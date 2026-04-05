@@ -1,0 +1,1863 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <title>第四国际 - 剧情节点编辑器 (Pro+富文本版)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #151515;
+            --grid-color: rgba(255, 255, 255, 0.05);
+            --node-bg: #242424;
+            --node-border: #383838;
+            --header-color: #2b5c5c;
+            --text-main: #d4d4d4;
+            --text-muted: #808080;
+            --input-bg: #1e1e1e;
+            --input-border: #333;
+            --accent: #4eb0a5;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh;
+            background-color: var(--bg-dark);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-main);
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .toolbar {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 50px;
+            background: #1e1e1e;
+            border-bottom: 1px solid #333;
+            display: flex; align-items: center;
+            padding: 0 20px; z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+
+        .btn {
+            background: #333; color: #ccc;
+            border: 1px solid #444; padding: 6px 14px;
+            margin-right: 12px; border-radius: 4px;
+            cursor: pointer; font-size: 13px;
+        }
+        .btn:hover { background: #444; color: #fff; }
+        .btn-export { background: #235836; border-color: #2ea043; color: white;}
+        .btn-export:hover { background: #2ea043; }
+
+        #viewport {
+            width: 100vw; height: 100vh;
+            position: relative; cursor: grab;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+        }
+        #viewport:active { cursor: grabbing; }
+
+        #canvas {
+            position: absolute; transform-origin: 0 0;
+            width: 1px; height: 1px;
+        }
+
+        #svg-layer {
+            position: absolute; top: 0; left: 0;
+            overflow: visible; pointer-events: none; z-index: 1;
+        }
+
+        .node {
+            position: absolute; width: 300px;
+            background: var(--node-bg); border: 1px solid var(--node-border);
+            border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+            z-index: 10; display: flex; flex-direction: column;
+        }
+
+        .node-header {
+            background: linear-gradient(180deg, var(--header-color) 0%, rgba(43,92,92,0) 100%);
+            padding: 10px 12px; cursor: move;
+            border-top-left-radius: 7px; border-top-right-radius: 7px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #333;
+        }
+
+       .node-title-input:focus {outline: 1px solid var(--accent);background: rgba(0,0,0,0.3) !important;}
+        .delete-btn { background: none; border: none; color: #888; cursor: pointer; font-size: 16px; padding: 0;}
+        .delete-btn:hover { color: #ff6b6b; }
+
+        .node-body { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+
+        .input-group { display: flex; flex-direction: column; gap: 4px; }
+        .input-group label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
+
+        input {
+            width: 100%; box-sizing: border-box; background: var(--input-bg);
+            border: 1px solid var(--input-border); color: var(--text-main);
+            padding: 6px 8px; border-radius: 4px; font-family: inherit; font-size: 12px;
+        }
+        input:focus { outline: none; border-color: var(--accent); }
+
+        /* 富文本编辑器与工具栏样式 */
+        .mini-toolbar {
+            display: flex; gap: 2px; background: #2a2a2a;
+            padding: 4px; border-radius: 4px 4px 0 0;
+            border: 1px solid var(--input-border); border-bottom: none;
+        }
+        .mini-toolbar button {
+            background: transparent; border: none; color: #ccc;
+            cursor: pointer; padding: 2px 6px; border-radius: 2px; font-size: 12px;
+        }
+        .mini-toolbar button:hover { background: #555; color: #fff; }
+        .divider { border-left: 1px solid #444; margin: 0 4px; }
+        
+        .rich-editor {
+            width: 100%; box-sizing: border-box; background: var(--input-bg);
+            border: 1px solid var(--input-border); color: var(--text-main);
+            padding: 8px; border-radius: 0 0 4px 4px;
+            font-family: inherit; font-size: 13px;
+            min-height: 60px; max-height: 200px; overflow-y: auto;
+            outline: none; line-height: 1.4;
+        }
+        .rich-editor:focus { border-color: var(--accent); }
+        .rich-editor[placeholder]:empty:before {
+            content: attr(placeholder); color: #666; pointer-events: none;
+        }
+
+        .socket {
+            width: 12px; height: 12px; 
+            background: var(--bg-dark); 
+            border: 2px solid var(--accent); border-radius: 50%;
+            position: absolute; top: -20px;
+            cursor: crosshair; /* 移到这里，让左右两边都有十字准星光标 */
+        }
+        .socket.in { left: -18px; }
+        .socket.out { right: -18px; }
+        
+        /* 新增：连线后的实心状态 */
+        .socket.connected {
+            background: var(--accent);
+        }
+
+        .btn-branch {
+            background: transparent; border: 1px dashed #555; color: #aaa;
+            padding: 6px; cursor: pointer; border-radius: 4px; font-size: 12px;
+            margin-top: 4px; transition: 0.2s;
+        }
+        .btn-branch:hover { background: #333; border-color: #777; color: #fff;}
+
+        .node input, .node .rich-editor { user-select: text; cursor: text; }
+
+        /* ================= 侧边栏样式 ================= */
+        /* 修改现有侧边栏的宽度 */
+        .side-panel {
+            position: fixed; top: 50px; right: -550px; /* 改成了 550 */
+            width: 500px; /* 原来是 400px，加宽了 */
+            height: calc(100vh - 50px);
+            background: #1a1a1a; border-left: 1px solid #333;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.6);
+            transition: right 0.3s ease; z-index: 2000;
+            display: flex; flex-direction: column;
+        }
+        .side-panel.open { right: 0; }
+
+        /* ================= 新增剧情块样式 ================= */
+        /* ================= 新增与修改：拖拽相关样式 ================= */
+        .story-block {
+            background: #2a2a2a; border: 1px solid #444; border-radius: 6px; 
+            padding: 12px 12px 12px 35px; /* 左侧增加 padding 给拖拽手柄留出位置 */
+            margin-bottom: 12px; position: relative;
+            transition: border-color 0.2s;
+        }
+        /* 拖拽进行中时的半透明虚线效果 */
+        .story-block.dragging {
+            opacity: 0.4; border: 1px dashed var(--accent); background: #222;
+        }
+        .block-drag-handle {
+            position: absolute; left: 6px; top: 12px; color: #555; 
+            cursor: grab; font-size: 16px; user-select: none;
+            padding: 4px; border-radius: 4px; display: flex; align-items: center; justify-content: center;
+        }
+        .block-drag-handle:hover { color: var(--accent); background: rgba(255,255,255,0.1); }
+        .block-drag-handle:active { cursor: grabbing; }
+        .block-delete {
+            position: absolute; right: 8px; top: 8px; color: #888; 
+            background: none; border: none; font-size: 16px; cursor: pointer; padding: 0;
+        }
+        .block-delete:hover { color: #ff6b6b; }
+        .block-role-input {
+            width: 40%; margin-bottom: 8px; background: #1e1e1e; border: 1px solid #444; 
+            color: var(--text-main); padding: 6px; border-radius: 4px; font-size: 13px;
+        }
+        /* 替换掉原来的 .block-textarea */
+        .block-editor {
+            width: 100%; box-sizing: border-box; background: #1e1e1e; border: 1px solid #444; 
+            color: var(--text-main); padding: 8px; border-radius: 4px; font-size: 13px; 
+            min-height: 70px; max-height: 300px; overflow-y: auto;
+            font-family: inherit; line-height: 1.5; outline: none;
+        }
+        .block-editor:focus, .block-role-input:focus { border-color: var(--accent); }
+        .block-editor[placeholder]:empty:before {
+            content: attr(placeholder); color: #666; pointer-events: none;
+        }
+        .block-label { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; display: block; }
+        .panel-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 20px; background: #242424; border-bottom: 1px solid #333;
+        }
+        #panel-title { font-weight: bold; font-size: 15px; color: var(--accent); }
+        .panel-toolbar {
+            display: flex; gap: 6px; padding: 10px 20px; background: #2a2a2a; border-bottom: 1px solid #333;
+        }
+        .panel-toolbar button {
+            background: #333; border: 1px solid #444; color: #ccc;
+            cursor: pointer; padding: 6px 10px; border-radius: 4px; font-size: 14px;
+        }
+        .panel-toolbar button:hover { background: #555; color: #fff; }
+        .panel-editor {
+            flex: 1; padding: 20px; outline: none; overflow-y: auto;
+            font-size: 14px; line-height: 1.6; color: var(--text-main);
+        }
+        .panel-editor:empty:before {
+            content: '在此处开始编写剧情文本...'; color: #666; pointer-events: none;
+        }
+        
+        /* 稍微调整一下原卡片里用来触发的区域样式 */
+        .v-text-trigger {
+            width: 100%; box-sizing: border-box; background: var(--input-bg);
+            border: 1px solid var(--input-border); color: var(--text-muted);
+            padding: 8px; border-radius: 4px;
+            font-size: 13px; min-height: 40px; max-height: 100px; 
+            overflow: hidden; text-overflow: ellipsis; cursor: pointer;
+        }
+        .v-text-trigger:hover { border-color: var(--accent); color: var(--text-main); }
+        /* ================= 搜索高亮特效 ================= */
+        @keyframes highlightBlink {
+            0% { box-shadow: 0 0 0px 0px var(--accent); border-color: var(--accent); transform: scale(1); }
+            50% { box-shadow: 0 0 30px 10px var(--accent); border-color: #fff; transform: scale(1.05); }
+            100% { box-shadow: 0 0 0px 0px var(--accent); border-color: var(--accent); transform: scale(1); }
+        }
+        .node.highlighted {
+            animation: highlightBlink 0.6s ease-in-out 3; /* 动画持续0.6秒，闪烁3次 */
+            border-color: var(--accent) !important;
+            z-index: 1000; /* 保证高亮的卡片在最上层 */
+        }
+
+        /* ================= 试玩模式样式 (精美AVG版) ================= */
+        #play-overlay {
+            position: fixed; inset: 0; 
+            /* 更有氛围感的径向渐变背景 */
+            background: radial-gradient(circle at center, rgba(15, 20, 25, 0.8) 0%, rgba(0, 0, 0, 0.95) 100%);
+            backdrop-filter: blur(8px);
+            z-index: 3000; display: none; flex-direction: column; 
+            justify-content: flex-end; align-items: center; padding-bottom: 60px;
+        }
+        #play-overlay.active { display: flex; }
+        
+        /* 对话框本体进入动画 */
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .play-dialogue-box {
+            width: 85%; max-width: 900px; 
+            /* 微磨砂玻璃质感 */
+            background: linear-gradient(135deg, rgba(30, 35, 40, 0.9) 0%, rgba(15, 18, 20, 0.95) 100%);
+            border: 1px solid rgba(78, 176, 165, 0.3);
+            border-top: 2px solid var(--accent); /* 顶部高亮线 */
+            border-radius: 4px; padding: 35px 40px;
+            position: relative; cursor: pointer; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 1px 10px rgba(255,255,255,0.05);
+            animation: slideUpFade 0.4s ease-out;
+        }
+
+        /* ================= 经典AVG风格：呼吸跳动的向下指示箭头 ================= */
+        @keyframes bounceDown {
+            0%, 100% { transform: translateY(0) rotate(45deg); opacity: 0.4; }
+            50% { transform: translateY(6px) rotate(45deg); opacity: 1; }
+        }
+        
+        /* 独立悬浮的角色名牌 */
+        .play-name { 
+            position: absolute; top: -22px; left: 30px;
+            background: linear-gradient(90deg, #2b5c5c 0%, #1a3838 100%);
+            border: 1px solid var(--accent); border-radius: 4px;
+            padding: 6px 20px; font-size: 18px; font-weight: bold; color: #fff; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); letter-spacing: 1px;
+            display: none; 
+        }
+
+        .play-text { 
+            font-size: 20px; line-height: 1.7; color: #e0e0e0; 
+            min-height: 90px; user-select: none; 
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+        .play-desc { color: #aaa; font-style: italic; }
+        
+        /* 选项面板 */
+        .play-choices {
+            display: flex; flex-direction: column; gap: 15px; width: 80%; max-width: 700px;
+            margin-bottom: 40px; display: none; animation: slideUpFade 0.3s ease-out;
+        }
+        
+        /* 全息科幻风选项按钮 */
+        .play-choice-btn {
+            background: linear-gradient(90deg, rgba(43,92,92,0.1) 0%, rgba(30,30,30,0.8) 20%, rgba(30,30,30,0.8) 80%, rgba(43,92,92,0.1) 100%);
+            border: 1px solid rgba(78, 176, 165, 0.4);
+            border-left: 3px solid var(--accent); border-right: 3px solid var(--accent);
+            color: #ccc; padding: 14px 20px; cursor: pointer; border-radius: 4px; 
+            text-align: center; font-size: 17px; letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s;
+        }
+        .play-choice-btn:hover { 
+            background: linear-gradient(90deg, rgba(78,176,165,0.2) 0%, rgba(43,92,92,0.9) 50%, rgba(78,176,165,0.2) 100%);
+            color: #fff; border-color: var(--accent); transform: scale(1.02); 
+            box-shadow: 0 0 15px rgba(78, 176, 165, 0.4);
+        }
+        
+        .play-close {
+            position: absolute; top: 30px; right: 40px; background: none; border: none;
+            color: #888; font-size: 45px; cursor: pointer; z-index: 3001; transition: 0.2s;
+        }
+        .play-close:hover { color: #ff6b6b; transform: scale(1.1) rotate(90deg); }
+
+        .btn-play { background: none; border: none; cursor: pointer; font-size: 15px; padding: 0 6px; filter: grayscale(100%); transition: 0.2s;}
+        .btn-play:hover { filter: grayscale(0%); transform: scale(1.2); }
+
+        /* 卡片上的小播放按钮 */
+        .btn-play { background: none; border: none; cursor: pointer; font-size: 15px; padding: 0 6px; filter: grayscale(100%); transition: 0.2s;}
+        .btn-play:hover { filter: grayscale(0%); transform: scale(1.2); }
+
+        /* ================= 新手引导样式 ================= */
+        /* 教程开启时，屏蔽全屏普通点击 */
+        body.tutorial-active { pointer-events: none; } 
+        
+        /* 【核心修复】：特赦所有的连接点 和 试玩界面，保证它们绝对可以被点击！ */
+        body.tutorial-active .socket,
+        body.tutorial-active #play-overlay { pointer-events: auto !important; }
+        
+        .guide-highlight {
+            pointer-events: auto !important; /* 唯独放行高亮区域的点击 */
+            z-index: 100000 !important;
+            /* 核心黑科技：用 9999px 的超大半透明阴影盖住全屏，中间自然镂空！ */
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.75), 0 0 15px 3px var(--accent) !important;
+            border-radius: 4px;
+            background: var(--node-bg); /* 防止透明元素被看穿 */
+            transition: box-shadow 0.3s ease;
+        }
+        
+        #guide-tooltip {
+            position: fixed; z-index: 100001; background: #242424; 
+            border: 2px solid var(--accent); color: white; padding: 20px; 
+            border-radius: 8px; width: 280px; pointer-events: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8); display: none;
+            transition: top 0.3s, left 0.3s;
+        }
+        .guide-title { color: var(--accent); font-weight: bold; margin-bottom: 10px; font-size: 16px; }
+        .guide-text { font-size: 14px; line-height: 1.5; color: #d4d4d4; }
+        /* ================= 教程完成庆祝动画 ================= */
+        #tutorial-complete-modal {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85);
+            z-index: 4000; display: none; justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        #tutorial-complete-modal.active { display: flex; pointer-events: auto; }
+        
+        .tutorial-modal-content {
+            background: linear-gradient(135deg, #1e2328 0%, #15181a 100%);
+            border: 2px solid var(--accent); border-radius: 12px;
+            padding: 40px 50px; text-align: center; color: white;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.8), 0 0 30px rgba(78, 176, 165, 0.3);
+            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative; z-index: 4001;
+        }
+        
+        .tutorial-modal-content h2 { color: var(--accent); font-size: 32px; margin-bottom: 15px; }
+        .tutorial-modal-content p { font-size: 16px; line-height: 1.8; color: #ccc; margin-bottom: 30px; }
+        .tutorial-modal-content .btn { 
+            font-size: 18px; padding: 12px 35px; background: var(--accent); 
+            color: #000; font-weight: bold; border: none; border-radius: 6px; 
+            cursor: pointer; transition: 0.2s;
+        }
+        .tutorial-modal-content .btn:hover { transform: scale(1.05); box-shadow: 0 0 20px var(--accent); }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 飘落的彩纸特效 */
+        .confetti {
+            position: absolute; width: 8px; height: 16px; z-index: 4000;
+            animation: fall linear forwards; pointer-events: none;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        /* ================= 全局交互手感 (Game Feel) 提升 ================= */
+
+        /* 1. 试玩模式对话框：悬浮时微微发亮，点击时真实下陷 */
+        .play-dialogue-box {
+            transition: transform 0.1s, box-shadow 0.2s, filter 0.2s;
+        }
+        .play-dialogue-box:hover {
+            filter: brightness(1.1); /* 鼠标移上去稍微变亮 */
+            box-shadow: 0 25px 60px rgba(0,0,0,0.9), inset 0 1px 20px rgba(78, 176, 165, 0.15);
+        }
+        .play-dialogue-box:active {
+            transform: scale(0.98); /* 点击的瞬间缩小一点点，模拟物理按压 */
+            filter: brightness(0.95);
+            transition: all 0.05s; /* 按下的动作要干脆利落 */
+        }
+
+        /* ================= 试玩模式跳动箭头 (真实元素版) ================= */
+        .play-next-arrow {
+            position: absolute; 
+            right: 35px; bottom: 30px;
+            width: 12px; height: 12px;
+            border-right: 3px solid var(--accent);
+            border-bottom: 3px solid var(--accent);
+            border-radius: 2px;
+            transform: rotate(45deg);
+            animation: bounceDown 1.2s infinite ease-in-out;
+            filter: drop-shadow(0 0 5px rgba(78, 176, 165, 0.6));
+            transition: all 0.2s;
+        }
+
+        /* 【核心改动】：现在只有鼠标精准悬浮在“箭头本身”上时，它才会发光变快！ */
+        .play-next-arrow:hover {
+            border-color: #fff;
+            filter: drop-shadow(0 0 8px var(--accent));
+            animation: bounceDown 0.6s infinite ease-in-out; 
+        }
+
+        /* 整个对话框被点击时，箭头依然会往下沉，给出全局的按压反馈 */
+        .play-dialogue-box:active .play-next-arrow {
+            animation: none; 
+            transform: translateY(12px) scale(0.8) rotate(45deg); 
+            opacity: 1;
+            transition: all 0.05s; 
+        }
+
+        /* 2. 所有通用按钮（包括工具栏和侧边栏）：按压物理反馈 */
+        .btn:active {
+            transform: scale(0.92) !important;
+            filter: brightness(0.8);
+            transition: all 0.05s; 
+        }
+
+        /* 3. 试玩模式选项按钮：按下的瞬间颜色反转并缩小 */
+        .play-choice-btn:active {
+            transform: scale(0.95);
+            background: var(--accent);
+            color: #000;
+            box-shadow: 0 0 20px var(--accent);
+            transition: all 0.05s;
+        }
+
+        /* 4. 连线小圆点：像磁铁一样的悬浮吸附感 */
+        .socket {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .socket:hover {
+            transform: scale(1.6); /* 鼠标靠近时明显变大，提示可以连线 */
+            background: rgba(78, 176, 165, 0.5);
+        }
+        .socket:active {
+            transform: scale(1.2);
+            background: var(--accent); /* 按住拖拽时变成实心高亮 */
+            transition: all 0.05s;
+        }
+
+        /* 5. 剧情节点卡片本体：悬浮时浮现微弱的环境光 */
+        .node {
+            transition: box-shadow 0.3s, border-color 0.3s;
+        }
+        .node:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 12px rgba(78, 176, 165, 0.25);
+            border-color: rgba(78, 176, 165, 0.6);
+        }
+        /* ================= 移动端适配 (响应式布局) ================= */
+        @media (max-width: 768px) {
+            /* 1. 顶部工具栏自适应，允许换行 */
+            .toolbar {
+                flex-wrap: wrap; height: auto; padding: 10px;
+                justify-content: center; gap: 8px;
+            }
+            .toolbar .btn { margin: 0; padding: 8px 12px; font-size: 13px; flex-grow: 1; text-align: center; }
+
+            /* 2. 右侧编辑栏改为从“底部”弹出的抽屉模式 */
+            #side-panel {
+                width: 100%; height: 60vh; /* 占据下方 60% 的屏幕 */
+                top: auto; bottom: -100%; right: 0;
+                border-left: none; border-top: 3px solid var(--accent);
+                border-radius: 20px 20px 0 0; /* 圆角看起来更像抽屉 */
+                box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+            }
+            #side-panel.open { bottom: 0; right: auto; }
+
+            /* 3. 为粗手指放大“连线插口” */
+            .socket { width: 22px; height: 22px; top: -25px; border-width: 3px; }
+            .socket.in { left: -22px; }
+            .socket.out { right: -22px; }
+
+            /* 4. 试玩模式和弹窗的自适应 */
+            .play-dialogue-box { width: 95%; padding: 20px 25px; }
+            .play-name { font-size: 16px; top: -16px; left: 15px; padding: 4px 12px; }
+            .play-text { font-size: 16px; line-height: 1.5; min-height: 70px; }
+            .play-choice-btn { padding: 12px; font-size: 15px; }
+            .tutorial-modal-content { padding: 30px 20px; width: 90%; }
+            .tutorial-modal-content h2 { font-size: 24px; }
+            #guide-tooltip { width: 90% !important; left: 5% !important; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="toolbar">
+        <!-- 替换掉原来的新建按钮 -->
+        <button id="btn-new-node" class="btn" onclick="spawnNodeSmartly()">+ 新建剧情节点</button>
+        <button id="btn-export-excel" class="btn btn-export" onclick="exportExcel()">↓ 导出 .xlsx 供程序读取</button>
+        <span class="divider" style="margin-right: 12px; height: 20px;"></span>
+        <button id="btn-global-play" class="btn" onclick="startGlobalPlay()" style="background: #bd5c00; border-color: #d96900; margin-right: 12px;">🎬 全局试玩</button>
+        
+        <button class="btn" onclick="saveToLocal()" style="background: #1e4b6e; border-color: #2b6a9c;">💾 保存</button>
+        <button class="btn" onclick="clearLocal()" style="background: #5c2b2b; border-color: #8c3b3b;">🗑️ 清空</button>
+        <span class="divider" style="margin-right: 12px; height: 20px;"></span>
+        
+        <button id="btn-export-project" class="btn" onclick="exportProject()" style="background: #4a3b69; border-color: #5c4b82;">📦 导出工程备份</button>
+        <button class="btn" onclick="document.getElementById('import-file').click()" style="background: #4a3b69; border-color: #5c4b82;">📂 导入</button>
+        <input type="file" id="import-file" style="display: none;" accept=".json" onchange="importProject(event)">
+        <span class="divider" style="margin-right: 12px; height: 20px;"></span>
+
+        <input type="text" id="search-input" placeholder="搜角色/台词/ID..." onkeypress="if(event.key==='Enter') performSearch()" style="padding: 6px; border-radius: 4px; border: 1px solid #444; background: #1e1e1e; color: white; width: 160px; outline: none;">
+        <button class="btn" onclick="performSearch()" style="background: #2c5e3b; border-color: #3d8050;">🔍 搜索</button>
+        <span id="search-result-text" style="color: var(--accent); font-size: 13px; margin-left: 8px; font-weight: bold;"></span>
+        <span style="color: #666; font-size: 12px; margin-left: 15px;">右键拖拽，滚轮缩放。双击连线取消。</span>
+        <!-- 在工具栏的合适位置（比如导出按钮的旁边）加上这个教程按钮 -->
+        <button class="btn" onclick="startTutorial()" style="background: #175438; border-color: #207a51;">💡 新手教程</button>
+    </div>
+    
+
+    <div id="viewport">
+        <div id="canvas">
+            <svg id="svg-layer"></svg>
+        </div>
+    </div>
+
+<script>
+    const viewport = document.getElementById('viewport');
+    const canvas = document.getElementById('canvas');
+    let panX = 0, panY = 0, scale = 1;
+    let isPanning = false, startPanX = 0, startPanY = 0;
+
+    function updateTransform() {
+        canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+        viewport.style.backgroundPosition = `${panX}px ${panY}px`;
+        viewport.style.backgroundSize = `${20 * scale}px ${20 * scale}px`;
+    }
+
+    viewport.addEventListener('mousedown', (e) => {
+        if (e.button === 2 || e.button === 1 || e.target === viewport) {
+            isPanning = true; startPanX = e.clientX - panX; startPanY = e.clientY - panY;
+        }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (isPanning) {
+            panX = e.clientX - startPanX; panY = e.clientY - startPanY;
+            updateTransform();
+        }
+        if (isConnecting && connectStartNodeId) {
+            const start = getSocketCoords(connectStartNodeId, connectStartType);
+            const endX = (e.clientX - panX) / scale;
+            const endY = (e.clientY - panY) / scale;
+            
+            // 根据是从左边拉还是右边拉，决定曲线甩出去的方向
+            let cp1x, cp2x;
+            if (connectStartType === 'out') {
+                cp1x = start.x + 80; cp2x = endX - 80;
+            } else {
+                cp1x = start.x - 80; cp2x = endX + 80;
+            }
+
+            const tempLine = document.getElementById('temp-line');
+            if (tempLine) {
+                tempLine.setAttribute('d', `M ${start.x} ${start.y} C ${cp1x} ${start.y}, ${cp2x} ${endY}, ${endX} ${endY}`);
+            }
+        }
+    });
+
+    window.addEventListener('mouseup', () => { isPanning = false; });
+    viewport.addEventListener('contextmenu', e => e.preventDefault());
+
+    viewport.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const zoomIntensity = 0.1;
+        const zoom = Math.exp((e.deltaY < 0 ? 1 : -1) * zoomIntensity);
+        panX = e.clientX - (e.clientX - panX) * zoom;
+        panY = e.clientY - (e.clientY - panY) * zoom;
+        scale = Math.min(Math.max(0.2, scale *= zoom), 3); 
+        updateTransform();
+    }, {passive: false});
+
+    function getCenter() {
+        return { x: (window.innerWidth / 2 - panX) / scale, y: (window.innerHeight / 2 - panY) / scale };
+    }
+
+    let nodeCount = 1;
+    let isDraggingNode = false, currentDragNode = null, dragOffsetX = 0, dragOffsetY = 0;
+
+    function formatText(command) {
+        document.execCommand(command, false, null);
+    }
+
+    function createNode(x, y, parentTargetInput = null, loadData = null) {
+        // 如果有载入数据，使用旧 ID；如果没有，正常自增
+        const id = loadData ? loadData.id : 'N' + (nodeCount++).toString().padStart(3, '0');
+        const node = document.createElement('div');
+        node.className = 'node'; node.id = id;
+        node.style.left = x + 'px'; node.style.top = y + 'px';
+
+        node.innerHTML = `
+            <div class="node-header" onmousedown="startNodeDrag(event, this.parentElement)">
+                <input type="text" class="node-title-input" value="${id}" 
+                       onchange="updateNodeId(this, this.closest('.node').id)" 
+                       onclick="event.stopPropagation()"
+                       onmousedown="event.stopPropagation()"
+                       style="background: transparent; border: none; color: white; font-weight: bold; font-size: 14px; width: 120px;">
+                <div style="display: flex; align-items: center;">
+                    <button class="btn-play" title="从此节点开始试玩" onclick="startPlayMode(this.closest('.node').id)" onmousedown="event.stopPropagation()">▶️</button>
+                    <button class="delete-btn" onclick="removeNode(this.closest('.node').id)">×</button>
+                </div>
+            </div>
+            <div class="node-body">
+                <div class="socket in" onmousedown="startConnection(event, this.closest('.node').id, 'in')" onmouseup="finishConnection(this.closest('.node').id, 'in')"></div>
+                <div class="input-group">
+                    <label>本段出场角色 (Cast)</label>
+                    <input type="text" class="v-role" placeholder="如：卡斯珀, 斯特凡">
+                </div>
+                <div class="input-group">
+                    <label>剧情序列 (Sequence)</label>
+                    <div class="v-text-trigger v-text-preview" onclick="openSidePanel(this.closest('.node').id)">点击此处编写剧情序列...</div>
+                    <input type="hidden" class="v-story-data" value="[]">
+                </div>
+                <div class="input-group">
+                    <label>分支选项与目标 (Targets)</label>
+                    <input type="text" class="v-target" placeholder="跳转ID(如: N002, N003)" oninput="drawAllLines()">
+                </div>
+                <div class="input-group">
+                    <label>条件/变量 (Conditions)</label>
+                    <input type="text" class="v-var" placeholder="如: 精神力-1">
+                </div>
+                <button class="btn-branch" onclick="branchOut(this.closest('.node').id)">+ 快速延展分支</button>
+                <div class="socket out" onmousedown="startConnection(event, this.closest('.node').id, 'out')" onmouseup="finishConnection(this.closest('.node').id, 'out')"></div>
+            </div>
+            `;
+        canvas.appendChild(node);
+        
+        // 如果是读取存档，把各个输入框的数据塞回去
+        if (loadData) {
+            node.querySelector('.v-role').value = loadData.role || '';
+            node.querySelector('.v-story-data').value = loadData.storyData || '[]';
+            node.querySelector('.v-target').value = loadData.targets || '';
+            node.querySelector('.v-var').value = loadData.conditions || '';
+            updateNodePreview(node); // 还原文字预览
+        }
+
+        if (parentTargetInput && !loadData) {
+            let current = parentTargetInput.value.trim();
+            parentTargetInput.value = current ? current + ', ' + id : id;
+        }
+        drawAllLines();
+    }
+
+    // ================= 智能排布新节点逻辑 =================
+    function spawnNodeSmartly() {
+        const nodes = document.querySelectorAll('.node');
+        
+        // 1. 如果画布完全是空的，还是按照老规矩生成在屏幕正中央
+        if (nodes.length === 0) {
+            const center = getCenter();
+            createNode(center.x, center.y);
+            return;
+        }
+
+        // 2. 找到 DOM 里的最后一个节点（通常就是你上一次创建的那个）
+        const lastNode = nodes[nodes.length - 1];
+        const lastX = parseFloat(lastNode.style.left);
+        const lastY = parseFloat(lastNode.style.top);
+
+        // 3. 计算新位置：放在上一个节点的右边（卡片宽 300 + 间距 40）
+        // Y 轴加一点点随机偏移，让排版看起来不那么死板
+        const newX = lastX + 340;
+        const newY = lastY + (Math.random() * 40 - 20);
+
+        // 生成节点
+        createNode(newX, newY);
+        
+        // 4. 自动将画布视野平移到新节点的位置，防止新节点跑到屏幕外面去
+        const screenW = window.innerWidth;
+        const screenH = window.innerHeight;
+        
+        // 150 和 100 是为了让卡片大致居中
+        panX = screenW / 2 - (newX + 150) * scale; 
+        panY = screenH / 2 - (newY + 100) * scale; 
+        updateTransform();
+    }
+
+    function branchOut(parentId) {
+        const parentNode = document.getElementById(parentId);
+        const x = parseFloat(parentNode.style.left) + 360;
+        const y = parseFloat(parentNode.style.top) + (Math.random() * 40 - 20);
+        createNode(x, y, parentNode.querySelector('.v-target'));
+    }
+
+    // ================= 删除节点逻辑 (带全局引用清理) =================
+    function removeNode(id) {
+        if (!confirm(`确定要删除节点 ${id} 吗？`)) return; // 加个防误触确认框
+        
+        // 1. 删除节点本体
+        const node = document.getElementById(id);
+        if (node) node.remove();
+
+        // 2. 全局大扫除：遍历所有其他的目标输入框，把这个 ID 抠掉
+        document.querySelectorAll('.v-target').forEach(input => {
+            let targets = input.value.split(',').map(s => s.trim()).filter(s => s);
+            
+            // 如果别人的目标里有这个被删掉的 ID，就把它过滤掉
+            if (targets.includes(id)) {
+                targets = targets.filter(t => t !== id);
+                input.value = targets.join(', ');
+            }
+        });
+
+        // 3. 重新绘制线条并存档
+        drawAllLines();
+        if (typeof saveToLocal === 'function') {
+            saveToLocal(true);
+        }
+    }
+
+    function startNodeDrag(e, node) {
+        if(e.target.tagName.toLowerCase() === 'button') return;
+        isDraggingNode = true; currentDragNode = node;
+        document.querySelectorAll('.node').forEach(n => n.style.zIndex = 10);
+        node.style.zIndex = 100;
+        const rect = node.getBoundingClientRect();
+        dragOffsetX = (e.clientX - rect.left) / scale; dragOffsetY = (e.clientY - rect.top) / scale;
+        e.stopPropagation();
+    }
+
+    window.addEventListener('mousemove', (e) => {
+        if (isDraggingNode && currentDragNode) {
+            currentDragNode.style.left = ((e.clientX - panX) / scale - dragOffsetX) + 'px';
+            currentDragNode.style.top = ((e.clientY - panY) / scale - dragOffsetY) + 'px';
+            drawAllLines();
+        }
+    });
+
+    window.addEventListener('mouseup', () => { isDraggingNode = false; currentDragNode = null; 
+    if (isConnecting) {
+            isConnecting = false;
+            connectStartNodeId = null;
+            const tempLine = document.getElementById('temp-line');
+            if (tempLine) tempLine.remove();
+        }
+    });
+
+    // ================= 获取插口精准坐标 =================
+    function getSocketCoords(nodeId, type) {
+        const node = document.getElementById(nodeId);
+        if (!node) return { x: 0, y: 0 };
+        const socket = node.querySelector('.socket.' + type);
+        // 获取插口相对于视口的边界框
+        const rect = socket.getBoundingClientRect();
+        const canvasRect = canvas.getBoundingClientRect();
+        // 计算相对于画布的精确坐标 (去除缩放影响)
+        return {
+            x: (rect.left - canvasRect.left + rect.width / 2) / scale,
+            y: (rect.top - canvasRect.top + rect.height / 2) / scale
+        };
+    }
+
+    // ================= 更新后的重绘连线逻辑 (含交互) =================
+    function drawAllLines() {
+        const svg = document.getElementById('svg-layer'); 
+        svg.innerHTML = ''; 
+        
+        // 每次重绘前，先把所有圆点恢复成空心
+        document.querySelectorAll('.socket').forEach(s => s.classList.remove('connected'));
+
+        document.querySelectorAll('.node').forEach(node => {
+            const targetsStr = node.querySelector('.v-target').value;
+            if (!targetsStr) return;
+            
+            const targets = targetsStr.split(',').map(s => s.trim()).filter(s => s);
+            
+            // 如果这个节点有目标，把它的输出端变实心
+            if (targets.length > 0) {
+                node.querySelector('.socket.out').classList.add('connected');
+            }
+
+            targets.forEach(targetId => {
+                const targetNode = document.getElementById(targetId);
+                if (targetNode) {
+                    // 如果目标节点存在，把目标的输入端变实心
+                    targetNode.querySelector('.socket.in').classList.add('connected');
+
+                    // 获取精准的起始和结束点坐标
+                    const start = getSocketCoords(node.id, 'out');
+                    const end = getSocketCoords(targetId, 'in');
+
+                    // 动态计算曲线强度：如果节点发生了“从右向左”的反向摆放，自动把曲线拉大，防止线条穿透卡片
+                    let curveStrength = Math.max(80, Math.abs(end.x - start.x) * 0.6);
+                    const cp1x = start.x + curveStrength, cp2x = end.x - curveStrength;
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('d', `M ${start.x} ${start.y} C ${cp1x} ${start.y}, ${cp2x} ${end.y}, ${end.x} ${end.y}`);
+                    path.setAttribute('fill', 'none'); 
+                    path.setAttribute('stroke', '#4eb0a5');
+                    path.setAttribute('stroke-width', '4'); // 线条稍微加粗一点点，方便鼠标点中
+                    path.setAttribute('opacity', '0.7');
+
+                    // 【核心修改】：突破 SVG 层的鼠标限制，让线条自身可以被点击
+                    path.style.pointerEvents = 'visibleStroke';
+                    path.style.cursor = 'pointer';
+
+                    // 添加鼠标悬浮特效：变红且加粗
+                    path.addEventListener('mouseenter', () => {
+                        path.setAttribute('stroke', '#ff6b6b');
+                        path.setAttribute('stroke-width', '6');
+                        path.setAttribute('opacity', '1');
+                    });
+                    
+                    // 鼠标移开恢复原状
+                    path.addEventListener('mouseleave', () => {
+                        path.setAttribute('stroke', '#4eb0a5');
+                        path.setAttribute('stroke-width', '4');
+                        path.setAttribute('opacity', '0.7');
+                    });
+
+                    // 双击删除这条连线
+                    path.addEventListener('dblclick', (e) => {
+                        e.stopPropagation(); // 阻止触发画布背景的拖拽等事件
+                        removeConnection(node.id, targetId);
+                    });
+
+                    svg.appendChild(path);
+                }
+            });
+        });
+    }
+
+    // ================= 删除连线逻辑 =================
+    function removeConnection(sourceId, targetId) {
+        const sourceNode = document.getElementById(sourceId);
+        if (!sourceNode) return;
+        
+        // 找到源节点的跳转目标输入框
+        const targetInput = sourceNode.querySelector('.v-target');
+
+        // 把目标 ID 从输入框的字符串里剥离出来
+        let targets = targetInput.value.split(',').map(s => s.trim()).filter(s => s);
+        targets = targets.filter(id => id !== targetId);
+
+        // 更新输入框，并触发重绘
+        targetInput.value = targets.join(', ');
+        drawAllLines();
+
+        // 触发一次自动存档（如果你已经加了本地存档功能的话）
+        if (typeof saveToLocal === 'function') {
+            saveToLocal(true);
+        }
+    }
+
+   // 专门用来处理 Excel 导出和卡片预览的【终极清洗辅助函数】
+    function cleanHtmlForExcel(html) {
+        if (!html) return "";
+        let text = html;
+
+        // 1. 把加粗、斜体等转换为游戏引擎支持的 BBCode
+        text = text.replace(/<b>(.*?)<\/b>/gi, "[b]$1[/b]");
+        text = text.replace(/<strong>(.*?)<\/strong>/gi, "[b]$1[/b]");
+        text = text.replace(/<i>(.*?)<\/i>/gi, "[i]$1[/i]");
+        text = text.replace(/<em>(.*?)<\/em>/gi, "[i]$1[/i]");
+        text = text.replace(/<u>(.*?)<\/u>/gi, "[u]$1[/u]");
+
+        // 2. 专门对付各种浏览器产生的换行标签，强制转为原生 \n
+        text = text.replace(/<\/div>\s*<div>/gi, "\n"); // 处理连敲回车产生的连续 div
+        text = text.replace(/<div>/gi, "\n");           // 处理 Chrome 的回车
+        text = text.replace(/<br\s*[\/]?>/gi, "\n");    // 处理单独的换行符
+        text = text.replace(/<p>/gi, "\n");             // 处理 Safari 的回车
+
+        // 3. 无情剥离：删掉所有残余的 HTML 标签 (如 </div>, </span> 等)
+        text = text.replace(/<[^>]+>/g, '');
+
+        // 4. 解码转义字符（比如把 &nbsp; 还原成正常的空格）
+        const temp = document.createElement("textarea");
+        temp.innerHTML = text;
+        let result = temp.value;
+
+        // 清理一下开头和结尾多余的换行符
+        return result.replace(/^\n+|\n+$/g, ''); 
+    }
+
+    // ================= 导出 Excel 逻辑 =================
+    function exportExcel() {
+        const nodes = document.querySelectorAll('.node');
+        const exportData = [];
+
+        nodes.forEach(node => {
+            const nodeId = node.id;
+            const cast = node.querySelector('.v-role').value;
+            const targets = node.querySelector('.v-target').value;
+            const condition = node.querySelector('.v-var').value;
+            
+            let blocks = [];
+            try { blocks = JSON.parse(node.querySelector('.v-story-data').value); } catch(e) {}
+
+            if (blocks.length === 0) {
+                exportData.push({
+                    "节点ID": nodeId, "出场角色": cast, "段落类型": "", "说话人": "",
+                    "文本内容": "", "跳转目标": targets, "变量条件": condition
+                });
+            } else {
+                blocks.forEach((block, index) => {
+                    const isLast = (index === blocks.length - 1); 
+                    
+                    // 重点在这里：调用 cleanHtmlForExcel 函数洗掉标签
+                    const cleanText = cleanHtmlForExcel(block.text);
+
+                    exportData.push({
+                        "节点ID": index === 0 ? nodeId : "", 
+                        "出场角色": index === 0 ? cast : "",
+                        "段落类型": block.type === 'dialogue' ? '对话' : '描写',
+                        "说话人": block.type === 'dialogue' ? block.role : "",
+                        "文本内容": cleanText, // 这里输出的就是纯洁的换行文本了
+                        "跳转目标": isLast ? targets : "", 
+                        "变量条件": index === 0 ? condition : ""
+                    });
+                });
+            }
+        });
+
+        if (exportData.length === 0) return alert("画布是空的哦！");
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        worksheet['!cols'] = [{wch: 8}, {wch: 15}, {wch: 8}, {wch: 15}, {wch: 60}, {wch: 15}, {wch: 15}];
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "剧情序列数据");
+        XLSX.writeFile(workbook, "第四国际_剧情数据.xlsx");
+    }
+
+    window.onload = () => { 
+        // 尝试读取本地数据
+        const loaded = loadFromLocal();
+        const hasPlayedTutorial = localStorage.getItem('fourth_intl_tutorial');
+        
+        if (!loaded) {
+            updateTransform(); 
+            // 如果是第一次使用（没有通关过教程），自动触发新手引导！
+            if (!hasPlayedTutorial) {
+                localStorage.setItem('fourth_intl_tutorial', 'true');
+                startTutorial();
+            } else {
+                // 老玩家没存档，就给个默认节点
+                createNode(window.innerWidth/2 - 150, window.innerHeight/2 - 120); 
+            }
+        }
+    };
+
+    // ================= 修改节点名字逻辑 =================
+    function updateNodeId(inputElem, oldId) {
+        const newId = inputElem.value.trim();
+        // 如果新名字为空，或者已经有同名节点，就恢复原状
+        if (!newId || document.getElementById(newId)) {
+            inputElem.value = oldId;
+            return;
+        }
+        
+        // 更新 DOM 元素的 ID
+        const node = document.getElementById(oldId);
+        if(node) node.id = newId;
+        
+        // 更新 input 自身的事件传参
+        inputElem.setAttribute('onchange', `updateNodeId(this, '${newId}')`);
+
+        // 自动更新其他节点里指向旧 ID 的连线目标
+        document.querySelectorAll('.v-target').forEach(inp => {
+            let parts = inp.value.split(',').map(s => s.trim());
+            let index = parts.indexOf(oldId);
+            if (index !== -1) {
+                parts[index] = newId;
+                inp.value = parts.join(', ');
+            }
+        });
+        
+        drawAllLines();
+    }
+
+    // ================= 拖拽连线逻辑 (双向增强版) =================
+    let isConnecting = false;
+    let connectStartNodeId = null;
+    let connectStartType = null; // 记录是从 in 还是 out 开始拖的
+
+    function startConnection(e, nodeId, type) {
+        e.stopPropagation(); 
+        isConnecting = true;
+        connectStartNodeId = nodeId;
+        connectStartType = type;
+        
+        const svg = document.getElementById('svg-layer');
+        const tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        tempLine.id = 'temp-line';
+        tempLine.setAttribute('fill', 'none');
+        tempLine.setAttribute('stroke', '#ffaa00'); 
+        tempLine.setAttribute('stroke-width', '4');
+        tempLine.setAttribute('stroke-dasharray', '5,5');
+        svg.appendChild(tempLine);
+    }
+
+    function finishConnection(targetNodeId, targetType) {
+        // 必须满足：正在连线 + 不是同一个节点 + 插口类型相反 (in连out, out连in)
+        if (isConnecting && connectStartNodeId && connectStartNodeId !== targetNodeId && connectStartType !== targetType) {
+            
+            // 智能判断谁是“发送方”，谁是“接收方”
+            let sourceId, targetIdToSave;
+            if (connectStartType === 'out') {
+                sourceId = connectStartNodeId; // 从右往左拉：起点是发送方
+                targetIdToSave = targetNodeId;
+            } else {
+                sourceId = targetNodeId;       // 从左往右拉：终点是发送方
+                targetIdToSave = connectStartNodeId;
+            }
+
+            const sourceNode = document.getElementById(sourceId);
+            if (sourceNode) {
+                const targetInput = sourceNode.querySelector('.v-target');
+                let currentTargets = targetInput.value.split(',').map(s => s.trim()).filter(s => s);
+                
+                // 避免重复连线
+                if (!currentTargets.includes(targetIdToSave)) {
+                    currentTargets.push(targetIdToSave);
+                    targetInput.value = currentTargets.join(', ');
+                    drawAllLines(); 
+                    if (typeof saveToLocal === 'function') saveToLocal(true);
+                }
+            }
+        }
+    }
+
+    // ================= 侧边栏块状编辑器逻辑 =================
+    let activeEditingNodeId = null;
+
+    // 侧边栏的排版工具
+    function formatBlockText(command) {
+        document.execCommand(command, false, null);
+        syncTextToNode(); // 格式化后同步数据
+    }
+
+    // 动态向侧边栏添加一个输入块
+    function addBlock(type, role = '', text = '') {
+        const editor = document.getElementById('panel-editor');
+        const block = document.createElement('div');
+        block.className = 'story-block';
+        block.dataset.type = type;
+
+        // 核心修改：鼠标“悬浮”到手柄上时就解锁拖拽，移开就锁定。这样浏览器就有足够的时间反应。
+        let html = `<div class="block-drag-handle" title="按住拖拽排序" 
+                         onmouseenter="this.parentElement.draggable = true" 
+                         onmouseleave="this.parentElement.draggable = false">☰</div>`;
+                         
+        html += `<button class="block-delete" onclick="this.parentElement.remove(); syncTextToNode()">×</button>`;
+        
+        if (type === 'dialogue') {
+            html += `<span class="block-label">🗣️ 角色台词</span>`;
+            html += `<input type="text" class="block-role-input" placeholder="输入说话角色..." value="${role}" oninput="syncTextToNode()">`;
+            html += `<div class="block-editor" contenteditable="true" placeholder="输入台词内容（回车可换行）..." oninput="syncTextToNode()">${text}</div>`;
+        } else {
+            html += `<span class="block-label">🎬 场景描写 / 动作</span>`;
+            html += `<div class="block-editor" contenteditable="true" placeholder="输入描写内容（回车可换行）..." oninput="syncTextToNode()">${text}</div>`;
+        }
+
+        block.innerHTML = html;
+
+        // ====== 绑定该块的拖拽开始和结束事件 ======
+        block.addEventListener('dragstart', (e) => {
+            block.classList.add('dragging'); 
+            // 解决火狐浏览器的兼容问题，必须有这行才能拖拽
+            if (e.dataTransfer) e.dataTransfer.setData('text/plain', ''); 
+        });
+        
+        block.addEventListener('dragend', () => {
+            block.classList.remove('dragging');
+            block.draggable = false; // 落地后强制上锁，保护富文本编辑
+            syncTextToNode(); 
+        });
+
+        editor.appendChild(block);
+        syncTextToNode();
+    }
+
+    // 将侧边栏里所有块的数据打包，并智能识别出场角色
+    function syncTextToNode() {
+        if (!activeEditingNodeId) return;
+        const node = document.getElementById(activeEditingNodeId);
+        const editor = document.getElementById('panel-editor');
+        const blocks = Array.from(editor.querySelectorAll('.story-block'));
+        
+        let blockRoles = new Set(); // 收集当前面板里出现的所有说话角色
+
+        const data = blocks.map(b => {
+            const type = b.dataset.type;
+            if (type === 'dialogue') {
+                const roleName = b.querySelector('.block-role-input').value.trim();
+                if (roleName) blockRoles.add(roleName); // 收集角色名字
+                
+                return { type: 'dialogue', role: roleName, text: b.querySelector('.block-editor').innerHTML };
+            } else {
+                return { type: 'desc', role: '', text: b.querySelector('.block-editor').innerHTML };
+            }
+        });
+        
+        // ================= 修复：带“记忆”的智能角色合并 =================
+        const roleInput = node.querySelector('.v-role');
+        
+        // 1. 获取当前输入框里的角色，和上次“自动填入”的角色
+        let currentRoles = roleInput.value.split(/[,，]/).map(s => s.trim()).filter(s => s);
+        let oldAutoRoles = (node.dataset.autoRoles || "").split(',').filter(s => s);
+        
+        // 2. 剥离出哪些是你“手动输入”的（用当前角色 减去 上次自动生成的角色）
+        let manualRoles = currentRoles.filter(r => !oldAutoRoles.includes(r));
+        
+        // 3. 把“手动输入的”和“现在侧边栏里的”重新合并并去重
+        let finalRolesSet = new Set([...manualRoles, ...blockRoles]);
+        
+        // 4. 更新输入框显示，并把这次的侧边栏角色存入记忆中
+        roleInput.value = Array.from(finalRolesSet).join(', ');
+        node.dataset.autoRoles = Array.from(blockRoles).join(',');
+        // =========================================================
+
+        node.querySelector('.v-story-data').value = JSON.stringify(data);
+        updateNodePreview(node); 
+        
+        // 顺手触发一下静默存档
+        if (typeof saveToLocal === 'function') {
+            saveToLocal(true);
+        }
+    }
+
+    // 打开侧边栏
+    function openSidePanel(nodeId) {
+        activeEditingNodeId = nodeId;
+        const node = document.getElementById(nodeId);
+        const dataInput = node.querySelector('.v-story-data');
+        const editor = document.getElementById('panel-editor');
+        
+        document.getElementById('panel-title').innerText = `正在编写: ${nodeId}`;
+        editor.innerHTML = ''; // 清空面板
+        
+        // 尝试解析卡片里存的 JSON 数据，并还原成输入块
+        try {
+            const blocksData = JSON.parse(dataInput.value || '[]');
+            blocksData.forEach(b => addBlock(b.type, b.role, b.text));
+        } catch(e) { console.error("解析剧情数据失败", e); }
+        
+        document.getElementById('side-panel').classList.add('open');
+    }
+
+    // 关闭侧边栏
+    function closeSidePanel() {
+        document.getElementById('side-panel').classList.remove('open');
+        activeEditingNodeId = null;
+    }
+
+    // 更新卡片表面的剧情预览
+    function updateNodePreview(node) {
+        const preview = node.querySelector('.v-text-preview');
+        const dataInput = node.querySelector('.v-story-data');
+        if (!preview || !dataInput) return;
+
+        try {
+            const data = JSON.parse(dataInput.value || '[]');
+            if (data.length === 0) {
+                preview.innerText = '点击此处编写剧情序列...';
+                preview.style.color = 'var(--text-muted)';
+            } else {
+                // 【核心修改】：调用清洗机把 <div> 等标签洗掉，拿到纯净文本
+                const firstText = cleanHtmlForExcel(data[0].text); 
+                const prefix = data[0].type === 'dialogue' ? `[${data[0].role || '?'}] ` : '[描写] ';
+                
+                // 为了让卡片预览好看，我们把取出的换行符全换成空格，保持单行显示
+                const previewText = (prefix + firstText).replace(/\n/g, ' '); 
+                
+                preview.innerText = previewText.length > 25 ? previewText.substring(0, 25) + '...' : (previewText || '空内容...');
+                preview.style.color = 'var(--text-main)';
+            }
+        } catch(e) { console.error("预览更新失败", e); }
+    }
+
+
+    // ================= 本地存档逻辑 =================
+    const SAVE_KEY = 'fourth_intl_story_save';
+
+    function saveToLocal(isAutoSave = false) {
+        const nodes = document.querySelectorAll('.node');
+        const data = {
+            viewport: { panX, panY, scale },
+            nodeCount: nodeCount, // 保存当前的编号进度
+            nodes: []
+        };
+
+        nodes.forEach(node => {
+            data.nodes.push({
+                id: node.id,
+                x: parseFloat(node.style.left),
+                y: parseFloat(node.style.top),
+                role: node.querySelector('.v-role').value,
+                storyData: node.querySelector('.v-story-data').value,
+                targets: node.querySelector('.v-target').value,
+                conditions: node.querySelector('.v-var').value
+            });
+        });
+
+        localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+        if (!isAutoSave) {
+            alert("✅ 草稿已保存到浏览器！\n下次打开此页面会自动读取。");
+        }
+    }
+
+    function loadFromLocal() {
+        const savedStr = localStorage.getItem(SAVE_KEY);
+        if (!savedStr) return false; // 没有存档
+
+        try {
+            const data = JSON.parse(savedStr);
+            // 还原视野
+            panX = data.viewport.panX;
+            panY = data.viewport.panY;
+            scale = data.viewport.scale;
+            nodeCount = data.nodeCount || 1;
+
+            // 清理旧画布（保留 svg 层即可）
+            document.getElementById('canvas').innerHTML = '<svg id="svg-layer"></svg>';
+            updateTransform();
+
+            // 逐个重建节点
+            data.nodes.forEach(nData => {
+                createNode(nData.x, nData.y, null, nData);
+            });
+
+            drawAllLines();
+            return true; // 成功读取
+        } catch (e) {
+            console.error("读取存档失败，数据可能已损坏", e);
+            return false;
+        }
+    }
+
+    function clearLocal() {
+        if (confirm("⚠️ 确定要清空浏览器的本地草稿吗？\n\n这不会影响你已经导出的 Excel 文件，但会导致当前未导出的进度丢失。清空后页面将自动刷新。")) {
+            localStorage.removeItem(SAVE_KEY);
+            location.reload();
+        }
+    }
+
+    // ================= 工程文件导入导出逻辑 =================
+    
+    // 导出工程：把当前浏览器里的草稿打包成 .json 文件下载
+    function exportProject() {
+        // 导出前先强制保存一次最新进度到本地
+        saveToLocal(true); 
+        const dataStr = localStorage.getItem(SAVE_KEY);
+        if (!dataStr) return alert("画布是空的，没有数据可导出！");
+        
+        // 生成虚拟文件并触发下载
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        // 自动带上今天的日期作为文件名
+        const date = new Date();
+        const dateStr = `${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2,'0')}${date.getDate().toString().padStart(2,'0')}`;
+        a.download = `第四国际_剧情工程_${dateStr}.json`;
+        
+        a.click();
+        URL.revokeObjectURL(url); // 释放内存
+    }
+
+    // 导入工程：读取电脑里的 .json 文件并覆盖当前画布
+    function importProject(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                // 校验文件格式是不是我们导出的那种
+                const data = JSON.parse(e.target.result);
+                if (!data.nodes || typeof data.nodeCount === 'undefined') {
+                    throw new Error("格式不匹配");
+                }
+                
+                if (confirm("⚠️ 导入工程将完全覆盖当前画布上的所有内容，确定要继续吗？")) {
+                    // 偷个懒也是最稳妥的做法：直接把读取到的数据塞进浏览器的存档里，然后刷新网页
+                    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+                    location.reload(); 
+                }
+            } catch (error) {
+                alert("导入失败：文件格式不正确，或者不是剧情编辑器的工程文件！");
+                console.error(error);
+            }
+            // 清空输入框，保证下次还能选同一个文件
+            event.target.value = ''; 
+        };
+        reader.readAsText(file);
+    }
+
+    // 设置每10秒后台静默自动保存
+    setInterval(() => {
+        if (document.querySelectorAll('.node').length > 0) {
+            saveToLocal(true);
+        }
+    }, 10000);
+
+   // ================= 侧边栏拖拽排序底层逻辑 (修复版) =================
+    
+    // 直接监听整个文档的拖动事件，避开加载顺序问题
+    document.addEventListener('dragover', e => {
+        const panelEditor = document.getElementById('panel-editor');
+        
+        // 只有当鼠标在 panel-editor 内部滑动时，才触发排序逻辑
+        if (panelEditor && panelEditor.contains(e.target)) {
+            e.preventDefault(); // 【核心】：告诉浏览器“这里允许放下”，消除禁止符号
+            
+            const draggable = document.querySelector('.dragging');
+            if (draggable) {
+                const afterElement = getDragAfterElement(panelEditor, e.clientY);
+                if (afterElement == null) {
+                    panelEditor.appendChild(draggable);
+                } else {
+                    panelEditor.insertBefore(draggable, afterElement);
+                }
+            }
+        }
+    });
+
+    // 数学计算：找出鼠标 Y 坐标最近的下方元素
+    function getDragAfterElement(container, y) {
+        // 抓取容器内所有【没有正在被拖拽】的卡片
+        const draggableElements = [...container.querySelectorAll('.story-block:not(.dragging)')];
+
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            // 判定阈值：越过卡片的中轴线即视为换位
+            const offset = y - box.top - box.height / 2;
+            
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+    // ================= 全局搜索与快速定位逻辑 =================
+    let searchResults = [];
+    let currentSearchIndex = -1;
+
+    function performSearch() {
+        const query = document.getElementById('search-input').value.toLowerCase().trim();
+        const resultText = document.getElementById('search-result-text');
+        
+        if (!query) {
+            resultText.innerText = "";
+            return;
+        }
+
+        // 判断是否是在连续搜索同一个关键词（用于循环跳转下一个结果）
+        if (searchResults.length > 0 && document.getElementById('search-input').dataset.lastQuery === query) {
+            currentSearchIndex = (currentSearchIndex + 1) % searchResults.length;
+            focusNode(searchResults[currentSearchIndex]);
+            resultText.innerText = `第 ${currentSearchIndex + 1} / ${searchResults.length} 个结果`;
+            return;
+        }
+
+        // 如果是新词，重置状态
+        searchResults = [];
+        currentSearchIndex = -1;
+        document.getElementById('search-input').dataset.lastQuery = query;
+
+        // 遍历所有节点翻找数据
+        const nodes = document.querySelectorAll('.node');
+        nodes.forEach(node => {
+            const id = node.id.toLowerCase();
+            const role = node.querySelector('.v-role').value.toLowerCase();
+            let textContent = "";
+            
+            // 解析剧情数据来搜台词
+            try {
+                const blocks = JSON.parse(node.querySelector('.v-story-data').value || '[]');
+                textContent = blocks.map(b => b.text.toLowerCase() + " " + (b.role || "").toLowerCase()).join(" ");
+            } catch(e) {}
+
+            // 如果 ID、出场角色或台词包含关键词，就记下来
+            if (id.includes(query) || role.includes(query) || textContent.includes(query)) {
+                searchResults.push(node.id);
+            }
+        });
+
+        // 处理搜索结果
+        if (searchResults.length > 0) {
+            currentSearchIndex = 0;
+            focusNode(searchResults[0]);
+            // 提示用户可以继续点击搜索下一个
+            resultText.innerText = `找到 ${searchResults.length} 个。第 1 个 (回车找下一个)`;
+        } else {
+            resultText.innerText = "未找到包含该内容的节点 😢";
+        }
+    }
+
+    // 将画布平移到目标节点并触发高亮
+    function focusNode(nodeId) {
+        const node = document.getElementById(nodeId);
+        if (!node) return;
+
+        // 先移除所有其他节点的高亮状态
+        document.querySelectorAll('.node').forEach(n => n.classList.remove('highlighted'));
+        
+        // 强行触发一帧重绘（重置动画）
+        void node.offsetWidth; 
+        
+        // 计算把这个节点放在屏幕正中央需要的画布平移坐标
+        const screenW = window.innerWidth;
+        const screenH = window.innerHeight;
+        const nodeX = parseFloat(node.style.left);
+        const nodeY = parseFloat(node.style.top);
+        
+        // 考虑当前的缩放比例进行精准定位，125和80是卡片宽高的一半
+        panX = screenW / 2 - (nodeX + 125) * scale; 
+        panY = screenH / 2 - (nodeY + 80) * scale; 
+        
+        // 执行移动
+        updateTransform(); 
+
+        // 加上我们写的闪烁类名
+        node.classList.add('highlighted');
+        
+        // 动画播完后清理掉类名，防止影响后续操作
+        setTimeout(() => {
+            node.classList.remove('highlighted');
+        }, 1800); 
+    }
+    // ================= 沉浸式试玩模式逻辑 =================
+    let playSequence = [];
+    let playCurrentIndex = 0;
+    let playCurrentNodeId = null;
+
+    // 启动试玩
+    function startPlayMode(nodeId) {
+        const node = document.getElementById(nodeId);
+        if (!node) return;
+        
+        playCurrentNodeId = nodeId;
+        try {
+            playSequence = JSON.parse(node.querySelector('.v-story-data').value || '[]');
+        } catch(e) { playSequence = []; }
+
+        // 如果这个节点没写内容，给个默认提示防报错
+        if (playSequence.length === 0) {
+            playSequence = [{ type: 'desc', text: '（该节点暂无剧情序列内容）' }];
+        }
+
+        playCurrentIndex = 0;
+        document.getElementById('play-overlay').classList.add('active');
+        document.getElementById('play-choices').style.display = 'none';
+        document.getElementById('play-dialogue-box').style.display = 'block';
+        
+        renderPlayBlock();
+    }
+
+    // 渲染当前的一句话
+    function renderPlayBlock() {
+        // 如果这句话播完了，就进入选项阶段
+        if (playCurrentIndex >= playSequence.length) {
+            showPlayChoices();
+            return;
+        }
+
+        const block = playSequence[playCurrentIndex];
+        const nameEl = document.getElementById('play-name');
+        const textEl = document.getElementById('play-text');
+        
+        // 直接使用保留了HTML的富文本数据，这样加粗、斜体都能在对话框里直接显示！
+        if (block.type === 'dialogue') {
+            nameEl.style.display = 'block';
+            nameEl.innerText = block.role || '未知角色';
+            textEl.innerHTML = block.text;
+            textEl.className = 'play-text';
+        } else {
+            nameEl.style.display = 'none';
+            textEl.innerHTML = block.text;
+            textEl.className = 'play-text play-desc';
+        }
+    }
+
+    // 点击鼠标，播放下一句
+    function advancePlayMode() {
+        if (document.getElementById('play-choices').style.display === 'flex') return; // 如果在等玩家选选项，就屏蔽点击
+        playCurrentIndex++;
+        renderPlayBlock();
+    }
+
+    // 剧情播完，生成分支选项
+    function showPlayChoices() {
+        document.getElementById('play-dialogue-box').style.display = 'none'; // 隐藏对话框
+        const node = document.getElementById(playCurrentNodeId);
+        const targetsStr = node.querySelector('.v-target').value;
+        const choicesContainer = document.getElementById('play-choices');
+        choicesContainer.innerHTML = ''; // 清空旧选项
+        
+        const targets = targetsStr.split(',').map(s => s.trim()).filter(s => s);
+        
+        if (targets.length === 0) {
+            // 如果没有跳转目标，说明剧情到底了
+            choicesContainer.innerHTML = `<div class="play-choice-btn" onclick="closePlayMode()">[ 剧情结束 / 返回编辑器 ]</div>`;
+        } else {
+            // 根据跳转目标生成按钮
+            targets.forEach(targetId => {
+                const tNode = document.getElementById(targetId);
+                let previewText = "";
+                
+                // 智能抓取目标节点的预览文字，当做选项的文本
+                if (tNode) {
+                    const pv = tNode.querySelector('.v-text-preview').innerText;
+                    previewText = pv.includes('点击此处') ? '（未编写内容）' : pv;
+                } else {
+                    previewText = '（⚠️ 目标节点不存在）';
+                }
+                
+                const btn = document.createElement('div');
+                btn.className = 'play-choice-btn';
+                btn.innerText = `➔ [${targetId}] ${previewText}`;
+                
+                if (tNode) {
+                    btn.onclick = () => startPlayMode(targetId); // 点击直接进入下一个节点的试玩
+                } else {
+                    btn.style.opacity = '0.5';
+                    btn.style.cursor = 'not-allowed';
+                }
+                choicesContainer.appendChild(btn);
+            });
+        }
+        choicesContainer.style.display = 'flex';
+    }
+
+    // 退出试玩
+    function closePlayMode() {
+        document.getElementById('play-overlay').classList.remove('active');
+    }
+
+    // ================= 全局试玩引擎入口 =================
+    function startGlobalPlay() {
+        const nodes = document.querySelectorAll('.node');
+        if (nodes.length === 0) {
+            alert("画布是空的，还没写剧情呢！");
+            return;
+        }
+
+        // 1. 收集画布上所有被“指向”的目标 ID
+        let allTargets = new Set();
+        document.querySelectorAll('.v-target').forEach(input => {
+            let targets = input.value.split(',').map(s => s.trim()).filter(s => s);
+            targets.forEach(t => allTargets.add(t));
+        });
+
+        // 2. 寻找故事的“源头”（根节点）：即没有被任何节点指向的节点
+        let rootNodeId = null;
+        
+        // 先把节点按 ID 顺序排个序，保证查找的稳定性
+        let nodeArray = Array.from(nodes).sort((a, b) => a.id.localeCompare(b.id));
+
+        for (let node of nodeArray) {
+            // 如果这个节点的 ID 不在别人的目标列表里，说明它是开头
+            if (!allTargets.has(node.id)) {
+                rootNodeId = node.id;
+                break;
+            }
+        }
+
+        // 3. 兜底机制：如果你画了一个完美的闭环（所有节点互相指），就强行从 ID 最小的那个开始
+        if (!rootNodeId) {
+            rootNodeId = nodeArray[0].id;
+        }
+
+        // 4. 调用现有的试玩函数，传入找到的根节点
+        startPlayMode(rootNodeId);
+    }
+    // ================= 新手引导系统 (终极完善版) =================
+    let currentGuideStep = 0;
+    let guideSteps = [];
+
+    function startTutorial() {
+        // 1. 贴心的防手滑提示
+        const nodes = document.querySelectorAll('.node');
+        if (nodes.length > 0) {
+            if (!confirm("💡 开启新手教程将清空当前画布上的所有内容！\n\n如果你有未导出的心血，请先点取消去【保存/导出工程】。\n确定要清空并开始教程吗？")) {
+                return; // 如果点击取消，就直接中止教程
+            }
+        }
+
+        // 2. 强行清空桌面并复位镜头
+        nodes.forEach(n => n.remove());
+        drawAllLines();
+        document.getElementById('side-panel').classList.remove('open');
+        panX = 0; panY = 0; scale = 1; updateTransform();
+
+        document.body.classList.add('tutorial-active');
+        currentGuideStep = 0;
+        
+        // 3. 全新拆解的剧本式引导步骤（加入了局部试玩）
+        guideSteps = [
+            { selector: '#btn-new-node', title: '第一步：创造世界', text: '一切的故事都从这里开始。\n点击【+ 新建剧情节点】创建你的第一张卡片。', action: 'click' },
+            { selector: '.node-title-input', title: '第二步：命名节点', text: '每个节点都有自己的名字（ID）。\n试着点击卡片左上角的默认名字，把它改成“开头”或者“01”。\n（改好后请点击下方【继续】）', action: 'free', waitFor: true },
+            { selector: '.v-text-preview', title: '第三步：开启剧本模式', text: '现在，点击卡片中间的【剧情序列】区域，打开右侧的专业剧本编辑器。', action: 'click', waitFor: true },
+            { selector: '#btn-add-dialogue', title: '第四步：添加台词块', text: '点击右侧面板的【+ 台词】按钮。', action: 'click', waitFor: true },
+            { selector: '.block-role-input', title: '第五步：赋予名字', text: '在框里随便打一个角色名字。\n👀 注意看左边的画布！卡片会自动将名字同步为出场角色。\n（写完后请点击下方【继续】）', action: 'free', waitFor: true },
+            { selector: '.block-editor', title: '第六步：赋予灵魂', text: '在这里敲下角色的第一句台词。支持回车换行、加粗斜体哦。\n（写完后请点击下方【继续】）', action: 'free', waitFor: true },
+            { selector: '#btn-add-desc', title: '第七步：添加场景动作', text: '只有对话太单调了，点击【+ 描写】加点动作吧。', action: 'click', waitFor: true },
+            { selector: '.story-block:last-child .block-editor', title: '第八步：环境烘托', text: '给刚才那句话加一点场景描写吧。\n（写完后请点击下方【继续】）', action: 'free', waitFor: true },
+            { selector: '#btn-close-panel', title: '第九步：保存并退出', text: '写好啦！点击右上角的【关闭】按钮，改动会自动浓缩回卡片上。', action: 'click', waitFor: true },
+            
+            // ======= 新增：局部试玩 =======
+            { selector: '.btn-play', title: '第十步：局部试玩', text: '想单独看看这第一张卡片的演出效果？\n点击卡片右上角的【▶️】按钮，进入局部试玩。\n（💡 体验完毕并点击右上角退出后，请点击下方【继续】）', action: 'free', waitFor: true },
+            // ==============================
+
+            { selector: '#btn-new-node', title: '第十一步：创造分支', text: '一个节点怎么够玩？\n点击【+ 新建剧情节点】再创建第二张卡片。', action: 'click', waitFor: true },
+            { selector: '.node .socket.out', title: '第十二步：命运的连线', text: '把鼠标放到第一张卡片右下角的【绿色空心小圆点】上。\n按住它，拖拽一条连线到第二张卡片左上角的小圆点上！\n（连线成功后请点击下方【继续】）', action: 'free', waitFor: true },
+            { selector: '#btn-global-play', title: '第十三步：全局漫游', text: '你有了一条完整的故事链！点击【🎬 全局试玩】跑一遍完整的连线剧情。\n（💡 体验完毕并退出试玩后，再点击下方【继续】）', action: 'free', waitFor: true },
+            { selector: '#btn-export-excel', title: '第十四步：输出配置表', text: '试玩没问题后，点击【↓ 导出 .xlsx】。\n这份表格可以直接发给程序，或者导入游戏引擎中无缝读取！', action: 'click', waitFor: true },
+            { selector: '#btn-export-project', title: '最终步：备份工程文件', text: '最后，千万别忘了点击【📦 导出工程备份】。\n把 .json 工程文件存进电脑硬盘，哪怕清空缓存也不怕丢数据。\n\n恭喜你，通关了整个编辑器工作流！🎉', action: 'click', waitFor: true }
+        ];
+        
+        runGuideStep();
+    }
+
+    function runGuideStep() {
+        // 清除上一步的状态
+        document.querySelectorAll('.guide-highlight').forEach(el => {
+            el.classList.remove('guide-highlight');
+            if(el.guideHandler) el.removeEventListener('click', el.guideHandler);
+        });
+
+        if (currentGuideStep >= guideSteps.length) {
+            document.getElementById('guide-tooltip').style.display = 'none';
+            showCelebration(); // 呼出庆祝弹窗
+            return;
+        }
+
+        const step = guideSteps[currentGuideStep];
+        
+        const tryBind = () => {
+            const target = document.querySelector(step.selector);
+            if (!target) {
+                if (step.waitFor) setTimeout(tryBind, 200);
+                return;
+            }
+
+            target.classList.add('guide-highlight');
+            
+            const rect = target.getBoundingClientRect();
+            const tooltip = document.getElementById('guide-tooltip');
+            const nextBtn = document.getElementById('guide-btn-next');
+            
+            tooltip.style.display = 'block';
+            tooltip.querySelector('.guide-title').innerText = step.title;
+            tooltip.querySelector('.guide-text').innerText = step.text;
+            
+            // 智能定位
+            let top = rect.bottom + 15;
+            let left = rect.left;
+            
+            // 【核心修复】：如果是连线引导，把气泡强行固定在屏幕正上方居中，绝不挡路
+            if (step.title.includes('连线')) {
+                top = 50; 
+                left = window.innerWidth / 2 - 140; // 280是气泡宽度的一半
+            } else {
+                // 普通情况下的自动避让
+                if (top + 150 > window.innerHeight) top = rect.top - 180;
+                if (left + 280 > window.innerWidth) left = window.innerWidth - 300;
+            }
+            
+            tooltip.style.top = top + 'px'; 
+            tooltip.style.left = left + 'px';
+
+            // 判断操作类型：是普通的“点击下一步”，还是“自由操作后手动点继续”
+            if (step.action === 'free') {
+                nextBtn.style.display = 'block';
+                // 自由模式下，点击面板上的“继续 ➔”按钮进入下一步
+                nextBtn.onclick = () => {
+                    nextBtn.onclick = null;
+                    currentGuideStep++;
+                    setTimeout(runGuideStep, 200);
+                };
+            } else {
+                nextBtn.style.display = 'none';
+                // 点击模式下，直接点击高亮目标区域进入下一步
+                target.guideHandler = () => {
+                    target.removeEventListener('click', target.guideHandler);
+                    currentGuideStep++;
+                    setTimeout(runGuideStep, 200);
+                };
+                target.addEventListener('click', target.guideHandler);
+            }
+        };
+
+        tryBind();
+    }
+    // ================= 庆祝弹窗与彩纸生成 =================
+    function showCelebration() {
+        const modal = document.getElementById('tutorial-complete-modal');
+        modal.classList.add('active');
+        
+        // 创建一个装彩纸的隐形容器
+        const container = document.createElement('div');
+        container.id = 'confetti-container';
+        container.style.position = 'fixed';
+        container.style.inset = '0';
+        container.style.pointerEvents = 'none';
+        container.style.overflow = 'hidden';
+        container.style.zIndex = '3999';
+        document.body.appendChild(container);
+
+        // 随机生成 80 片彩色纸屑
+        const colors = ['#4eb0a5', '#ff6b6b', '#feca57', '#5f27cd', '#48dbfb'];
+        for (let i = 0; i < 80; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            // 随机分配位置、颜色、下落速度和延迟时间
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            confetti.style.animationDelay = (Math.random() * 0.5) + 's';
+            container.appendChild(confetti);
+        }
+    }
+
+    // 真正结束教程，解除所有锁定
+    function endTutorial() {
+        document.getElementById('tutorial-complete-modal').classList.remove('active');
+        document.body.classList.remove('tutorial-active');
+        
+        // 扫地出门，把掉完的彩纸清掉
+        const container = document.getElementById('confetti-container');
+        if (container) container.remove();
+        
+        // 标记教程已完成，下次打开网页就不会再弹出了
+        localStorage.setItem('fourth_intl_tutorial', 'true');
+    }
+    // ================= 移动端触屏支持引擎 (修复版) =================
+    function initTouchSupport() {
+        // 将触摸事件“翻译”为鼠标事件
+        function touchToMouse(e) {
+            const touch = e.changedTouches[0];
+            let type = "";
+            if (e.type === "touchstart") type = "mousedown";
+            else if (e.type === "touchmove") type = "mousemove";
+            else if (e.type === "touchend") type = "mouseup";
+            
+            if (!type) return;
+
+            // 【核心修复】：动态寻找手指当前正在覆盖的真实元素
+            let realTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+            // 如果手指滑出屏幕等极端情况找不到元素，就退回使用初始元素
+            if (!realTarget) realTarget = touch.target;
+
+            // 派发一个模拟的鼠标事件
+            const simulatedEvent = new MouseEvent(type, {
+                bubbles: true, cancelable: true, view: window,
+                clientX: touch.clientX, clientY: touch.clientY,
+                screenX: touch.screenX, screenY: touch.screenY,
+                button: 0 // 模拟左键
+            });
+            
+            // 把事件精准发射给手指当前的真实位置！
+            realTarget.dispatchEvent(simulatedEvent);
+            
+            // 核心逻辑：如果在拖拽节点或连线时，禁止页面默认的上下滚动
+            if (e.type === "touchmove" && (window.isDragging || window.isConnecting || window.isPanning)) {
+                e.preventDefault(); 
+            }
+        }
+
+        // 直接把事件绑定到整个 document 上，绝对不会找不到目标！
+        document.addEventListener("touchstart", touchToMouse, { passive: false });
+        document.addEventListener("touchmove", touchToMouse, { passive: false });
+        document.addEventListener("touchend", touchToMouse, { passive: false });
+
+        // 单指滑动背景平移画布逻辑
+        document.addEventListener('touchstart', (e) => {
+            // 如果摸到的是背景 SVG 或 Body 本身，就开启平移
+            if (e.target.id === 'svg-layer' || e.target.tagName.toLowerCase() === 'body' || e.target.tagName.toLowerCase() === 'html') {
+                window.isPanning = true;
+                const touch = e.changedTouches[0];
+                window.startX = touch.clientX - window.panX;
+                window.startY = touch.clientY - window.panY;
+            }
+        }, { passive: false });
+    }
+
+    document.addEventListener('DOMContentLoaded', initTouchSupport);
+</script>
+
+<div id="side-panel" class="side-panel">
+        <div class="panel-header">
+            <span id="panel-title">编辑剧情序列</span>
+            <!-- 找到这行并替换（加上 id="btn-close-panel"） -->
+            <button id="btn-close-panel" class="btn" onclick="closeSidePanel()">关闭</button>
+        </div>
+        <div class="panel-toolbar">
+            <button id="btn-add-dialogue" class="btn" onclick="addBlock('dialogue')" style="background: #2b5c5c; border-color:#3e827a;">+ 台词</button>
+            <!-- 找到这行并加上 ID -->
+        <button id="btn-add-desc" class="btn" onclick="addBlock('desc')">+ 描写</button>
+            <span class="divider"></span>
+            <!-- 加回富文本工具 -->
+            <button type="button" class="btn" style="padding: 4px 8px; margin-right: 4px;" onclick="formatBlockText('bold')" title="加粗"><b>B</b></button>
+            <button type="button" class="btn" style="padding: 4px 8px; margin-right: 4px;" onclick="formatBlockText('italic')" title="斜体"><i>I</i></button>
+            <button type="button" class="btn" style="padding: 4px 8px; margin-right: 4px;" onclick="formatBlockText('underline')" title="下划线"><u>U</u></button>
+            <button type="button" class="btn" style="padding: 4px 8px; margin-right: 4px;" onclick="formatBlockText('justifyLeft')" title="左对齐">⫷</button>
+            <button type="button" class="btn" style="padding: 4px 8px; margin-right: 0;" onclick="formatBlockText('justifyCenter')" title="居中">≡</button>
+        </div>
+        <div id="panel-editor" class="panel-editor" style="background: #151515;"></div>
+    </div>
+    <!-- 试玩模式界面 -->
+    <div id="play-overlay">
+        <button class="play-close" onclick="closePlayMode()">×</button>
+        <!-- 选项容器 -->
+        <div id="play-choices" class="play-choices"></div>
+        <!-- 对话框容器 -->
+        <div id="play-dialogue-box" class="play-dialogue-box" onclick="advancePlayMode()">
+            <div id="play-name" class="play-name"></div>
+            <div id="play-text" class="play-text"></div>
+            <div class="play-next-arrow"></div> 
+        </div>
+    </div>
+<!-- 新手引导提示气泡 -->
+    <div id="guide-tooltip">
+        <div class="guide-title"></div>
+        <div class="guide-text" style="white-space: pre-line;"></div>
+        <button id="guide-btn-next" class="btn" style="margin-top: 15px; display: none; background: var(--accent); color: #000; border: none; width: 100%; font-weight: bold; font-size: 14px;">继续 ➔</button>
+    </div>
+<!-- 教程通关庆祝弹窗 -->
+    <div id="tutorial-complete-modal">
+        <div class="tutorial-modal-content">
+            <h2>🎉 恭喜通关！</h2>
+            <p>你已经掌握了剧情编辑器的所有核心操作！<br>现在，尽情挥洒你的灵感，开始创造属于你的世界吧。</p>
+            <button class="btn" onclick="endTutorial()">🚀 开始创作</button>
+        </div>
+    </div>
+</body>
+</html>
