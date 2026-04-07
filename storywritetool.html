@@ -1,0 +1,3456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>剧情节点编辑器</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #151515;
+            --grid-color: rgba(255, 255, 255, 0.05);
+            --node-bg: #242424;
+            --node-border: #383838;
+            --header-color: #2b5c5c;
+            --text-main: #d4d4d4;
+            --text-muted: #808080;
+            --input-bg: #1e1e1e;
+            --input-border: #333;
+            --accent: #4eb0a5;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh;
+            background-color: var(--bg-dark);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-main);
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .toolbar {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 50px;
+            background: #1e1e1e;
+            border-bottom: 1px solid #333;
+            display: flex; align-items: center;
+            padding: 0 20px; z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            box-sizing: border-box; /* 👉 加上这一行，把内边距算在 100% 宽度里面 */
+        }
+
+        .btn {
+            background: #333; color: #ccc;
+            border: 1px solid #444; padding: 6px 14px;
+            margin-right: 12px; border-radius: 4px;
+            cursor: pointer; font-size: 13px;
+        }
+        .btn:hover { background: #444; color: #fff; }
+        .btn-export { background: #235836; border-color: #2ea043; color: white;}
+        .btn-export:hover { background: #2ea043; }
+
+        #viewport {
+            width: 100vw; height: 100vh;
+            position: relative; cursor: grab;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+        }
+        #viewport:active { cursor: grabbing; }
+
+        #canvas {
+            position: absolute; transform-origin: 0 0;
+            width: 1px; height: 1px;
+        }
+
+        #svg-layer {
+            position: absolute; top: 0; left: 0;
+            overflow: visible; pointer-events: none; z-index: 1;
+        }
+
+        .node {
+            position: absolute; width: 300px;
+            background: var(--node-bg); border: 1px solid var(--node-border);
+            border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+            z-index: 10; display: flex; flex-direction: column;
+        }
+
+        .node-header {
+            background: linear-gradient(180deg, var(--header-color) 0%, rgba(43,92,92,0) 100%);
+            padding: 10px 12px; cursor: move;
+            border-top-left-radius: 7px; border-top-right-radius: 7px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #333;
+        }
+
+       .node-title-input:focus {outline: 1px solid var(--accent);background: rgba(0,0,0,0.3) !important;}
+        .delete-btn { background: none; border: none; color: #888; cursor: pointer; font-size: 16px; padding: 0;}
+        .delete-btn:hover { color: #ff6b6b; }
+
+        .node-body { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+
+        .input-group { display: flex; flex-direction: column; gap: 4px; }
+        .input-group label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
+
+        input {
+            width: 100%; box-sizing: border-box; background: var(--input-bg);
+            border: 1px solid var(--input-border); color: var(--text-main);
+            padding: 6px 8px; border-radius: 4px; font-family: inherit; font-size: 12px;
+        }
+        input:focus { outline: none; border-color: var(--accent); }
+
+        /* 强制下拉框继承全局字体，统一字号和样式 */
+        select {
+            font-family: inherit;
+            font-size: 12px;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        /* 顺便修复一下各种下拉菜单里的选项文字太挤的问题 */
+        select option {
+            background: var(--node-bg);
+            color: var(--text-main);
+            padding: 4px;
+        }
+
+        /* 富文本编辑器与工具栏样式 */
+        .mini-toolbar {
+            display: flex; gap: 2px; background: #2a2a2a;
+            padding: 4px; border-radius: 4px 4px 0 0;
+            border: 1px solid var(--input-border); border-bottom: none;
+        }
+        .mini-toolbar button {
+            background: transparent; border: none; color: #ccc;
+            cursor: pointer; padding: 2px 6px; border-radius: 2px; font-size: 12px;
+        }
+        .mini-toolbar button:hover { background: #555; color: #fff; }
+        .divider { border-left: 1px solid #444; margin: 0 4px; }
+        
+        .rich-editor {
+            width: 100%; box-sizing: border-box; background: var(--input-bg);
+            border: 1px solid var(--input-border); color: var(--text-main);
+            padding: 8px; border-radius: 0 0 4px 4px;
+            font-family: inherit; font-size: 13px;
+            min-height: 60px; max-height: 200px; overflow-y: auto;
+            outline: none; line-height: 1.4;
+        }
+        .rich-editor:focus { border-color: var(--accent); }
+        .rich-editor[placeholder]:empty:before {
+            content: attr(placeholder); color: #666; pointer-events: none;
+        }
+
+        .socket {
+            width: 12px; height: 12px; 
+            background: var(--bg-dark); 
+            border: 2px solid var(--accent); border-radius: 50%;
+            position: absolute; top: -20px;
+            cursor: crosshair; /* 移到这里，让左右两边都有十字准星光标 */
+        }
+        .socket.in { left: -18px; }
+        .socket.out { right: -18px; }
+        
+        /* 新增：连线后的实心状态 */
+        .socket.connected {
+            background: var(--accent);
+        }
+
+        .btn-branch {
+            background: transparent; border: 1px dashed #555; color: #aaa;
+            padding: 6px; cursor: pointer; border-radius: 4px; font-size: 12px;
+            margin-top: 4px; transition: 0.2s;
+        }
+        .btn-branch:hover { background: #333; border-color: #777; color: #fff;}
+
+        .node input, .node .rich-editor { user-select: text; cursor: text; }
+
+        /* ================= 侧边栏样式 ================= */
+        /* 修改现有侧边栏的宽度 */
+        .side-panel {
+            position: fixed; top: 50px; right: -900px; /* 改成了 900 */
+            width: 600px; /* 原来是 400px，加宽了 */
+            height: calc(100vh - 50px);
+            background: #1a1a1a; border-left: 1px solid #333;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.6);
+            transition: right 0.3s ease; z-index: 2000;
+            display: flex; flex-direction: column;
+        }
+        .side-panel.open { right: 0; }
+
+        /* ================= 新增剧情块样式 ================= */
+        /* ================= 新增与修改：拖拽相关样式 ================= */
+        .story-block {
+            background: #2a2a2a; border: 1px solid #444; border-radius: 6px; 
+            padding: 12px 12px 12px 35px; /* 左侧增加 padding 给拖拽手柄留出位置 */
+            margin-bottom: 12px; position: relative;
+            transition: border-color 0.2s;
+        }
+        /* 拖拽进行中时的半透明虚线效果 */
+        .story-block.dragging {
+            opacity: 0.4; border: 1px dashed var(--accent); background: #222;
+        }
+
+        /* 块级变量条件输入框 */
+/* 剧情块专属的条件栏 UI */
+.condition-row {
+    display: flex; gap: 4px; align-items: center; margin-bottom: 8px;
+    background: rgba(43, 92, 92, 0.1); padding: 6px; border-radius: 4px; 
+    border: 1px dashed rgba(78, 176, 165, 0.4);
+}
+.condition-row select, .condition-row input {
+    background: var(--input-bg); color: var(--text-main); 
+    border: 1px solid var(--input-border);
+    padding: 4px; border-radius: 3px; font-size: 11px; outline: none;
+}
+.condition-row select { color: var(--accent); cursor: pointer; }
+.condition-row input { flex: 1; min-width: 30px; }
+.condition-row input:focus, .condition-row select:focus { border-color: var(--accent); }
+        .block-drag-handle:hover { color: var(--accent); background: rgba(255,255,255,0.1); }
+        .block-drag-handle:active { cursor: grabbing; }
+        .block-delete {
+            position: absolute; right: 8px; top: 8px; color: #888; 
+            background: none; border: none; font-size: 16px; cursor: pointer; padding: 0;
+        }
+        .block-delete:hover { color: #ff6b6b; }
+        .block-role-input {
+            width: 40%; margin-bottom: 8px; background: #1e1e1e; border: 1px solid #444; 
+            color: var(--text-main); padding: 6px; border-radius: 4px; font-size: 13px;
+        }
+        /* 替换掉原来的 .block-textarea */
+        .block-editor {
+            width: 100%; box-sizing: border-box; background: #1e1e1e; border: 1px solid #444; 
+            color: var(--text-main); padding: 8px; border-radius: 4px; font-size: 13px; 
+            min-height: 70px; max-height: 300px; overflow-y: auto;
+            font-family: inherit; line-height: 1.5; outline: none;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            min-height: 40px;
+            outline: none;
+        }
+        .block-editor:focus, .block-role-input:focus { border-color: var(--accent); }
+        .block-editor[placeholder]:empty:before {
+            content: attr(placeholder); color: #666; pointer-events: none;
+        }
+        .block-label { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; display: block; }
+        .panel-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 20px; background: #242424; border-bottom: 1px solid #333;
+        }
+        #panel-title { font-weight: bold; font-size: 15px; color: var(--accent); }
+        .panel-toolbar {
+            display: flex; gap: 6px; padding: 10px 20px; background: #2a2a2a; border-bottom: 1px solid #333;
+        }
+        .panel-toolbar button {
+            background: #333; border: 1px solid #444; color: #ccc;
+            cursor: pointer; padding: 6px 10px; border-radius: 4px; font-size: 14px;
+        }
+        .panel-toolbar button:hover { background: #555; color: #fff; }
+        .panel-editor {
+            flex: 1; padding: 20px; outline: none; overflow-y: auto;
+            font-size: 14px; line-height: 1.6; color: var(--text-main);
+        }
+        .panel-editor:empty:before {
+            content: '在此处开始编写剧情文本...'; color: #666; pointer-events: none;
+        }
+        
+        /* 稍微调整一下原卡片里用来触发的区域样式 */
+        .v-text-trigger {
+            width: 100%; box-sizing: border-box; background: var(--input-bg);
+            border: 1px solid var(--input-border); color: var(--text-muted);
+            padding: 8px; border-radius: 4px;
+            font-size: 13px; min-height: 40px; max-height: 100px; 
+            overflow: hidden; text-overflow: ellipsis; cursor: pointer;
+        }
+        .v-text-trigger:hover { border-color: var(--accent); color: var(--text-main); }
+        /* ================= 搜索高亮特效 ================= */
+        @keyframes highlightBlink {
+            0% { box-shadow: 0 0 0px 0px var(--accent); border-color: var(--accent); transform: scale(1); }
+            50% { box-shadow: 0 0 30px 10px var(--accent); border-color: #fff; transform: scale(1.05); }
+            100% { box-shadow: 0 0 0px 0px var(--accent); border-color: var(--accent); transform: scale(1); }
+        }
+        .node.highlighted {
+            animation: highlightBlink 0.6s ease-in-out 3; /* 动画持续0.6秒，闪烁3次 */
+            border-color: var(--accent) !important;
+            z-index: 1000; /* 保证高亮的卡片在最上层 */
+        }
+
+        /* ================= 试玩模式样式 (精美AVG版) ================= */
+        #play-overlay {
+            position: fixed; inset: 0; 
+            /* 更有氛围感的径向渐变背景 */
+            background: radial-gradient(circle at center, rgba(15, 20, 25, 0.8) 0%, rgba(0, 0, 0, 0.95) 100%);
+            backdrop-filter: blur(8px);
+            z-index: 3000; display: none; flex-direction: column; 
+            justify-content: flex-end; align-items: center; padding-bottom: 60px;
+        }
+        #play-overlay.active { display: flex; }
+        
+        /* 对话框本体进入动画 */
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .play-dialogue-box {
+            width: 85%; max-width: 900px; 
+            /* 微磨砂玻璃质感 */
+            background: linear-gradient(135deg, rgba(30, 35, 40, 0.9) 0%, rgba(15, 18, 20, 0.95) 100%);
+            border: 1px solid rgba(78, 176, 165, 0.3);
+            border-top: 2px solid var(--accent); /* 顶部高亮线 */
+            border-radius: 4px; padding: 35px 40px;
+            position: relative; cursor: pointer; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 1px 10px rgba(255,255,255,0.05);
+            animation: slideUpFade 0.4s ease-out;
+        }
+
+        /* ================= 经典AVG风格：呼吸跳动的向下指示箭头 ================= */
+        @keyframes bounceDown {
+            0%, 100% { transform: translateY(0) rotate(45deg); opacity: 0.4; }
+            50% { transform: translateY(6px) rotate(45deg); opacity: 1; }
+        }
+        
+        /* 独立悬浮的角色名牌 */
+        .play-name { 
+            position: absolute; top: -22px; left: 30px;
+            background: linear-gradient(90deg, #2b5c5c 0%, #1a3838 100%);
+            border: 1px solid var(--accent); border-radius: 4px;
+            padding: 6px 20px; font-size: 18px; font-weight: bold; color: #fff; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); letter-spacing: 1px;
+            display: none; 
+        }
+
+        .play-text { 
+            font-size: 20px; line-height: 1.7; color: #e0e0e0; 
+            min-height: 90px; user-select: none; 
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            white-space: pre-wrap;      /* 核心：保留你在编辑器里打的换行，同时自动折行 */
+            word-wrap: break-word;      /* 核心：允许长单词或连续字符在边界内换行 */
+            overflow-wrap: break-word;  /* 现代浏览器通用的折行属性 */
+            max-width: 100%;            /* 确保不超出父容器宽度 */
+            line-height: 1.6;           /* 顺便给台词加点行间距，读起来更舒服 */
+        }
+        .play-desc { color: #aaa; font-style: italic; }
+        
+        /* 选项面板 */
+        .play-choices {
+            display: flex; flex-direction: column; gap: 15px; width: 80%; max-width: 700px;
+            margin-bottom: 40px; display: none; animation: slideUpFade 0.3s ease-out;
+        }
+        
+        /* 全息科幻风选项按钮 */
+        .play-choice-btn {
+            background: linear-gradient(90deg, rgba(43,92,92,0.1) 0%, rgba(30,30,30,0.8) 20%, rgba(30,30,30,0.8) 80%, rgba(43,92,92,0.1) 100%);
+            border: 1px solid rgba(78, 176, 165, 0.4);
+            border-left: 3px solid var(--accent); border-right: 3px solid var(--accent);
+            color: #ccc; padding: 14px 20px; cursor: pointer; border-radius: 4px; 
+            text-align: center; font-size: 17px; letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s;
+        }
+        .play-choice-btn:hover { 
+            background: linear-gradient(90deg, rgba(78,176,165,0.2) 0%, rgba(43,92,92,0.9) 50%, rgba(78,176,165,0.2) 100%);
+            color: #fff; border-color: var(--accent); transform: scale(1.02); 
+            box-shadow: 0 0 15px rgba(78, 176, 165, 0.4);
+        }
+        
+        .play-close {
+            position: absolute; top: 30px; right: 40px; background: none; border: none;
+            color: #888; font-size: 45px; cursor: pointer; z-index: 3001; transition: 0.2s;
+        }
+        .play-close:hover { color: #ff6b6b; transform: scale(1.1) rotate(90deg); }
+
+        .btn-play { background: none; border: none; cursor: pointer; font-size: 15px; padding: 0 6px; filter: grayscale(100%); transition: 0.2s;}
+        .btn-play:hover { filter: grayscale(0%); transform: scale(1.2); }
+
+        /* 卡片上的小播放按钮 */
+        .btn-play { background: none; border: none; cursor: pointer; font-size: 15px; padding: 0 6px; filter: grayscale(100%); transition: 0.2s;}
+        .btn-play:hover { filter: grayscale(0%); transform: scale(1.2); }
+
+        /* ================= 新手引导样式 ================= */
+        /* 教程开启时，屏蔽全屏普通点击 */
+        body.tutorial-active { pointer-events: none; } 
+        
+        /* 【核心修复】：特赦连接点 和 试玩界面的所有元素，保证绝对可点击！ */
+        body.tutorial-active .socket,
+        body.tutorial-active #play-overlay,
+        body.tutorial-active #play-overlay * { pointer-events: auto !important; }
+        /* 👇 保证全局变量弹窗在教程里绝对可见、可点击，且不受黑影影响 */
+        body.tutorial-active #var-modal { 
+            pointer-events: auto !important; 
+            z-index: 100005 !important; 
+        }
+        
+        .guide-highlight {
+            pointer-events: auto !important; /* 唯独放行高亮区域的点击 */
+            z-index: 100000 !important;
+            /* 核心黑科技：用 9999px 的超大半透明阴影盖住全屏，中间自然镂空！ */
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.75), 0 0 15px 3px var(--accent) !important;
+            border-radius: 4px;
+            background: var(--node-bg); /* 防止透明元素被看穿 */
+            transition: box-shadow 0.3s ease;
+        }
+        
+        #guide-tooltip {
+            position: fixed; z-index: 100001; background: #242424; 
+            border: 2px solid var(--accent); color: white; padding: 20px; 
+            border-radius: 8px; width: 280px; pointer-events: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8); display: none;
+            transition: top 0.3s, left 0.3s;
+        }
+        .guide-title { color: var(--accent); font-weight: bold; margin-bottom: 10px; font-size: 16px; }
+        .guide-text { font-size: 14px; line-height: 1.5; color: #d4d4d4; }
+        /* ================= 教程完成庆祝动画 ================= */
+        #tutorial-complete-modal {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85);
+            z-index: 4000; display: none; justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        #tutorial-complete-modal.active { display: flex; pointer-events: auto; }
+        
+        .tutorial-modal-content {
+            background: linear-gradient(135deg, #1e2328 0%, #15181a 100%);
+            border: 2px solid var(--accent); border-radius: 12px;
+            padding: 40px 50px; text-align: center; color: white;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.8), 0 0 30px rgba(78, 176, 165, 0.3);
+            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative; z-index: 4001;
+        }
+        
+        .tutorial-modal-content h2 { color: var(--accent); font-size: 32px; margin-bottom: 15px; }
+        .tutorial-modal-content p { font-size: 16px; line-height: 1.8; color: #ccc; margin-bottom: 30px; }
+        .tutorial-modal-content .btn { 
+            font-size: 18px; padding: 12px 35px; background: var(--accent); 
+            color: #000; font-weight: bold; border: none; border-radius: 6px; 
+            cursor: pointer; transition: 0.2s;
+        }
+        .tutorial-modal-content .btn:hover { transform: scale(1.05); box-shadow: 0 0 20px var(--accent); }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 飘落的彩纸特效 */
+        .confetti {
+            position: absolute; width: 8px; height: 16px; z-index: 4000;
+            animation: fall linear forwards; pointer-events: none;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        /* ================= 全局交互手感 (Game Feel) 提升 ================= */
+
+        /* 1. 试玩模式对话框：悬浮时微微发亮，点击时真实下陷 */
+        .play-dialogue-box {
+            transition: transform 0.1s, box-shadow 0.2s, filter 0.2s;
+        }
+        .play-dialogue-box:hover {
+            filter: brightness(1.1); /* 鼠标移上去稍微变亮 */
+            box-shadow: 0 25px 60px rgba(0,0,0,0.9), inset 0 1px 20px rgba(78, 176, 165, 0.15);
+        }
+        .play-dialogue-box:active {
+            transform: scale(0.98); /* 点击的瞬间缩小一点点，模拟物理按压 */
+            filter: brightness(0.95);
+            transition: all 0.05s; /* 按下的动作要干脆利落 */
+        }
+
+        /* ================= 试玩模式跳动箭头 (真实元素版) ================= */
+        .play-next-arrow {
+            position: absolute; 
+            right: 35px; bottom: 30px;
+            width: 12px; height: 12px;
+            border-right: 3px solid var(--accent);
+            border-bottom: 3px solid var(--accent);
+            border-radius: 2px;
+            transform: rotate(45deg);
+            animation: bounceDown 1.2s infinite ease-in-out;
+            filter: drop-shadow(0 0 5px rgba(78, 176, 165, 0.6));
+            transition: all 0.2s;
+        }
+
+        /* 【核心改动】：现在只有鼠标精准悬浮在“箭头本身”上时，它才会发光变快！ */
+        .play-next-arrow:hover {
+            border-color: #fff;
+            filter: drop-shadow(0 0 8px var(--accent));
+            animation: bounceDown 0.6s infinite ease-in-out; 
+        }
+
+        /* 整个对话框被点击时，箭头依然会往下沉，给出全局的按压反馈 */
+        .play-dialogue-box:active .play-next-arrow {
+            animation: none; 
+            transform: translateY(12px) scale(0.8) rotate(45deg); 
+            opacity: 1;
+            transition: all 0.05s; 
+        }
+
+        /* 2. 所有通用按钮（包括工具栏和侧边栏）：按压物理反馈 */
+        .btn:active {
+            transform: scale(0.92) !important;
+            filter: brightness(0.8);
+            transition: all 0.05s; 
+        }
+
+        /* 3. 试玩模式选项按钮：按下的瞬间颜色反转并缩小 */
+        .play-choice-btn:active {
+            transform: scale(0.95);
+            background: var(--accent);
+            color: #000;
+            box-shadow: 0 0 20px var(--accent);
+            transition: all 0.05s;
+        }
+
+        /* 4. 连线小圆点：像磁铁一样的悬浮吸附感 */
+        .socket {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .socket:hover {
+            transform: scale(1.6); /* 鼠标靠近时明显变大，提示可以连线 */
+            background: rgba(78, 176, 165, 0.5);
+        }
+        .socket:active {
+            transform: scale(1.2);
+            background: var(--accent); /* 按住拖拽时变成实心高亮 */
+            transition: all 0.05s;
+        }
+
+        /* 5. 剧情节点卡片本体：悬浮时浮现微弱的环境光 */
+        .node {
+            transition: box-shadow 0.3s, border-color 0.3s;
+        }
+        .node:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 12px rgba(78, 176, 165, 0.25);
+            border-color: rgba(78, 176, 165, 0.6);
+        }
+
+        /* 卡片上的选项预览区 */
+.node-choices-preview {
+    display: flex; flex-direction: column; gap: 4px; margin-top: 4px;
+}
+.node-choice-item {
+    background: rgba(0,0,0,0.3); border-left: 2px solid var(--accent);
+    padding: 4px 8px; font-size: 11px; color: #aaa; border-radius: 2px;
+    display: flex; justify-content: space-between;
+}
+.node-choice-target { color: var(--accent); font-weight: bold; }
+
+/* 侧边栏的选项编辑区 */
+.panel-choices-section {
+    margin-top: 20px; border-top: 1px dashed #444; padding-top: 15px;
+}
+.choice-edit-block {
+    background: #1e1e1e; border: 1px solid #333; padding: 10px;
+    margin-bottom: 8px; border-radius: 4px; display: flex; flex-direction: column; gap: 8px;
+}
+.choice-edit-row { display: flex; gap: 8px; align-items: center; }
+.choice-text-input { flex: 2; }
+.choice-target-input { flex: 1; }
+.btn-auto-gen {
+    background: #2b5c5c; color: white; border: none; padding: 6px 10px;
+    border-radius: 4px; cursor: pointer; font-size: 12px; white-space: nowrap;
+}
+.btn-auto-gen:hover { background: #3e827a; }
+
+/* 吐司容器：固定在顶部居中，处理多条堆叠 */
+#toast-container {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none; /* 核心：不阻挡鼠标点击事件 */
+}
+
+/* 吐司基础样式 */
+.toast-item {
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  animation: toast-slide-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* 不同类型的配色 */
+.toast-success { background-color: #2e7d32; } /* 沉稳的绿色 */
+.toast-error { background-color: #d32f2f; }   /* 警示的红色 */
+.toast-warning { background-color: #ed6c02; } /* 提醒的橙色 */
+.toast-info { background-color: #0288d1; }    /* 提示的蓝色 */
+
+/* 消失动画类 */
+.toast-fadeout {
+  animation: toast-fade-out 0.25s ease-in forwards;
+}
+
+/* 动画关键帧 */
+@keyframes toast-slide-in {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toast-fade-out {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.95); }
+}
+
+/* ================= 变量管理器弹窗 ================= */
+#var-modal {
+    display: none;
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: #2a2a2a; padding: 20px; border-radius: 8px; z-index: 9999;
+    width: 420px; box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    color: #eee; border: 1px solid #444;
+}
+#var-modal.active { display: block; }
+.var-header {
+    display: flex; justify-content: space-between; align-items: center; 
+    margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px;
+}
+.var-header h3 { margin: 0; font-size: 16px; color: #4eb0a5; }
+.var-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+.var-row input { 
+    flex: 1; background: #1a1a1a; color: white; border: 1px solid #555; 
+    padding: 6px 10px; border-radius: 4px; outline: none;
+}
+.var-row input:focus { border-color: #4eb0a5; }
+
+/* ================= 工具栏下拉菜单样式 ================= */
+.dropdown {
+    position: relative;
+    display: inline-block;
+    margin-right: 6px;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #2a2a2a;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5);
+    z-index: 10000; /* 确保在最顶层 */
+    border-radius: 6px;
+    border: 1px solid #444;
+    top: 100%;
+    left: 0;
+    padding: 6px 0;
+    margin-top: 4px;
+}
+
+.dropdown-content a {
+    color: #ddd;
+    padding: 10px 16px;
+    text-decoration: none;
+    display: block;
+    font-size: 13px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.dropdown-content a:hover {
+    background-color: #3a3a3a;
+    color: #fff;
+}
+
+/* 给下拉菜单搭建一个隐形的感应桥梁 */
+.dropdown-content::before {
+    content: '';
+    position: absolute;
+    top: -15px; /* 向上延伸 15 像素的隐形区域 */
+    left: 0;
+    right: 0;
+    height: 15px;
+    background: transparent; /* 完全透明，肉眼看不见 */
+}
+
+/* 鼠标悬浮时显示菜单 */
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.drop-divider {
+    height: 1px;
+    background-color: #444;
+    margin: 4px 0;
+}
+
+/* ================= 结局黑场动画 ================= */
+        #play-ending-screen {
+            position: absolute; inset: 0; background: #000; z-index: 3500;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 1.5s ease-in-out;
+        }
+        #play-ending-screen.active { display: flex; opacity: 1; }
+        .ending-title { font-size: 24px; color: #888; letter-spacing: 4px; margin-bottom: 20px; }
+        .ending-name { font-size: 42px; color: #ff6b6b; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 20px rgba(255, 107, 107, 0.4); }
+
+        /* ================= 结局卡片专属视觉 ================= */
+        .node.ending-node {
+            border-color: #8c3b3b;
+            box-shadow: 0 6px 16px rgba(140, 59, 59, 0.4);
+        }
+        .node.ending-node .node-header {
+            background: linear-gradient(180deg, #5c2b2b 0%, rgba(92, 43, 43, 0) 100%);
+        }
+        .node.ending-node:hover {
+            box-shadow: 0 8px 25px rgba(140, 59, 59, 0.6), 0 0 12px rgba(255, 107, 107, 0.3);
+            border-color: #ff6b6b;
+        }
+
+        /* ================= 终极教程穿透术 ================= */
+        /* 确保探照灯打在卡片逻辑区时能亮起来 */
+        .var-logic-group.guide-highlight {
+            position: relative !important;
+            z-index: 999999 !important;
+            background: var(--node-bg) !important;
+            border-radius: 6px;
+            padding: 4px;
+        }
+
+        /* 确保全局变量弹窗能撕裂黑色遮罩，君临天下 */
+        body.tutorial-active #var-modal.guide-highlight {
+            position: fixed !important;
+            z-index: 9999999 !important; /* 比黑影多加几个9，绝对碾压 */
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.7), 0 10px 30px rgba(0,0,0,0.5) !important; /* 让弹窗自己生成护体黑影，排斥其他黑影 */
+            pointer-events: auto !important;
+        }
+
+        /* ================= 教程点击穿透补丁 ================= */
+        
+        /* 只要是教程高亮元素，必须有最高的 Z-index 并且允许点击 */
+        .guide-highlight {
+            position: relative !important;
+            z-index: 1000005 !important; /* 必须比遮罩层高 */
+            pointer-events: auto !important; /* 强制允许点击 */
+        }
+
+        /* 如果高亮的是下拉菜单，要确保它里面的内容也能被点到 */
+        .guide-highlight .dropdown-content {
+            z-index: 1000010 !important;
+            pointer-events: auto !important;
+        }
+
+        /* 解决你说的“隐形墙”：如果教程光圈失效，强制让黑影消失 */
+        .guide-mask[width="0"], .guide-mask[height="0"] {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="toolbar" style="display: flex; align-items: center; width: 100%;">
+    <div class="dropdown">
+        <button class="btn dropbtn">📁 文件</button>
+        <div class="dropdown-content">
+            <a href="#" onclick="saveToLocal()">💾 手动保存</a>
+            <a href="#" onclick="document.getElementById('import-file').click()">📂 导入工程</a>
+            <a href="#" onclick="exportProject()">📦 导出工程备份</a>
+            <a href="#" onclick="exportExcel()">↓ 导出 .xlsx 剧情配置</a>
+            <a href="#" onclick="exportPlayableGame()" style="color: #4eb0a5;">🎮 导出为独立网页游戏</a>
+            <div class="drop-divider"></div>
+            <a href="#" onclick="clearLocal()" style="color: #ff6b6b;">🗑️ 清空当前画布</a>
+        </div>
+    </div>
+
+    <div class="dropdown">
+        <button class="btn dropbtn">✏️ 编辑</button>
+        <div class="dropdown-content">
+            <a href="#" onclick="undoHistory()">↩ 撤回 (Ctrl+Z)</a>
+            <a href="#" onclick="redoHistory()">↪ 重做 (Ctrl+Y)</a>
+            <div class="drop-divider"></div>
+            <a href="#" onclick="openVarModal()">🔧 全局变量管理</a>
+        </div>
+    </div>
+
+    <span class="divider" style="margin: 0 12px; height: 20px;"></span>
+
+    <button id="btn-new-node" class="btn" onclick="spawnNodeSmartly()">+ 新建剧情节点</button>
+    <button id="btn-global-play" class="btn" onclick="startGlobalPlay()" style="background: #bd5c00; border-color: #d96900;">🎬 全局试玩</button>
+
+    <span class="divider" style="margin: 0 12px; height: 20px;"></span>
+
+    <input type="text" id="search-input" placeholder="搜角色/台词/ID..." onkeypress="if(event.key==='Enter') performSearch()" style="padding: 6px; border-radius: 4px; border: 1px solid #444; background: #1e1e1e; color: white; width: 140px; outline: none;">
+    <button class="btn" onclick="performSearch()" style="background: #2c5e3b; border-color: #3d8050; margin-left: 4px;">🔍</button>
+    <span id="search-result-text" style="color: var(--accent); font-size: 13px; margin-left: 8px; font-weight: bold;"></span>
+
+    <div style="flex-grow: 1;"></div>
+
+    <span style="color: #666; font-size: 12px; margin-right: 15px;">右键拖拽，滚轮缩放。双击连线取消。</span>
+    <button class="btn" onclick="startTutorial()" style="background: #175438; border-color: #207a51;">💡 教程</button>
+    
+    <input type="file" id="import-file" style="display: none;" accept=".json" onchange="importProject(event)">
+</div>
+    
+
+    <div id="viewport">
+        <div id="canvas">
+            <svg id="svg-layer"></svg>
+        </div>
+    </div>
+
+<script>
+    const viewport = document.getElementById('viewport');
+    const canvas = document.getElementById('canvas');
+    let panX = 0, panY = 0, scale = 1;
+    let isPanning = false, startPanX = 0, startPanY = 0;
+
+    function updateTransform() {
+        canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+        viewport.style.backgroundPosition = `${panX}px ${panY}px`;
+        viewport.style.backgroundSize = `${20 * scale}px ${20 * scale}px`;
+    }
+
+    viewport.addEventListener('mousedown', (e) => {
+        if (e.button === 2 || e.button === 1 || e.target === viewport) {
+            isPanning = true; startPanX = e.clientX - panX; startPanY = e.clientY - panY;
+        }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (isPanning) {
+            panX = e.clientX - startPanX; panY = e.clientY - startPanY;
+            updateTransform();
+        }
+        if (isConnecting && connectStartNodeId) {
+            const start = getSocketCoords(connectStartNodeId, connectStartType);
+            const endX = (e.clientX - panX) / scale;
+            const endY = (e.clientY - panY) / scale;
+            
+            // 根据是从左边拉还是右边拉，决定曲线甩出去的方向
+            let cp1x, cp2x;
+            if (connectStartType === 'out') {
+                cp1x = start.x + 80; cp2x = endX - 80;
+            } else {
+                cp1x = start.x - 80; cp2x = endX + 80;
+            }
+
+            const tempLine = document.getElementById('temp-line');
+            if (tempLine) {
+                tempLine.setAttribute('d', `M ${start.x} ${start.y} C ${cp1x} ${start.y}, ${cp2x} ${endY}, ${endX} ${endY}`);
+            }
+        }
+    });
+
+    window.addEventListener('mouseup', () => { isPanning = false; });
+    viewport.addEventListener('contextmenu', e => e.preventDefault());
+
+    viewport.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const zoomIntensity = 0.1;
+        const zoom = Math.exp((e.deltaY < 0 ? 1 : -1) * zoomIntensity);
+        panX = e.clientX - (e.clientX - panX) * zoom;
+        panY = e.clientY - (e.clientY - panY) * zoom;
+        scale = Math.min(Math.max(0.2, scale *= zoom), 3); 
+        updateTransform();
+    }, {passive: false});
+
+    function getCenter() {
+        return { x: (window.innerWidth / 2 - panX) / scale, y: (window.innerHeight / 2 - panY) / scale };
+    }
+
+    let nodeCount = 1;
+    let isDraggingNode = false, currentDragNode = null, dragOffsetX = 0, dragOffsetY = 0;
+
+    function formatText(command) {
+        document.execCommand(command, false, null);
+    }
+
+    function createNode(x, y, parentTargetInput = null, loadData = null) {
+        const id = loadData ? loadData.id : 'N' + (nodeCount++).toString().padStart(3, '0');
+        const node = document.createElement('div');
+        node.className = 'node'; node.id = id;
+        node.style.left = x + 'px'; node.style.top = y + 'px';
+
+        node.innerHTML = `
+            <div class="node-header" onmousedown="startNodeDrag(event, this.parentElement)">
+                <input type="text" class="node-title-input" value="${id}" 
+                       onchange="updateNodeId(this, this.closest('.node').id)" 
+                       onclick="event.stopPropagation()"
+                       onmousedown="event.stopPropagation()"
+                       style="background: transparent; border: none; color: white; font-weight: bold; font-size: 14px; width: 120px;">
+                <div style="display: flex; align-items: center;">
+                    <button class="btn-play" title="从此节点开始试玩" onclick="initPlayState(); startPlayMode(this.closest('.node').id)" onmousedown="event.stopPropagation()">▶️</button>
+                    <button class="delete-btn" onclick="removeNode(this.closest('.node').id)">×</button>
+                </div>
+            </div>
+            <div class="node-body">
+                <div class="socket in" onmousedown="startConnection(event, this.closest('.node').id, 'in')" onmouseup="finishConnection(this.closest('.node').id, 'in')"></div>
+                <div class="input-group">
+                    <label>本段出场角色 (Cast)</label>
+                    <input type="text" class="v-role" placeholder="如：卡斯珀, 斯特凡">
+                </div>
+                <div class="input-group">
+                    <label>剧情序列 (Sequence)</label>
+                    <div class="v-text-trigger v-text-preview" onclick="openSidePanel(this.closest('.node').id)">点击此处编写剧情序列...</div>
+                    <input type="hidden" class="v-story-data" value="[]">
+                </div>
+                <div class="input-group">
+                    <label>分支选项 (Choices)</label>
+                    <input type="hidden" class="v-choices-data" value="[]">
+                    <div class="node-choices-preview" onclick="openSidePanel(this.closest('.node').id)">
+                        <div style="color: #666; font-size: 11px; cursor: pointer;">+ 点击面板编辑选项...</div>
+                    </div>
+                </div>
+                
+                <div class="input-group var-logic-group">
+                    <label>条件与变量 (Conditions & Actions)</label>
+                    <input type="hidden" class="v-var-data" value="[]">
+                    <div class="node-var-list"></div>
+                    <button class="btn-branch" style="margin-top: 2px; padding: 4px;" onclick="addNodeVarRule(this.closest('.node').id)">+ 添加逻辑规则</button>
+                </div>
+                <button class="btn-branch" onclick="branchOut(this.closest('.node').id)">+ 快速延展分支</button>
+                <div class="socket out" onmousedown="startConnection(event, this.closest('.node').id, 'out')" onmouseup="finishConnection(this.closest('.node').id, 'out')"></div>
+            </div>
+            `;
+        canvas.appendChild(node);
+        
+        // 读取存档逻辑（带新旧兼容）
+        if (loadData) {
+            node.querySelector('.v-role').value = loadData.role || '';
+            node.querySelector('.v-story-data').value = loadData.storyData || '[]';
+            
+            const choicesInput = node.querySelector('.v-choices-data');
+            if (choicesInput) {
+                choicesInput.value = loadData.choicesData || '[]';
+                // 如果读到了旧版的数据，自动转换成新版选项格式
+                if (loadData.targets && loadData.targets.trim() !== '' && choicesInput.value === '[]') {
+                    const oldTargets = loadData.targets.split(',').map(s => s.trim()).filter(s => s);
+                    const convertedChoices = oldTargets.map(t => ({ text: '继续...', target: t }));
+                    choicesInput.value = JSON.stringify(convertedChoices);
+                }
+                // 刷新卡片表面的选项UI
+                try { updateNodeChoicesPreview(node, JSON.parse(choicesInput.value)); } catch(e) {}
+            }
+
+            // 还原变量逻辑生成器
+            const varInput = node.querySelector('.v-var-data');
+            if (varInput) {
+                // 兼容老版本的纯文本存档，如果是旧档就设为空数组
+                varInput.value = (loadData.conditions && loadData.conditions.startsWith('[')) ? loadData.conditions : '[]';
+                try {
+                    const rules = JSON.parse(varInput.value);
+                    rules.forEach(rule => addNodeVarRule(node.id, rule));
+                } catch(e) {}
+            }
+            updateNodePreview(node); 
+        }
+
+        drawAllLines();
+    }
+
+    // ================= 智能排布新节点逻辑 =================
+    function spawnNodeSmartly() {
+        const nodes = document.querySelectorAll('.node');
+        
+        // 1. 如果画布完全是空的，还是按照老规矩生成在屏幕正中央
+        if (nodes.length === 0) {
+            const center = getCenter();
+            createNode(center.x, center.y);
+            return;
+        }
+
+        // 2. 找到 DOM 里的最后一个节点（通常就是你上一次创建的那个）
+        const lastNode = nodes[nodes.length - 1];
+        const lastX = parseFloat(lastNode.style.left);
+        const lastY = parseFloat(lastNode.style.top);
+
+        // 3. 计算新位置：放在上一个节点的右边（卡片宽 300 + 间距 40）
+        // Y 轴加一点点随机偏移，让排版看起来不那么死板
+        const newX = lastX + 340;
+        const newY = lastY + (Math.random() * 40 - 20);
+
+        // 生成节点
+        createNode(newX, newY);
+        
+        // 4. 自动将画布视野平移到新节点的位置，防止新节点跑到屏幕外面去
+        const screenW = window.innerWidth;
+        const screenH = window.innerHeight;
+        
+        // 150 和 100 是为了让卡片大致居中
+        panX = screenW / 2 - (newX + 150) * scale; 
+        panY = screenH / 2 - (newY + 100) * scale; 
+        updateTransform();
+        // 在 updateTransform(); 的下面加上这句：
+        if (typeof saveToLocal === 'function') saveToLocal(true, true);
+        showToast('✨ 新节点已生成', 'success', 2000);
+    }
+
+    function branchOut(parentId) {
+        const parentNode = document.getElementById(parentId);
+        const x = parseFloat(parentNode.style.left) + 360;
+        const y = parseFloat(parentNode.style.top) + (Math.random() * 40 - 20);
+        
+        // 1. 生成新节点
+        const newId = 'N' + (nodeCount++).toString().padStart(3, '0');
+        createNode(x, y, null, { id: newId, role: '', storyData: '[]', choicesData: '[]', conditions: '' });
+
+        // 2. 自动给父节点加一个新选项连过去
+        const choicesInput = parentNode.querySelector('.v-choices-data');
+        if (choicesInput) {
+            let choices = [];
+            try { choices = JSON.parse(choicesInput.value || '[]'); } catch(e) {}
+            choices.push({ text: '继续...', target: newId });
+            choicesInput.value = JSON.stringify(choices);
+            updateNodeChoicesPreview(parentNode, choices);
+        }
+
+        drawAllLines();
+        if (typeof saveToLocal === 'function') saveToLocal(true);
+        showToast('✨ 成功延展分支节点', 'success', 2000);
+    }
+
+    // ================= 删除节点逻辑 (带全局引用清理) =================
+    function removeNode(id) {
+        if (!confirm(`确定要删除节点 ${id} 吗？`)) return; // 加个防误触确认框
+        
+        // 1. 删除节点本体
+        const node = document.getElementById(id);
+        if (node) node.remove();
+
+        // 2. 全局大扫除：遍历所有其他的选项输入框，把被删掉的 ID 抠掉
+        document.querySelectorAll('.v-choices-data').forEach(input => {
+            try {
+                let choices = JSON.parse(input.value || '[]');
+                let changed = false;
+                choices.forEach(c => {
+                    if (c.target === id) {
+                        c.target = ''; // 拔掉网线，但保留文字！
+                        changed = true;
+                    }
+                });
+                if (changed) {
+                    input.value = JSON.stringify(choices);
+                    updateNodeChoicesPreview(input.closest('.node'), choices);
+                }
+            } catch(e) {}
+        });
+
+        // 原本是 saveToLocal(true)，改成加上第二个 true
+        drawAllLines();
+        if (typeof saveToLocal === 'function') {
+            saveToLocal(true, true); 
+        }
+    }
+
+    function startNodeDrag(e, node) {
+        if(e.target.tagName.toLowerCase() === 'button') return;
+        isDraggingNode = true; currentDragNode = node;
+        document.querySelectorAll('.node').forEach(n => n.style.zIndex = 10);
+        node.style.zIndex = 100;
+        const rect = node.getBoundingClientRect();
+        dragOffsetX = (e.clientX - rect.left) / scale; dragOffsetY = (e.clientY - rect.top) / scale;
+        e.stopPropagation();
+    }
+
+    window.addEventListener('mousemove', (e) => {
+        if (isDraggingNode && currentDragNode) {
+            currentDragNode.style.left = ((e.clientX - panX) / scale - dragOffsetX) + 'px';
+            currentDragNode.style.top = ((e.clientY - panY) / scale - dragOffsetY) + 'px';
+            drawAllLines();
+        }
+    });
+
+    window.addEventListener('mouseup', () => { isDraggingNode = false; currentDragNode = null; 
+    if (isConnecting) {
+            isConnecting = false;
+            connectStartNodeId = null;
+            const tempLine = document.getElementById('temp-line');
+            if (tempLine) tempLine.remove();
+        }
+    });
+
+    // ================= 获取插口精准坐标 =================
+    function getSocketCoords(nodeId, type) {
+        const node = document.getElementById(nodeId);
+        if (!node) return { x: 0, y: 0 };
+        const socket = node.querySelector('.socket.' + type);
+        // 获取插口相对于视口的边界框
+        const rect = socket.getBoundingClientRect();
+        const canvasRect = canvas.getBoundingClientRect();
+        // 计算相对于画布的精确坐标 (去除缩放影响)
+        return {
+            x: (rect.left - canvasRect.left + rect.width / 2) / scale,
+            y: (rect.top - canvasRect.top + rect.height / 2) / scale
+        };
+    }
+
+    // ================= 更新后的重绘连线逻辑 (带隐形加宽碰撞箱) =================
+    function drawAllLines() {
+        const svg = document.getElementById('svg-layer'); 
+        svg.innerHTML = ''; 
+        
+        // 每次重绘前，先把所有圆点恢复成空心
+        document.querySelectorAll('.socket').forEach(s => s.classList.remove('connected'));
+
+        document.querySelectorAll('.node').forEach(node => {
+            let targets = [];
+            try {
+                const choices = JSON.parse(node.querySelector('.v-choices-data').value || '[]');
+                targets = choices.map(c => c.target).filter(t => t);
+            } catch(e) {}
+
+            if (targets.length > 0) {
+                const outSocket = node.querySelector('.socket.out');
+                if(outSocket) outSocket.classList.add('connected');
+            }
+
+            targets.forEach(targetId => {
+                const targetNode = document.getElementById(targetId);
+                if (targetNode) {
+                    const inSocket = targetNode.querySelector('.socket.in');
+                    if(inSocket) inSocket.classList.add('connected');
+
+                    const start = getSocketCoords(node.id, 'out');
+                    const end = getSocketCoords(targetId, 'in');
+
+                    let curveStrength = Math.max(80, Math.abs(end.x - start.x) * 0.6);
+                    const cp1x = start.x + curveStrength, cp2x = end.x - curveStrength;
+                    const pathString = `M ${start.x} ${start.y} C ${cp1x} ${start.y}, ${cp2x} ${end.y}, ${end.x} ${end.y}`;
+
+                    // 1. 肉眼可见的实体线 (不接受鼠标事件)
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('d', pathString);
+                    path.setAttribute('fill', 'none'); 
+                    path.setAttribute('stroke', '#4eb0a5');
+                    path.setAttribute('stroke-width', '4'); 
+                    path.setAttribute('opacity', '0.7');
+                    path.style.pointerEvents = 'none'; // 让它忽略鼠标，穿透给下方的碰撞箱
+
+                    // 2. 隐形碰撞箱线 (又粗又透明，专门用来挨点)
+                    const hitbox = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    hitbox.setAttribute('d', pathString);
+                    hitbox.setAttribute('fill', 'none');
+                    hitbox.setAttribute('stroke', 'transparent'); // 完全透明
+                    hitbox.setAttribute('stroke-width', '25'); // 碰撞范围扩大到 25px！闭着眼睛都能点到
+                    hitbox.style.pointerEvents = 'visibleStroke';
+                    hitbox.style.cursor = 'pointer';
+
+                    // 交互事件绑定在碰撞箱上，但修改的是实体线的样式
+                    hitbox.addEventListener('mouseenter', () => {
+                        path.setAttribute('stroke', '#ff6b6b');
+                        path.setAttribute('stroke-width', '6');
+                        path.setAttribute('opacity', '1');
+                    });
+                    
+                    hitbox.addEventListener('mouseleave', () => {
+                        path.setAttribute('stroke', '#4eb0a5');
+                        path.setAttribute('stroke-width', '4');
+                        path.setAttribute('opacity', '0.7');
+                    });
+
+                    hitbox.addEventListener('dblclick', (e) => {
+                        e.stopPropagation(); 
+                        removeConnection(node.id, targetId);
+                    });
+
+                    // 先加实体线，再加碰撞箱 (让碰撞箱在最顶层)
+                    svg.appendChild(path);
+                    svg.appendChild(hitbox);
+                }
+            });
+        });
+    }
+
+    // ================= 删除连线逻辑 (带智能清理) =================
+    function removeConnection(sourceId, targetId) {
+        const sourceNode = document.getElementById(sourceId);
+        if (!sourceNode) return;
+        
+        const choicesInput = sourceNode.querySelector('.v-choices-data');
+        if (!choicesInput) return;
+
+        let choices = [];
+        let hasChanged = false;
+        try { choices = JSON.parse(choicesInput.value || '[]'); } catch(e) {}
+
+        // 1. 拔掉对应目标的连接线（清空 target）
+        choices.forEach(c => {
+            if (c.target === targetId) {
+                c.target = ''; 
+                hasChanged = true;
+            }
+        });
+
+        if (hasChanged) {
+            // 2. 👉 新增的智能清理逻辑：
+            // 过滤掉那些“既没有目标节点，文本又是默认的 '继续...' ”的垃圾选项
+            choices = choices.filter(c => !(c.target === '' && c.text === '继续...'));
+
+            // 保存回隐藏框
+            choicesInput.value = JSON.stringify(choices);
+            
+            // 刷新卡片表面的文字预览
+            updateNodeChoicesPreview(sourceNode, choices);
+            
+            // 如果右侧面板正好打开着这个节点，也顺便刷新一下面板输入框里的内容
+            if (activeEditingNodeId === sourceId) {
+                openSidePanel(sourceId);
+            }
+
+            // 触发重绘和历史快照保存
+            drawAllLines();
+            if (typeof saveToLocal === 'function') saveToLocal(true, true);
+        }
+    }
+
+   // 专门用来处理 Excel 导出和卡片预览的【终极清洗辅助函数】
+    function cleanHtmlForExcel(html) {
+        if (!html) return "";
+        let text = html;
+
+        // 1. 把加粗、斜体等转换为游戏引擎支持的 BBCode
+        text = text.replace(/<b>(.*?)<\/b>/gi, "[b]$1[/b]");
+        text = text.replace(/<strong>(.*?)<\/strong>/gi, "[b]$1[/b]");
+        text = text.replace(/<i>(.*?)<\/i>/gi, "[i]$1[/i]");
+        text = text.replace(/<em>(.*?)<\/em>/gi, "[i]$1[/i]");
+        text = text.replace(/<u>(.*?)<\/u>/gi, "[u]$1[/u]");
+
+        // 2. 专门对付各种浏览器产生的换行标签，强制转为原生 \n
+        text = text.replace(/<\/div>\s*<div>/gi, "\n"); // 处理连敲回车产生的连续 div
+        text = text.replace(/<div>/gi, "\n");           // 处理 Chrome 的回车
+        text = text.replace(/<br\s*[\/]?>/gi, "\n");    // 处理单独的换行符
+        text = text.replace(/<p>/gi, "\n");             // 处理 Safari 的回车
+
+        // 3. 无情剥离：删掉所有残余的 HTML 标签 (如 </div>, </span> 等)
+        text = text.replace(/<[^>]+>/g, '');
+
+        // 4. 解码转义字符（比如把 &nbsp; 还原成正常的空格）
+        const temp = document.createElement("textarea");
+        temp.innerHTML = text;
+        let result = temp.value;
+
+        // 清理一下开头和结尾多余的换行符
+        return result.replace(/^\n+|\n+$/g, ''); 
+    }
+
+    // ================= 导出 Excel 逻辑 =================
+    function exportExcel() {
+        const nodes = document.querySelectorAll('.node');
+        const exportData = [];
+
+        nodes.forEach(node => {
+            const nodeId = node.id;
+            const cast = node.querySelector('.v-role').value;
+            let condition = "";
+try {
+    const rules = JSON.parse(node.querySelector('.v-var-data').value || '[]');
+    condition = rules.map(r => `${r.varName} ${r.op} ${r.val}`).join(' 且 ');
+} catch(e) {}
+            
+            // 解析选项，为了兼容你的程序，我们把目标 ID 重新拼成逗号分隔的字符串
+            let targets = "";
+            try {
+                const choices = JSON.parse(node.querySelector('.v-choices-data').value || '[]');
+                targets = choices.map(c => c.target).filter(t => t).join(', ');
+            } catch(e) {}
+            
+            let blocks = [];
+            try { blocks = JSON.parse(node.querySelector('.v-story-data').value); } catch(e) {}
+
+            if (blocks.length === 0) {
+                exportData.push({
+                    "节点ID": nodeId, "出场角色": cast, "段落类型": "", "说话人": "",
+                    "文本内容": "", "跳转目标": targets, "变量条件": condition
+                });
+            } else {
+                blocks.forEach((block, index) => {
+                    const isLast = (index === blocks.length - 1); 
+                    
+                    // 重点在这里：调用 cleanHtmlForExcel 函数洗掉标签
+                    const cleanText = cleanHtmlForExcel(block.text);
+
+                    exportData.push({
+                        "节点ID": index === 0 ? nodeId : "", 
+                        "出场角色": index === 0 ? cast : "",
+                        "段落类型": block.type === 'dialogue' ? '对话' : '描写',
+                        "说话人": block.type === 'dialogue' ? block.role : "",
+                        "文本内容": cleanText, // 这里输出的就是纯洁的换行文本了
+                        "跳转目标": isLast ? targets : "", 
+                        "变量条件": index === 0 ? condition : ""
+                    });
+                });
+            }
+        });
+
+        if (exportData.length === 0) return alert("画布是空的哦！");
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        worksheet['!cols'] = [{wch: 8}, {wch: 15}, {wch: 8}, {wch: 15}, {wch: 60}, {wch: 15}, {wch: 15}];
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "剧情序列数据");
+        XLSX.writeFile(workbook, "第四国际_剧情数据.xlsx");
+    }
+
+    window.onload = () => { 
+        // 尝试读取本地数据
+        const loaded = loadFromLocal();
+        const hasPlayedTutorial = localStorage.getItem('fourth_intl_tutorial');
+        
+        if (!loaded) {
+            updateTransform(); 
+            // 如果是第一次使用（没有通关过教程），自动触发新手引导！
+            if (!hasPlayedTutorial) {
+                localStorage.setItem('fourth_intl_tutorial', 'true');
+                startTutorial();
+            } else {
+                // 老玩家没存档，就给个默认节点
+                createNode(window.innerWidth/2 - 150, window.innerHeight/2 - 120); 
+            }
+        }
+        // 👉 新增：刚打开网页时，记录初始状态作为历史的起点
+        setTimeout(recordHistory, 500);
+    };
+
+    // ================= 修改节点名字逻辑 =================
+    function updateNodeId(inputElem, oldId) {
+        const newId = inputElem.value.trim();
+        // 如果新名字为空，或者已经有同名节点，就恢复原状
+        if (!newId || document.getElementById(newId)) {
+            inputElem.value = oldId;
+            return;
+        }
+        
+        // 更新 DOM 元素的 ID
+        const node = document.getElementById(oldId);
+        if(node) node.id = newId;
+        
+        // 更新 input 自身的事件传参
+        inputElem.setAttribute('onchange', `updateNodeId(this, '${newId}')`);
+
+        // 自动更新其他节点里指向旧 ID 的连线目标
+        document.querySelectorAll('.v-choices-data').forEach(inp => {
+            try {
+                let choices = JSON.parse(inp.value || '[]');
+                let changed = false;
+                choices.forEach(c => {
+                    if (c.target === oldId) {
+                        c.target = newId; // 更新目标ID
+                        changed = true;
+                    }
+                });
+                // 如果有改动，就保存并刷新预览
+                if (changed) {
+                    inp.value = JSON.stringify(choices);
+                    updateNodeChoicesPreview(inp.closest('.node'), choices);
+                }
+            } catch(e) {}
+        });
+        
+        drawAllLines();
+    }
+
+    // ================= 拖拽连线逻辑 (双向增强版) =================
+    let isConnecting = false;
+    let connectStartNodeId = null;
+    let connectStartType = null; // 记录是从 in 还是 out 开始拖的
+
+    function startConnection(e, nodeId, type) {
+        e.stopPropagation(); 
+        isConnecting = true;
+        connectStartNodeId = nodeId;
+        connectStartType = type;
+        
+        const svg = document.getElementById('svg-layer');
+        const tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        tempLine.id = 'temp-line';
+        tempLine.setAttribute('fill', 'none');
+        tempLine.setAttribute('stroke', '#ffaa00'); 
+        tempLine.setAttribute('stroke-width', '4');
+        tempLine.setAttribute('stroke-dasharray', '5,5');
+        svg.appendChild(tempLine);
+    }
+
+    function finishConnection(targetNodeId, targetType) {
+        // 必须满足：正在连线 + 不是同一个节点 + 插口类型相反 (in连out, out连in)
+        if (isConnecting && connectStartNodeId && connectStartNodeId !== targetNodeId && connectStartType !== targetType) {
+            
+            // 智能判断谁是“发送方”，谁是“接收方”
+            let sourceId, targetIdToSave;
+            if (connectStartType === 'out') {
+                sourceId = connectStartNodeId; // 从右往左拉：起点是发送方
+                targetIdToSave = targetNodeId;
+            } else {
+                sourceId = targetNodeId;       // 从左往右拉：终点是发送方
+                targetIdToSave = connectStartNodeId;
+            }
+
+            const sourceNode = document.getElementById(sourceId);
+            if (sourceNode) {
+                // 👉 全新逻辑：使用高级选项数据格式
+                const choicesInput = sourceNode.querySelector('.v-choices-data');
+                if (choicesInput) {
+                    let choices = [];
+                    try { choices = JSON.parse(choicesInput.value || '[]'); } catch(e) {}
+
+                    // 检查是不是已经连过这条线了（防止重复连线产生多余选项）
+                    const alreadyConnected = choices.some(c => c.target === targetIdToSave);
+                    
+                    if (!alreadyConnected) {
+                        // 自动生成一个默认的分支选项！
+                        choices.push({ text: '继续...', target: targetIdToSave });
+                        choicesInput.value = JSON.stringify(choices);
+                        
+                        // 刷新卡片表面的UI
+                        updateNodeChoicesPreview(sourceNode, choices);
+                        
+                        // 如果右侧面板刚好开着，顺便刷新一下面板
+                        if (activeEditingNodeId === sourceId) {
+                            openSidePanel(sourceId);
+                        }
+
+                        drawAllLines(); 
+                        if (typeof saveToLocal === 'function') saveToLocal(true, true);
+                    }
+                }
+            }
+        }
+    }
+
+    // ================= 侧边栏块状编辑器逻辑 =================
+    let activeEditingNodeId = null;
+
+    // 侧边栏的排版工具
+    function formatBlockText(command) {
+        document.execCommand(command, false, null);
+        syncTextToNode(); // 格式化后同步数据
+    }
+
+   function addBlock(type, role = '', text = '', condition = '') {
+    const editor = document.getElementById('panel-editor');
+    const block = document.createElement('div');
+    block.className = 'story-block';
+    block.dataset.type = type;
+
+    // 动态拉取你设置好的全局变量
+    let varOptions = '<option value="">无条件 (默认直接显示)</option>';
+    if (typeof globalVars !== 'undefined') {
+        globalVars.forEach(v => {
+            if (v.name) varOptions += `<option value="${v.name}">${v.name}</option>`;
+        });
+    }
+
+    let html = `<div class="block-drag-handle" title="按住拖拽排序" 
+                     onmouseenter="this.parentElement.draggable = true" 
+                     onmouseleave="this.parentElement.draggable = false">☰</div>`;
+    html += `<button class="block-delete" onclick="this.parentElement.remove(); syncTextToNode()">×</button>`;
+    
+    // 👇 全新升级的下拉选项条件栏
+    html += `
+        <div class="condition-row">
+            <span style="font-size: 11px; color: #888;">👁️ 显示条件:</span>
+            <select class="cond-var" onchange="syncTextToNode()">${varOptions}</select>
+            <select class="cond-op" onchange="toggleConditionRange(this); syncTextToNode()">
+                <option value=">">大于 (>)</option>
+                <option value=">=">大于等于 (>=)</option>
+                <option value="<">小于 (<)</option>
+                <option value="<=">小于等于 (<=)</option>
+                <option value="==">等于 (==)</option>
+                <option value="between">区间 (A~B)</option>
+            </select>
+            <input type="text" class="cond-val1" placeholder="数值" oninput="syncTextToNode()">
+            <span class="cond-between-text" style="display:none; font-size:11px; color:#888;">~</span>
+            <input type="text" class="cond-val2" placeholder="数值" style="display:none;" oninput="syncTextToNode()">
+        </div>
+    `;
+
+    if (type === 'dialogue') {
+        html += `<span class="block-label">🗣️ 角色台词</span>`;
+        html += `<input type="text" class="block-role-input" placeholder="输入角色..." value="${role}" oninput="syncTextToNode()">`;
+        html += `<div class="block-editor" contenteditable="true" placeholder="输入台词..." oninput="syncTextToNode()">${text}</div>`;
+    } else if (type === 'ending') {
+        html += `<span class="block-label" style="color: #ff6b6b;">🛑 达成结局</span>`;
+        html += `<div class="block-editor" contenteditable="true" placeholder="输入结局名称（如：真正的第四国际）..." oninput="syncTextToNode()">${text}</div>`;
+        block.style.borderLeft = '4px solid #ff6b6b';
+        block.style.background = 'rgba(255, 107, 107, 0.05)';
+    } else {
+        html += `<span class="block-label">🎬 场景描写</span>`;
+        html += `<div class="block-editor" contenteditable="true" placeholder="输入描写..." oninput="syncTextToNode()">${text}</div>`;
+    }
+    block.innerHTML = html;
+
+    // 👇 在插入 HTML 后，把保存的 condition 数据反向解析回下拉框里
+    if (condition) {
+        const varSel = block.querySelector('.cond-var');
+        const opSel = block.querySelector('.cond-op');
+        const val1In = block.querySelector('.cond-val1');
+        const val2In = block.querySelector('.cond-val2');
+
+        // 尝试解析区间匹配 (例如: 20 <= hp <= 50)
+        const rangeMatch = condition.match(/^(-?\d+(?:\.\d+)?)\s*<=\s*([a-zA-Z0-9_\u4e00-\u9fa5]+)\s*<=\s*(-?\d+(?:\.\d+)?)$/);
+        if (rangeMatch) {
+            varSel.value = rangeMatch[2]; // 变量名
+            opSel.value = "between";
+            val1In.value = rangeMatch[1]; // 最小值
+            val2In.value = rangeMatch[3]; // 最大值
+            toggleConditionRange(opSel);  // 触发显示第二个框
+        } else {
+            // 解析单条件匹配 (例如: hp > 50)
+            const singleMatch = condition.match(/^([a-zA-Z0-9_\u4e00-\u9fa5]+)\s*(>=|<=|>|<|==)\s*(-?\d+(?:\.\d+)?)$/);
+            if (singleMatch) {
+                varSel.value = singleMatch[1];
+                opSel.value = singleMatch[2];
+                val1In.value = singleMatch[3];
+            }
+        }
+    }
+
+    block.addEventListener('dragstart', (e) => { block.classList.add('dragging'); if (e.dataTransfer) e.dataTransfer.setData('text/plain', ''); });
+    block.addEventListener('dragend', () => { block.classList.remove('dragging'); block.draggable = false; syncTextToNode(); });
+
+    const choicesSection = document.getElementById('panel-choices-section');
+    if (choicesSection) editor.insertBefore(block, choicesSection);
+    else editor.appendChild(block);
+    
+    syncTextToNode();
+}
+
+    // 将侧边栏里所有块的数据打包，并智能识别出场角色
+    function syncTextToNode() {
+        if (!activeEditingNodeId) return;
+        const node = document.getElementById(activeEditingNodeId);
+        const editor = document.getElementById('panel-editor');
+        const blocks = Array.from(editor.querySelectorAll('.story-block'));
+        
+        let blockRoles = new Set(); // 收集当前面板里出现的所有说话角色
+
+       const data = blocks.map(b => {
+        const type = b.dataset.type;
+        
+        // 👇 智能拼装条件字符串
+        const varName = b.querySelector('.cond-var').value;
+        const op = b.querySelector('.cond-op').value;
+        const val1 = b.querySelector('.cond-val1').value.trim();
+        const val2 = b.querySelector('.cond-val2').value.trim();
+        
+        let conditionStr = '';
+        if (varName && val1 !== '') {
+            if (op === 'between' && val2 !== '') {
+                conditionStr = `${val1} <= ${varName} <= ${val2}`; // 存成区间格式
+            } else if (op !== 'between') {
+                conditionStr = `${varName} ${op} ${val1}`; // 存成普通格式
+            }
+        }
+
+        if (type === 'dialogue') {
+            const roleName = b.querySelector('.block-role-input').value.trim();
+            if (roleName) blockRoles.add(roleName); 
+            return { type: 'dialogue', role: roleName, text: b.querySelector('.block-editor').innerHTML, condition: conditionStr };
+        } else if (type === 'ending') {
+            return { type: 'ending', role: '', text: b.querySelector('.block-editor').innerHTML, condition: conditionStr };
+        } else {
+            return { type: 'desc', role: '', text: b.querySelector('.block-editor').innerHTML, condition: conditionStr };
+        }
+    });
+        
+        // ================= 修复：带“记忆”的智能角色合并 =================
+        const roleInput = node.querySelector('.v-role');
+        
+        // 1. 获取当前输入框里的角色，和上次“自动填入”的角色
+        let currentRoles = roleInput.value.split(/[,，]/).map(s => s.trim()).filter(s => s);
+        let oldAutoRoles = (node.dataset.autoRoles || "").split(',').filter(s => s);
+        
+        // 2. 剥离出哪些是你“手动输入”的（用当前角色 减去 上次自动生成的角色）
+        let manualRoles = currentRoles.filter(r => !oldAutoRoles.includes(r));
+        
+        // 3. 把“手动输入的”和“现在侧边栏里的”重新合并并去重
+        let finalRolesSet = new Set([...manualRoles, ...blockRoles]);
+        
+        // 4. 更新输入框显示，并把这次的侧边栏角色存入记忆中
+        roleInput.value = Array.from(finalRolesSet).join(', ');
+        node.dataset.autoRoles = Array.from(blockRoles).join(',');
+        // =========================================================
+
+        node.querySelector('.v-story-data').value = JSON.stringify(data);
+        updateNodePreview(node); 
+        
+        // 顺手触发一下静默存档
+        if (typeof saveToLocal === 'function') {
+            saveToLocal(true);
+        }
+    }
+
+    // 打开侧边栏
+    function openSidePanel(nodeId) {
+        activeEditingNodeId = nodeId;
+        const node = document.getElementById(nodeId);
+        const dataInput = node.querySelector('.v-story-data');
+        const editor = document.getElementById('panel-editor');
+        
+        document.getElementById('panel-title').innerText = `正在编写: ${nodeId}`;
+        editor.innerHTML = ''; 
+
+        // 1. 先还原剧情块
+        try {
+        const blocksData = JSON.parse(node.querySelector('.v-story-data').value || '[]');
+        // 👇 修改这里，把 b.condition 传进去
+        blocksData.forEach(b => addBlock(b.type, b.role, b.text, b.condition || ''));
+        } catch(e) {}
+        
+        // 2. 再生成选项区（它会自动跑到所有剧情块后面）
+        renderPanelChoices(node);
+        
+        document.getElementById('side-panel').classList.add('open');
+    }
+
+    // 关闭侧边栏
+    function closeSidePanel() {
+        document.getElementById('side-panel').classList.remove('open');
+        activeEditingNodeId = null;
+    }
+
+    // 更新卡片表面的剧情预览
+    function updateNodePreview(node) {
+        const preview = node.querySelector('.v-text-preview');
+        const dataInput = node.querySelector('.v-story-data');
+        if (!preview || !dataInput) return;
+
+        try {
+            const data = JSON.parse(dataInput.value || '[]');
+            
+            // 👇 新增逻辑：检查这堆数据里有没有“结局块”
+            const hasEnding = data.some(b => b.type === 'ending');
+            if (hasEnding) {
+                node.classList.add('ending-node'); // 盖上红章
+            } else {
+                node.classList.remove('ending-node'); // 摘掉红章
+            }
+
+            if (data.length === 0) {
+                preview.innerText = '点击此处编写剧情序列...';
+                preview.style.color = 'var(--text-muted)';
+            } else {
+                const firstText = cleanHtmlForExcel(data[0].text); 
+                
+                // 👇 根据不同的块类型，给预览文本加上不同的前缀
+                let prefix = '[描写] ';
+                if (data[0].type === 'dialogue') prefix = `[${data[0].role || '?'}] `;
+                if (data[0].type === 'ending') prefix = '[结局] ';
+                
+                const previewText = (prefix + firstText).replace(/\n/g, ' '); 
+                
+                preview.innerText = previewText.length > 25 ? previewText.substring(0, 25) + '...' : (previewText || '空内容...');
+                preview.style.color = 'var(--text-main)';
+            }
+        } catch(e) { console.error("预览更新失败", e); }
+    }
+
+
+    // ================= 本地存档逻辑 =================
+    const SAVE_KEY = 'fourth_intl_story_save';
+
+    // 增加第二个参数 isImmediateAction
+    function saveToLocal(isAutoSave = false, isImmediateAction = false) {
+        recordHistory(isImmediateAction); // 传递操作的紧急程度
+        
+        const nodes = document.querySelectorAll('.node');
+        const data = {
+            viewport: { panX, panY, scale },
+            nodeCount: nodeCount, 
+            globalVars: globalVars, // <--- 加上这一行，把变量存进去
+            nodes: []
+        };
+
+        nodes.forEach(node => {
+            data.nodes.push({
+                id: node.id,
+                x: parseFloat(node.style.left),
+                y: parseFloat(node.style.top),
+                role: node.querySelector('.v-role').value,
+                storyData: node.querySelector('.v-story-data').value,
+                choicesData: node.querySelector('.v-choices-data') ? node.querySelector('.v-choices-data').value : '[]',
+                conditions: node.querySelector('.v-var-data') ? node.querySelector('.v-var-data').value : '[]'
+            });
+        });
+
+        localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+        if (!isAutoSave) {
+        showToast('💾 草稿已安全保存到浏览器', 'success', 2000);
+        }
+    }
+
+    function loadFromLocal() {
+        const savedStr = localStorage.getItem(SAVE_KEY);
+        if (!savedStr) return false; // 没有存档
+
+        try {
+            const data = JSON.parse(savedStr);
+            globalVars = data.globalVars || [];
+            // 还原视野
+            panX = data.viewport.panX;
+            panY = data.viewport.panY;
+            scale = data.viewport.scale;
+            nodeCount = data.nodeCount || 1;
+
+            // 清理旧画布（保留 svg 层即可）
+            document.getElementById('canvas').innerHTML = '<svg id="svg-layer"></svg>';
+            updateTransform();
+
+            // 逐个重建节点
+            data.nodes.forEach(nData => {
+                createNode(nData.x, nData.y, null, nData);
+            });
+
+            drawAllLines();
+            return true; // 成功读取
+        } catch (e) {
+            console.error("读取存档失败，数据可能已损坏", e);
+            return false;
+        }
+    }
+
+    function clearLocal() {
+        if (confirm("⚠️ 确定要清空浏览器的本地草稿吗？\n\n这不会影响你已经导出的 Excel 文件，但会导致当前未导出的进度丢失。清空后页面将自动刷新。")) {
+            localStorage.removeItem(SAVE_KEY);
+            location.reload();
+        }
+    }
+
+    // ================= 工程文件导入导出逻辑 =================
+    
+    // 导出工程：把当前浏览器里的草稿打包成 .json 文件下载
+    function exportProject() {
+        // 导出前先强制保存一次最新进度到本地
+        saveToLocal(true); 
+        const dataStr = localStorage.getItem(SAVE_KEY);
+        if (!dataStr) return alert("画布是空的，没有数据可导出！");
+        
+        // 生成虚拟文件并触发下载
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        // 自动带上今天的日期作为文件名
+        const date = new Date();
+        const dateStr = `${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2,'0')}${date.getDate().toString().padStart(2,'0')}`;
+        a.download = `第四国际_剧情工程_${dateStr}.json`;
+        
+        a.click();
+        URL.revokeObjectURL(url); // 释放内存
+    }
+
+    // 导入工程：读取电脑里的 .json 文件并覆盖当前画布
+    function importProject(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                // 校验文件格式是不是我们导出的那种
+                const data = JSON.parse(e.target.result);
+                if (!data.nodes || typeof data.nodeCount === 'undefined') {
+                    throw new Error("格式不匹配");
+                }
+                
+                if (confirm("⚠️ 导入工程将完全覆盖当前画布上的所有内容，确定要继续吗？")) {
+                    // 偷个懒也是最稳妥的做法：直接把读取到的数据塞进浏览器的存档里，然后刷新网页
+                    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+                    location.reload(); 
+                }
+            } catch (error) {
+                alert("导入失败：文件格式不正确，或者不是剧情编辑器的工程文件！");
+                console.error(error);
+            }
+            // 清空输入框，保证下次还能选同一个文件
+            event.target.value = ''; 
+        };
+        reader.readAsText(file);
+    }
+
+    // 设置每10秒后台静默自动保存
+    setInterval(() => {
+        if (document.querySelectorAll('.node').length > 0) {
+            saveToLocal(true);
+        }
+    }, 10000);
+
+   // ================= 侧边栏拖拽排序底层逻辑 (修复版) =================
+    
+    // ================= 侧边栏拖拽排序底层逻辑 (隔离选项版) =================
+    document.addEventListener('dragover', e => {
+        const panelEditor = document.getElementById('panel-editor');
+        const blocksContainer = document.getElementById('blocks-container');
+        
+        // 只要鼠标在面板里滑动，就允许排序
+        if (panelEditor && panelEditor.contains(e.target)) {
+            e.preventDefault(); 
+            
+            const draggable = document.querySelector('.dragging');
+            if (draggable && blocksContainer) {
+                const afterElement = getDragAfterElement(blocksContainer, e.clientY);
+                if (afterElement == null) {
+                    blocksContainer.appendChild(draggable); // 拖到最底下时，放在台词盒子的最后，绝不会跑到选项下面去！
+                } else {
+                    blocksContainer.insertBefore(draggable, afterElement);
+                }
+            }
+        }
+    });
+
+    // 数学计算：找出鼠标 Y 坐标最近的下方元素
+    function getDragAfterElement(container, y) {
+        // 抓取容器内所有【没有正在被拖拽】的卡片
+        const draggableElements = [...container.querySelectorAll('.story-block:not(.dragging)')];
+
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            // 判定阈值：越过卡片的中轴线即视为换位
+            const offset = y - box.top - box.height / 2;
+            
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+    // ================= 全局搜索与快速定位逻辑 =================
+    let searchResults = [];
+    let currentSearchIndex = -1;
+
+    function performSearch() {
+        const query = document.getElementById('search-input').value.toLowerCase().trim();
+        const resultText = document.getElementById('search-result-text');
+        
+        if (!query) {
+            resultText.innerText = "";
+            return;
+        }
+
+        // 判断是否是在连续搜索同一个关键词（用于循环跳转下一个结果）
+        if (searchResults.length > 0 && document.getElementById('search-input').dataset.lastQuery === query) {
+            currentSearchIndex = (currentSearchIndex + 1) % searchResults.length;
+            focusNode(searchResults[currentSearchIndex]);
+            resultText.innerText = `第 ${currentSearchIndex + 1} / ${searchResults.length} 个结果`;
+            return;
+        }
+
+        // 如果是新词，重置状态
+        searchResults = [];
+        currentSearchIndex = -1;
+        document.getElementById('search-input').dataset.lastQuery = query;
+
+        // 遍历所有节点翻找数据
+        const nodes = document.querySelectorAll('.node');
+        nodes.forEach(node => {
+            const id = node.id.toLowerCase();
+            const role = node.querySelector('.v-role').value.toLowerCase();
+            let textContent = "";
+            
+            // 解析剧情数据来搜台词
+            try {
+                const blocks = JSON.parse(node.querySelector('.v-story-data').value || '[]');
+                textContent = blocks.map(b => b.text.toLowerCase() + " " + (b.role || "").toLowerCase()).join(" ");
+            } catch(e) {}
+
+            // 如果 ID、出场角色或台词包含关键词，就记下来
+            if (id.includes(query) || role.includes(query) || textContent.includes(query)) {
+                searchResults.push(node.id);
+            }
+        });
+
+        // 处理搜索结果
+        if (searchResults.length > 0) {
+            currentSearchIndex = 0;
+            focusNode(searchResults[0]);
+            // 提示用户可以继续点击搜索下一个
+            resultText.innerText = `找到 ${searchResults.length} 个。第 1 个 (回车找下一个)`;
+        } else {
+            resultText.innerText = "未找到包含该内容的节点 😢";
+        }
+    }
+
+    // 将画布平移到目标节点并触发高亮
+    function focusNode(nodeId) {
+        const node = document.getElementById(nodeId);
+        if (!node) return;
+
+        // 先移除所有其他节点的高亮状态
+        document.querySelectorAll('.node').forEach(n => n.classList.remove('highlighted'));
+        
+        // 强行触发一帧重绘（重置动画）
+        void node.offsetWidth; 
+        
+        // 计算把这个节点放在屏幕正中央需要的画布平移坐标
+        const screenW = window.innerWidth;
+        const screenH = window.innerHeight;
+        const nodeX = parseFloat(node.style.left);
+        const nodeY = parseFloat(node.style.top);
+        
+        // 考虑当前的缩放比例进行精准定位，125和80是卡片宽高的一半
+        panX = screenW / 2 - (nodeX + 125) * scale; 
+        panY = screenH / 2 - (nodeY + 80) * scale; 
+        
+        // 执行移动
+        updateTransform(); 
+
+        // 加上我们写的闪烁类名
+        node.classList.add('highlighted');
+        
+        // 动画播完后清理掉类名，防止影响后续操作
+        setTimeout(() => {
+            node.classList.remove('highlighted');
+        }, 1800); 
+    }
+    // ================= 沉浸式试玩模式逻辑 =================
+    let playSequence = [];
+    let playCurrentIndex = 0;
+    let playCurrentNodeId = null;
+
+    // 启动试玩
+    function startPlayMode(nodeId) {
+        const node = document.getElementById(nodeId);
+        if (!node) return;
+
+        // 👇 新增：结算当前节点的加减分，并刷新右上角 HUD
+        processNodeRules(nodeId, false);
+        updateHUD();
+        
+        playCurrentNodeId = nodeId;
+        try {
+            playSequence = JSON.parse(node.querySelector('.v-story-data').value || '[]');
+        } catch(e) { playSequence = []; }
+
+        // 如果这个节点没写内容，给个默认提示防报错
+        if (playSequence.length === 0) {
+            playSequence = [{ type: 'desc', text: '（该节点暂无剧情序列内容）' }];
+        }
+
+        playCurrentIndex = 0;
+        document.getElementById('play-overlay').classList.add('active');
+        document.getElementById('play-choices').style.display = 'none';
+        document.getElementById('play-dialogue-box').style.display = 'block';
+        
+        renderPlayBlock();
+    }
+
+    // 渲染当前的一句话
+    function renderPlayBlock() {
+        if (playCurrentIndex >= playSequence.length) {
+            showPlayChoices();
+            return;
+        }
+
+        const block = playSequence[playCurrentIndex];
+
+        // 👇 核心拦截逻辑：如果不满足条件，直接无缝跳到下一句！
+        if (block.condition) {
+            if (!evaluateBlockCondition(block.condition)) {
+                playCurrentIndex++;
+                renderPlayBlock(); // 递归调用，不露痕迹地跳过
+                return;
+            }
+        }
+        
+        // 👇 这里是新增的拦截点：如果这一块是结局标记，直接黑屏杀青！
+        if (block.type === 'ending') {
+            document.getElementById('play-dialogue-box').style.display = 'none';
+            document.getElementById('play-choices').style.display = 'none';
+            const endingScreen = document.getElementById('play-ending-screen');
+            document.getElementById('ending-name-text').innerHTML = block.text || '未命名结局';
+            
+            // 延迟 0.1 秒变黑，更有电影感
+            setTimeout(() => endingScreen.classList.add('active'), 100);
+            return;
+        }
+
+        const nameEl = document.getElementById('play-name');
+        const textEl = document.getElementById('play-text');
+        
+        // 原本正常的对话和描写渲染逻辑
+        if (block.type === 'dialogue') {
+            nameEl.style.display = 'block';
+            nameEl.innerText = block.role || '未知角色';
+            textEl.innerHTML = block.text;
+            textEl.className = 'play-text';
+        } else {
+            nameEl.style.display = 'none';
+            textEl.innerHTML = block.text;
+            textEl.className = 'play-text play-desc';
+        }
+    }
+
+    // 解析试玩模式里的条件拦截
+    function evaluateBlockCondition(condStr) {
+        if (!condStr) return true; // 没写条件就畅通无阻
+        try {
+            // 1. 优先尝试区间检定：例如 "20 <= hp <= 50"
+            const rangeMatch = condStr.match(/^(-?\d+(?:\.\d+)?)\s*<=\s*([a-zA-Z0-9_\u4e00-\u9fa5]+)\s*<=\s*(-?\d+(?:\.\d+)?)$/);
+            if (rangeMatch) {
+                const minVal = parseFloat(rangeMatch[1]);
+                const vName = rangeMatch[2];
+                const maxVal = parseFloat(rangeMatch[3]);
+                const currentVal = playState[vName] || 0;
+                
+                return currentVal >= minVal && currentVal <= maxVal; // 必须在区间内
+            }
+
+            // 2. 退化为单条件检定：例如 "hp > 50"
+            const singleMatch = condStr.match(/^([a-zA-Z0-9_\u4e00-\u9fa5]+)\s*(>=|<=|>|<|==)\s*(-?\d+(?:\.\d+)?)$/);
+            if (singleMatch) {
+                const vName = singleMatch[1];
+                const op = singleMatch[2];
+                const targetVal = parseFloat(singleMatch[3]);
+                const currentVal = playState[vName] || 0;
+                
+                if (op === '>' && !(currentVal > targetVal)) return false;
+                if (op === '>=' && !(currentVal >= targetVal)) return false;
+                if (op === '<' && !(currentVal < targetVal)) return false;
+                if (op === '<=' && !(currentVal <= targetVal)) return false;
+                if (op === '==' && !(currentVal === targetVal)) return false;
+                return true;
+            }
+        } catch(e) { console.warn("台词条件解析失败:", e); return true; }
+        
+        return true; 
+    }
+
+    // 点击鼠标，播放下一句
+    function advancePlayMode() {
+        if (document.getElementById('play-choices').style.display === 'flex') return; // 如果在等玩家选选项，就屏蔽点击
+        playCurrentIndex++;
+        renderPlayBlock();
+    }
+
+    function showPlayChoices() {
+        document.getElementById('play-dialogue-box').style.display = 'none'; 
+        const node = document.getElementById(playCurrentNodeId);
+        const choicesContainer = document.getElementById('play-choices');
+        choicesContainer.innerHTML = ''; 
+        
+        // 读取新的选项数据
+        let choices = [];
+        try { choices = JSON.parse(node.querySelector('.v-choices-data').value || '[]'); } catch(e) {}
+        
+        if (choices.length === 0) {
+            choicesContainer.innerHTML = `<div class="play-choice-btn" onclick="closePlayMode()">[ 剧情结束 / 返回编辑器 ]</div>`;
+        } else {
+            choices.forEach(choice => {
+                const tNode = document.getElementById(choice.target);
+                const btn = document.createElement('div');
+                btn.className = 'play-choice-btn';
+                
+                // 👇 新增：呼叫裁判，看看玩家的属性够不够资格进入这个选项指向的节点
+                const isAllowed = processNodeRules(choice.target, true);
+                
+                if (tNode && isAllowed) {
+                    // 正常显示的选项
+                    btn.innerText = `➔ [${choice.target || '未连接'}] ${choice.text || '继续...'}`;
+                    btn.onclick = () => startPlayMode(choice.target); 
+                } else if (tNode && !isAllowed) {
+                    // 属性不够，变灰并锁死选项（经典 CRPG 体验）
+                    btn.innerText = `🔒 [条件不足] ${choice.text || '未知选项'}`;
+                    btn.style.opacity = '0.3';
+                    btn.style.cursor = 'not-allowed';
+                    btn.style.background = 'rgba(0,0,0,0.5)';
+                } else {
+                    btn.innerText = `➔ [未连接] ${choice.text || '继续...'}`;
+                    btn.style.opacity = '0.5';
+                    btn.style.cursor = 'not-allowed';
+                }
+                choicesContainer.appendChild(btn);
+            });
+        }
+        choicesContainer.style.display = 'flex';
+    }
+
+    // 退出试玩
+    function closePlayMode() {
+        document.getElementById('play-overlay').classList.remove('active');
+        // 👇 加上这一行，保证退出时黑屏也跟着消失
+        document.getElementById('play-ending-screen').classList.remove('active');
+    }
+
+    // ================= 全局试玩引擎入口 =================
+    function startGlobalPlay() {
+        const nodes = document.querySelectorAll('.node');
+        if (nodes.length === 0) {
+            alert("画布是空的，还没写剧情呢！");
+            return;
+        }
+
+        // 1. 收集画布上所有被“指向”的目标 ID
+        let allTargets = new Set();
+        document.querySelectorAll('.v-choices-data').forEach(input => {
+            try {
+                const choices = JSON.parse(input.value || '[]');
+                // 把所有填写了目标 ID 的选项提取出来
+                choices.forEach(c => {
+                    if (c.target) allTargets.add(c.target);
+                });
+            } catch(e) {}
+        });
+
+        // 2. 寻找故事的“源头”（根节点）：即没有被任何节点指向的节点
+        let rootNodeId = null;
+        
+        // 先把节点按 ID 顺序排个序，保证查找的稳定性
+        let nodeArray = Array.from(nodes).sort((a, b) => a.id.localeCompare(b.id));
+
+        for (let node of nodeArray) {
+            // 如果这个节点的 ID 不在别人的目标列表里，说明它是开头
+            if (!allTargets.has(node.id)) {
+                rootNodeId = node.id;
+                break;
+            }
+        }
+
+        // 3. 兜底机制：如果你画了一个完美的闭环（所有节点互相指），就强行从 ID 最小的那个开始
+        if (!rootNodeId) {
+            rootNodeId = nodeArray[0].id;
+        }
+
+        initPlayState(); // 👇 新增：每次启动全局试玩，重置状态
+        // 4. 调用现有的试玩函数，传入找到的根节点
+        startPlayMode(rootNodeId);
+    }
+    // ================= 新手引导系统 (终极完善版) =================
+    let currentGuideStep = 0;
+    let guideSteps = [];
+
+    function startTutorial() {
+        // 1. 贴心的防手滑提示
+        const nodes = document.querySelectorAll('.node');
+        if (nodes.length > 0) {
+            if (!confirm("💡 开启新手教程将清空当前画布上的所有内容！\n\n如果你有未导出的心血，请先点取消去【保存/导出工程】。\n确定要清空并开始教程吗？")) {
+                return; // 如果点击取消，就直接中止教程
+            }
+        }
+
+        // 2. 强行清空桌面并复位镜头
+        nodes.forEach(n => n.remove());
+        drawAllLines();
+        document.getElementById('side-panel').classList.remove('open');
+        panX = 0; panY = 0; scale = 1; updateTransform();
+
+        document.body.classList.add('tutorial-active');
+        currentGuideStep = 0;
+        
+
+        // 3. 终极导演剪辑版教程（逻辑闭环，包含所有特性）
+        // 3. 终极无敌导演剪辑版教程（加入重做，完美闭环！）
+        // 3. 终极无敌圆满版教程（加入描写环节，完美闭环！）
+        // 终极修复版：适配了新面板排版的教程序列
+        // 终极无敌完全体版：加入了变量、逻辑检定与真结局的教程序列
+        guideSteps = [
+            { selector: '#btn-new-node', title: '第一步：新建节点', text: '点击【+ 新建剧情节点】创建第一张卡片。', action: 'click' },
+            { selector: '.node-title-input', title: '第二步：命名节点', text: '每个节点都有自己的ID。\n点击卡片左上角的默认名字，把它改成你想要的名字。', action: 'free', waitFor: true },
+            { selector: '.v-text-preview', title: '第三步：编写剧情', text: '点击【剧情序列】区域，打开右侧的剧本编辑器。', action: 'click', waitFor: true },
+            { selector: '#btn-add-dialogue', title: '第四步：添加台词块', text: '点击右侧面板的【+ 台词】按钮。', action: 'click', waitFor: true },
+            { selector: '.block-role-input', title: '第五步：赋予名字', text: '输入角色名字。\n画布上的卡片会自动将名字同步为出场角色。\n（写完后请点击下方【继续】）', action: 'free', waitFor: true },
+            
+            { selector: '.story-block[data-type="dialogue"] .block-editor', title: '第六步：添加台词', text: '输入角色台词。\n（写完后请点击下方【继续】）', action: 'free', waitFor: true },
+            
+            { selector: '#btn-add-desc', title: '第七步：添加环境', text: '只有对话太单调了，点击【+ 描写】加点动作和场景吧。', action: 'click', waitFor: true },
+            { selector: '.story-block[data-type="desc"] .block-editor', title: '第八步：描写场景', text: '补充场景描写或者角色动作。\n（写完后请点击下方【继续】）', action: 'free', waitFor: true },
+            
+            { selector: 'button[onclick="addNewChoice()"]', title: '第九步：添加分支', text: '点击右侧面板下方的【+ 新增选项】。', action: 'click', waitFor: true },
+            { selector: '.choice-text-input', title: '第十步：添加选项内容', text: '在左侧输入框输入玩家会看到的选项文本（如：踢门）。\n（写完后请点击下方【继续】）', action: 'free', waitFor: true },
+            { selector: '.choice-target-input', title: '第十一步：添加节点名字', text: '在右侧输入框输入一个还不存在的ID（比如：111）。\n（写完后请点击下方【继续】）', action: 'free', waitFor: true },
+            { selector: '.btn-auto-gen', title: '第十二步：确认添加新分支', text: '点击【✨ 生成并连接】按钮。程序会自动在画布上生成新卡片并连好线。', action: 'click', waitFor: true },
+            { selector: '#btn-close-panel', title: '第十三步：保存并退出', text: '点击右上角的【关闭】按钮。', action: 'click', waitFor: true },
+            
+            // 👇 全新加入的“系统玩法”教学
+            { selector: '.toolbar .dropdown:nth-child(2)', title: '第十四步：定义全局变量', text: '随着剧情发展，我们需要记录数值！\n在【编辑】菜单中点击【🔧 全局变量】。\n添加一个变量（如HP，初始值设为10），点【完成】关闭弹窗。\n（操作完后请点击下方【继续】）', action: 'free', waitFor: true },
+            { selector: '.node .var-logic-group', title: '第十五步：设置逻辑检定', text: '给卡片加上判定机制！\n点击卡片上的【+ 添加逻辑规则】，你可以设置“满足条件才能选”或“进入后扣除属性”。\n（随便配置一条后，请点击下方【继续】）', action: 'free', waitFor: true },
+
+            { selector: '.btn-play', title: '第十六步：局部试玩', text: '点击卡片右上角的【▶️】按钮，体验刚才写好的剧情，并看看左上角的变量HUD有没有变化！\n（体验完毕并点击右上角【×】退出后，请点击下方【继续】）', action: 'free', waitFor: true },
+            
+            // 撤回与重做的时空穿梭
+            { selector: '.toolbar .dropdown:nth-child(2)', title: '第十七步：撤回操作', text: '在【编辑】菜单里点击【↩ 撤回】，或按 Ctrl+Z 撤回操作。\n（点击撤回后，请点击下方【继续】）', action: 'free', waitFor: true },
+            { selector: '.toolbar .dropdown:nth-child(2)', title: '第十八步：重做操作', text: '按 Ctrl+Y 或在菜单点击【↪ 重做】，把卡片找回来。\n（点击重做后，请点击下方【继续】）', action: 'free', waitFor: true },
+
+            { selector: '#btn-new-node', title: '第十九步：手动添加新节点', text: '点击左上角的【+ 新建剧情节点】，再建一张全新的卡片，我们将把它作为结局。', action: 'click', waitFor: true },
+            
+            // 👇 全新加入的“真结局”教学
+            { selector: '.node:last-child .v-text-preview', title: '第二十步：编写结局', text: '点击那张新卡片的【剧情序列】，打开右侧编辑器。', action: 'click', waitFor: true },
+            { selector: '#btn-add-ending', title: '第二十一步：添加结局标记', text: '点击右侧面板的【+ 结局标记】。\n加上这个红色的标记，玩家走到这里时就会触发全屏黑场！', action: 'click', waitFor: true },
+            { selector: '.story-block[data-type="ending"] .block-editor', title: '第二十二步：命名结局', text: '输入这周目的结局名字（例如：真正的第四国际）。\n（写完后请点击右上角【关闭】面板，再点击下方【继续】）', action: 'free', waitFor: true },
+
+            { selector: '.node .socket.out', title: '第二十三步：手动连线', text: '按住前面卡片右下角的空心小圆点，拖拽一条线到红色的结局卡片上。\n💡 提示：双击连线可以断开连接。\n（连线成功后请点击下方【继续】）', action: 'free', waitFor: true },
+            
+            // 👇 全部改为 free 模式，避免和下拉菜单的点击事件打架
+            { selector: '[onclick*="startGlobalPlay"]', title: '第二十四步：全局试玩', text: '激动人心的时刻！点击【🎬 全局试玩】，跑通完整剧情。\n（💡 体验完成并退出后，请点击下方【继续】）', action: 'free', waitFor: true },
+            
+            { selector: '[onclick*="exportExcel"]', title: '第二十五步：输出配置表', text: '在菜单里点击【↓ 导出 .xlsx】，可导出配置表。\n（💡 操作完后，请点击下方【继续】）', action: 'free', waitFor: true },
+            
+            { selector: '[onclick*="exportProject"]', title: '最终步：备份工程文件', text: '点击【📦 导出工程备份】，备份工程源文件。', action: 'free', waitFor: true }
+        ];
+        
+        runGuideStep();
+    }
+
+    function runGuideStep() {
+        // 清除上一步的状态
+        document.querySelectorAll('.guide-highlight').forEach(el => {
+            el.classList.remove('guide-highlight');
+            if(el.guideHandler) el.removeEventListener('click', el.guideHandler);
+        });
+
+        // 教程结束判定
+        if (currentGuideStep >= guideSteps.length) {
+            document.getElementById('guide-tooltip').style.display = 'none';
+            if (typeof showCelebration === 'function') showCelebration(); 
+            return;
+        }
+
+        const step = guideSteps[currentGuideStep];
+        
+        const tryBind = () => {
+            let target = document.querySelector(step.selector);
+            
+            // 如果还没加载出来，且设置了等待
+            if (!target) {
+                if (step.waitFor) {
+                    setTimeout(tryBind, 200);
+                } else {
+                    console.warn("教程目标未找到，跳过:", step.selector);
+                    currentGuideStep++;
+                    runGuideStep();
+                }
+                return;
+            }
+
+            // --- 【核心修复 1】：处理隐藏在菜单里的元素 ---
+            let rect = target.getBoundingClientRect();
+            
+            // 如果目标元素目前不可见（比如藏在下拉菜单里，宽高为0）
+            if (rect.width === 0 || rect.height === 0) {
+                // 向上寻找最近的一个可见父级（通常是 .dropdown 菜单头）
+                let visibleParent = target.closest('.dropdown') || target.parentElement;
+                if (visibleParent) {
+                    target = visibleParent;
+                    rect = target.getBoundingClientRect(); // 重新覆盖 rect，保证气泡定位正确
+                }
+            }
+
+            // 激活高亮
+            target.classList.add('guide-highlight');
+            
+            const tooltip = document.getElementById('guide-tooltip');
+            const nextBtn = document.getElementById('guide-btn-next');
+            
+            tooltip.style.display = 'block';
+            tooltip.querySelector('.guide-title').innerText = step.title;
+            tooltip.querySelector('.guide-text').innerText = step.text;
+            
+            // --- 【核心修复 2】：使用修正后的 rect 进行智能定位 ---
+            let top = rect.bottom + 15;
+            let left = rect.left;
+            
+            if (step.title.includes('连线')) {
+                top = 100; // 连线步稍微往下一点，别挡住连线点
+                left = window.innerWidth / 2 - 140; 
+            } else if (step.selector.includes('.dropdown') || step.selector.includes('export') || step.selector.includes('global') || step.title.includes('操作')) {
+                // 工具栏操作：气泡固定在左上角安全区
+                top = 80; 
+                left = 220;
+            } else if (step.title.includes('逻辑检定') || step.title.includes('试玩') || step.title.includes('命名节点')) {
+                // 卡片操作：气泡挂在右侧
+                top = rect.top - 20; 
+                left = rect.right + 30; 
+                if (left + 280 > window.innerWidth) left = rect.left - 310;
+            } else {
+                // 普通避让
+                if (top + 150 > window.innerHeight) top = rect.top - 180;
+                if (left + 280 > window.innerWidth) left = window.innerWidth - 300;
+            }
+            
+            tooltip.style.top = top + 'px'; 
+            tooltip.style.left = left + 'px';
+
+            // 绑定下一步逻辑
+            if (step.action === 'free') {
+                nextBtn.style.display = 'block';
+                nextBtn.onclick = () => {
+                    nextBtn.onclick = null;
+                    currentGuideStep++;
+                    setTimeout(runGuideStep, 200);
+                };
+            } else {
+                nextBtn.style.display = 'none';
+                target.guideHandler = () => {
+                    target.removeEventListener('click', target.guideHandler);
+                    currentGuideStep++;
+                    setTimeout(runGuideStep, 200);
+                };
+                target.addEventListener('click', target.guideHandler);
+            }
+        };
+
+        tryBind();
+    }
+
+    
+    // ================= 庆祝弹窗与彩纸生成 =================
+    function showCelebration() {
+        const modal = document.getElementById('tutorial-complete-modal');
+        modal.classList.add('active');
+        
+        // 创建一个装彩纸的隐形容器
+        const container = document.createElement('div');
+        container.id = 'confetti-container';
+        container.style.position = 'fixed';
+        container.style.inset = '0';
+        container.style.pointerEvents = 'none';
+        container.style.overflow = 'hidden';
+        container.style.zIndex = '3999';
+        document.body.appendChild(container);
+
+        // 随机生成 80 片彩色纸屑
+        const colors = ['#4eb0a5', '#ff6b6b', '#feca57', '#5f27cd', '#48dbfb'];
+        for (let i = 0; i < 80; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            // 随机分配位置、颜色、下落速度和延迟时间
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            confetti.style.animationDelay = (Math.random() * 0.5) + 's';
+            container.appendChild(confetti);
+        }
+    }
+
+    // 真正结束教程，解除所有锁定
+    function endTutorial() {
+        document.getElementById('tutorial-complete-modal').classList.remove('active');
+        document.body.classList.remove('tutorial-active');
+        
+        // 扫地出门，把掉完的彩纸清掉
+        const container = document.getElementById('confetti-container');
+        if (container) container.remove();
+        
+        // 标记教程已完成，下次打开网页就不会再弹出了
+        localStorage.setItem('fourth_intl_tutorial', 'true');
+    }
+
+    // 自动衍生并连接新节点
+function addAutoBranchNode() {
+    if (!activeEditingNodeId) {
+        alert("请先点击一个卡片的【剧情序列】打开右侧面板！");
+        return;
+    }
+
+    // 1. 获取当前正在编辑的父节点
+    const parentNode = document.getElementById(activeEditingNodeId);
+    const parentX = parseFloat(parentNode.style.left);
+    const parentY = parseFloat(parentNode.style.top);
+
+    // 2. 计算新节点坐标：放在父节点右侧，稍微往下偏移一点防止重叠
+    const newX = parentX + 350;
+    const newY = parentY + 100;
+
+    // 3. 生成新ID并创建节点
+    const newId = 'N' + (nodeCount++).toString().padStart(3, '0');
+    // 调用现成的 createNode，并塞入一个空数据的格式
+    createNode(newX, newY, null, { 
+        id: newId, role: '', storyData: '[]', targets: '', conditions: '' 
+    });
+
+    // 4. 自动连线：给父节点加一个新选项连过去
+    const choicesInput = parentNode.querySelector('.v-choices-data');
+    if (choicesInput) {
+        let choices = [];
+        try { choices = JSON.parse(choicesInput.value || '[]'); } catch(e) {}
+        
+        // 如果还没有连过，就生成一个默认选项
+        if (!choices.some(c => c.target === newId)) {
+            choices.push({ text: '继续...', target: newId });
+            choicesInput.value = JSON.stringify(choices);
+            updateNodeChoicesPreview(parentNode, choices); // 刷新卡片表面
+        }
+    }
+
+    // 5. 刷新画布与存档
+    drawAllLines();
+    if (typeof saveToLocal === 'function') saveToLocal(true);
+    
+    // 给点视觉反馈
+    const targetBtn = document.getElementById('btn-auto-branch');
+    const oldText = targetBtn.innerText;
+    targetBtn.innerText = `已生成: ${newId}！`;
+    setTimeout(() => targetBtn.innerText = oldText, 1000);
+}
+
+// 每次打开侧边栏时，同时渲染文本块和选项块
+function openSidePanel(nodeId) {
+    activeEditingNodeId = nodeId;
+    const node = document.getElementById(nodeId);
+    
+    document.getElementById('panel-title').innerText = `正在编写: ${nodeId}`;
+    
+    // 1. 渲染剧情块 (原有逻辑)
+    const editor = document.getElementById('panel-editor');
+    editor.innerHTML = ''; 
+    try {
+        const blocksData = JSON.parse(node.querySelector('.v-story-data').value || '[]');
+        blocksData.forEach(b => addBlock(b.type, b.role, b.text));
+    } catch(e) {}
+    
+    // 2. 渲染选项区 (新增逻辑)
+    renderPanelChoices(node);
+    
+    document.getElementById('side-panel').classList.add('open');
+}
+
+// 渲染选项区，并保证它一直在最后
+    function renderPanelChoices(node) {
+        const editor = document.getElementById('panel-editor');
+        
+        // 检查是否已存在选项区，存在则先移除，保证它永远重新生成在最后
+        let choicesSection = document.getElementById('panel-choices-section');
+        if (choicesSection) choicesSection.remove();
+
+        choicesSection = document.createElement('div');
+        choicesSection.id = 'panel-choices-section';
+        choicesSection.className = 'panel-choices-section'; 
+        choicesSection.innerHTML = `
+            <h4 style="margin: 20px 0 10px 0; color: #d4d4d4; font-size: 13px; border-top: 1px dashed #444; padding-top: 15px;">➔ 剧情分支选项</h4>
+            <div id="choices-container"></div>
+            <button class="btn" onclick="addNewChoice()" style="background: transparent; border: 1px dashed #666; width: 100%; margin-top: 5px;">+ 新增选项</button>`;
+        
+        editor.appendChild(choicesSection);
+
+        // 渲染具体选项
+        const choicesData = JSON.parse(node.querySelector('.v-choices-data').value || '[]');
+        choicesData.forEach((choice, index) => renderSingleChoiceUI(choice, index));
+    }
+
+function renderSingleChoiceUI(choice, index) {
+    const container = document.getElementById('choices-container');
+    const div = document.createElement('div');
+    div.className = 'choice-edit-block';
+    div.innerHTML = `
+        <div class="choice-edit-row">
+            <input type="text" class="choice-text-input" placeholder="玩家看到的选项文本 (如: [卡斯珀] 何意味)" value="${choice.text}" oninput="syncChoicesToNode()">
+            <button class="block-delete" style="position:static;" onclick="this.parentElement.parentElement.remove(); syncChoicesToNode()">×</button>
+        </div>
+        <div class="choice-edit-row">
+            <input type="text" class="choice-target-input" placeholder="目标节点ID (如: N002)" value="${choice.target}" oninput="syncChoicesToNode()">
+            <button class="btn-auto-gen" onclick="autoGenerateNodeForChoice(this)">✨ 生成并连接</button>
+        </div>
+    `;
+    container.appendChild(div);
+}
+
+function addNewChoice() {
+    renderSingleChoiceUI({ text: '', target: '' }, -1);
+    syncChoicesToNode();
+}
+
+// 核心魔法：智能生成并连接节点 (支持自定义ID)
+function autoGenerateNodeForChoice(btn) {
+    const targetInput = btn.parentElement.querySelector('.choice-target-input');
+    let targetId = targetInput.value.trim();
+
+    // 1. 智能判定目标 ID
+    if (targetId !== '') {
+        // 如果框里有名字，先去画布上找找看
+        if (document.getElementById(targetId)) {
+            // 如果真的有这张卡片，那才是真连上了
+            alert("这个选项已经连接到现有的节点 [" + targetId + "] 啦！");
+            return;
+        }
+        // 如果框里有名字，但画布上没有这张卡，那我们就用这个名字建新卡！
+    } else {
+        // 如果框里是空的，就自动按顺序生成一个新 ID
+        targetId = 'N' + (nodeCount++).toString().padStart(3, '0');
+        // 防止和别人改过的名字撞车
+        while (document.getElementById(targetId)) {
+            targetId = 'N' + (nodeCount++).toString().padStart(3, '0');
+        }
+    }
+
+    // 2. 获取父节点坐标
+    const parentNode = document.getElementById(activeEditingNodeId);
+    const px = parseFloat(parentNode.style.left);
+    const py = parseFloat(parentNode.style.top);
+
+    // 3. 生成新节点 (使用刚才决定的 targetId)
+    createNode(px + 350, py + (Math.random() * 60), null, { 
+        id: targetId, role: '', storyData: '[]', choicesData: '[]', conditions: '' 
+    }); 
+
+    // 4. 把正确的 ID 填入当前选项框，并同步保存
+    targetInput.value = targetId;
+    syncChoicesToNode();
+
+    // 给点反馈
+    const oldText = btn.innerText;
+    btn.innerText = '✅ 已生成';
+    btn.style.background = '#2ea043';
+    setTimeout(() => { btn.innerText = oldText; btn.style.background = ''; }, 1000);
+
+    // 触发历史存档
+    if (typeof saveToLocal === 'function') saveToLocal(true, true);
+}
+
+// 同步选项数据到卡片，并触发连线重绘
+function syncChoicesToNode() {
+    if (!activeEditingNodeId) return;
+    const node = document.getElementById(activeEditingNodeId);
+    const container = document.getElementById('choices-container');
+    if (!container) return; // 面板没打开时忽略
+
+    const blocks = Array.from(container.querySelectorAll('.choice-edit-block'));
+    const choicesData = blocks.map(b => {
+        return {
+            text: b.querySelector('.choice-text-input').value.trim(),
+            target: b.querySelector('.choice-target-input').value.trim()
+        };
+    });
+
+    node.querySelector('.v-choices-data').value = JSON.stringify(choicesData);
+    
+    // 更新卡片表面的预览UI
+    updateNodeChoicesPreview(node, choicesData);
+    
+    // 重新画线！
+    drawAllLines();
+    if (typeof saveToLocal === 'function') saveToLocal(true);
+}
+
+function updateNodeChoicesPreview(node, choicesData) {
+    const previewContainer = node.querySelector('.node-choices-preview');
+    if (choicesData.length === 0) {
+        previewContainer.innerHTML = `<div style="color: #666; font-size: 11px;">+ 点击面板编辑选项...</div>`;
+        return;
+    }
+
+    previewContainer.innerHTML = choicesData.map(c => 
+        `<div class="node-choice-item">
+            <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;">➔ ${c.text || '未命名选项'}</span>
+            <span class="node-choice-target">${c.target ? `[${c.target}]` : '[空]'}</span>
+        </div>`
+    ).join('');
+}
+// ================= 撤回/重做系统 (History System) =================
+    const MAX_HISTORY = 50; // 最多记录50步
+    let historyStack = [];
+    let historyIndex = -1;
+    let isRestoring = false; // 防止在撤回时触发新的历史记录
+
+    // 提取当前画布的完整快照
+    function getSnapshot() {
+        const nodes = document.querySelectorAll('.node');
+        const data = { viewport: { panX, panY, scale }, nodeCount: nodeCount, globalVars: globalVars, nodes: [] };
+        nodes.forEach(node => {
+            data.nodes.push({
+                id: node.id,
+                x: parseFloat(node.style.left),
+                y: parseFloat(node.style.top),
+                role: node.querySelector('.v-role').value,
+                storyData: node.querySelector('.v-story-data').value,
+                choicesData: node.querySelector('.v-choices-data') ? node.querySelector('.v-choices-data').value : '[]',
+                conditions: node.querySelector('.v-var-data') ? node.querySelector('.v-var-data').value : '[]'
+            });
+        });
+        return JSON.stringify(data);
+    }
+
+    let historyTimeout = null; // 新增：用于防抖的定时器
+
+    // 升级版：加入智能防抖 (Debounce) 和 立即记录 (Immediate)
+    function recordHistory(immediate = false) {
+        if (isRestoring) return; 
+        
+        const takeSnapshot = () => {
+            const currentState = getSnapshot();
+            if (historyIndex >= 0 && historyStack[historyIndex] === currentState) return;
+            if (historyIndex < historyStack.length - 1) {
+                historyStack = historyStack.slice(0, historyIndex + 1);
+            }
+            historyStack.push(currentState);
+            if (historyStack.length > MAX_HISTORY) historyStack.shift();
+            else historyIndex++;
+        };
+
+        if (immediate) {
+            // 如果是添加节点、连线等重大操作，立刻记录
+            if (historyTimeout) clearTimeout(historyTimeout);
+            takeSnapshot();
+        } else {
+            // 如果是打字，停顿 800 毫秒后才正式拍下快照
+            if (historyTimeout) clearTimeout(historyTimeout);
+            historyTimeout = setTimeout(takeSnapshot, 800); 
+        }
+    }
+
+    // 撤回 (Undo)
+    function undoHistory() {
+        if (historyIndex > 0) {
+            historyIndex--;
+            restoreSnapshot(historyStack[historyIndex]);
+            showToast('↩ 已撤回', 'info', 1500); // 正常撤回的提示
+        } else {
+            // 触达边界的提示
+            showToast('已经是最初的状态啦', 'warning', 2000); 
+        }
+    }
+
+    // 重做 (Redo)
+    function redoHistory() {
+        if (historyIndex < historyStack.length - 1) {
+            historyIndex++;
+            restoreSnapshot(historyStack[historyIndex]);
+            showToast('↪ 已重做', 'info', 1500); // 正常重做的提示
+        } else {
+            // 触达边界的提示
+            showToast('已经是最新状态了', 'warning', 2000); 
+        }
+    }
+
+    // 读取并还原快照
+    function restoreSnapshot(stateStr) {
+        isRestoring = true; // 开启保护锁
+        try {
+            const data = JSON.parse(stateStr);
+            globalVars = data.globalVars || [];
+            panX = data.viewport.panX; panY = data.viewport.panY; scale = data.viewport.scale;
+            nodeCount = data.nodeCount || 1;
+            
+            // 清空画布并重建
+            document.getElementById('canvas').innerHTML = '<svg id="svg-layer"></svg>';
+            updateTransform();
+            data.nodes.forEach(nData => createNode(nData.x, nData.y, null, nData));
+            
+            drawAllLines();
+            saveToLocal(true); 
+
+            // 👉 智能恢复侧边栏状态
+            if (activeEditingNodeId) {
+                // 如果当前正在编辑的节点在撤回后依然存在，就刷新面板内容
+                if (document.getElementById(activeEditingNodeId)) {
+                    openSidePanel(activeEditingNodeId);
+                } else {
+                    // 只有当这个节点因为撤回而消失时，才关闭面板
+                    closeSidePanel();
+                }
+            }
+            
+        } catch(e) { console.error("历史快照还原失败", e); }
+        
+        // 延迟0.1秒解锁，防止输入框的 oninput 晚了一步触发保存
+        setTimeout(() => { isRestoring = false; }, 100);
+    }
+
+    // 监听键盘快捷键
+    window.addEventListener('keydown', (e) => {
+        // Ctrl+Z (Windows) 或 Cmd+Z (Mac)
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+            if (e.shiftKey) {
+                e.preventDefault(); redoHistory(); // Ctrl+Shift+Z
+            } else {
+                e.preventDefault(); undoHistory(); // Ctrl+Z
+            }
+        }
+        // Ctrl+Y (Windows常用重做)
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+            e.preventDefault(); redoHistory();
+        }
+    });
+
+    /**
+ * 全局吐司提示函数
+ * @param {string} message - 提示文本
+ * @param {string} type - 类型: 'success' | 'error' | 'warning' | 'info'
+ * @param {number} duration - 显示时长(毫秒)
+ */
+function showToast(message, type = 'info', duration = 3000) {
+  // 1. 确保容器存在
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  // 2. 准备图标映射
+  const icons = {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: '✨'
+  };
+
+  // 3. 创建吐司元素
+  const toast = document.createElement('div');
+  toast.className = `toast-item toast-${type}`;
+  toast.innerHTML = `
+    <span style="font-size: 16px;">${icons[type] || icons.info}</span>
+    <span>${message}</span>
+  `;
+
+  // 4. 添加到页面中
+  container.appendChild(toast);
+
+  // 5. 定时移除
+  setTimeout(() => {
+    toast.classList.add('toast-fadeout');
+    // 监听消失动画结束，然后从 DOM 中彻底移除节点
+    toast.addEventListener('animationend', () => {
+      toast.remove();
+    });
+  }, duration);
+}
+
+// ================= 全局变量管理系统 =================
+let globalVars = []; // 数据结构示例: [{ name: 'Sanity', value: '100' }]
+
+
+// 关闭面板
+function closeVarModal() {
+    const modal = document.getElementById('var-modal');
+    if (modal) modal.classList.remove('active');
+    
+    // 关闭时自动保存并给个吐司提示
+    if (typeof saveToLocal === 'function') {
+        saveToLocal(true, true);
+        if (typeof showToast === 'function') showToast('🔧 变量数据已同步', 'info', 1500);
+    }
+    updateAllNodeVarDropdowns();
+}
+
+// 渲染面板内容
+function renderVarModal() {
+    const modal = document.getElementById('var-modal');
+    let html = `
+        <div class="var-header">
+            <h3>🔧 全局变量管理</h3>
+            <button class="btn" style="padding: 4px 12px;" onclick="closeVarModal()">完成</button>
+        </div>
+        <div id="var-list" style="max-height: 300px; overflow-y: auto; padding-right: 5px;"></div>
+        <button class="btn" onclick="addVarRow()" style="width: 100%; margin-top: 15px; border: 1px dashed #666; background: transparent; color: #aaa;">+ 新增初始变量</button>
+    `;
+    modal.innerHTML = html;
+    
+    const list = document.getElementById('var-list');
+    if (globalVars.length === 0) {
+        list.innerHTML = '<div style="color:#888; text-align:center; font-size:12px; margin-top: 20px;">暂无变量。你可以添加例如 "HP" 或 "HasKey" 等属性。</div>';
+    } else {
+        globalVars.forEach((v, index) => {
+            const row = document.createElement('div');
+            row.className = 'var-row';
+            row.innerHTML = `
+                <input type="text" placeholder="变量名 (如: hp)" value="${v.name}" onchange="updateVar(${index}, 'name', this.value)">
+                <span style="color:#888;">=</span>
+                <input type="text" placeholder="初始值 (如: 100)" value="${v.value}" onchange="updateVar(${index}, 'value', this.value)">
+                <button class="delete-btn" style="position:static; margin:0;" onclick="removeVar(${index})">×</button>
+            `;
+            list.appendChild(row);
+        });
+    }
+}
+
+// 增加一行空变量
+function addVarRow() {
+    globalVars.push({ name: '', value: '' });
+    renderVarModal();
+}
+
+// 更新数组中的值
+function updateVar(index, key, val) {
+    globalVars[index][key] = val.trim();
+}
+
+// 删除某一行
+function removeVar(index) {
+    globalVars.splice(index, 1);
+    renderVarModal();
+}
+
+// ================= 变量弹窗拖拽逻辑 =================
+let isDraggingVarModal = false;
+let varDragOffsetX = 0;
+let varDragOffsetY = 0;
+
+// ================= 变量弹窗与拖拽逻辑 =================
+function openVarModal() {
+    let modal = document.getElementById('var-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'var-modal';
+        document.body.appendChild(modal);
+        
+        // 只在第一次创建时绑定拖拽事件
+        window.addEventListener('mousemove', (e) => {
+            if (isDraggingVarModal) {
+                modal.style.left = (e.clientX - varDragOffsetX) + 'px';
+                modal.style.top = (e.clientY - varDragOffsetY) + 'px';
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (isDraggingVarModal) {
+                isDraggingVarModal = false;
+                const header = modal.querySelector('.var-header');
+                if (header) header.style.cursor = 'grab';
+            }
+        });
+    }
+    
+    renderVarModal();
+    modal.classList.add('active');
+    
+    // 👇 教程特权：打开弹窗时，把高亮瞬间转移到弹窗上，并且把气泡挪到安全区
+    if (document.body.classList.contains('tutorial-active')) {
+        document.querySelectorAll('.guide-highlight').forEach(el => el.classList.remove('guide-highlight'));
+        modal.classList.add('guide-highlight');
+        
+        const tooltip = document.getElementById('guide-tooltip');
+        if (tooltip) {
+            tooltip.style.top = '100px';
+            tooltip.style.left = '50px';
+        }
+    }
+    
+    // 每次渲染后重新获取 header 并绑定 mousedown（拖拽起手式）
+    const header = modal.querySelector('.var-header');
+    if (header) {
+        header.style.cursor = 'grab';
+        header.onmousedown = (e) => {
+            isDraggingVarModal = true;
+            header.style.cursor = 'grabbing';
+            
+            // 核心技巧：拖拽前先把 CSS 的 translate 居中属性拔掉，换成纯绝对坐标，防止乱飞
+            const rect = modal.getBoundingClientRect();
+            modal.style.transform = 'none';
+            modal.style.margin = '0';
+            modal.style.left = rect.left + 'px';
+            modal.style.top = rect.top + 'px';
+            
+            varDragOffsetX = e.clientX - rect.left;
+            varDragOffsetY = e.clientY - rect.top;
+            e.preventDefault(); // 防止拖拽时意外选中文本
+        };
+    }
+}
+
+// 当你在下拉框选择一个变量时，自动把它插进旁边的输入框里
+function insertVarToInput(selectElem) {
+    if (!selectElem.value) return;
+    const inputElem = selectElem.nextElementSibling; // 找到紧挨着的输入框
+    
+    // 自动在输入框末尾追加变量名和一个空格
+    inputElem.value += (inputElem.value ? ' ' : '') + selectElem.value;
+    selectElem.value = ""; // 用完重置回默认提示
+    inputElem.focus(); // 焦点还给输入框，方便你继续敲 ">" 或 "+"
+    
+    if (typeof saveToLocal === 'function') saveToLocal(true);
+}
+
+// 遍历画布上所有的节点，刷新它们的变量下拉菜单
+function updateAllNodeVarDropdowns() {
+    const selects = document.querySelectorAll('.v-var-select');
+    let optionsHtml = '<option value="">+ 插入变量</option>';
+    globalVars.forEach(v => {
+        if (v.name) optionsHtml += `<option value="${v.name}">${v.name}</option>`;
+    });
+    selects.forEach(select => select.innerHTML = optionsHtml );
+}
+
+// 记得在关闭变量管理面板时，触发一次刷新！
+// 请找到你原来的 closeVarModal 函数，在里面加上这一行：
+// updateAllNodeVarDropdowns();
+
+// ================= 节点变量可视化配置逻辑 =================
+    
+    // 在卡片上新增一行变量规则
+    function addNodeVarRule(nodeId, ruleData = null) {
+        const node = document.getElementById(nodeId);
+        const list = node.querySelector('.node-var-list');
+        
+        const div = document.createElement('div');
+        div.className = 'var-rule-row';
+        div.style.cssText = 'display: flex; gap: 4px; margin-bottom: 4px; align-items: center;';
+        
+        // 动态生成下拉选项
+        let varOptions = '<option value="">选择变量...</option>';
+        if (typeof globalVars !== 'undefined') {
+            globalVars.forEach(v => {
+                if (v.name) varOptions += `<option value="${v.name}">${v.name}</option>`;
+            });
+        }
+
+        div.innerHTML = `
+            <select class="rule-var" style="flex: 2; background: var(--input-bg); color: var(--text-main); border: 1px solid var(--input-border); border-radius: 4px; padding: 4px; outline: none;" onchange="syncNodeVars('${nodeId}')">
+                ${varOptions}
+            </select>
+            <select class="rule-op" style="flex: 1; background: var(--input-bg); color: var(--accent); border: 1px solid var(--input-border); border-radius: 4px; padding: 4px; outline: none;" onchange="syncNodeVars('${nodeId}')">
+                <optgroup label="判断条件 (满足才能进)">
+                    <option value=">">大于 (>)</option>
+                    <option value=">=">大于等于 (>=)</option>
+                    <option value="<">小于 (<)</option>
+                    <option value="<=">小于等于 (<=)</option>
+                    <option value="==">等于 (==)</option>
+                </optgroup>
+                <optgroup label="数值结算 (进入后执行)">
+                    <option value="+">增加 (+)</option>
+                    <option value="-">扣除 (-)</option>
+                    <option value="=">赋值为 (=)</option>
+                </optgroup>
+            </select>
+            <input type="text" class="rule-val" style="flex: 1; padding: 4px;" placeholder="数值" oninput="syncNodeVars('${nodeId}')">
+            <button class="delete-btn" style="position:static; margin:0; padding: 0 4px;" onclick="this.parentElement.remove(); syncNodeVars('${nodeId}')">×</button>
+        `;
+        list.appendChild(div);
+
+        // 如果是读取存档，把数据塞回去
+        if (ruleData) {
+            div.querySelector('.rule-var').value = ruleData.varName || '';
+            div.querySelector('.rule-op').value = ruleData.op || '=';
+            div.querySelector('.rule-val').value = ruleData.val || '';
+        }
+        syncNodeVars(nodeId);
+    }
+
+    // 把卡片上配置的规则打包存进隐藏输入框
+    function syncNodeVars(nodeId) {
+        const node = document.getElementById(nodeId);
+        const rows = node.querySelectorAll('.var-rule-row');
+        const data = [];
+        rows.forEach(row => {
+            const varName = row.querySelector('.rule-var').value;
+            const op = row.querySelector('.rule-op').value;
+            const val = row.querySelector('.rule-val').value;
+            if (varName) data.push({ varName, op, val });
+        });
+        node.querySelector('.v-var-data').value = JSON.stringify(data);
+        if (typeof saveToLocal === 'function') saveToLocal(true);
+    }
+
+    // 终极同步法术：刷新画布上所有卡片的下拉菜单
+    function updateAllNodeVarDropdowns() {
+        const selects = document.querySelectorAll('.rule-var');
+        selects.forEach(select => {
+            const currentVal = select.value; // 记住它现在选的是谁
+            let optionsHtml = '<option value="">选择变量...</option>';
+            if (typeof globalVars !== 'undefined') {
+                globalVars.forEach(v => {
+                    if (v.name) optionsHtml += `<option value="${v.name}">${v.name}</option>`;
+                });
+            }
+            select.innerHTML = optionsHtml;
+            select.value = currentVal; // 恢复选择
+        });
+    }
+
+    // ================= 全局试玩：变量裁判与 HUD 系统 =================
+    let playState = {}; // 游戏运行时的“内存”，用来记录玩家当前的数值
+
+    // 1. 初始化试玩状态（每次点击全局试玩时调用）
+    function initPlayState() {
+        playState = {};
+        if (typeof globalVars !== 'undefined') {
+            globalVars.forEach(v => {
+                // 把字符串转换成数字，如果不是数字就存字符串
+                playState[v.name] = isNaN(v.value) ? v.value : parseFloat(v.value);
+            });
+        }
+        updateHUD();
+    }
+
+    // 2. 核心魔法：解析卡片上的积木规则
+    // isCheckOnly = true 时，只判断让不让进（门卫）；
+    // isCheckOnly = false 时，真正扣血/加血（记账员）。
+    // 2. 核心魔法：解析卡片上的积木规则
+    function processNodeRules(nodeId, isCheckOnly = false) {
+        const node = document.getElementById(nodeId);
+        if (!node) return true; 
+        
+        let rules = [];
+        try { rules = JSON.parse(node.querySelector('.v-var-data').value || '[]'); } catch(e) {}
+        
+        for (let rule of rules) {
+            const vName = (rule.varName || "").trim();
+            const currentVal = playState[vName] || 0; // 如果找不到变量，默认当做 0
+            const targetVal = isNaN(rule.val) ? rule.val : parseFloat(rule.val);
+            
+            // 【条件门卫】：查数值，如果不满足直接拦截！
+            if (rule.op === '>' && !(currentVal > targetVal)) return false;
+            if (rule.op === '>=' && !(currentVal >= targetVal)) return false;
+            if (rule.op === '<' && !(currentVal < targetVal)) return false;
+            if (rule.op === '<=' && !(currentVal <= targetVal)) return false;
+            if (rule.op === '==' && !(currentVal === targetVal)) return false;
+            
+            // 【执行记账】：只有在真正进入节点时（isCheckOnly 为 false），才去改变数值
+            if (!isCheckOnly) {
+                if (rule.op === '=') playState[vName] = targetVal;
+                if (rule.op === '+') playState[vName] = currentVal + targetVal;
+                if (rule.op === '-') playState[vName] = currentVal - targetVal;
+            }
+        }
+        return true; // 查验全部通过
+    }
+
+    // 3. 渲染左上角的 HUD 状态栏
+    function updateHUD() {
+        let hud = document.getElementById('play-hud');
+        if (!hud) {
+            hud = document.createElement('div');
+            hud.id = 'play-hud';
+            // 给 HUD 加一点赛博复古档案感
+            hud.style.cssText = 'position: absolute; top: 20px; left: 20px; z-index: 3001; display: flex; flex-direction: column; gap: 8px;';
+            document.getElementById('play-overlay').appendChild(hud);
+        }
+        
+        hud.innerHTML = Object.keys(playState).map(key => `
+            <div style="background: rgba(0,0,0,0.6); border-left: 3px solid var(--accent); padding: 6px 12px; border-radius: 2px; color: #eee; font-family: monospace; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+                <span style="color: #888; margin-right: 8px;">${key}</span> 
+                <span style="font-weight: bold; color: var(--accent);">${playState[key]}</span>
+            </div>
+        `).join('');
+    }
+    // 切换条件类型：如果是区间，就多显示一个输入框
+function toggleConditionRange(selectElem) {
+    const row = selectElem.closest('.condition-row');
+    const val2 = row.querySelector('.cond-val2');
+    const span = row.querySelector('.cond-between-text');
+    if (selectElem.value === 'between') {
+        val2.style.display = 'block';
+        span.style.display = 'block';
+    } else {
+        val2.style.display = 'none';
+        span.style.display = 'none';
+    }
+}
+
+// 导出独立可玩的单文件 HTML 游戏 (修复白屏 & 支持自定义名字)
+function exportPlayableGame() {
+    const nodes = document.querySelectorAll('.node');
+    if (nodes.length === 0) {
+        alert("画布是空的，没东西可导出呀！");
+        return;
+    }
+
+    // 1. 弹窗询问名字
+    const gameTitle = prompt("请输入游戏标题（显示在浏览器标签页上）：", "第四国际 - 沉浸版");
+    if (gameTitle === null) return; // 点击取消则中止
+
+    const fileName = prompt("请输入导出的文件名（不需要打 .html）：", "第四国际_可玩版");
+    if (fileName === null) return;
+
+    // 2. 打包当前所有数据
+    const gameData = {
+        globalVars: globalVars || [],
+        nodes: {}
+    };
+
+    nodes.forEach(node => {
+        gameData.nodes[node.id] = {
+            role: node.querySelector('.v-role').value,
+            storyData: JSON.parse(node.querySelector('.v-story-data').value || '[]'),
+            choicesData: JSON.parse(node.querySelector('.v-choices-data').value || '[]'),
+            conditions: JSON.parse(node.querySelector('.v-var-data').value || '[]')
+        };
+    });
+
+    const rootNodeId = nodes[0].id;
+
+    // 3. 组装 HTML 模板
+    const htmlTemplate = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>${gameTitle}</title> <style>
+        body { 
+            margin: 0; padding: 0;
+            background-color: #0a0c0e; /* 👇 加上了这行保底的纯黑色，防止渐变失效变白！ */
+            background-image: radial-gradient(circle at center, #1a2026 0%, #0a0c0e 100%); 
+            color: #eee; font-family: 'Segoe UI', "Microsoft YaHei", sans-serif; 
+            user-select: none; overflow: hidden; height: 100vh;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes bounceDown { 0%, 100% { transform: translateY(0) rotate(45deg); opacity: 0.5; } 50% { transform: translateY(6px) rotate(45deg); opacity: 1; } }
+        @keyframes cinematicFade { from { opacity: 0; filter: blur(10px); } to { opacity: 1; filter: blur(0); } }
+
+        .hud { 
+            position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 100;
+            animation: fadeIn 1s ease-out;
+        }
+        .hud-item {
+            background: rgba(10, 15, 20, 0.7); padding: 6px 12px; border-left: 3px solid #4eb0a5;
+            border-radius: 2px; font-family: monospace; font-size: 14px; color: #ccc;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+        }
+        .hud-val { color: #4eb0a5; font-weight: bold; margin-left: 8px; }
+
+        .dialogue-wrapper {
+            position: fixed; bottom: 40px; z-index: 50; display: none;
+            left: 0; right: 0; margin: auto; 
+            width: 85%; max-width: 900px;
+            animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .dialogue-box { 
+            background: linear-gradient(135deg, rgba(30, 35, 40, 0.85) 0%, rgba(15, 18, 20, 0.95) 100%);
+            border: 1px solid rgba(78, 176, 165, 0.3); border-top: 2px solid #4eb0a5;
+            padding: 35px 40px 45px 40px; border-radius: 6px; cursor: pointer;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 1px 10px rgba(255,255,255,0.05);
+            backdrop-filter: blur(8px); position: relative; transition: all 0.1s;
+        }
+        .dialogue-box:active { transform: scale(0.99); filter: brightness(0.9); }
+
+        .name { 
+            position: absolute; top: -20px; left: 30px;
+            background: linear-gradient(90deg, #2b5c5c 0%, #1a3838 100%);
+            border: 1px solid #4eb0a5; border-radius: 4px; color: #fff;
+            padding: 6px 20px; font-size: 18px; font-weight: bold; letter-spacing: 1px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: none;
+        }
+
+        .text { font-size: 20px; line-height: 1.7; min-height: 90px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); color: #e0e0e0; }
+        .text-desc { color: #aaa; font-style: italic; }
+
+        .next-arrow {
+            position: absolute; right: 35px; bottom: 30px; width: 10px; height: 10px;
+            border-right: 3px solid #4eb0a5; border-bottom: 3px solid #4eb0a5;
+            animation: bounceDown 1.2s infinite ease-in-out; display: none;
+        }
+
+        .choices { 
+            position: fixed; bottom: 180px; left: 0; right: 0; margin: auto; 
+            width: 80%; max-width: 700px; display: none; flex-direction: column; gap: 15px; z-index: 60;
+            animation: slideUp 0.3s ease-out;
+        }
+        .choice-btn { 
+            background: linear-gradient(90deg, rgba(43,92,92,0.1) 0%, rgba(30,30,30,0.8) 20%, rgba(30,30,30,0.8) 80%, rgba(43,92,92,0.1) 100%);
+            border: 1px solid rgba(78, 176, 165, 0.4); border-left: 3px solid #4eb0a5; border-right: 3px solid #4eb0a5;
+            padding: 16px 20px; color: #ccc; cursor: pointer; text-align: center; font-size: 18px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; border-radius: 4px;
+        }
+        .choice-btn:hover { 
+            background: linear-gradient(90deg, rgba(78,176,165,0.2) 0%, rgba(43,92,92,0.9) 50%, rgba(78,176,165,0.2) 100%);
+            color: #fff; border-color: #4eb0a5; transform: scale(1.02); box-shadow: 0 0 15px rgba(78, 176, 165, 0.4);
+        }
+        .choice-btn:active { transform: scale(0.98); background: #4eb0a5; color: #000; }
+
+        .ending-screen {
+            position: fixed; inset: 0; background: #000; z-index: 200;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            animation: cinematicFade 2s ease-in-out forwards;
+        }
+        .ending-title { font-size: 24px; color: #888; letter-spacing: 6px; margin-bottom: 20px; }
+        .ending-name { font-size: 48px; color: #ff6b6b; font-weight: bold; letter-spacing: 4px; text-shadow: 0 0 30px rgba(255, 107, 107, 0.5); }
+        .restart-btn { margin-top: 60px; padding: 12px 30px; background: transparent; border: 1px solid #555; color: #888; cursor: pointer; border-radius: 4px; font-size: 16px; transition: 0.3s; }
+        .restart-btn:hover { border-color: #eee; color: #eee; }
+    </style>
+</head>
+<body>
+    <div id="hud" class="hud"></div>
+    <div id="choices" class="choices"></div>
+    
+    <div id="dialogue-wrapper" class="dialogue-wrapper">
+        <div id="dialogue-box" class="dialogue-box" onclick="advancePlay()">
+            <div id="name" class="name"></div>
+            <div id="text" class="text"></div>
+            <div id="next-arrow" class="next-arrow"></div>
+        </div>
+    </div>
+
+    <div id="ending-screen" class="ending-screen">
+        <div class="ending-title">达成结局</div>
+        <div id="ending-name" class="ending-name"></div>
+        <button class="restart-btn" onclick="location.reload()">重新开始旅程</button>
+    </div>
+
+    <script>
+        const gameData = ${JSON.stringify(gameData)};
+        const rootNodeId = "${rootNodeId}";
+        
+        let playState = {};
+        let currentNodeId = null;
+        let currentSequence = [];
+        let seqIndex = 0;
+
+        let typeTimer = null;
+        let isTyping = false;
+        let targetHtml = "";
+
+        function updateHUD() {
+            document.getElementById('hud').innerHTML = Object.keys(playState).map(k => 
+                \`<div class="hud-item">\${k}<span class="hud-val">\${playState[k]}</span></div>\`
+            ).join('');
+        }
+
+        function processRules(nodeId) {
+            const rules = gameData.nodes[nodeId].conditions || [];
+            for (let rule of rules) {
+                const vName = (rule.varName || "").trim();
+                const currentVal = playState[vName] || 0; 
+                const targetVal = isNaN(rule.val) ? rule.val : parseFloat(rule.val);
+                
+                if (rule.op === '>' && !(currentVal > targetVal)) return false;
+                if (rule.op === '>=' && !(currentVal >= targetVal)) return false;
+                if (rule.op === '<' && !(currentVal < targetVal)) return false;
+                if (rule.op === '<=' && !(currentVal <= targetVal)) return false;
+                if (rule.op === '==' && !(currentVal === targetVal)) return false;
+                
+                if (rule.op === '=') playState[vName] = targetVal;
+                if (rule.op === '+') playState[vName] = currentVal + targetVal;
+                if (rule.op === '-') playState[vName] = currentVal - targetVal;
+            }
+            return true;
+        }
+
+        function evaluateBlockCondition(condStr) {
+            if (!condStr) return true; 
+            try {
+                const rangeMatch = condStr.match(/^(-?\\d+(?:\\.\\d+)?)\\s*<=\\s*([a-zA-Z0-9_\\u4e00-\\u9fa5]+)\\s*<=\\s*(-?\\d+(?:\\.\\d+)?)$/);
+                if (rangeMatch) {
+                    const minVal = parseFloat(rangeMatch[1]);
+                    const vName = rangeMatch[2];
+                    const maxVal = parseFloat(rangeMatch[3]);
+                    const currentVal = playState[vName] || 0;
+                    return currentVal >= minVal && currentVal <= maxVal; 
+                }
+                const singleMatch = condStr.match(/^([a-zA-Z0-9_\\u4e00-\\u9fa5]+)\\s*(>=|<=|>|<|==)\\s*(-?\\d+(?:\\.\\d+)?)$/);
+                if (singleMatch) {
+                    const vName = singleMatch[1];
+                    const op = singleMatch[2];
+                    const targetVal = parseFloat(singleMatch[3]);
+                    const currentVal = playState[vName] || 0;
+                    
+                    if (op === '>' && !(currentVal > targetVal)) return false;
+                    if (op === '>=' && !(currentVal >= targetVal)) return false;
+                    if (op === '<' && !(currentVal < targetVal)) return false;
+                    if (op === '<=' && !(currentVal <= targetVal)) return false;
+                    if (op === '==' && !(currentVal === targetVal)) return false;
+                    return true;
+                }
+            } catch(e) { return true; }
+            return true; 
+        }
+
+        function startGame(nodeId) {
+            gameData.globalVars.forEach(v => playState[v.name] = parseFloat(v.value) || 0);
+            document.getElementById('ending-screen').style.display = 'none';
+            enterNode(nodeId);
+        }
+
+        function enterNode(nodeId) {
+            currentNodeId = nodeId;
+            const node = gameData.nodes[nodeId];
+            if (!node) return;
+            
+            processRules(nodeId);
+            updateHUD();
+            
+            currentSequence = node.storyData;
+            seqIndex = 0;
+            document.getElementById('choices').style.display = 'none';
+            document.getElementById('dialogue-wrapper').style.display = 'block';
+            renderBlock();
+        }
+
+        function typeWriter(elementId, htmlString) {
+            const el = document.getElementById(elementId);
+            clearInterval(typeTimer);
+            el.innerHTML = '';
+            targetHtml = htmlString;
+            isTyping = true;
+            document.getElementById('next-arrow').style.display = 'none';
+
+            let i = 0;
+            let currentTag = '';
+            let inTag = false;
+
+            typeTimer = setInterval(() => {
+                if (i >= htmlString.length) {
+                    completeTyping(elementId);
+                    return;
+                }
+                
+                let char = htmlString[i];
+                if (char === '<') inTag = true;
+                
+                if (inTag) {
+                    currentTag += char;
+                    if (char === '>') {
+                        inTag = false;
+                        el.innerHTML += currentTag;
+                        currentTag = '';
+                    }
+                } else {
+                    el.innerHTML += char;
+                }
+                i++;
+            }, 35); 
+        }
+
+        function completeTyping(elementId) {
+            clearInterval(typeTimer);
+            document.getElementById(elementId).innerHTML = targetHtml;
+            isTyping = false;
+            document.getElementById('next-arrow').style.display = 'block';
+        }
+
+        function renderBlock() {
+            if (seqIndex >= currentSequence.length) {
+                showChoices();
+                return;
+            }
+            const block = currentSequence[seqIndex];
+            
+            if (block.condition && !evaluateBlockCondition(block.condition)) {
+                seqIndex++;
+                renderBlock();
+                return;
+            }
+            
+            if (block.type === 'ending') {
+                document.getElementById('dialogue-wrapper').style.display = 'none';
+                document.getElementById('ending-name').innerHTML = block.text || '未命名结局';
+                document.getElementById('ending-screen').style.display = 'flex';
+                return;
+            }
+
+            const nameEl = document.getElementById('name');
+            const textEl = document.getElementById('text');
+            
+            if (block.type === 'dialogue' && block.role) {
+                nameEl.style.display = 'block';
+                nameEl.innerText = block.role;
+                textEl.className = 'text';
+            } else {
+                nameEl.style.display = 'none';
+                textEl.className = 'text text-desc';
+            }
+
+            typeWriter('text', block.text);
+        }
+
+        function advancePlay() {
+            if (isTyping) {
+                completeTyping('text');
+                return;
+            }
+            seqIndex++;
+            renderBlock();
+        }
+
+        function showChoices() {
+            document.getElementById('dialogue-wrapper').style.display = 'none';
+            const choicesDiv = document.getElementById('choices');
+            choicesDiv.innerHTML = '';
+            
+            const choices = gameData.nodes[currentNodeId].choicesData;
+            if (choices.length === 0) {
+                choicesDiv.innerHTML = \`<div class="choice-btn" onclick="location.reload()">[ 旅途结束 / 点击重置 ]</div>\`;
+            } else {
+                choices.forEach(c => {
+                    const btn = document.createElement('div');
+                    btn.className = 'choice-btn';
+                    
+                    const tNode = gameData.nodes[c.target];
+                    if (!tNode) {
+                         btn.innerText = \`➔ [前路未卜] \${c.text}\`;
+                         btn.style.opacity = '0.5';
+                         btn.style.cursor = 'not-allowed';
+                    } else {
+                        let canEnter = true;
+                        const targetRules = tNode.conditions || [];
+                        for (let rule of targetRules) {
+                            const vName = (rule.varName || "").trim();
+                            const currentVal = playState[vName] || 0; 
+                            const targetVal = isNaN(rule.val) ? rule.val : parseFloat(rule.val);
+                            if (rule.op === '>' && !(currentVal > targetVal)) canEnter = false;
+                            if (rule.op === '>=' && !(currentVal >= targetVal)) canEnter = false;
+                            if (rule.op === '<' && !(currentVal < targetVal)) canEnter = false;
+                            if (rule.op === '<=' && !(currentVal <= targetVal)) canEnter = false;
+                            if (rule.op === '==' && !(currentVal === targetVal)) canEnter = false;
+                        }
+                        
+                        if (canEnter) {
+                            btn.innerText = c.text;
+                            btn.onclick = () => enterNode(c.target);
+                        } else {
+                            btn.innerHTML = \`🔒 <span style="font-size:14px; color:#888;">[检定失败]</span> \${c.text}\`;
+                            btn.style.opacity = '0.4';
+                            btn.style.cursor = 'not-allowed';
+                            btn.style.background = 'rgba(0,0,0,0.6)';
+                        }
+                    }
+                    choicesDiv.appendChild(btn);
+                });
+            }
+            choicesDiv.style.display = 'flex';
+        }
+
+        startGame(rootNodeId);
+    ${'</' + 'script>'}
+</body>
+</html>`;
+
+    // 4. 触发下载
+    const blob = new Blob([htmlTemplate], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${fileName}.html`; // 这里使用了你输入的文件名
+    a.click();
+    URL.revokeObjectURL(url);
+}
+</script>
+
+<!-- 侧边栏结构开始 -->
+    <div id="side-panel" class="side-panel">
+        <div class="panel-header">
+            <span id="panel-title">编辑剧情序列</span>
+            <button id="btn-close-panel" class="btn" onclick="closeSidePanel()">关闭</button>
+        </div>
+        <div class="panel-toolbar">
+            <button id="btn-add-dialogue" class="btn" onclick="addBlock('dialogue')" style="background: #2b5c5c; border-color:#3e827a;">+ 台词</button>
+            <button id="btn-add-desc" class="btn" onclick="addBlock('desc')">+ 描写</button>
+            <button id="btn-add-ending" class="btn" onclick="addBlock('ending')" style="background: #5c2b2b; border-color:#8c3b3b; color: #ff9999;">+ 结局标记</button>
+            <span class="divider"></span>
+            <button type="button" class="btn" style="padding: 4px 8px; margin-right: 4px;" onclick="formatBlockText('bold')" title="加粗"><b>B</b></button>
+            <button type="button" class="btn" style="padding: 4px 8px; margin-right: 4px;" onclick="formatBlockText('italic')" title="斜体"><i>I</i></button>
+            <button type="button" class="btn" style="padding: 4px 8px; margin-right: 4px;" onclick="formatBlockText('underline')" title="下划线"><u>U</u></button>
+            <button type="button" class="btn" style="padding: 4px 8px; margin-right: 4px;" onclick="formatBlockText('justifyLeft')" title="左对齐">⫷</button>
+            <button type="button" class="btn" style="padding: 4px 8px; margin-right: 0;" onclick="formatBlockText('justifyCenter')" title="居中">≡</button>
+        </div>
+        
+        <div id="panel-editor" class="panel-editor" style="background: #151515;"></div>
+    </div>
+    <!-- 侧边栏结构结束 -->
+        
+  
+    <!-- 试玩模式界面 -->
+    <div id="play-overlay">
+        
+        <div id="play-ending-screen">
+            <div class="ending-title">达成结局</div>
+            <div id="ending-name-text" class="ending-name"></div>
+            <button class="btn" style="margin-top: 50px; background: transparent; border: 1px solid #444;" onclick="closePlayMode()">返回编辑器</button>
+        </div>
+        <button class="play-close" onclick="closePlayMode()">×</button>
+        <div id="play-choices" class="play-choices"></div>
+        <div id="play-dialogue-box" class="play-dialogue-box" onclick="advancePlayMode()">
+            <div id="play-name" class="play-name"></div>
+            <div id="play-text" class="play-text"></div>
+            <div class="play-next-arrow"></div> 
+        </div>
+    </div>
+<!-- 新手引导提示气泡 -->
+    <div id="guide-tooltip">
+        <div class="guide-title"></div>
+        <div class="guide-text" style="white-space: pre-line;"></div>
+        <button id="guide-btn-next" class="btn" style="margin-top: 15px; display: none; background: var(--accent); color: #000; border: none; width: 100%; font-weight: bold; font-size: 14px;">继续 ➔</button>
+    </div>
+<!-- 教程通关庆祝弹窗 -->
+    <div id="tutorial-complete-modal">
+        <div class="tutorial-modal-content">
+            <h2>🎉 恭喜通关！</h2>
+            <p>你已经掌握了剧情编辑器的所有核心操作！<br>现在，尽情挥洒你的灵感，开始创造属于你的世界吧。</p>
+            <button class="btn" onclick="endTutorial()">🚀 开始创作</button>
+        </div>
+    </div>
+</body>
+</html>
