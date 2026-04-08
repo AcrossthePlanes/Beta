@@ -2,9 +2,15 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>剧情节点编辑器</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
+        /* 彻底干掉烦人的空图片图标 */
+        img[src=""], img:not([src]) {
+            display: none !important;
+            opacity: 0 !important;
+        }
         :root {
             --bg-dark: #151515;
             --grid-color: rgba(255, 255, 255, 0.05);
@@ -275,6 +281,30 @@
             z-index: 1000; /* 保证高亮的卡片在最上层 */
         }
 
+        /* ================= 新增：纯CG模式 ================= */
+        .cg-only-mode .play-dialogue-box {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+            /* 把对话框拉伸到全屏，这样点屏幕任何地方都能继续 */
+            position: fixed !important; inset: 0 !important; 
+            width: 100% !important; height: 100vh !important; 
+            max-width: none !important; margin: 0 !important; padding: 0 !important;
+            border-radius: 0 !important;
+        }
+        /* 隐藏掉名字、台词和翻页小箭头 */
+        .cg-only-mode .play-name, 
+        .cg-only-mode .play-text, 
+        .cg-only-mode .play-next-arrow { 
+            display: none !important; 
+        }
+        /* 将原本靠底下站立的立绘，拉到全屏并垂直居中，化身完美CG */
+        .cg-only-mode #play-sprite-container {
+            bottom: 0 !important; height: 100vh !important; 
+            align-items: center !important; max-width: 100% !important;
+        }
+
         /* ================= 试玩模式样式 (精美AVG版) ================= */
         #play-overlay {
             position: fixed; inset: 0; 
@@ -303,6 +333,45 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 1px 10px rgba(255,255,255,0.05);
             animation: slideUpFade 0.4s ease-out;
         }
+
+        /* 强制让试玩界面的底色变半透明，透出背景图 */
+        #play-overlay {
+            background: rgba(15, 20, 25, 0.75) !important; 
+        }
+        /* 确保背景图层级正确 */
+        #play-bg {
+            z-index: 0 !important; 
+        }
+        /* 确保立绘层级在最前方，不被台词框遮挡 */
+        #play-sprite-container {
+            z-index: 10 !important; 
+        }
+
+        /* 新增：游戏背景图层 */
+#play-bg {
+    position: fixed; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; z-index: -1; 
+    opacity: 0; transition: opacity 0.8s ease-in-out;
+}
+#play-bg.active { opacity: 1; }
+
+/* 新增：角色立绘/CG图层 */
+#play-sprite-container {
+    position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 800px; height: 60vh; 
+    display: flex; justify-content: center; align-items: flex-end;
+    pointer-events: none; /* 防止挡住点击事件 */
+}
+#play-sprite {
+    max-height: 100%; max-width: 100%; object-fit: contain;
+    opacity: 0; transform: translateY(20px); transition: all 0.4s ease-out;
+}
+#play-sprite.active { opacity: 1; transform: translateY(0); }
+
+/* 原本的遮罩层需要调整 z-index 和背景色，让后面的背景图能透过来 */
+#play-overlay {
+    background: radial-gradient(circle at center, rgba(15, 20, 25, 0.6) 0%, rgba(0, 0, 0, 0.85) 100%);
+}
 
         /* ================= 经典AVG风格：呼吸跳动的向下指示箭头 ================= */
         @keyframes bounceDown {
@@ -669,7 +738,7 @@
 }
 
 /* 鼠标悬浮时显示菜单 */
-.dropdown:hover .dropdown-content {
+.dropdown:hover > .dropdown-content {
     display: block;
 }
 
@@ -677,6 +746,20 @@
     height: 1px;
     background-color: #444;
     margin: 4px 0;
+}
+
+/* ================= 多级嵌套菜单专属样式 ================= */
+.dropdown-content .dropdown {
+    display: block;
+    width: 100%;
+    margin: 0;
+}
+/* 让子菜单往右边弹出，而不是往下 */
+.dropdown-content .dropdown > .dropdown-content {
+    top: 0;
+    left: 100%; 
+    margin-top: -6px; /* 微调对齐 */
+    margin-left: 1px;
 }
 
 /* ================= 结局黑场动画 ================= */
@@ -739,6 +822,77 @@
         .guide-mask[width="0"], .guide-mask[height="0"] {
             display: none !important;
         }
+
+        /* ================= 📱 移动端自适应补丁 (最终防裁剪版) ================= */
+        @media screen and (max-width: 768px) {
+            /* 1. 工具栏开启横向滚动，彻底禁止换行 */
+            .toolbar {
+                width: 100vw !important;
+                overflow-x: auto !important;
+                white-space: nowrap !important;
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                justify-content: flex-start !important;
+                -webkit-overflow-scrolling: touch; /* 苹果设备平滑滚动 */
+                box-sizing: border-box !important;
+            }
+            .toolbar > * { flex-shrink: 0 !important; }
+            .toolbar::-webkit-scrollbar { display: none; } /* 隐藏丑陋的滚动条 */
+
+            /* 2. 核心大招：赋予下拉菜单特权，强行逃出工具栏的裁剪魔爪！ */
+            .dropdown-content {
+                position: fixed !important; /* 越级直接吸附在屏幕上 */
+                top: 55px !important;       /* 刚好在工具栏下方 */
+                left: 10px !important; 
+                width: 220px !important;    /* 稍微加宽一点，防止字挤在一起 */
+                max-height: 70vh !important;
+                overflow-y: auto !important;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.9) !important;
+                border: 1px solid var(--accent) !important;
+            }
+            
+            /* 3. 让“导出网页游戏”等二级菜单在手机上直接往下展开，而不是往右飞出屏幕 */
+            .dropdown-content .dropdown-content {
+                position: static !important; 
+                width: 100% !important;
+                box-shadow: none !important;
+                border: none !important;
+                border-left: 2px solid var(--accent) !important;
+                padding-left: 10px !important;
+                margin-top: 5px !important;
+                background: rgba(0,0,0,0.2) !important;
+            }
+
+            /* 4. 其他原本修复好的面板适配 */
+            .side-panel {
+                width: 100vw !important; right: -100vw !important; top: 50px !important;
+                height: calc(100vh - 50px) !important; z-index: 2000 !important;
+            }
+            .side-panel.open { right: 0 !important; }
+            .dropdown-content::before { display: none !important; } /* 消除空气墙 */
+            
+            #var-modal, #img-modal, #sprite-modal { width: 90vw !important; max-width: 400px !important; }
+            .play-dialogue-box { width: 90vw !important; padding: 25px 20px !important; }
+            .play-text { font-size: 16px !important; min-height: 70px !important; }
+            .play-name { left: 15px !important; top: -15px !important; font-size: 15px !important; }
+            .play-choices { width: 95vw !important; }
+            .play-choice-btn { font-size: 15px !important; padding: 12px 10px !important; }
+        }
+
+        /* ================= ✂️ 连线触控优化 ================= */
+        path {
+            cursor: pointer;
+            transition: stroke 0.2s, stroke-width 0.2s; /* 增加平滑的变色动画 */
+        }
+        /* 当鼠标悬浮，或者手指按住时，连线变粗并变红，提示你已瞄准 */
+        path:hover, path:active {
+            stroke: #ff6b6b !important; 
+            stroke-width: 6px !important;
+        }
+        /* 拖拽中生成的临时虚线千万不能拦截点击 */
+        #temp-line {
+            pointer-events: none !important; 
+        }
     </style>
 </head>
 <body>
@@ -751,7 +905,17 @@
             <a href="#" onclick="document.getElementById('import-file').click()">📂 导入工程</a>
             <a href="#" onclick="exportProject()">📦 导出工程备份</a>
             <a href="#" onclick="exportExcel()">↓ 导出 .xlsx 剧情配置</a>
-            <a href="#" onclick="exportPlayableGame()" style="color: #4eb0a5;">🎮 导出为独立网页游戏</a>
+            <div class="dropdown" style="width: 100%;">
+        <a href="#" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>🎮 导出为网页游戏</span>
+            <span style="color: #666; font-size: 10px;">▶</span>
+        </a>
+        <div class="dropdown-content">
+            <a href="#" onclick="exportPlayableGame('classic')">🌌 经典日系 AVG 风</a>
+            <a href="#" onclick="exportPlayableGame('cyber')">💻 赛博黑客终端风</a>
+            <a href="#" onclick="exportPlayableGame('paper')">📜 复古文艺信笺风</a>
+        </div>
+    </div>
             <div class="drop-divider"></div>
             <a href="#" onclick="clearLocal()" style="color: #ff6b6b;">🗑️ 清空当前画布</a>
         </div>
@@ -764,6 +928,8 @@
             <a href="#" onclick="redoHistory()">↪ 重做 (Ctrl+Y)</a>
             <div class="drop-divider"></div>
             <a href="#" onclick="openVarModal()">🔧 全局变量管理</a>
+            <a href="#" onclick="openImgModal()">🖼️ 统一图库管理</a>
+            <a href="#" onclick="openSpriteModal()">🎭 角色立绘管理</a>
         </div>
     </div>
 
@@ -861,87 +1027,70 @@
     }
 
     function createNode(x, y, parentTargetInput = null, loadData = null) {
-        const id = loadData ? loadData.id : 'N' + (nodeCount++).toString().padStart(3, '0');
-        const node = document.createElement('div');
-        node.className = 'node'; node.id = id;
-        node.style.left = x + 'px'; node.style.top = y + 'px';
+    const id = loadData ? loadData.id : 'N' + (nodeCount++).toString().padStart(3, '0');
+    const node = document.createElement('div');
+    node.className = 'node'; node.id = id;
+    node.style.left = x + 'px'; node.style.top = y + 'px';
 
-        node.innerHTML = `
-            <div class="node-header" onmousedown="startNodeDrag(event, this.parentElement)">
-                <input type="text" class="node-title-input" value="${id}" 
-                       onchange="updateNodeId(this, this.closest('.node').id)" 
-                       onclick="event.stopPropagation()"
-                       onmousedown="event.stopPropagation()"
-                       style="background: transparent; border: none; color: white; font-weight: bold; font-size: 14px; width: 120px;">
-                <div style="display: flex; align-items: center;">
-                    <button class="btn-play" title="从此节点开始试玩" onclick="initPlayState(); startPlayMode(this.closest('.node').id)" onmousedown="event.stopPropagation()">▶️</button>
-                    <button class="delete-btn" onclick="removeNode(this.closest('.node').id)">×</button>
+    node.innerHTML = `
+        <div class="node-header" onmousedown="startNodeDrag(event, this.parentElement)">
+            <input type="text" class="node-title-input" value="${id}" 
+                   onchange="updateNodeId(this, this.closest('.node').id)" 
+                   onclick="event.stopPropagation()"
+                   onmousedown="event.stopPropagation()"
+                   style="background: transparent; border: none; color: white; font-weight: bold; font-size: 14px; width: 120px;">
+            <div style="display: flex; align-items: center;">
+                <button class="btn-play" title="从此节点开始试玩" onclick="initPlayState(); startPlayMode(this.closest('.node').id)" onmousedown="event.stopPropagation()">▶️</button>
+                <button class="delete-btn" onclick="removeNode(this.closest('.node').id)">×</button>
+            </div>
+        </div>
+        <div class="node-body">
+            <div class="socket in" onmousedown="startConnection(event, this.closest('.node').id, 'in')" onmouseup="finishConnection(this.closest('.node').id, 'in')"></div>
+            <div class="input-group">
+                <label>本段出场角色 (Cast)</label>
+                <input type="text" class="v-role" placeholder="如：卡斯珀, 斯特凡">
+            </div>
+            <div class="input-group">
+                <label>场景背景图 (Background URL)</label>
+                <div style="display: flex; gap: 4px;">
+                    <input type="text" class="v-bg-url" placeholder="http://..." value="${loadData?.bgUrl || ''}" oninput="saveToLocal(true)" style="flex: 1;">
+                    <select class="img-quick-select" onchange="insertImgToInput(this, this.previousElementSibling)" style="width: 80px; background: var(--input-bg); color: var(--text-main); border: 1px solid var(--input-border); border-radius: 4px; cursor: pointer;"></select>
                 </div>
             </div>
-            <div class="node-body">
-                <div class="socket in" onmousedown="startConnection(event, this.closest('.node').id, 'in')" onmouseup="finishConnection(this.closest('.node').id, 'in')"></div>
-                <div class="input-group">
-                    <label>本段出场角色 (Cast)</label>
-                    <input type="text" class="v-role" placeholder="如：卡斯珀, 斯特凡">
-                </div>
-                <div class="input-group">
-                    <label>剧情序列 (Sequence)</label>
-                    <div class="v-text-trigger v-text-preview" onclick="openSidePanel(this.closest('.node').id)">点击此处编写剧情序列...</div>
-                    <input type="hidden" class="v-story-data" value="[]">
-                </div>
-                <div class="input-group">
-                    <label>分支选项 (Choices)</label>
-                    <input type="hidden" class="v-choices-data" value="[]">
-                    <div class="node-choices-preview" onclick="openSidePanel(this.closest('.node').id)">
-                        <div style="color: #666; font-size: 11px; cursor: pointer;">+ 点击面板编辑选项...</div>
-                    </div>
-                </div>
-                
-                <div class="input-group var-logic-group">
-                    <label>条件与变量 (Conditions & Actions)</label>
-                    <input type="hidden" class="v-var-data" value="[]">
-                    <div class="node-var-list"></div>
-                    <button class="btn-branch" style="margin-top: 2px; padding: 4px;" onclick="addNodeVarRule(this.closest('.node').id)">+ 添加逻辑规则</button>
-                </div>
-                <button class="btn-branch" onclick="branchOut(this.closest('.node').id)">+ 快速延展分支</button>
-                <div class="socket out" onmousedown="startConnection(event, this.closest('.node').id, 'out')" onmouseup="finishConnection(this.closest('.node').id, 'out')"></div>
+            <div class="input-group">
+                <label>剧情序列 (Sequence)</label>
+                <div class="v-text-trigger v-text-preview" onclick="openSidePanel(this.closest('.node').id)">点击此处编写剧情序列...</div>
+                <input type="hidden" class="v-story-data" value="[]">
             </div>
-            `;
-        canvas.appendChild(node);
-        
-        // 读取存档逻辑（带新旧兼容）
-        if (loadData) {
-            node.querySelector('.v-role').value = loadData.role || '';
-            node.querySelector('.v-story-data').value = loadData.storyData || '[]';
-            
-            const choicesInput = node.querySelector('.v-choices-data');
-            if (choicesInput) {
-                choicesInput.value = loadData.choicesData || '[]';
-                // 如果读到了旧版的数据，自动转换成新版选项格式
-                if (loadData.targets && loadData.targets.trim() !== '' && choicesInput.value === '[]') {
-                    const oldTargets = loadData.targets.split(',').map(s => s.trim()).filter(s => s);
-                    const convertedChoices = oldTargets.map(t => ({ text: '继续...', target: t }));
-                    choicesInput.value = JSON.stringify(convertedChoices);
-                }
-                // 刷新卡片表面的选项UI
-                try { updateNodeChoicesPreview(node, JSON.parse(choicesInput.value)); } catch(e) {}
-            }
-
-            // 还原变量逻辑生成器
-            const varInput = node.querySelector('.v-var-data');
-            if (varInput) {
-                // 兼容老版本的纯文本存档，如果是旧档就设为空数组
-                varInput.value = (loadData.conditions && loadData.conditions.startsWith('[')) ? loadData.conditions : '[]';
-                try {
-                    const rules = JSON.parse(varInput.value);
-                    rules.forEach(rule => addNodeVarRule(node.id, rule));
-                } catch(e) {}
-            }
-            updateNodePreview(node); 
-        }
-
-        drawAllLines();
+            <div class="input-group">
+                <label>分支选项 (Choices)</label>
+                <input type="hidden" class="v-choices-data" value="[]">
+                <div class="node-choices-preview" onclick="openSidePanel(this.closest('.node').id)">
+                    <div style="color: #666; font-size: 11px; cursor: pointer;">+ 点击面板编辑选项...</div>
+                </div>
+            </div>
+            <div class="input-group var-logic-group">
+                <label>条件与变量</label>
+                <input type="hidden" class="v-var-data" value="[]">
+                <div class="node-var-list"></div>
+                <button class="btn-branch" style="margin-top: 2px; padding: 4px;" onclick="addNodeVarRule(this.closest('.node').id)">+ 添加规则</button>
+            </div>
+            <div class="socket out" onmousedown="startConnection(event, this.closest('.node').id, 'out')" onmouseup="finishConnection(this.closest('.node').id, 'out')"></div>
+        </div>
+    `;
+    canvas.appendChild(node);
+    
+    if (loadData) {
+        node.querySelector('.v-role').value = loadData.role || '';
+        node.querySelector('.v-story-data').value = loadData.storyData || '[]';
+        node.querySelector('.v-choices-data').value = loadData.choicesData || '[]';
+        node.querySelector('.v-var-data').value = loadData.conditions || '[]';
+        updateNodePreview(node); 
+        try { updateNodeChoicesPreview(node, JSON.parse(node.querySelector('.v-choices-data').value)); } catch(e) {}
     }
+    drawAllLines();
+    updateAllImgDropdowns();
+}
 
     // ================= 智能排布新节点逻辑 =================
     function spawnNodeSmartly() {
@@ -1286,24 +1435,17 @@ try {
     }
 
     window.onload = () => { 
-        // 尝试读取本地数据
-        const loaded = loadFromLocal();
-        const hasPlayedTutorial = localStorage.getItem('fourth_intl_tutorial');
-        
-        if (!loaded) {
-            updateTransform(); 
-            // 如果是第一次使用（没有通关过教程），自动触发新手引导！
-            if (!hasPlayedTutorial) {
-                localStorage.setItem('fourth_intl_tutorial', 'true');
-                startTutorial();
-            } else {
-                // 老玩家没存档，就给个默认节点
-                createNode(window.innerWidth/2 - 150, window.innerHeight/2 - 120); 
-            }
-        }
-        // 👉 新增：刚打开网页时，记录初始状态作为历史的起点
-        setTimeout(recordHistory, 500);
-    };
+    const loaded = loadFromLocal();
+    if (!loaded) {
+        // 只有在没有存档时，才生成中心初始节点
+        panX = 0; panY = 0; scale = 1;
+        updateTransform();
+        createNode(window.innerWidth/2 - 150, window.innerHeight/2 - 120); 
+    }
+    setTimeout(recordHistory, 500);
+    updateAllImgDropdowns(); // 网页刷新时，激活所有的图库快捷按钮
+    updateAllSpriteDropdowns(); // 新增：初始加载立绘库
+};
 
     // ================= 修改节点名字逻辑 =================
     function updateNodeId(inputElem, oldId) {
@@ -1419,13 +1561,16 @@ try {
         syncTextToNode(); // 格式化后同步数据
     }
 
-   function addBlock(type, role = '', text = '', condition = '') {
+   function addBlock(type, role = '', textData = '', condition = '') {
     const editor = document.getElementById('panel-editor');
     const block = document.createElement('div');
     block.className = 'story-block';
     block.dataset.type = type;
 
-    // 动态拉取你设置好的全局变量
+    // 👉 兼容新旧数据结构：提取文本和图片链接
+    const textContent = typeof textData === 'object' ? (textData.content || '') : textData;
+    const imgLink = typeof textData === 'object' ? (textData.image || '') : '';
+
     let varOptions = '<option value="">无条件 (默认直接显示)</option>';
     if (typeof globalVars !== 'undefined') {
         globalVars.forEach(v => {
@@ -1438,7 +1583,16 @@ try {
                      onmouseleave="this.parentElement.draggable = false">☰</div>`;
     html += `<button class="block-delete" onclick="this.parentElement.remove(); syncTextToNode()">×</button>`;
     
-    // 👇 全新升级的下拉选项条件栏
+    // 👉 智能判断：台词块用立绘库，其他块用普通风景图库
+    const selectClass = (type === 'dialogue') ? 'sprite-quick-select' : 'img-quick-select';
+    
+    html += `
+        <div class="input-group" style="margin-bottom: 8px; display: flex; flex-direction: row; gap: 4px;">
+            <input type="text" class="block-img-input" placeholder="🖼️ ${type === 'dialogue' ? '角色立绘链接' : '背景/CG链接'} (可留空)" value="${imgLink}" oninput="syncTextToNode()" style="flex: 1;">
+            <select class="${selectClass}" onchange="insertImgToInput(this, this.previousElementSibling)" style="width: 85px; background: var(--input-bg); color: var(--text-main); border: 1px solid var(--input-border); border-radius: 4px; cursor: pointer;"></select>
+        </div>
+    `;
+
     html += `
         <div class="condition-row">
             <span style="font-size: 11px; color: #888;">👁️ 显示条件:</span>
@@ -1460,35 +1614,32 @@ try {
     if (type === 'dialogue') {
         html += `<span class="block-label">🗣️ 角色台词</span>`;
         html += `<input type="text" class="block-role-input" placeholder="输入角色..." value="${role}" oninput="syncTextToNode()">`;
-        html += `<div class="block-editor" contenteditable="true" placeholder="输入台词..." oninput="syncTextToNode()">${text}</div>`;
+        html += `<div class="block-editor" contenteditable="true" placeholder="输入台词..." oninput="syncTextToNode()">${textContent}</div>`;
     } else if (type === 'ending') {
         html += `<span class="block-label" style="color: #ff6b6b;">🛑 达成结局</span>`;
-        html += `<div class="block-editor" contenteditable="true" placeholder="输入结局名称（如：真正的第四国际）..." oninput="syncTextToNode()">${text}</div>`;
+        html += `<div class="block-editor" contenteditable="true" placeholder="输入结局名称..." oninput="syncTextToNode()">${textContent}</div>`;
         block.style.borderLeft = '4px solid #ff6b6b';
         block.style.background = 'rgba(255, 107, 107, 0.05)';
     } else {
         html += `<span class="block-label">🎬 场景描写</span>`;
-        html += `<div class="block-editor" contenteditable="true" placeholder="输入描写..." oninput="syncTextToNode()">${text}</div>`;
+        html += `<div class="block-editor" contenteditable="true" placeholder="输入描写..." oninput="syncTextToNode()">${textContent}</div>`;
     }
     block.innerHTML = html;
 
-    // 👇 在插入 HTML 后，把保存的 condition 数据反向解析回下拉框里
     if (condition) {
         const varSel = block.querySelector('.cond-var');
         const opSel = block.querySelector('.cond-op');
         const val1In = block.querySelector('.cond-val1');
         const val2In = block.querySelector('.cond-val2');
 
-        // 尝试解析区间匹配 (例如: 20 <= hp <= 50)
         const rangeMatch = condition.match(/^(-?\d+(?:\.\d+)?)\s*<=\s*([a-zA-Z0-9_\u4e00-\u9fa5]+)\s*<=\s*(-?\d+(?:\.\d+)?)$/);
         if (rangeMatch) {
-            varSel.value = rangeMatch[2]; // 变量名
+            varSel.value = rangeMatch[2]; 
             opSel.value = "between";
-            val1In.value = rangeMatch[1]; // 最小值
-            val2In.value = rangeMatch[3]; // 最大值
-            toggleConditionRange(opSel);  // 触发显示第二个框
+            val1In.value = rangeMatch[1]; 
+            val2In.value = rangeMatch[3]; 
+            toggleConditionRange(opSel);  
         } else {
-            // 解析单条件匹配 (例如: hp > 50)
             const singleMatch = condition.match(/^([a-zA-Z0-9_\u4e00-\u9fa5]+)\s*(>=|<=|>|<|==)\s*(-?\d+(?:\.\d+)?)$/);
             if (singleMatch) {
                 varSel.value = singleMatch[1];
@@ -1505,22 +1656,21 @@ try {
     if (choicesSection) editor.insertBefore(block, choicesSection);
     else editor.appendChild(block);
     
+    updateAllImgDropdowns();
+    updateAllSpriteDropdowns(); // 新增：也刷新立绘库！
     syncTextToNode();
 }
 
-    // 将侧边栏里所有块的数据打包，并智能识别出场角色
     function syncTextToNode() {
-        if (!activeEditingNodeId) return;
-        const node = document.getElementById(activeEditingNodeId);
-        const editor = document.getElementById('panel-editor');
-        const blocks = Array.from(editor.querySelectorAll('.story-block'));
-        
-        let blockRoles = new Set(); // 收集当前面板里出现的所有说话角色
+    if (!activeEditingNodeId) return;
+    const node = document.getElementById(activeEditingNodeId);
+    const editor = document.getElementById('panel-editor');
+    const blocks = Array.from(editor.querySelectorAll('.story-block'));
+    
+    let blockRoles = new Set(); 
 
-       const data = blocks.map(b => {
+    const data = blocks.map(b => {
         const type = b.dataset.type;
-        
-        // 👇 智能拼装条件字符串
         const varName = b.querySelector('.cond-var').value;
         const op = b.querySelector('.cond-op').value;
         const val1 = b.querySelector('.cond-val1').value.trim();
@@ -1529,73 +1679,61 @@ try {
         let conditionStr = '';
         if (varName && val1 !== '') {
             if (op === 'between' && val2 !== '') {
-                conditionStr = `${val1} <= ${varName} <= ${val2}`; // 存成区间格式
+                conditionStr = `${val1} <= ${varName} <= ${val2}`; 
             } else if (op !== 'between') {
-                conditionStr = `${varName} ${op} ${val1}`; // 存成普通格式
+                conditionStr = `${varName} ${op} ${val1}`; 
             }
         }
+
+        // 👉 核心修复：在这里精准抓取你填写的图片链接
+        const imgInput = b.querySelector('.block-img-input');
+        const imgLink = imgInput ? imgInput.value.trim() : '';
 
         if (type === 'dialogue') {
             const roleName = b.querySelector('.block-role-input').value.trim();
             if (roleName) blockRoles.add(roleName); 
-            return { type: 'dialogue', role: roleName, text: b.querySelector('.block-editor').innerHTML, condition: conditionStr };
+            return { type: 'dialogue', role: roleName, text: b.querySelector('.block-editor').innerHTML, condition: conditionStr, image: imgLink };
         } else if (type === 'ending') {
-            return { type: 'ending', role: '', text: b.querySelector('.block-editor').innerHTML, condition: conditionStr };
+            return { type: 'ending', role: '', text: b.querySelector('.block-editor').innerHTML, condition: conditionStr, image: imgLink };
         } else {
-            return { type: 'desc', role: '', text: b.querySelector('.block-editor').innerHTML, condition: conditionStr };
+            return { type: 'desc', role: '', text: b.querySelector('.block-editor').innerHTML, condition: conditionStr, image: imgLink };
         }
     });
-        
-        // ================= 修复：带“记忆”的智能角色合并 =================
-        const roleInput = node.querySelector('.v-role');
-        
-        // 1. 获取当前输入框里的角色，和上次“自动填入”的角色
-        let currentRoles = roleInput.value.split(/[,，]/).map(s => s.trim()).filter(s => s);
-        let oldAutoRoles = (node.dataset.autoRoles || "").split(',').filter(s => s);
-        
-        // 2. 剥离出哪些是你“手动输入”的（用当前角色 减去 上次自动生成的角色）
-        let manualRoles = currentRoles.filter(r => !oldAutoRoles.includes(r));
-        
-        // 3. 把“手动输入的”和“现在侧边栏里的”重新合并并去重
-        let finalRolesSet = new Set([...manualRoles, ...blockRoles]);
-        
-        // 4. 更新输入框显示，并把这次的侧边栏角色存入记忆中
-        roleInput.value = Array.from(finalRolesSet).join(', ');
-        node.dataset.autoRoles = Array.from(blockRoles).join(',');
-        // =========================================================
+    
+    const roleInput = node.querySelector('.v-role');
+    let currentRoles = roleInput.value.split(/[,，]/).map(s => s.trim()).filter(s => s);
+    let oldAutoRoles = (node.dataset.autoRoles || "").split(',').filter(s => s);
+    let manualRoles = currentRoles.filter(r => !oldAutoRoles.includes(r));
+    let finalRolesSet = new Set([...manualRoles, ...blockRoles]);
+    
+    roleInput.value = Array.from(finalRolesSet).join(', ');
+    node.dataset.autoRoles = Array.from(blockRoles).join(',');
 
-        node.querySelector('.v-story-data').value = JSON.stringify(data);
-        updateNodePreview(node); 
-        
-        // 顺手触发一下静默存档
-        if (typeof saveToLocal === 'function') {
-            saveToLocal(true);
-        }
+    node.querySelector('.v-story-data').value = JSON.stringify(data);
+    updateNodePreview(node); 
+    
+    if (typeof saveToLocal === 'function') {
+        saveToLocal(true);
     }
+}
 
     // 打开侧边栏
     function openSidePanel(nodeId) {
-        activeEditingNodeId = nodeId;
-        const node = document.getElementById(nodeId);
-        const dataInput = node.querySelector('.v-story-data');
-        const editor = document.getElementById('panel-editor');
-        
-        document.getElementById('panel-title').innerText = `正在编写: ${nodeId}`;
-        editor.innerHTML = ''; 
-
-        // 1. 先还原剧情块
-        try {
+    activeEditingNodeId = nodeId;
+    const node = document.getElementById(nodeId);
+    document.getElementById('panel-title').innerText = `正在编写: ${nodeId}`;
+    const editor = document.getElementById('panel-editor');
+    editor.innerHTML = ''; 
+    try {
         const blocksData = JSON.parse(node.querySelector('.v-story-data').value || '[]');
-        // 👇 修改这里，把 b.condition 传进去
-        blocksData.forEach(b => addBlock(b.type, b.role, b.text, b.condition || ''));
-        } catch(e) {}
-        
-        // 2. 再生成选项区（它会自动跑到所有剧情块后面）
-        renderPanelChoices(node);
-        
-        document.getElementById('side-panel').classList.add('open');
-    }
-
+        blocksData.forEach(b => addBlock(b.type, b.role, { content: b.text, image: b.image || '' }, b.condition || ''));
+    } catch(e) {}
+    renderPanelChoices(node);
+    document.getElementById('side-panel').classList.add('open');
+    updateAllImgDropdowns(); // 新增：每次打开侧边栏，顺便刷新所有的图库菜单
+    updateAllSpriteDropdowns(); // 新增：也刷新立绘库！
+}
+    
     // 关闭侧边栏
     function closeSidePanel() {
         document.getElementById('side-panel').classList.remove('open');
@@ -1643,34 +1781,33 @@ try {
     const SAVE_KEY = 'fourth_intl_story_save';
 
     // 增加第二个参数 isImmediateAction
-    function saveToLocal(isAutoSave = false, isImmediateAction = false) {
-        recordHistory(isImmediateAction); // 传递操作的紧急程度
-        
-        const nodes = document.querySelectorAll('.node');
-        const data = {
+    function saveToLocal(isAutoSave = false) {
+    const nodes = document.querySelectorAll('.node');
+    const data = {
             viewport: { panX, panY, scale },
             nodeCount: nodeCount, 
-            globalVars: globalVars, // <--- 加上这一行，把变量存进去
+            globalVars: globalVars,
+            globalImages: globalImages,
+            globalSprites: globalSprites, // 👉 新增：保存立绘库
             nodes: []
         };
 
-        nodes.forEach(node => {
-            data.nodes.push({
-                id: node.id,
-                x: parseFloat(node.style.left),
-                y: parseFloat(node.style.top),
-                role: node.querySelector('.v-role').value,
-                storyData: node.querySelector('.v-story-data').value,
-                choicesData: node.querySelector('.v-choices-data') ? node.querySelector('.v-choices-data').value : '[]',
-                conditions: node.querySelector('.v-var-data') ? node.querySelector('.v-var-data').value : '[]'
-            });
+    nodes.forEach(node => {
+        data.nodes.push({
+            id: node.id,
+            x: parseFloat(node.style.left),
+            y: parseFloat(node.style.top),
+            role: node.querySelector('.v-role').value,
+            bgUrl: node.querySelector('.v-bg-url').value, // 关键：保存背景图
+            storyData: node.querySelector('.v-story-data').value,
+            choicesData: node.querySelector('.v-choices-data').value,
+            conditions: node.querySelector('.v-var-data').value
         });
+    });
 
-        localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-        if (!isAutoSave) {
-        showToast('💾 草稿已安全保存到浏览器', 'success', 2000);
-        }
-    }
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    if (!isAutoSave) showToast('💾 已保存', 'success', 1000);
+}
 
     function loadFromLocal() {
         const savedStr = localStorage.getItem(SAVE_KEY);
@@ -1679,6 +1816,8 @@ try {
         try {
             const data = JSON.parse(savedStr);
             globalVars = data.globalVars || [];
+            globalImages = data.globalImages || [];
+            globalSprites = data.globalSprites || []; // 👉 新增：读取立绘库
             // 还原视野
             panX = data.viewport.panX;
             panY = data.viewport.panY;
@@ -1912,8 +2051,17 @@ try {
         updateHUD();
         
         playCurrentNodeId = nodeId;
+        const bgInput = node.querySelector('.v-bg-url');
+        const bgImg = document.getElementById('play-bg');
+        if (bgInput && bgInput.value.trim() !== '') {
+        bgImg.src = bgInput.value.trim();
+        bgImg.classList.add('active');
+        } else {
+        bgImg.classList.remove('active');
+        setTimeout(() => bgImg.src = '', 800); // 等过渡动画结束再清空
+        }
         try {
-            playSequence = JSON.parse(node.querySelector('.v-story-data').value || '[]');
+         playSequence = JSON.parse(node.querySelector('.v-story-data').value || '[]');
         } catch(e) { playSequence = []; }
 
         // 如果这个节点没写内容，给个默认提示防报错
@@ -1931,49 +2079,64 @@ try {
 
     // 渲染当前的一句话
     function renderPlayBlock() {
-        if (playCurrentIndex >= playSequence.length) {
-            showPlayChoices();
+    if (playCurrentIndex >= playSequence.length) {
+        showPlayChoices();
+        return;
+    }
+
+    const block = playSequence[playCurrentIndex];
+
+    if (block.condition) {
+        if (!evaluateBlockCondition(block.condition)) {
+            playCurrentIndex++;
+            renderPlayBlock(); 
             return;
-        }
-
-        const block = playSequence[playCurrentIndex];
-
-        // 👇 核心拦截逻辑：如果不满足条件，直接无缝跳到下一句！
-        if (block.condition) {
-            if (!evaluateBlockCondition(block.condition)) {
-                playCurrentIndex++;
-                renderPlayBlock(); // 递归调用，不露痕迹地跳过
-                return;
-            }
-        }
-        
-        // 👇 这里是新增的拦截点：如果这一块是结局标记，直接黑屏杀青！
-        if (block.type === 'ending') {
-            document.getElementById('play-dialogue-box').style.display = 'none';
-            document.getElementById('play-choices').style.display = 'none';
-            const endingScreen = document.getElementById('play-ending-screen');
-            document.getElementById('ending-name-text').innerHTML = block.text || '未命名结局';
-            
-            // 延迟 0.1 秒变黑，更有电影感
-            setTimeout(() => endingScreen.classList.add('active'), 100);
-            return;
-        }
-
-        const nameEl = document.getElementById('play-name');
-        const textEl = document.getElementById('play-text');
-        
-        // 原本正常的对话和描写渲染逻辑
-        if (block.type === 'dialogue') {
-            nameEl.style.display = 'block';
-            nameEl.innerText = block.role || '未知角色';
-            textEl.innerHTML = block.text;
-            textEl.className = 'play-text';
-        } else {
-            nameEl.style.display = 'none';
-            textEl.innerHTML = block.text;
-            textEl.className = 'play-text play-desc';
         }
     }
+    
+    if (block.type === 'ending') {
+        document.getElementById('play-dialogue-box').style.display = 'none';
+        document.getElementById('play-choices').style.display = 'none';
+        const endingScreen = document.getElementById('play-ending-screen');
+        document.getElementById('ending-name-text').innerHTML = block.text || '未命名结局';
+        setTimeout(() => endingScreen.classList.add('active'), 100);
+        return;
+    }
+
+    const nameEl = document.getElementById('play-name');
+    const textEl = document.getElementById('play-text');
+    
+    // 👉 核心逻辑：检测文本是否为空，如果为空就开启纯 CG 模式
+    const cleanText = (block.text || '').replace(/<[^>]*>?/gm, '').trim();
+    const overlayEl = document.getElementById('play-overlay');
+    if (cleanText === '') {
+        overlayEl.classList.add('cg-only-mode'); // 开启透明全屏
+    } else {
+        overlayEl.classList.remove('cg-only-mode'); // 恢复正常对话框
+    }
+    
+    const spriteImg = document.getElementById('play-sprite');
+    if (block.image && block.image.trim() !== '') {
+        spriteImg.src = block.image;
+        spriteImg.style.opacity = '1';
+        spriteImg.style.transform = 'translateY(0)';
+    } else {
+        spriteImg.style.opacity = '0';
+        spriteImg.style.transform = 'translateY(20px)';
+        setTimeout(() => { if (spriteImg.style.opacity === '0') spriteImg.removeAttribute('src'); }, 400);
+    }
+    
+    if (block.type === 'dialogue') {
+        nameEl.style.display = 'block';
+        nameEl.innerText = block.role || '未知角色';
+        textEl.innerHTML = block.text;
+        textEl.className = 'play-text';
+    } else {
+        nameEl.style.display = 'none';
+        textEl.innerHTML = block.text;
+        textEl.className = 'play-text play-desc';
+    }
+}
 
     // 解析试玩模式里的条件拦截
     function evaluateBlockCondition(condStr) {
@@ -2377,27 +2540,6 @@ function addAutoBranchNode() {
     setTimeout(() => targetBtn.innerText = oldText, 1000);
 }
 
-// 每次打开侧边栏时，同时渲染文本块和选项块
-function openSidePanel(nodeId) {
-    activeEditingNodeId = nodeId;
-    const node = document.getElementById(nodeId);
-    
-    document.getElementById('panel-title').innerText = `正在编写: ${nodeId}`;
-    
-    // 1. 渲染剧情块 (原有逻辑)
-    const editor = document.getElementById('panel-editor');
-    editor.innerHTML = ''; 
-    try {
-        const blocksData = JSON.parse(node.querySelector('.v-story-data').value || '[]');
-        blocksData.forEach(b => addBlock(b.type, b.role, b.text));
-    } catch(e) {}
-    
-    // 2. 渲染选项区 (新增逻辑)
-    renderPanelChoices(node);
-    
-    document.getElementById('side-panel').classList.add('open');
-}
-
 // 渲染选项区，并保证它一直在最后
     function renderPanelChoices(node) {
         const editor = document.getElementById('panel-editor');
@@ -2699,8 +2841,179 @@ function showToast(message, type = 'info', duration = 3000) {
   }, duration);
 }
 
-// ================= 全局变量管理系统 =================
+// ================= 🖼️ 统一图库管理系统 =================
+function openImgModal() {
+    document.getElementById('img-modal').style.display = 'block';
+    renderImgModal();
+}
+
+function closeImgModal() {
+    document.getElementById('img-modal').style.display = 'none';
+    if (typeof saveToLocal === 'function') saveToLocal(true);
+    updateAllImgDropdowns(); // 关闭时刷新编辑器里的所有下拉框
+}
+
+function renderImgModal() {
+    const modal = document.getElementById('img-modal');
+    let html = `
+        <div class="var-header">
+            <h3 style="color: #4eb0a5; margin: 0;">🖼️ 统一图库管理</h3>
+            <button class="btn" style="padding: 4px 12px;" onclick="closeImgModal()">完成</button>
+        </div>
+        <div style="font-size: 12px; color: #aaa; margin-bottom: 15px;">在此统一定义图片资源，之后在卡片中可通过下拉菜单一键引用链接。</div>
+        <div id="img-list" style="max-height: 350px; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 8px;"></div>
+        <button class="btn" onclick="addImgRow()" style="width: 100%; margin-top: 15px; border: 1px dashed #666; background: transparent; color: #aaa;">+ 新增图片资源</button>
+    `;
+    modal.innerHTML = html;
+    
+    const list = document.getElementById('img-list');
+    if (globalImages.length === 0) {
+        list.innerHTML = '<div style="color:#888; text-align:center; font-size:12px; margin-top: 20px;">暂无图片。尝试添加例如 "羊皮纸背景" 并填入你的 GitHub 链接。</div>';
+    } else {
+        globalImages.forEach((img, index) => {
+            const row = document.createElement('div');
+            row.style.cssText = 'display: flex; gap: 8px; align-items: center; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; border: 1px solid #333;';
+            row.innerHTML = `
+                <input type="text" placeholder="简称 (如: 羊皮纸)" value="${img.name}" onchange="updateImg(${index}, 'name', this.value)" style="flex: 1; background: #1a1a1a; color: white; border: 1px solid #555; padding: 6px; border-radius: 4px; outline: none;">
+                <input type="text" placeholder="图片链接 (http://...)" value="${img.url}" onchange="updateImg(${index}, 'url', this.value)" style="flex: 2; background: #1a1a1a; color: white; border: 1px solid #555; padding: 6px; border-radius: 4px; outline: none;">
+                <button class="delete-btn" style="position:static; margin:0;" onclick="removeImg(${index})">×</button>
+            `;
+            list.appendChild(row);
+        });
+    }
+}
+
+function addImgRow() { globalImages.push({ name: '', url: '' }); renderImgModal(); }
+function updateImg(index, key, val) { globalImages[index][key] = val.trim(); }
+function removeImg(index) { globalImages.splice(index, 1); renderImgModal(); }
+
+// 替换原来的 insertImgToInput
+function insertImgToInput(selectElem, inputElem) {
+    if (!selectElem.value) {
+        inputElem.value = ""; // 如果选了默认的空项，就清空链接
+    } else {
+        inputElem.value = selectElem.value;
+    }
+    // 删掉了强行重置的代码，现在它会乖乖停留在你选的名字上
+    inputElem.dispatchEvent(new Event('input')); 
+}
+
+// 替换原来的 updateAllImgDropdowns
+function updateAllImgDropdowns() {
+    const selects = document.querySelectorAll('.img-quick-select');
+    selects.forEach(select => {
+        // 看看旁边的输入框现在填的是什么链接
+        const inputElem = select.previousElementSibling;
+        const currentUrl = inputElem ? inputElem.value.trim() : '';
+
+        let optionsHtml = '<option value="">+ 图库...</option>';
+        globalImages.forEach(img => {
+            if (img.name && img.url) {
+                // 如果输入框里的链接刚好和图库里的一样，就自动选中这个名字！
+                const isSelected = (currentUrl === img.url) ? 'selected' : '';
+                optionsHtml += `<option value="${img.url}" ${isSelected}>${img.name}</option>`;
+            }
+        });
+        select.innerHTML = optionsHtml;
+    });
+}
+
+// ================= 🎭 角色立绘管理系统 =================
+function openSpriteModal() { document.getElementById('sprite-modal').style.display = 'block'; renderSpriteModal(); }
+function closeSpriteModal() { 
+    document.getElementById('sprite-modal').style.display = 'none'; 
+    if (typeof saveToLocal === 'function') saveToLocal(true);
+    updateAllSpriteDropdowns(); 
+}
+
+function renderSpriteModal() {
+    const modal = document.getElementById('sprite-modal');
+    let html = `
+        <div class="var-header">
+            <h3 style="color: #ff8e8e; margin: 0;">🎭 角色立绘管理</h3>
+            <button class="btn" style="padding: 4px 12px;" onclick="closeSpriteModal()">完成</button>
+        </div>
+        <div style="font-size: 12px; color: #aaa; margin-bottom: 15px;">按角色分组管理立绘。在“台词”区块中，下拉框会自动按角色名对表情进行分类。</div>
+        <div id="sprite-list" style="max-height: 450px; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 12px;"></div>
+        <button class="btn" onclick="addCharToSpriteLib()" style="width: 100%; margin-top: 15px; border: 1px dashed #666; background: transparent; color: #aaa;">+ 新增角色</button>
+    `;
+    modal.innerHTML = html;
+    
+    const list = document.getElementById('sprite-list');
+    if (globalSprites.length === 0) {
+        list.innerHTML = '<div style="color:#888; text-align:center; font-size:12px; margin-top: 20px;">暂无内容。请先添加一个角色，再为其添加不同的表情立绘。</div>';
+    } else {
+        globalSprites.forEach((charData, cIdx) => {
+            const charBox = document.createElement('div');
+            charBox.style.cssText = 'background: rgba(255,142,142,0.05); border: 1px solid rgba(255,142,142,0.3); border-radius: 6px; padding: 12px;';
+            
+            let charHtml = `
+                <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 8px;">
+                    <span style="font-size:16px; color:#ff8e8e;">👤</span>
+                    <input type="text" placeholder="角色名 (如: 卡斯珀)" value="${charData.charName}" onchange="updateSpriteChar(${cIdx}, this.value)" style="flex: 1; background: #1a1a1a; color: white; border: 1px solid #555; padding: 6px; border-radius: 4px; outline: none; font-weight: bold;">
+                    <button class="btn" style="padding: 4px 10px; background: transparent; border: 1px solid #555; color: #ff8e8e;" onclick="addSpriteToChar(${cIdx})">+ 添表情</button>
+                    <button class="delete-btn" style="position:static; margin:0;" onclick="removeSpriteChar(${cIdx})">×</button>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px; padding-left: 28px;">
+            `;
+            
+            if(charData.sprites.length === 0) {
+                charHtml += `<div style="font-size:11px; color:#666;">（空空如也，点击右上角 + 添表情）</div>`;
+            } else {
+                charData.sprites.forEach((sp, sIdx) => {
+                    charHtml += `
+                        <div style="display: flex; gap: 6px; align-items: center;">
+                            <input type="text" placeholder="表情名 (如: 伤心)" value="${sp.name}" onchange="updateSpriteItem(${cIdx}, ${sIdx}, 'name', this.value)" style="flex: 1; background: #1e1e1e; color: #ddd; border: 1px solid #444; padding: 4px 6px; border-radius: 3px; font-size: 12px; outline: none;">
+                            <input type="text" placeholder="立绘URL链接" value="${sp.url}" onchange="updateSpriteItem(${cIdx}, ${sIdx}, 'url', this.value)" style="flex: 2; background: #1e1e1e; color: #ddd; border: 1px solid #444; padding: 4px 6px; border-radius: 3px; font-size: 12px; outline: none;">
+                            <button class="delete-btn" style="font-size: 16px; padding: 0 4px; position:static;" onclick="removeSpriteItem(${cIdx}, ${sIdx})">×</button>
+                        </div>
+                    `;
+                });
+            }
+            charHtml += `</div>`;
+            charBox.innerHTML = charHtml;
+            list.appendChild(charBox);
+        });
+    }
+}
+
+function addCharToSpriteLib() { globalSprites.push({ charName: '', sprites: [] }); renderSpriteModal(); }
+function removeSpriteChar(cIdx) { if(confirm('⚠️ 删除该角色及其所有立绘？')) { globalSprites.splice(cIdx, 1); renderSpriteModal(); } }
+function updateSpriteChar(cIdx, val) { globalSprites[cIdx].charName = val.trim(); }
+
+function addSpriteToChar(cIdx) { globalSprites[cIdx].sprites.push({ name: '', url: '' }); renderSpriteModal(); }
+function removeSpriteItem(cIdx, sIdx) { globalSprites[cIdx].sprites.splice(sIdx, 1); renderSpriteModal(); }
+function updateSpriteItem(cIdx, sIdx, key, val) { globalSprites[cIdx].sprites[sIdx][key] = val.trim(); }
+
+// 动态刷新所有“立绘选择器”，生成漂亮的分组菜单
+function updateAllSpriteDropdowns() {
+    const selects = document.querySelectorAll('.sprite-quick-select');
+    selects.forEach(select => {
+        const inputElem = select.previousElementSibling;
+        const currentUrl = inputElem ? inputElem.value.trim() : '';
+
+        let optionsHtml = '<option value="">+ 立绘...</option>';
+        globalSprites.forEach(charData => {
+            if (charData.charName && charData.sprites.length > 0) {
+                // 用 optgroup 生成带有角色名的归类小标题
+                optionsHtml += `<optgroup label="▼ ${charData.charName}">`;
+                charData.sprites.forEach(sp => {
+                    if (sp.name && sp.url) {
+                        const isSelected = (currentUrl === sp.url) ? 'selected' : '';
+                        optionsHtml += `<option value="${sp.url}" ${isSelected}>- ${sp.name}</option>`;
+                    }
+                });
+                optionsHtml += `</optgroup>`;
+            }
+        });
+        select.innerHTML = optionsHtml;
+    });
+}
+
+// ================= 全局管理系统 =================
 let globalVars = []; // 数据结构示例: [{ name: 'Sanity', value: '100' }]
+let globalImages = []; // 新增：全局图库数组
+let globalSprites = []; // 新增：树状角色立绘库
 
 
 // 关闭面板
@@ -3020,22 +3333,20 @@ function toggleConditionRange(selectElem) {
     }
 }
 
-// 导出独立可玩的单文件 HTML 游戏 (修复白屏 & 支持自定义名字)
-function exportPlayableGame() {
+// 导出独立可玩的单文件 HTML 游戏 (支持多主题切换)
+function exportPlayableGame(theme = 'classic') {
     const nodes = document.querySelectorAll('.node');
     if (nodes.length === 0) {
         alert("画布是空的，没东西可导出呀！");
         return;
     }
 
-    // 1. 弹窗询问名字
-    const gameTitle = prompt("请输入游戏标题（显示在浏览器标签页上）：", "第四国际 - 沉浸版");
-    if (gameTitle === null) return; // 点击取消则中止
+    const gameTitle = prompt("请输入游戏标题（显示在浏览器标签页上）：", "第四国际 - " + theme);
+    if (gameTitle === null) return; 
 
     const fileName = prompt("请输入导出的文件名（不需要打 .html）：", "第四国际_可玩版");
     if (fileName === null) return;
 
-    // 2. 打包当前所有数据
     const gameData = {
         globalVars: globalVars || [],
         nodes: {}
@@ -3044,6 +3355,7 @@ function exportPlayableGame() {
     nodes.forEach(node => {
         gameData.nodes[node.id] = {
             role: node.querySelector('.v-role').value,
+            bgUrl: node.querySelector('.v-bg-url') ? node.querySelector('.v-bg-url').value : '',
             storyData: JSON.parse(node.querySelector('.v-story-data').value || '[]'),
             choicesData: JSON.parse(node.querySelector('.v-choices-data').value || '[]'),
             conditions: JSON.parse(node.querySelector('.v-var-data').value || '[]')
@@ -3051,102 +3363,31 @@ function exportPlayableGame() {
     });
 
     const rootNodeId = nodes[0].id;
+    const selectedCSS = getThemeCSS(theme);
 
-    // 3. 组装 HTML 模板
     const htmlTemplate = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>${gameTitle}</title> <style>
-        body { 
-            margin: 0; padding: 0;
-            background-color: #0a0c0e; /* 👇 加上了这行保底的纯黑色，防止渐变失效变白！ */
-            background-image: radial-gradient(circle at center, #1a2026 0%, #0a0c0e 100%); 
-            color: #eee; font-family: 'Segoe UI', "Microsoft YaHei", sans-serif; 
-            user-select: none; overflow: hidden; height: 100vh;
-        }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes bounceDown { 0%, 100% { transform: translateY(0) rotate(45deg); opacity: 0.5; } 50% { transform: translateY(6px) rotate(45deg); opacity: 1; } }
-        @keyframes cinematicFade { from { opacity: 0; filter: blur(10px); } to { opacity: 1; filter: blur(0); } }
-
-        .hud { 
-            position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 100;
-            animation: fadeIn 1s ease-out;
-        }
-        .hud-item {
-            background: rgba(10, 15, 20, 0.7); padding: 6px 12px; border-left: 3px solid #4eb0a5;
-            border-radius: 2px; font-family: monospace; font-size: 14px; color: #ccc;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5); backdrop-filter: blur(4px);
-        }
-        .hud-val { color: #4eb0a5; font-weight: bold; margin-left: 8px; }
-
-        .dialogue-wrapper {
-            position: fixed; bottom: 40px; z-index: 50; display: none;
-            left: 0; right: 0; margin: auto; 
-            width: 85%; max-width: 900px;
-            animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-        .dialogue-box { 
-            background: linear-gradient(135deg, rgba(30, 35, 40, 0.85) 0%, rgba(15, 18, 20, 0.95) 100%);
-            border: 1px solid rgba(78, 176, 165, 0.3); border-top: 2px solid #4eb0a5;
-            padding: 35px 40px 45px 40px; border-radius: 6px; cursor: pointer;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 1px 10px rgba(255,255,255,0.05);
-            backdrop-filter: blur(8px); position: relative; transition: all 0.1s;
-        }
-        .dialogue-box:active { transform: scale(0.99); filter: brightness(0.9); }
-
-        .name { 
-            position: absolute; top: -20px; left: 30px;
-            background: linear-gradient(90deg, #2b5c5c 0%, #1a3838 100%);
-            border: 1px solid #4eb0a5; border-radius: 4px; color: #fff;
-            padding: 6px 20px; font-size: 18px; font-weight: bold; letter-spacing: 1px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: none;
-        }
-
-        .text { font-size: 20px; line-height: 1.7; min-height: 90px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); color: #e0e0e0; }
-        .text-desc { color: #aaa; font-style: italic; }
-
-        .next-arrow {
-            position: absolute; right: 35px; bottom: 30px; width: 10px; height: 10px;
-            border-right: 3px solid #4eb0a5; border-bottom: 3px solid #4eb0a5;
-            animation: bounceDown 1.2s infinite ease-in-out; display: none;
-        }
-
-        .choices { 
-            position: fixed; bottom: 180px; left: 0; right: 0; margin: auto; 
-            width: 80%; max-width: 700px; display: none; flex-direction: column; gap: 15px; z-index: 60;
-            animation: slideUp 0.3s ease-out;
-        }
-        .choice-btn { 
-            background: linear-gradient(90deg, rgba(43,92,92,0.1) 0%, rgba(30,30,30,0.8) 20%, rgba(30,30,30,0.8) 80%, rgba(43,92,92,0.1) 100%);
-            border: 1px solid rgba(78, 176, 165, 0.4); border-left: 3px solid #4eb0a5; border-right: 3px solid #4eb0a5;
-            padding: 16px 20px; color: #ccc; cursor: pointer; text-align: center; font-size: 18px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: all 0.2s; border-radius: 4px;
-        }
-        .choice-btn:hover { 
-            background: linear-gradient(90deg, rgba(78,176,165,0.2) 0%, rgba(43,92,92,0.9) 50%, rgba(78,176,165,0.2) 100%);
-            color: #fff; border-color: #4eb0a5; transform: scale(1.02); box-shadow: 0 0 15px rgba(78, 176, 165, 0.4);
-        }
-        .choice-btn:active { transform: scale(0.98); background: #4eb0a5; color: #000; }
-
-        .ending-screen {
-            position: fixed; inset: 0; background: #000; z-index: 200;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
-            animation: cinematicFade 2s ease-in-out forwards;
-        }
-        .ending-title { font-size: 24px; color: #888; letter-spacing: 6px; margin-bottom: 20px; }
-        .ending-name { font-size: 48px; color: #ff6b6b; font-weight: bold; letter-spacing: 4px; text-shadow: 0 0 30px rgba(255, 107, 107, 0.5); }
-        .restart-btn { margin-top: 60px; padding: 12px 30px; background: transparent; border: 1px solid #555; color: #888; cursor: pointer; border-radius: 4px; font-size: 16px; transition: 0.3s; }
-        .restart-btn:hover { border-color: #eee; color: #eee; }
+    <title>${gameTitle}</title>
+    <style>
+        ${selectedCSS}
+        /* 👉 导出版的纯CG模式样式 */
+        .cg-only-mode .dialogue-box { background: transparent !important; border: none !important; box-shadow: none !important; backdrop-filter: none !important; position: fixed !important; inset: 0 !important; width: 100% !important; height: 100vh !important; max-width: none !important; margin: 0 !important; padding: 0 !important; }
+        .cg-only-mode .name, .cg-only-mode .text, .cg-only-mode .next-arrow { display: none !important; }
+        .cg-only-mode #sprite-container { bottom: 0 !important; height: 100vh !important; align-items: center !important; max-width: 100% !important; z-index: -1; }
     </style>
 </head>
 <body>
+    <img id="bg-image" src="" style="position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; opacity: 0; transition: opacity 0.8s;">
+    
     <div id="hud" class="hud"></div>
     <div id="choices" class="choices"></div>
     
     <div id="dialogue-wrapper" class="dialogue-wrapper">
+        <div id="sprite-container" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); width: 100%; max-width: 800px; height: 60vh; display: flex; justify-content: center; align-items: flex-end; pointer-events: none;">
+            <img id="sprite-image" src="" style="max-height: 100%; max-width: 100%; object-fit: contain; opacity: 0; transform: translateY(20px); transition: all 0.4s;">
+        </div>
         <div id="dialogue-box" class="dialogue-box" onclick="advancePlay()">
             <div id="name" class="name"></div>
             <div id="text" class="text"></div>
@@ -3168,7 +3409,6 @@ function exportPlayableGame() {
         let currentNodeId = null;
         let currentSequence = [];
         let seqIndex = 0;
-
         let typeTimer = null;
         let isTyping = false;
         let targetHtml = "";
@@ -3216,7 +3456,6 @@ function exportPlayableGame() {
                     const op = singleMatch[2];
                     const targetVal = parseFloat(singleMatch[3]);
                     const currentVal = playState[vName] || 0;
-                    
                     if (op === '>' && !(currentVal > targetVal)) return false;
                     if (op === '>=' && !(currentVal >= targetVal)) return false;
                     if (op === '<' && !(currentVal < targetVal)) return false;
@@ -3238,6 +3477,14 @@ function exportPlayableGame() {
             currentNodeId = nodeId;
             const node = gameData.nodes[nodeId];
             if (!node) return;
+            
+            const bgImg = document.getElementById('bg-image');
+            if (node.bgUrl) {
+                bgImg.src = node.bgUrl;
+                bgImg.style.opacity = '1';
+            } else {
+                bgImg.style.opacity = '0';
+            }
             
             processRules(nodeId);
             updateHUD();
@@ -3266,10 +3513,8 @@ function exportPlayableGame() {
                     completeTyping(elementId);
                     return;
                 }
-                
                 let char = htmlString[i];
                 if (char === '<') inTag = true;
-                
                 if (inTag) {
                     currentTag += char;
                     if (char === '>') {
@@ -3298,6 +3543,24 @@ function exportPlayableGame() {
             }
             const block = currentSequence[seqIndex];
             
+            // 👉 新增：智能检测纯CG模式
+            const cleanText = (block.text || '').replace(/<[^>]*>?/gm, '').trim();
+            if (cleanText === '') {
+                document.body.classList.add('cg-only-mode');
+            } else {
+                document.body.classList.remove('cg-only-mode');
+            }
+            
+            const spriteImg = document.getElementById('sprite-image');
+            if (block.image) {
+                spriteImg.src = block.image;
+                spriteImg.style.opacity = '1';
+                spriteImg.style.transform = 'translateY(0)';
+            } else {
+                spriteImg.style.opacity = '0';
+                spriteImg.style.transform = 'translateY(20px)';
+            }
+            
             if (block.condition && !evaluateBlockCondition(block.condition)) {
                 seqIndex++;
                 renderBlock();
@@ -3322,7 +3585,6 @@ function exportPlayableGame() {
                 nameEl.style.display = 'none';
                 textEl.className = 'text text-desc';
             }
-
             typeWriter('text', block.text);
         }
 
@@ -3347,7 +3609,6 @@ function exportPlayableGame() {
                 choices.forEach(c => {
                     const btn = document.createElement('div');
                     btn.className = 'choice-btn';
-                    
                     const tNode = gameData.nodes[c.target];
                     if (!tNode) {
                          btn.innerText = \`➔ [前路未卜] \${c.text}\`;
@@ -3366,15 +3627,13 @@ function exportPlayableGame() {
                             if (rule.op === '<=' && !(currentVal <= targetVal)) canEnter = false;
                             if (rule.op === '==' && !(currentVal === targetVal)) canEnter = false;
                         }
-                        
                         if (canEnter) {
                             btn.innerText = c.text;
                             btn.onclick = () => enterNode(c.target);
                         } else {
-                            btn.innerHTML = \`🔒 <span style="font-size:14px; color:#888;">[检定失败]</span> \${c.text}\`;
+                            btn.innerHTML = \`🔒 <span style="font-size:14px; opacity:0.6;">[条件未满足]</span> \${c.text}\`;
                             btn.style.opacity = '0.4';
                             btn.style.cursor = 'not-allowed';
-                            btn.style.background = 'rgba(0,0,0,0.6)';
                         }
                     }
                     choicesDiv.appendChild(btn);
@@ -3388,15 +3647,230 @@ function exportPlayableGame() {
 </body>
 </html>`;
 
-    // 4. 触发下载
     const blob = new Blob([htmlTemplate], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${fileName}.html`; // 这里使用了你输入的文件名
+    a.download = `${fileName}.html`;
     a.click();
     URL.revokeObjectURL(url);
 }
+
+// 主题 CSS 样式库
+function getThemeCSS(themeType) {
+    let css = "";
+    
+    if (themeType === 'cyber') {
+        // 💻 主题 1：赛博黑客终端风 (黑绿配色，等宽字体，发光特效)
+        css = `
+            body { margin: 0; background: #050505; color: #0f0; font-family: 'Courier New', Courier, monospace; user-select: none; overflow: hidden; height: 100vh; background-image: linear-gradient(rgba(0, 255, 0, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 0, 0.03) 1px, transparent 1px); background-size: 20px 20px; }
+            @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+            @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+            .hud { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 100; }
+            .hud-item { border: 1px solid #0f0; padding: 4px 10px; font-size: 14px; background: rgba(0,255,0,0.1); box-shadow: 0 0 10px rgba(0,255,0,0.2); text-transform: uppercase; }
+            .hud-val { color: #fff; margin-left: 8px; font-weight: bold; }
+            .dialogue-wrapper { position: fixed; bottom: 40px; left: 0; right: 0; margin: auto; width: 90%; max-width: 900px; z-index: 50; display: none; animation: slideUp 0.2s; }
+            .dialogue-box { background: rgba(5, 10, 5, 0.9); border: 2px solid #0f0; padding: 30px; box-shadow: 0 0 20px rgba(0,255,0,0.3); position: relative; cursor: pointer; }
+            .name { position: absolute; top: -15px; left: 20px; background: #0f0; color: #000; padding: 2px 15px; font-size: 16px; font-weight: bold; text-transform: uppercase; display: none; }
+            .text { font-size: 18px; line-height: 1.6; min-height: 80px; text-shadow: 0 0 5px rgba(0,255,0,0.5); }
+            .text-desc { color: #0aa; font-style: normal; }
+            .next-arrow { position: absolute; right: 20px; bottom: 20px; width: 12px; height: 12px; background: #0f0; animation: blink 1s infinite; display: none; }
+            .choices { position: fixed; bottom: 180px; left: 0; right: 0; margin: auto; width: 80%; max-width: 700px; display: none; flex-direction: column; gap: 10px; z-index: 60; animation: slideUp 0.2s; }
+            .choice-btn { background: #000; border: 1px solid #0f0; padding: 12px; color: #0f0; cursor: pointer; text-align: left; font-size: 16px; text-transform: uppercase; }
+            .choice-btn:hover { background: #0f0; color: #000; box-shadow: 0 0 15px #0f0; font-weight: bold; }
+            .choice-btn::before { content: "> "; opacity: 0; }
+            .choice-btn:hover::before { opacity: 1; }
+            .ending-screen { position: fixed; inset: 0; background: #000; z-index: 200; display: none; flex-direction: column; justify-content: center; align-items: center; }
+            .ending-title { font-size: 20px; color: #0a0; margin-bottom: 20px; letter-spacing: 5px; }
+            .ending-name { font-size: 40px; color: #0f0; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 20px #0f0; }
+            .restart-btn { margin-top: 50px; background: none; border: 1px solid #0f0; color: #0f0; padding: 10px 20px; cursor: pointer; font-family: inherit; }
+            .restart-btn:hover { background: #0f0; color: #000; }
+        `;
+    } 
+    else if (themeType === 'paper') {
+        // 📜 主题 2：复古文艺信笺风 (米白底色，深灰衬线字体，极简排版)
+        css = `
+            body { margin: 0; background: #f4f1ea; color: #333; font-family: 'Noto Serif SC', 'SimSun', serif; user-select: none; overflow: hidden; height: 100vh; }
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+            .hud { position: absolute; top: 20px; left: 20px; display: flex; gap: 15px; z-index: 100; animation: fadeIn 1s; }
+            .hud-item { font-size: 14px; color: #666; border-bottom: 1px solid #ccc; padding-bottom: 4px; letter-spacing: 1px; }
+            .hud-val { color: #8b3a3a; margin-left: 6px; font-weight: bold; font-family: sans-serif; }
+            .dialogue-wrapper { position: fixed; bottom: 8vh; left: 0; right: 0; margin: auto; width: 70%; max-width: 800px; z-index: 50; display: none; animation: slideUp 0.5s ease-out; }
+            .dialogue-box { background: transparent; padding: 20px; position: relative; cursor: pointer; border-top: 1px solid #dcd5c6; border-bottom: 1px solid #dcd5c6; }
+            .name { position: absolute; top: -35px; left: 0; color: #8b3a3a; font-size: 22px; font-weight: bold; display: none; }
+            .text { font-size: 20px; line-height: 2.2; min-height: 100px; color: #222; }
+            .text-desc { color: #666; font-style: italic; }
+            .next-arrow { position: absolute; right: 0; bottom: -25px; font-size: 16px; color: #8b3a3a; animation: fadeIn 1.5s infinite alternate; display: none; }
+            .next-arrow::after { content: "▼"; }
+            .choices { position: fixed; bottom: 35vh; left: 0; right: 0; margin: auto; width: 60%; max-width: 600px; display: none; flex-direction: column; gap: 15px; z-index: 60; animation: fadeIn 0.4s; }
+            .choice-btn { background: transparent; border: 1px solid #dcd5c6; padding: 15px; color: #444; cursor: pointer; text-align: center; font-size: 18px; transition: 0.3s; }
+            .choice-btn:hover { background: #eae5d9; color: #000; border-color: #8b3a3a; transform: scale(1.02); }
+            .ending-screen { position: fixed; inset: 0; background: #f4f1ea; z-index: 200; display: none; flex-direction: column; justify-content: center; align-items: center; animation: fadeIn 3s; }
+            .ending-title { font-size: 18px; color: #888; margin-bottom: 30px; letter-spacing: 8px; }
+            .ending-name { font-size: 42px; color: #8b3a3a; font-weight: bold; letter-spacing: 4px; border-bottom: 2px solid #8b3a3a; padding-bottom: 10px; }
+            .restart-btn { margin-top: 60px; background: none; border: none; color: #666; border-bottom: 1px dashed #666; padding: 5px; cursor: pointer; font-family: inherit; font-size: 16px; }
+            .restart-btn:hover { color: #000; border-color: #000; }
+        `;
+    } 
+    else {
+        // 🌌 主题 3 (默认)：经典日系 AVG 风 (上一版的高级磨砂玻璃质感)
+        css = `
+            body { margin: 0; background: radial-gradient(circle at center, #1a2026 0%, #0a0c0e 100%); color: #eee; font-family: 'Segoe UI', sans-serif; user-select: none; overflow: hidden; height: 100vh; }
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+            @keyframes bounceDown { 0%, 100% { transform: translateY(0) rotate(45deg); opacity: 0.5; } 50% { transform: translateY(6px) rotate(45deg); opacity: 1; } }
+            .hud { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 100; animation: fadeIn 1s ease-out; }
+            .hud-item { background: rgba(10, 15, 20, 0.7); padding: 6px 12px; border-left: 3px solid #4eb0a5; border-radius: 2px; font-family: monospace; font-size: 14px; color: #ccc; backdrop-filter: blur(4px); }
+            .hud-val { color: #4eb0a5; font-weight: bold; margin-left: 8px; }
+            .dialogue-wrapper { position: fixed; bottom: 40px; left: 0; right: 0; margin: auto; width: 85%; max-width: 900px; z-index: 50; display: none; animation: slideUp 0.4s ease; }
+            .dialogue-box { background: linear-gradient(135deg, rgba(30, 35, 40, 0.85) 0%, rgba(15, 18, 20, 0.95) 100%); border: 1px solid rgba(78, 176, 165, 0.3); border-top: 2px solid #4eb0a5; padding: 35px 40px 45px 40px; border-radius: 6px; cursor: pointer; box-shadow: 0 20px 50px rgba(0,0,0,0.8); backdrop-filter: blur(8px); position: relative; }
+            .dialogue-box:active { transform: scale(0.99); filter: brightness(0.9); }
+            .name { position: absolute; top: -20px; left: 30px; background: linear-gradient(90deg, #2b5c5c 0%, #1a3838 100%); border: 1px solid #4eb0a5; border-radius: 4px; color: #fff; padding: 6px 20px; font-size: 18px; font-weight: bold; letter-spacing: 1px; display: none; }
+            .text { font-size: 20px; line-height: 1.7; min-height: 90px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); color: #e0e0e0; }
+            .text-desc { color: #aaa; font-style: italic; }
+            .next-arrow { position: absolute; right: 35px; bottom: 30px; width: 10px; height: 10px; border-right: 3px solid #4eb0a5; border-bottom: 3px solid #4eb0a5; animation: bounceDown 1.2s infinite ease-in-out; display: none; }
+            .choices { position: fixed; bottom: 180px; left: 0; right: 0; margin: auto; width: 80%; max-width: 700px; display: none; flex-direction: column; gap: 15px; z-index: 60; animation: slideUp 0.3s; }
+            .choice-btn { background: linear-gradient(90deg, rgba(43,92,92,0.1) 0%, rgba(30,30,30,0.8) 20%, rgba(30,30,30,0.8) 80%, rgba(43,92,92,0.1) 100%); border: 1px solid rgba(78, 176, 165, 0.4); border-left: 3px solid #4eb0a5; border-right: 3px solid #4eb0a5; padding: 16px 20px; color: #ccc; cursor: pointer; text-align: center; font-size: 18px; transition: 0.2s; border-radius: 4px; }
+            .choice-btn:hover { background: linear-gradient(90deg, rgba(78,176,165,0.2) 0%, rgba(43,92,92,0.9) 50%, rgba(78,176,165,0.2) 100%); color: #fff; border-color: #4eb0a5; transform: scale(1.02); }
+            .ending-screen { position: fixed; inset: 0; background: #000; z-index: 200; display: none; flex-direction: column; justify-content: center; align-items: center; animation: fadeIn 2s forwards; }
+            .ending-title { font-size: 24px; color: #888; letter-spacing: 6px; margin-bottom: 20px; }
+            .ending-name { font-size: 48px; color: #ff6b6b; font-weight: bold; letter-spacing: 4px; text-shadow: 0 0 30px rgba(255, 107, 107, 0.5); }
+            .restart-btn { margin-top: 60px; padding: 12px 30px; background: transparent; border: 1px solid #555; color: #888; cursor: pointer; border-radius: 4px; font-size: 16px; transition: 0.3s; }
+            .restart-btn:hover { border-color: #eee; color: #eee; }
+        `;
+    }
+    return css;
+}
+
+// ================= 📱 移动端触摸交互补丁 (完整修复版) =================
+    // 拦截手指触摸屏幕的事件，翻译成拖动画布、拖动卡片和连线
+    viewport.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) return; 
+        const touch = e.touches[0];
+        const target = e.target;
+
+        // 【新增】：情况0：手指摸到了小圆点（插口），开始连线！
+        const socket = target.closest('.socket');
+        if (socket) {
+            e.stopPropagation();
+            const node = socket.closest('.node');
+            const type = socket.classList.contains('out') ? 'out' : 'in';
+            startConnection(e, node.id, type);
+            return;
+        }
+
+        // 情况1：手指摸到了卡片的头部区域 -> 开始拖拽卡片
+        const nodeHeader = target.closest('.node-header');
+        if (nodeHeader && target.tagName.toLowerCase() !== 'button' && target.tagName.toLowerCase() !== 'input') {
+            isDraggingNode = true;
+            currentDragNode = nodeHeader.parentElement;
+            document.querySelectorAll('.node').forEach(n => n.style.zIndex = 10);
+            currentDragNode.style.zIndex = 100;
+            const rect = currentDragNode.getBoundingClientRect();
+            dragOffsetX = (touch.clientX - rect.left) / scale;
+            dragOffsetY = (touch.clientY - rect.top) / scale;
+            return;
+        }
+
+        // 情况2：手指摸到了画布的空白处 -> 开始平移整个画布
+        if (target === viewport || target === canvas || target.id === 'svg-layer') {
+            isPanning = true;
+            startPanX = touch.clientX - panX;
+            startPanY = touch.clientY - panY;
+        }
+    }, {passive: false});
+
+    window.addEventListener('touchmove', (e) => {
+        if (e.touches.length !== 1) return;
+        const touch = e.touches[0];
+
+        // 【新增】：正在拖拽连线
+        if (isConnecting && connectStartNodeId) {
+            const start = getSocketCoords(connectStartNodeId, connectStartType);
+            const endX = (touch.clientX - panX) / scale;
+            const endY = (touch.clientY - panY) / scale;
+
+            // 保持曲线顺滑的控制点计算
+            let cp1x, cp2x;
+            if (connectStartType === 'out') {
+                cp1x = start.x + 80; cp2x = endX - 80;
+            } else {
+                cp1x = start.x - 80; cp2x = endX + 80;
+            }
+
+            const tempLine = document.getElementById('temp-line');
+            if (tempLine) {
+                tempLine.setAttribute('d', `M ${start.x} ${start.y} C ${cp1x} ${start.y}, ${cp2x} ${endY}, ${endX} ${endY}`);
+            }
+            e.preventDefault(); // 阻止屏幕乱滚
+        }
+        // 正在拖拽卡片
+        else if (isDraggingNode && currentDragNode) {
+            currentDragNode.style.left = ((touch.clientX - panX) / scale - dragOffsetX) + 'px';
+            currentDragNode.style.top = ((touch.clientY - panY) / scale - dragOffsetY) + 'px';
+            drawAllLines();
+            e.preventDefault(); 
+        } 
+        // 正在平移画布
+        else if (isPanning) {
+            panX = touch.clientX - startPanX;
+            panY = touch.clientY - startPanY;
+            updateTransform();
+            e.preventDefault();
+        }
+    }, {passive: false});
+
+    window.addEventListener('touchend', (e) => {
+        // 【新增】：手指松开连线时，利用视觉穿透抓取底下的目标！
+        if (isConnecting) {
+            const touch = e.changedTouches[0];
+            // 神奇的 API：直接穿透获取屏幕这个坐标上最前方的元素
+            const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            if (targetElement) {
+                const socket = targetElement.closest('.socket');
+                if (socket) {
+                    const targetNode = socket.closest('.node');
+                    const targetType = socket.classList.contains('out') ? 'out' : 'in';
+                    finishConnection(targetNode.id, targetType);
+                }
+            }
+            
+            // 清理连线黄虚线的状态
+            isConnecting = false;
+            connectStartNodeId = null;
+            const tempLine = document.getElementById('temp-line');
+            if (tempLine) tempLine.remove();
+        }
+
+        isPanning = false;
+        isDraggingNode = false;
+        currentDragNode = null;
+    });
+
+    // ================= ✂️ 手机端“双击斩断连线”拦截器 =================
+    let lastLineTapTime = 0;
+    let lastTappedLine = null;
+
+    window.addEventListener('touchstart', (e) => {
+        const target = e.target;
+        // 确认手指摸到的是连线（<path>），且不是正在拖拽的临时虚线
+        if (target.tagName && target.tagName.toLowerCase() === 'path' && target.id !== 'temp-line') {
+            const currentTime = Date.now();
+            const tapLength = currentTime - lastLineTapTime;
+            
+            // 如果在 400 毫秒内，连续摸了两次同一根线，判定为斩断！
+            if (tapLength < 400 && tapLength > 0 && lastTappedLine === target) {
+                // 召唤一个虚拟的鼠标双击事件，骗过电脑端的原始删除代码
+                target.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+                e.preventDefault(); // 阻止屏幕放大
+            }
+            lastLineTapTime = currentTime;
+            lastTappedLine = target;
+        }
+    }, {passive: false});
+
 </script>
 
 <!-- 侧边栏结构开始 -->
@@ -3424,20 +3898,28 @@ function exportPlayableGame() {
   
     <!-- 试玩模式界面 -->
     <div id="play-overlay">
+        <img id="play-bg" src="" alt="">
         
         <div id="play-ending-screen">
             <div class="ending-title">达成结局</div>
             <div id="ending-name-text" class="ending-name"></div>
             <button class="btn" style="margin-top: 50px; background: transparent; border: 1px solid #444;" onclick="closePlayMode()">返回编辑器</button>
         </div>
+        
         <button class="play-close" onclick="closePlayMode()">×</button>
         <div id="play-choices" class="play-choices"></div>
+        
         <div id="play-dialogue-box" class="play-dialogue-box" onclick="advancePlayMode()">
+            <div id="play-sprite-container" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); width: 100%; height: 60vh; display: flex; justify-content: center; align-items: flex-end; pointer-events: none;">
+                <img id="play-sprite" src="" style="max-height: 100%; max-width: 100%; object-fit: contain; opacity: 0; transition: all 0.4s;">
+            </div>
+            
             <div id="play-name" class="play-name"></div>
             <div id="play-text" class="play-text"></div>
             <div class="play-next-arrow"></div> 
         </div>
     </div>
+
 <!-- 新手引导提示气泡 -->
     <div id="guide-tooltip">
         <div class="guide-title"></div>
@@ -3452,5 +3934,8 @@ function exportPlayableGame() {
             <button class="btn" onclick="endTutorial()">🚀 开始创作</button>
         </div>
     </div>
+    <div id="img-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2a2a2a; padding: 20px; border-radius: 8px; z-index: 9999; width: 520px; box-shadow: 0 4px 24px rgba(0,0,0,0.6); border: 1px solid #444; color: #eee;"></div>
+
+    <div id="sprite-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2a2a2a; padding: 20px; border-radius: 8px; z-index: 9999; width: 560px; box-shadow: 0 4px 24px rgba(0,0,0,0.6); border: 1px solid #444; color: #eee; max-height: 85vh;"></div>
 </body>
 </html>
