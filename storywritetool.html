@@ -421,6 +421,21 @@
             color: #fff; border-color: var(--accent); transform: scale(1.02); 
             box-shadow: 0 0 15px rgba(78, 176, 165, 0.4);
         }
+
+        /* 试玩模式：已经点过的选项变灰 */
+        .play-choice-btn.visited {
+            color: #777 !important;
+            border-color: #444 !important;
+            background: rgba(30, 30, 30, 0.4) !important;
+            box-shadow: none !important;
+            font-style: italic; /* 加个斜体，更有“已读”的感觉 */
+        }
+        /* 就算鼠标悬浮在已读选项上，光芒也暗淡一些 */
+        .play-choice-btn.visited:hover {
+            box-shadow: 0 0 10px rgba(100, 100, 100, 0.4) !important;
+            border-color: #666 !important;
+            color: #aaa !important;
+        }
         
         .play-close {
             position: absolute; top: 30px; right: 40px; background: none; border: none;
@@ -880,19 +895,48 @@
         }
 
         /* ================= ✂️ 连线触控优化 ================= */
-        path {
+        /* 只给肉眼可见的线加过渡动画，避开那个 25px 的透明碰撞箱 */
+        path:not([stroke="transparent"]) {
             cursor: pointer;
-            transition: stroke 0.2s, stroke-width 0.2s; /* 增加平滑的变色动画 */
+            transition: stroke 0.15s ease-out, stroke-width 0.15s ease-out; 
         }
-        /* 当鼠标悬浮，或者手指按住时，连线变粗并变红，提示你已瞄准 */
-        path:hover, path:active {
-            stroke: #ff6b6b !important; 
-            stroke-width: 6px !important;
-        }
+        /* 删除了原本会引发闪烁的全局 hover，现在悬停变色已由 JS 的隐形碰撞箱完美接管！ */
+
         /* 拖拽中生成的临时虚线千万不能拦截点击 */
         #temp-line {
             pointer-events: none !important; 
         }
+        /* ================= 存储空间监测条样式 ================= */
+.storage-monitor {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-right: 15px;
+    width: 120px;
+}
+.storage-bar-bg {
+    width: 100%;
+    height: 6px;
+    background: #333;
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid #444;
+}
+#storage-bar-fill {
+    width: 0%;
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.3s ease, background-color 0.3s;
+}
+.storage-text {
+    font-size: 10px;
+    color: #888;
+    margin-top: 2px;
+    font-family: monospace;
+}
+/* 空间告急时的报警色 */
+.storage-warning { background-color: #ed6c02 !important; }
+.storage-danger { background-color: #d32f2f !important; }
     </style>
 </head>
 <body>
@@ -914,6 +958,7 @@
             <a href="#" onclick="exportPlayableGame('classic')">🌌 经典日系 AVG 风</a>
             <a href="#" onclick="exportPlayableGame('cyber')">💻 赛博黑客终端风</a>
             <a href="#" onclick="exportPlayableGame('paper')">📜 复古文艺信笺风</a>
+            <a href="#" onclick="exportPlayableGame('disco')">🎲 极乐侧边栏风</a>
         </div>
     </div>
             <div class="drop-divider"></div>
@@ -935,16 +980,30 @@
 
     <span class="divider" style="margin: 0 12px; height: 20px;"></span>
 
+    <!-- 👇 新增的全局工程名输入框 -->
+    <input type="text" id="project-title" value="第四国际" title="设置工程/游戏名称" onchange="if(typeof saveToLocal === 'function') saveToLocal(true)" style="background: rgba(0,0,0,0.2); border: 1px dashed #555; color: var(--accent); padding: 6px 10px; border-radius: 4px; font-weight: bold; font-size: 14px; width: 130px; outline: none; text-align: center; transition: 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='#555'">
+
     <button id="btn-new-node" class="btn" onclick="spawnNodeSmartly()">+ 新建剧情节点</button>
     <button id="btn-global-play" class="btn" onclick="startGlobalPlay()" style="background: #bd5c00; border-color: #d96900;">🎬 全局试玩</button>
 
     <span class="divider" style="margin: 0 12px; height: 20px;"></span>
 
+    <select id="chapter-filter" class="btn" onchange="filterChapters()" style="background: #242424; color: #ccc; border: 1px solid #444; outline: none; margin-right: 8px;">
+        <option value="all">显示全部章节</option>
+        </select>
+    <button class="btn" onclick="openChapterModal()" style="margin-right: 12px; padding: 4px 8px; background: #2b5c5c;">📑 章节管理</button>
     <input type="text" id="search-input" placeholder="搜角色/台词/ID..." onkeypress="if(event.key==='Enter') performSearch()" style="padding: 6px; border-radius: 4px; border: 1px solid #444; background: #1e1e1e; color: white; width: 140px; outline: none;">
     <button class="btn" onclick="performSearch()" style="background: #2c5e3b; border-color: #3d8050; margin-left: 4px;">🔍</button>
     <span id="search-result-text" style="color: var(--accent); font-size: 13px; margin-left: 8px; font-weight: bold;"></span>
 
     <div style="flex-grow: 1;"></div>
+
+    <div class="storage-monitor" title="浏览器本地存储空间占用情况">
+    <div class="storage-bar-bg">
+        <div id="storage-bar-fill"></div>
+    </div>
+    <span id="storage-text" class="storage-text">MEM: 0%</span>
+</div>
 
     <span style="color: #666; font-size: 12px; margin-right: 15px;">右键拖拽，滚轮缩放。双击连线取消。</span>
     <button class="btn" onclick="startTutorial()" style="background: #175438; border-color: #207a51;">💡 教程</button>
@@ -960,6 +1019,8 @@
     </div>
 
 <script>
+    // 👇 新增这行：定义一个全局的读档保护锁
+    let isAppLoading = false;
     const viewport = document.getElementById('viewport');
     const canvas = document.getElementById('canvas');
     let panX = 0, panY = 0, scale = 1;
@@ -987,22 +1048,24 @@
             const endX = (e.clientX - panX) / scale;
             const endY = (e.clientY - panY) / scale;
             
-            // 根据是从左边拉还是右边拉，决定曲线甩出去的方向
-            let cp1x, cp2x;
-            if (connectStartType === 'out') {
-                cp1x = start.x + 80; cp2x = endX - 80;
-            } else {
-                cp1x = start.x - 80; cp2x = endX + 80;
-            }
+            // 呼叫智能连线算法计算拖拽临时线
+            let pathString = calculateBezierPath(start.x, start.y, endX, endY, connectStartType);
 
             const tempLine = document.getElementById('temp-line');
             if (tempLine) {
-                tempLine.setAttribute('d', `M ${start.x} ${start.y} C ${cp1x} ${start.y}, ${cp2x} ${endY}, ${endX} ${endY}`);
+                tempLine.setAttribute('d', pathString);
             }
         }
     });
 
-    window.addEventListener('mouseup', () => { isPanning = false; });
+    window.addEventListener('mouseup', () => { 
+        if (isPanning) {
+            isPanning = false;
+            // 拖拽画布结束时，立刻静默存盘记录视角
+            if (typeof saveToLocal === 'function') saveToLocal(true); 
+        }
+    });
+    
     viewport.addEventListener('contextmenu', e => e.preventDefault());
 
     viewport.addEventListener('wheel', (e) => {
@@ -1013,13 +1076,54 @@
         panY = e.clientY - (e.clientY - panY) * zoom;
         scale = Math.min(Math.max(0.2, scale *= zoom), 3); 
         updateTransform();
+        
+        // 缩放结束的 0.5 秒后静默存盘，记录缩放比例
+        clearTimeout(window.zoomSaveTimeout);
+        window.zoomSaveTimeout = setTimeout(() => {
+            if (typeof saveToLocal === 'function') saveToLocal(true);
+        }, 500);
     }, {passive: false});
 
     function getCenter() {
         return { x: (window.innerWidth / 2 - panX) / scale, y: (window.innerHeight / 2 - panY) / scale };
     }
 
-    let nodeCount = 1;
+    let nodeCount = 1; // 这行保留，当作历史遗留的备用
+    
+    // ================= 新增：智能 ID 生成器 (只增不减版) =================
+    function generateUniqueNodeId() {
+        let maxNumber = 0;
+
+        // 1. 扫描画布上所有卡片的 ID，找出其中最大的数字
+        document.querySelectorAll('.node').forEach(n => {
+            // 提取 ID 结尾的数字部分（比如从 "N004" 里抓出 "004"）
+            const numMatch = n.id.match(/\d+$/); 
+            if (numMatch) {
+                const num = parseInt(numMatch[0], 10);
+                if (num > maxNumber) maxNumber = num;
+            }
+        });
+
+        // 2. 扫描所有分支选项里填写的 ID，防止你手动填了一个更大的数字
+        document.querySelectorAll('.v-choices-data').forEach(input => {
+            try {
+                const choices = JSON.parse(input.value || '[]');
+                choices.forEach(c => {
+                    if (c.target) {
+                        const numMatch = c.target.match(/\d+$/);
+                        if (numMatch) {
+                            const num = parseInt(numMatch[0], 10);
+                            if (num > maxNumber) maxNumber = num;
+                        }
+                    }
+                });
+            } catch(e) {}
+        });
+
+        // 3. 在找到的最大数字基础上直接 +1，绝不回头
+        return 'N' + (maxNumber + 1).toString().padStart(3, '0');
+    }
+
     let isDraggingNode = false, currentDragNode = null, dragOffsetX = 0, dragOffsetY = 0;
 
     function formatText(command) {
@@ -1027,8 +1131,14 @@
     }
 
     function createNode(x, y, parentTargetInput = null, loadData = null) {
-    const id = loadData ? loadData.id : 'N' + (nodeCount++).toString().padStart(3, '0');
-    const node = document.createElement('div');
+    // 使用智能生成器替代 nodeCount++
+        const id = loadData ? loadData.id : generateUniqueNodeId();
+        const node = document.createElement('div');
+        // 生成当前最新的章节选项 HTML
+    let chapterOptionsHTML = '';
+    chapterList.forEach(chap => {
+        chapterOptionsHTML += `<option value="${chap}">${chap}</option>`;
+    });
     node.className = 'node'; node.id = id;
     node.style.left = x + 'px'; node.style.top = y + 'px';
 
@@ -1046,6 +1156,12 @@
         </div>
         <div class="node-body">
             <div class="socket in" onmousedown="startConnection(event, this.closest('.node').id, 'in')" onmouseup="finishConnection(this.closest('.node').id, 'in')"></div>
+            <div class="input-group">
+                <label>所属章节 (Chapter)</label>
+                <select class="v-chapter" onchange="if(typeof saveToLocal === 'function') saveToLocal(true)" style="background: var(--input-bg); color: var(--text-main); border: 1px solid var(--input-border); padding: 4px; border-radius: 4px; font-size: 11px; outline: none;">
+                    ${chapterOptionsHTML}
+                </select>
+            </div>
             <div class="input-group">
                 <label>本段出场角色 (Cast)</label>
                 <input type="text" class="v-role" placeholder="如：卡斯珀, 斯特凡">
@@ -1075,19 +1191,48 @@
                 <div class="node-var-list"></div>
                 <button class="btn-branch" style="margin-top: 2px; padding: 4px;" onclick="addNodeVarRule(this.closest('.node').id)">+ 添加规则</button>
             </div>
+            
+            <button class="btn-branch" style="margin-top: 8px; border-color: var(--accent); color: var(--accent);" onclick="branchOut(this.closest('.node').id)">+ 快速延伸子节点</button>
+            
             <div class="socket out" onmousedown="startConnection(event, this.closest('.node').id, 'out')" onmouseup="finishConnection(this.closest('.node').id, 'out')"></div>
         </div>
     `;
     canvas.appendChild(node);
     
     if (loadData) {
+        // 1. 章节继承逻辑
+        const filterBox = document.getElementById('chapter-filter');
+        if (loadData.chapter) {
+            if(node.querySelector('.v-chapter')) node.querySelector('.v-chapter').value = loadData.chapter;
+        } else if (filterBox && filterBox.value !== 'all') {
+            if(node.querySelector('.v-chapter')) node.querySelector('.v-chapter').value = filterBox.value;
+        }
+
+        // 2. 基础文本与选项恢复逻辑
         node.querySelector('.v-role').value = loadData.role || '';
         node.querySelector('.v-story-data').value = loadData.storyData || '[]';
         node.querySelector('.v-choices-data').value = loadData.choicesData || '[]';
         node.querySelector('.v-var-data').value = loadData.conditions || '[]';
         updateNodePreview(node); 
         try { updateNodeChoicesPreview(node, JSON.parse(node.querySelector('.v-choices-data').value)); } catch(e) {}
+        
+        // 👇 3. 变量积木块的 UI 恢复逻辑（就是漏了这两行！）
+        try {
+            const rules = JSON.parse(loadData.conditions || '[]');
+            rules.forEach(rule => addNodeVarRule(id, rule));
+        } catch(e) {}
+        
+    } else {
+        // 这是给新建空白卡片准备的自动打章节标签逻辑
+        const filterBox = document.getElementById('chapter-filter');
+        if (filterBox && filterBox.value !== 'all') {
+            if(node.querySelector('.v-chapter')) node.querySelector('.v-chapter').value = filterBox.value;
+        }
     }
+    
+    // 画线和更新图库保持不变
+    drawAllLines();
+    updateAllImgDropdowns();
     drawAllLines();
     updateAllImgDropdowns();
 }
@@ -1134,8 +1279,8 @@
         const x = parseFloat(parentNode.style.left) + 360;
         const y = parseFloat(parentNode.style.top) + (Math.random() * 40 - 20);
         
-        // 1. 生成新节点
-        const newId = 'N' + (nodeCount++).toString().padStart(3, '0');
+        // 1. 使用智能生成器
+        const newId = generateUniqueNodeId();
         createNode(x, y, null, { id: newId, role: '', storyData: '[]', choicesData: '[]', conditions: '' });
 
         // 2. 自动给父节点加一个新选项连过去
@@ -1228,7 +1373,26 @@
         };
     }
 
-    // ================= 更新后的重绘连线逻辑 (带隐形加宽碰撞箱) =================
+    // ================= 新增：全局防打结连线算法（纯净工业版） =================
+    function calculateBezierPath(startX, startY, endX, endY, startType = 'out') {
+        let dx = endX - startX;
+        
+        // 核心动态弯曲度：距离越远弧度越大，但限制最大值防止乱甩
+        // 基础值为 120，确保即使卡片靠得很近，线也能保持平滑的抛物线
+        let curve = Math.max(120, Math.min(Math.abs(dx) * 0.5, 300));
+
+        // 彻底抛弃复杂的上下方向计算，只做最纯粹的水平拉伸
+        if (startType === 'out') {
+            // OUT 插口：控制点永远坚定地向右延伸 (startX + curve)
+            // IN 插口：控制点永远从左侧平缓进入 (endX - curve)
+            return `M ${startX} ${startY} C ${startX + curve} ${startY}, ${endX - curve} ${endY}, ${endX} ${endY}`;
+        } else {
+            // 反向从 IN 拖拽出的逻辑也是同理
+            return `M ${startX} ${startY} C ${startX - curve} ${startY}, ${endX + curve} ${endY}, ${endX} ${endY}`;
+        }
+    }
+
+    // ================= 更新后的重绘连线逻辑 (带隐身节点过滤) =================
     function drawAllLines() {
         const svg = document.getElementById('svg-layer'); 
         svg.innerHTML = ''; 
@@ -1237,49 +1401,50 @@
         document.querySelectorAll('.socket').forEach(s => s.classList.remove('connected'));
 
         document.querySelectorAll('.node').forEach(node => {
+            // 👉 核心修复 1：如果起点卡片被隐藏了（比如被章节过滤器过滤掉了），直接跳过！不画它的线！
+            if (node.style.display === 'none') return;
+
             let targets = [];
             try {
                 const choices = JSON.parse(node.querySelector('.v-choices-data').value || '[]');
                 targets = choices.map(c => c.target).filter(t => t);
             } catch(e) {}
 
-            if (targets.length > 0) {
-                const outSocket = node.querySelector('.socket.out');
-                if(outSocket) outSocket.classList.add('connected');
-            }
+            // 这里用来点亮有连线的点
+            let hasValidTarget = false;
 
             targets.forEach(targetId => {
                 const targetNode = document.getElementById(targetId);
-                if (targetNode) {
+                // 👉 核心修复 2：只有目标卡片存在，且【没有被隐藏】时，才画这条线！
+                if (targetNode && targetNode.style.display !== 'none') {
+                    hasValidTarget = true;
                     const inSocket = targetNode.querySelector('.socket.in');
                     if(inSocket) inSocket.classList.add('connected');
 
                     const start = getSocketCoords(node.id, 'out');
                     const end = getSocketCoords(targetId, 'in');
 
-                    let curveStrength = Math.max(80, Math.abs(end.x - start.x) * 0.6);
-                    const cp1x = start.x + curveStrength, cp2x = end.x - curveStrength;
-                    const pathString = `M ${start.x} ${start.y} C ${cp1x} ${start.y}, ${cp2x} ${end.y}, ${end.x} ${end.y}`;
+                    // 使用你上一轮换好的工业级纯净算法
+                    let pathString = calculateBezierPath(start.x, start.y, end.x, end.y, 'out');
 
-                    // 1. 肉眼可见的实体线 (不接受鼠标事件)
+                    // 1. 肉眼可见的实体线
                     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                     path.setAttribute('d', pathString);
                     path.setAttribute('fill', 'none'); 
                     path.setAttribute('stroke', '#4eb0a5');
                     path.setAttribute('stroke-width', '4'); 
                     path.setAttribute('opacity', '0.7');
-                    path.style.pointerEvents = 'none'; // 让它忽略鼠标，穿透给下方的碰撞箱
+                    path.style.pointerEvents = 'none'; 
 
-                    // 2. 隐形碰撞箱线 (又粗又透明，专门用来挨点)
+                    // 2. 隐形碰撞箱线
                     const hitbox = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                     hitbox.setAttribute('d', pathString);
                     hitbox.setAttribute('fill', 'none');
-                    hitbox.setAttribute('stroke', 'transparent'); // 完全透明
-                    hitbox.setAttribute('stroke-width', '25'); // 碰撞范围扩大到 25px！闭着眼睛都能点到
+                    hitbox.setAttribute('stroke', 'transparent'); 
+                    hitbox.setAttribute('stroke-width', '25'); 
                     hitbox.style.pointerEvents = 'visibleStroke';
                     hitbox.style.cursor = 'pointer';
 
-                    // 交互事件绑定在碰撞箱上，但修改的是实体线的样式
                     hitbox.addEventListener('mouseenter', () => {
                         path.setAttribute('stroke', '#ff6b6b');
                         path.setAttribute('stroke-width', '6');
@@ -1297,14 +1462,178 @@
                         removeConnection(node.id, targetId);
                     });
 
-                    // 先加实体线，再加碰撞箱 (让碰撞箱在最顶层)
                     svg.appendChild(path);
                     svg.appendChild(hitbox);
                 }
             });
+
+            // 只有当存在至少一条“有效且可见”的连线时，才点亮起点的空心圆
+            if (hasValidTarget) {
+                const outSocket = node.querySelector('.socket.out');
+                if(outSocket) outSocket.classList.add('connected');
+            }
         });
     }
 
+    // ================= 上帝视角：章节过滤 =================
+    function filterChapters() {
+        const selected = document.getElementById('chapter-filter').value;
+        const nodes = document.querySelectorAll('.node');
+        
+        nodes.forEach(node => {
+            const chapter = node.querySelector('.v-chapter').value;
+            // 如果选了全部，或者卡片章节等于选中的章节，就显示，否则隐藏
+            if (selected === 'all' || chapter === selected) {
+                node.style.display = 'flex';
+            } else {
+                node.style.display = 'none';
+            }
+        });
+        
+        // 核心：过滤完之后必须重新画线！
+        // 隐藏节点的连线会自动不画，让画面立刻清爽
+        drawAllLines(); 
+    }
+
+    // ================= 动态章节管理系统 =================
+    // 默认自带的基础章节，你想怎么改都可以
+    let chapterList = ['序章', '第一章', '第二章'];
+
+    function initChapters() {
+        const savedChapters = localStorage.getItem('my_story_chapters');
+        if (savedChapters) chapterList = JSON.parse(savedChapters);
+        updateAllChapterDropdowns();
+    }
+
+    // 打开章节管理面板
+    function openChapterModal() {
+        document.getElementById('chapter-modal').style.display = 'block';
+        renderChapterModal();
+    }
+
+    // 关闭并保存章节数据
+    function closeChapterModal() {
+        document.getElementById('chapter-modal').style.display = 'none';
+        localStorage.setItem('my_story_chapters', JSON.stringify(chapterList));
+        updateAllChapterDropdowns(); // 刷新所有下拉框
+        if (typeof saveToLocal === 'function') saveToLocal(true);
+    }
+
+    // 渲染面板 UI
+    function renderChapterModal() {
+        const modal = document.getElementById('chapter-modal');
+        let html = `
+            <div class="var-header">
+                <h3 style="color: #4eb0a5; margin: 0;">📑 章节分组管理</h3>
+                <button class="btn" style="padding: 4px 12px;" onclick="closeChapterModal()">完成</button>
+            </div>
+            <div style="font-size: 12px; color: #aaa; margin-bottom: 15px;">自定义剧情的章节名（如：序章、卡斯珀线）。改名后，画布上对应卡片的标签会自动更新。</div>
+            <div id="chapter-list" style="max-height: 350px; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 8px;"></div>
+            <button class="btn" onclick="addChapterRow()" style="width: 100%; margin-top: 15px; border: 1px dashed #666; background: transparent; color: #aaa;">+ 新增章节分类</button>
+        `;
+        modal.innerHTML = html;
+
+        const list = document.getElementById('chapter-list');
+        chapterList.forEach((chap, index) => {
+            const row = document.createElement('div');
+            row.style.cssText = 'display: flex; gap: 8px; align-items: center; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; border: 1px solid #333;';
+            row.innerHTML = `
+                <input type="text" placeholder="章节名 (如: 序章)" value="${chap}" onchange="updateChapterName(${index}, this.value)" style="flex: 1; background: #1a1a1a; color: white; border: 1px solid #555; padding: 6px; border-radius: 4px; outline: none;">
+                <button class="delete-btn" style="position:static; margin:0;" onclick="removeChapter(${index})">×</button>
+            `;
+            list.appendChild(row);
+        });
+    }
+
+    function addChapterRow() {
+        chapterList.push('新章节');
+        renderChapterModal();
+    }
+
+    // 核心魔法：改名时自动同步画布上的卡片
+    function updateChapterName(index, newName) {
+        const oldName = chapterList[index];
+        const trimmedName = newName.trim() || '未命名章节';
+        chapterList[index] = trimmedName;
+
+        document.querySelectorAll('.node').forEach(node => {
+            const chapSelect = node.querySelector('.v-chapter');
+            if (chapSelect && chapSelect.value === oldName) {
+                // 先强行塞入新选项防止掉线，等面板关闭时会统一重绘下拉框
+                chapSelect.innerHTML += `<option value="${trimmedName}">${trimmedName}</option>`;
+                chapSelect.value = trimmedName;
+            }
+        });
+        renderChapterModal();
+    }
+
+    // 核心魔法：删除时自动转移孤儿卡片
+    function removeChapter(index) {
+        if (chapterList.length <= 1) return alert("至少要保留一个章节分类哦！");
+        
+        if (confirm(`确定删除章节 "${chapterList[index]}" 吗？\n属于该章节的卡片会自动归入【${chapterList[0]}】中。`)) {
+            const oldName = chapterList[index];
+            chapterList.splice(index, 1);
+            const fallbackName = chapterList[0]; // 默认降级到第一个章节
+
+            document.querySelectorAll('.node').forEach(node => {
+                const chapSelect = node.querySelector('.v-chapter');
+                if (chapSelect && chapSelect.value === oldName) {
+                    chapSelect.value = fallbackName;
+                }
+            });
+            renderChapterModal();
+        }
+    }
+
+    function updateAllChapterDropdowns() {
+        // 1. 更新顶部上帝视角的下拉框
+        const filterBox = document.getElementById('chapter-filter');
+        if (!filterBox) return;
+        const currentFilter = filterBox.value;
+        filterBox.innerHTML = '<option value="all">显示全部章节</option>';
+        chapterList.forEach(chap => {
+            filterBox.innerHTML += `<option value="${chap}">${chap}</option>`;
+        });
+        filterBox.value = chapterList.includes(currentFilter) ? currentFilter : 'all';
+
+        // 2. 更新画布上所有卡片的下拉框
+        document.querySelectorAll('.v-chapter').forEach(select => {
+            const currentVal = select.value;
+            select.innerHTML = '';
+            chapterList.forEach(chap => {
+                select.innerHTML += `<option value="${chap}">${chap}</option>`;
+            });
+            select.value = chapterList.includes(currentVal) ? currentVal : chapterList[0];
+        });
+    }
+
+    function updateAllChapterDropdowns() {
+        // 1. 更新顶部上帝视角的下拉框
+        const filterBox = document.getElementById('chapter-filter');
+        const currentFilter = filterBox.value;
+        filterBox.innerHTML = '<option value="all">显示全部章节</option>';
+        chapterList.forEach(chap => {
+            filterBox.innerHTML += `<option value="${chap}">${chap}</option>`;
+        });
+        filterBox.value = currentFilter || 'all';
+
+        // 2. 更新画布上所有卡片的下拉框
+        document.querySelectorAll('.v-chapter').forEach(select => {
+            const currentVal = select.value;
+            select.innerHTML = '';
+            chapterList.forEach(chap => {
+                select.innerHTML += `<option value="${chap}">${chap}</option>`;
+            });
+            // 尝试保持原来的选择，如果原来的选项被删了就切到第一个
+            if (chapterList.includes(currentVal)) {
+                select.value = currentVal;
+            } else {
+                select.value = chapterList[0];
+            }
+        });
+    }
+    
     // ================= 删除连线逻辑 (带智能清理) =================
     function removeConnection(sourceId, targetId) {
         const sourceNode = document.getElementById(sourceId);
@@ -1427,27 +1756,41 @@ try {
         });
 
         if (exportData.length === 0) return alert("画布是空的哦！");
+
+        // 👇 同样在这里动态获取工程名
+        const projectTitleInput = document.getElementById('project-title');
+        const gameTitle = projectTitleInput ? projectTitleInput.value.trim() || "未命名工程" : "未命名工程";
+
         const worksheet = XLSX.utils.json_to_sheet(exportData);
         worksheet['!cols'] = [{wch: 8}, {wch: 15}, {wch: 8}, {wch: 15}, {wch: 60}, {wch: 15}, {wch: 15}];
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "剧情序列数据");
-        XLSX.writeFile(workbook, "第四国际_剧情数据.xlsx");
+        
+        // 👇 替换原来写死的 "第四国际_剧情数据.xlsx"
+        XLSX.writeFile(workbook, `${gameTitle}_剧情配置表.xlsx`);
     }
 
     window.onload = () => { 
     const loaded = loadFromLocal();
+    loadHistoryFromLocal(); // 👉 新增：网页一开，先把历史记忆装载上
     if (!loaded) {
-        // 只有在没有存档时，才生成中心初始节点
-        panX = 0; panY = 0; scale = 1;
-        updateTransform();
-        createNode(window.innerWidth/2 - 150, window.innerHeight/2 - 120); 
-    }
-    setTimeout(recordHistory, 500);
-    updateAllImgDropdowns(); // 网页刷新时，激活所有的图库快捷按钮
-    updateAllSpriteDropdowns(); // 新增：初始加载立绘库
-};
+            // 只有在没有存档时，才生成中心初始节点
+            panX = 0; panY = 0; scale = 1;
+            updateTransform();
+            createNode(window.innerWidth/2 - 150, window.innerHeight/2 - 120); 
+        }
+        
+        // 👉 新增防呆：如果读取发现历史栈是空的（比如第一次用），才主动记录第一帧
+        if (historyStack.length === 0) {
+            setTimeout(() => recordHistory(true), 500);
+        }
+        
+        updateAllImgDropdowns(); 
+        updateAllSpriteDropdowns(); 
+        updateStorageUsage();
+    };
 
-    // ================= 修改节点名字逻辑 =================
+    // ================= 修改节点名字逻辑 (完美同步版) =================
     function updateNodeId(inputElem, oldId) {
         const newId = inputElem.value.trim();
         // 如果新名字为空，或者已经有同名节点，就恢复原状
@@ -1463,6 +1806,13 @@ try {
         // 更新 input 自身的事件传参
         inputElem.setAttribute('onchange', `updateNodeId(this, '${newId}')`);
 
+        // 👉 核心补充 1：如果正在编辑的正是这张被改名的卡片，同步更新全局变量和面板标题
+        if (activeEditingNodeId === oldId) {
+            activeEditingNodeId = newId;
+            const panelTitle = document.getElementById('panel-title');
+            if (panelTitle) panelTitle.innerText = `正在编写: ${newId}`;
+        }
+
         // 自动更新其他节点里指向旧 ID 的连线目标
         document.querySelectorAll('.v-choices-data').forEach(inp => {
             try {
@@ -1474,15 +1824,27 @@ try {
                         changed = true;
                     }
                 });
-                // 如果有改动，就保存并刷新预览
+                
+                // 如果有改动，就保存并刷新
                 if (changed) {
                     inp.value = JSON.stringify(choices);
-                    updateNodeChoicesPreview(inp.closest('.node'), choices);
+                    const sourceNode = inp.closest('.node');
+                    updateNodeChoicesPreview(sourceNode, choices);
+                    
+                    // 👉 核心补充 2：如果被波及的这头卡片正好在右侧面板打开着，自动刷新面板输入框！
+                    if (activeEditingNodeId === sourceNode.id) {
+                        openSidePanel(sourceNode.id);
+                    }
                 }
             } catch(e) {}
         });
         
         drawAllLines();
+        
+        // 👉 核心补充 3：将改名操作拍入历史快照，支持 Ctrl+Z 撤回
+        if (typeof saveToLocal === 'function') {
+            saveToLocal(true, true);
+        }
     }
 
     // ================= 拖拽连线逻辑 (双向增强版) =================
@@ -1571,7 +1933,7 @@ try {
     const textContent = typeof textData === 'object' ? (textData.content || '') : textData;
     const imgLink = typeof textData === 'object' ? (textData.image || '') : '';
 
-    let varOptions = '<option value="">无条件 (默认直接显示)</option>';
+    let varOptions = '<option value="">无条件</option>';
     if (typeof globalVars !== 'undefined') {
         globalVars.forEach(v => {
             if (v.name) varOptions += `<option value="${v.name}">${v.name}</option>`;
@@ -1617,7 +1979,10 @@ try {
         html += `<div class="block-editor" contenteditable="true" placeholder="输入台词..." oninput="syncTextToNode()">${textContent}</div>`;
     } else if (type === 'ending') {
         html += `<span class="block-label" style="color: #ff6b6b;">🛑 达成结局</span>`;
-        html += `<div class="block-editor" contenteditable="true" placeholder="输入结局名称..." oninput="syncTextToNode()">${textContent}</div>`;
+        // 👉 新增：单独的结局名称输入框
+        html += `<input type="text" class="block-role-input block-ending-name" placeholder="输入结局名称 (如: 真正的第四国际)..." value="${role}" oninput="syncTextToNode()" style="border-color: #ff6b6b;">`;
+        // 结局内容输入框
+        html += `<div class="block-editor" contenteditable="true" placeholder="输入结局的详细描述内容..." oninput="syncTextToNode()">${textContent}</div>`;
         block.style.borderLeft = '4px solid #ff6b6b';
         block.style.background = 'rgba(255, 107, 107, 0.05)';
     } else {
@@ -1694,7 +2059,9 @@ try {
             if (roleName) blockRoles.add(roleName); 
             return { type: 'dialogue', role: roleName, text: b.querySelector('.block-editor').innerHTML, condition: conditionStr, image: imgLink };
         } else if (type === 'ending') {
-            return { type: 'ending', role: '', text: b.querySelector('.block-editor').innerHTML, condition: conditionStr, image: imgLink };
+            // 👉 修改：同时提取名称和内容
+            const endingName = b.querySelector('.block-ending-name').value.trim();
+            return { type: 'ending', role: endingName, text: b.querySelector('.block-editor').innerHTML, condition: conditionStr, image: imgLink };
         } else {
             return { type: 'desc', role: '', text: b.querySelector('.block-editor').innerHTML, condition: conditionStr, image: imgLink };
         }
@@ -1719,25 +2086,31 @@ try {
 
     // 打开侧边栏
     function openSidePanel(nodeId) {
-    activeEditingNodeId = nodeId;
-    const node = document.getElementById(nodeId);
-    document.getElementById('panel-title').innerText = `正在编写: ${nodeId}`;
-    const editor = document.getElementById('panel-editor');
-    editor.innerHTML = ''; 
-    try {
-        const blocksData = JSON.parse(node.querySelector('.v-story-data').value || '[]');
-        blocksData.forEach(b => addBlock(b.type, b.role, { content: b.text, image: b.image || '' }, b.condition || ''));
-    } catch(e) {}
-    renderPanelChoices(node);
-    document.getElementById('side-panel').classList.add('open');
-    updateAllImgDropdowns(); // 新增：每次打开侧边栏，顺便刷新所有的图库菜单
-    updateAllSpriteDropdowns(); // 新增：也刷新立绘库！
-}
+        activeEditingNodeId = nodeId;
+        const node = document.getElementById(nodeId);
+        document.getElementById('panel-title').innerText = `正在编写: ${nodeId}`;
+        const editor = document.getElementById('panel-editor');
+        editor.innerHTML = ''; 
+        try {
+            const blocksData = JSON.parse(node.querySelector('.v-story-data').value || '[]');
+            blocksData.forEach(b => addBlock(b.type, b.role, { content: b.text, image: b.image || '' }, b.condition || ''));
+        } catch(e) {}
+        renderPanelChoices(node);
+        document.getElementById('side-panel').classList.add('open');
+        updateAllImgDropdowns(); 
+        updateAllSpriteDropdowns(); 
+        
+        // 👉 核心修复：打开面板的瞬间立刻存盘，记住当前激活的卡片
+        if (typeof saveToLocal === 'function') saveToLocal(true);
+    }
     
     // 关闭侧边栏
     function closeSidePanel() {
         document.getElementById('side-panel').classList.remove('open');
         activeEditingNodeId = null;
+        
+        // 👉 核心修复：关闭面板的瞬间立刻存盘，清空面板记忆
+        if (typeof saveToLocal === 'function') saveToLocal(true);
     }
 
     // 更新卡片表面的剧情预览
@@ -1777,65 +2150,87 @@ try {
     }
 
 
-    // ================= 本地存档逻辑 =================
+    // ================= 本地存档逻辑 (视角记忆 + 历史快照完全体) =================
     const SAVE_KEY = 'fourth_intl_story_save';
 
-    // 增加第二个参数 isImmediateAction
-    function saveToLocal(isAutoSave = false) {
-    const nodes = document.querySelectorAll('.node');
-    const data = {
+    // 👉 记得把 isImmediateAction 加回参数里
+    function saveToLocal(isAutoSave = false, isImmediateAction = false) {
+        // 🛡️ 终极防线：如果在读档期间，绝对禁止任何覆盖保存行为！
+        if (typeof isAppLoading !== 'undefined' && isAppLoading) return;
+        const nodes = document.querySelectorAll('.node');
+        const data = {
             viewport: { panX, panY, scale },
-            nodeCount: nodeCount, 
+            lastActiveNode: activeEditingNodeId,
+            projectTitle: document.getElementById('project-title') ? document.getElementById('project-title').value : '第四国际', // 👈 新增这一行
+            nodeCount: nodeCount,
             globalVars: globalVars,
             globalImages: globalImages,
-            globalSprites: globalSprites, // 👉 新增：保存立绘库
+            globalSprites: globalSprites, 
             nodes: []
         };
 
-    nodes.forEach(node => {
-        data.nodes.push({
-            id: node.id,
-            x: parseFloat(node.style.left),
-            y: parseFloat(node.style.top),
-            role: node.querySelector('.v-role').value,
-            bgUrl: node.querySelector('.v-bg-url').value, // 关键：保存背景图
-            storyData: node.querySelector('.v-story-data').value,
-            choicesData: node.querySelector('.v-choices-data').value,
-            conditions: node.querySelector('.v-var-data').value
+        nodes.forEach(node => {
+            data.nodes.push({
+                id: node.id,
+                x: parseFloat(node.style.left),
+                y: parseFloat(node.style.top),
+                chapter: node.querySelector('.v-chapter') ? node.querySelector('.v-chapter').value : '公共线', // 新增并防错
+                role: node.querySelector('.v-role').value,
+                bgUrl: node.querySelector('.v-bg-url').value, 
+                storyData: node.querySelector('.v-story-data').value,
+                choicesData: node.querySelector('.v-choices-data').value,
+                conditions: node.querySelector('.v-var-data').value
+            });
         });
-    });
 
-    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-    if (!isAutoSave) showToast('💾 已保存', 'success', 1000);
-}
+        localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+        if (!isAutoSave && typeof showToast === 'function') showToast('💾 已保存', 'success', 1000);
+
+        // 👇 就是漏了这最核心的一段！现在把它加回来，每次打字都会自动拍快照了
+        if (typeof recordHistory === 'function') {
+            recordHistory(isImmediateAction);
+        }
+    }
 
     function loadFromLocal() {
         const savedStr = localStorage.getItem(SAVE_KEY);
-        if (!savedStr) return false; // 没有存档
+        if (!savedStr) return false; 
+        // 🔒 上锁：我要开始一张张重绘卡片了，谁也不许触发保存！
+        isAppLoading = true;
 
         try {
             const data = JSON.parse(savedStr);
             globalVars = data.globalVars || [];
             globalImages = data.globalImages || [];
-            globalSprites = data.globalSprites || []; // 👉 新增：读取立绘库
-            // 还原视野
+            globalSprites = data.globalSprites || []; 
             panX = data.viewport.panX;
             panY = data.viewport.panY;
             scale = data.viewport.scale;
             nodeCount = data.nodeCount || 1;
+            if (data.projectTitle && document.getElementById('project-title')) {
+                document.getElementById('project-title').value = data.projectTitle;
+            }
 
-            // 清理旧画布（保留 svg 层即可）
             document.getElementById('canvas').innerHTML = '<svg id="svg-layer"></svg>';
             updateTransform();
 
-            // 逐个重建节点
             data.nodes.forEach(nData => {
                 createNode(nData.x, nData.y, null, nData);
             });
 
             drawAllLines();
-            return true; // 成功读取
+
+            // 👉 核心：读取完毕后，如果上次有打开的面板，自动恢复它
+            if (data.lastActiveNode && document.getElementById(data.lastActiveNode)) {
+                openSidePanel(data.lastActiveNode);
+            }
+
+            // 🔓 解锁：所有卡片都安稳落地了，解除保存禁令
+            isAppLoading = false; 
+            return true; 
         } catch (e) {
+            // 🔓 解锁：万一读取出错，也要把锁解开，防止系统卡死
+            isAppLoading = false; 
             console.error("读取存档失败，数据可能已损坏", e);
             return false;
         }
@@ -1844,6 +2239,7 @@ try {
     function clearLocal() {
         if (confirm("⚠️ 确定要清空浏览器的本地草稿吗？\n\n这不会影响你已经导出的 Excel 文件，但会导致当前未导出的进度丢失。清空后页面将自动刷新。")) {
             localStorage.removeItem(SAVE_KEY);
+            localStorage.removeItem('fourth_intl_story_history'); // 👉 新增：把历史记忆一起扬了
             location.reload();
         }
     }
@@ -1857,6 +2253,10 @@ try {
         const dataStr = localStorage.getItem(SAVE_KEY);
         if (!dataStr) return alert("画布是空的，没有数据可导出！");
         
+        // 👇 动态获取你在顶部工具栏填写的工程名
+        const projectTitleInput = document.getElementById('project-title');
+        const gameTitle = projectTitleInput ? projectTitleInput.value.trim() || "未命名工程" : "未命名工程";
+        
         // 生成虚拟文件并触发下载
         const blob = new Blob([dataStr], { type: "application/json" });
         const url = URL.createObjectURL(blob);
@@ -1866,7 +2266,9 @@ try {
         // 自动带上今天的日期作为文件名
         const date = new Date();
         const dateStr = `${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2,'0')}${date.getDate().toString().padStart(2,'0')}`;
-        a.download = `第四国际_剧情工程_${dateStr}.json`;
+        
+        // 👇 使用获取到的名字和日期拼装文件名
+        a.download = `${gameTitle}_工程备份_${dateStr}.json`;
         
         a.click();
         URL.revokeObjectURL(url); // 释放内存
@@ -1908,24 +2310,29 @@ try {
         }
     }, 10000);
 
-   // ================= 侧边栏拖拽排序底层逻辑 (修复版) =================
     
-    // ================= 侧边栏拖拽排序底层逻辑 (隔离选项版) =================
+    // ================= 侧边栏拖拽排序底层逻辑 (修复隔离选项版) =================
     document.addEventListener('dragover', e => {
         const panelEditor = document.getElementById('panel-editor');
-        const blocksContainer = document.getElementById('blocks-container');
         
         // 只要鼠标在面板里滑动，就允许排序
         if (panelEditor && panelEditor.contains(e.target)) {
             e.preventDefault(); 
             
             const draggable = document.querySelector('.dragging');
-            if (draggable && blocksContainer) {
-                const afterElement = getDragAfterElement(blocksContainer, e.clientY);
+            if (draggable) {
+                const afterElement = getDragAfterElement(panelEditor, e.clientY);
+                const choicesSection = document.getElementById('panel-choices-section');
+                
                 if (afterElement == null) {
-                    blocksContainer.appendChild(draggable); // 拖到最底下时，放在台词盒子的最后，绝不会跑到选项下面去！
+                    // 拖到最底下时，放在选项区的前面（绝不跑到选项下面去！）
+                    if (choicesSection) {
+                        panelEditor.insertBefore(draggable, choicesSection);
+                    } else {
+                        panelEditor.appendChild(draggable); 
+                    }
                 } else {
-                    blocksContainer.insertBefore(draggable, afterElement);
+                    panelEditor.insertBefore(draggable, afterElement);
                 }
             }
         }
@@ -1933,7 +2340,7 @@ try {
 
     // 数学计算：找出鼠标 Y 坐标最近的下方元素
     function getDragAfterElement(container, y) {
-        // 抓取容器内所有【没有正在被拖拽】的卡片
+        // 抓取容器内所有【没有正在被拖拽】的剧情卡片，这样会自动排除选项区
         const draggableElements = [...container.querySelectorAll('.story-block:not(.dragging)')];
 
         return draggableElements.reduce((closest, child) => {
@@ -1948,6 +2355,8 @@ try {
             }
         }, { offset: Number.NEGATIVE_INFINITY }).element;
     }
+
+
     // ================= 全局搜索与快速定位逻辑 =================
     let searchResults = [];
     let currentSearchIndex = -1;
@@ -2043,6 +2452,9 @@ try {
 
     // 启动试玩
     function startPlayMode(nodeId) {
+        if (!visitedNodesPlay.includes(nodeId)) {
+            visitedNodesPlay.push(nodeId);
+        }
         const node = document.getElementById(nodeId);
         if (!node) return;
 
@@ -2098,7 +2510,11 @@ try {
         document.getElementById('play-dialogue-box').style.display = 'none';
         document.getElementById('play-choices').style.display = 'none';
         const endingScreen = document.getElementById('play-ending-screen');
-        document.getElementById('ending-name-text').innerHTML = block.text || '未命名结局';
+        
+        // 👉 注意：编辑器试玩的 ID 是带有 -text 后缀的
+        document.getElementById('ending-name-text').innerHTML = block.role || '未命名结局';
+        document.getElementById('ending-content-text').innerHTML = block.text || '';
+        
         setTimeout(() => endingScreen.classList.add('active'), 100);
         return;
     }
@@ -2205,6 +2621,11 @@ try {
                     // 正常显示的选项
                     btn.innerText = `➔ [${choice.target || '未连接'}] ${choice.text || '继续...'}`;
                     btn.onclick = () => startPlayMode(choice.target); 
+                    
+                    // 👇 核心魔法：如果这个选项指向的卡片已经在足迹本里了，就变灰！
+                    if (visitedNodesPlay.includes(choice.target)) {
+                        btn.classList.add('visited');
+                    }
                 } else if (tNode && !isAllowed) {
                     // 属性不够，变灰并锁死选项（经典 CRPG 体验）
                     btn.innerText = `🔒 [条件不足] ${choice.text || '未知选项'}`;
@@ -2509,7 +2930,7 @@ function addAutoBranchNode() {
     const newY = parentY + 100;
 
     // 3. 生成新ID并创建节点
-    const newId = 'N' + (nodeCount++).toString().padStart(3, '0');
+    const newId = generateUniqueNodeId();
     // 调用现成的 createNode，并塞入一个空数据的格式
     createNode(newX, newY, null, { 
         id: newId, role: '', storyData: '[]', targets: '', conditions: '' 
@@ -2599,13 +3020,9 @@ function autoGenerateNodeForChoice(btn) {
             return;
         }
         // 如果框里有名字，但画布上没有这张卡，那我们就用这个名字建新卡！
-    } else {
-        // 如果框里是空的，就自动按顺序生成一个新 ID
-        targetId = 'N' + (nodeCount++).toString().padStart(3, '0');
-        // 防止和别人改过的名字撞车
-        while (document.getElementById(targetId)) {
-            targetId = 'N' + (nodeCount++).toString().padStart(3, '0');
-        }
+   } else {
+        // 如果框里是空的，就使用智能生成器分配一个绝不撞车的 ID
+        targetId = generateUniqueNodeId();
     }
 
     // 2. 获取父节点坐标
@@ -2676,6 +3093,31 @@ function updateNodeChoicesPreview(node, choicesData) {
     let historyStack = [];
     let historyIndex = -1;
     let isRestoring = false; // 防止在撤回时触发新的历史记录
+    const HISTORY_SAVE_KEY = 'fourth_intl_story_history'; // 👉 新增：历史记录的专属存档键
+
+    // 👉 新增：把历史记录持久化到浏览器
+    function persistHistory() {
+        try {
+            localStorage.setItem(HISTORY_SAVE_KEY, JSON.stringify({
+                stack: historyStack,
+                index: historyIndex
+            }));
+        } catch (e) {
+            console.warn("历史记录体积过大，暂停本地固化", e);
+        }
+    }
+
+    // 👉 新增：网页刚打开时，读取历史记录
+    function loadHistoryFromLocal() {
+        const savedHistory = localStorage.getItem(HISTORY_SAVE_KEY);
+        if (savedHistory) {
+            try {
+                const data = JSON.parse(savedHistory);
+                historyStack = data.stack || [];
+                historyIndex = data.index !== undefined ? data.index : -1;
+            } catch(e) {}
+        }
+    }
 
     // 提取当前画布的完整快照
     function getSnapshot() {
@@ -2686,6 +3128,7 @@ function updateNodeChoicesPreview(node, choicesData) {
                 id: node.id,
                 x: parseFloat(node.style.left),
                 y: parseFloat(node.style.top),
+                chapter: node.querySelector('.v-chapter') ? node.querySelector('.v-chapter').value : '公共线', // 新增并防错
                 role: node.querySelector('.v-role').value,
                 storyData: node.querySelector('.v-story-data').value,
                 choicesData: node.querySelector('.v-choices-data') ? node.querySelector('.v-choices-data').value : '[]',
@@ -2695,9 +3138,8 @@ function updateNodeChoicesPreview(node, choicesData) {
         return JSON.stringify(data);
     }
 
-    let historyTimeout = null; // 新增：用于防抖的定时器
+    let historyTimeout = null; 
 
-    // 升级版：加入智能防抖 (Debounce) 和 立即记录 (Immediate)
     function recordHistory(immediate = false) {
         if (isRestoring) return; 
         
@@ -2710,39 +3152,55 @@ function updateNodeChoicesPreview(node, choicesData) {
             historyStack.push(currentState);
             if (historyStack.length > MAX_HISTORY) historyStack.shift();
             else historyIndex++;
+
+            persistHistory(); // 👉 核心：每次拍完快照，立马保存进浏览器！
         };
 
         if (immediate) {
-            // 如果是添加节点、连线等重大操作，立刻记录
             if (historyTimeout) clearTimeout(historyTimeout);
             takeSnapshot();
         } else {
-            // 如果是打字，停顿 800 毫秒后才正式拍下快照
             if (historyTimeout) clearTimeout(historyTimeout);
             historyTimeout = setTimeout(takeSnapshot, 800); 
         }
     }
 
+    // ================= 撤回/重做系统核心逻辑升级 =================
+
     // 撤回 (Undo)
     function undoHistory() {
+        // 👉 核心修复：如果你还在打字，立刻把刚打的字强行拍进快照里！
+        if (historyTimeout) {
+            clearTimeout(historyTimeout);
+            historyTimeout = null;
+            recordHistory(true); 
+        }
+
         if (historyIndex > 0) {
             historyIndex--;
             restoreSnapshot(historyStack[historyIndex]);
-            showToast('↩ 已撤回', 'info', 1500); // 正常撤回的提示
+            if (typeof persistHistory === 'function') persistHistory(); 
+            showToast('↩ 已撤回', 'info', 1500); 
         } else {
-            // 触达边界的提示
             showToast('已经是最初的状态啦', 'warning', 2000); 
         }
     }
 
     // 重做 (Redo)
     function redoHistory() {
+        // 同样拦截倒计时，防止错乱
+        if (historyTimeout) {
+            clearTimeout(historyTimeout);
+            historyTimeout = null;
+            recordHistory(true);
+        }
+
         if (historyIndex < historyStack.length - 1) {
             historyIndex++;
             restoreSnapshot(historyStack[historyIndex]);
-            showToast('↪ 已重做', 'info', 1500); // 正常重做的提示
+            if (typeof persistHistory === 'function') persistHistory(); 
+            showToast('↪ 已重做', 'info', 1500); 
         } else {
-            // 触达边界的提示
             showToast('已经是最新状态了', 'warning', 2000); 
         }
     }
@@ -3255,10 +3713,12 @@ function updateAllNodeVarDropdowns() {
 
     // ================= 全局试玩：变量裁判与 HUD 系统 =================
     let playState = {}; // 游戏运行时的“内存”，用来记录玩家当前的数值
+    let visitedNodesPlay = []; // 👉 记录试玩期间访问过的卡片 ID
 
     // 1. 初始化试玩状态（每次点击全局试玩时调用）
     function initPlayState() {
         playState = {};
+        visitedNodesPlay = []; // 👉 每次点试玩，重置足迹
         if (typeof globalVars !== 'undefined') {
             globalVars.forEach(v => {
                 // 把字符串转换成数字，如果不是数字就存字符串
@@ -3341,11 +3801,13 @@ function exportPlayableGame(theme = 'classic') {
         return;
     }
 
-    const gameTitle = prompt("请输入游戏标题（显示在浏览器标签页上）：", "第四国际 - " + theme);
-    if (gameTitle === null) return; 
-
-    const fileName = prompt("请输入导出的文件名（不需要打 .html）：", "第四国际_可玩版");
-    if (fileName === null) return;
+    // 👇 自动读取工具栏的工程名，不再弹窗问了！
+    const projectTitleInput = document.getElementById('project-title');
+    const gameTitle = projectTitleInput ? projectTitleInput.value.trim() || "第四国际" : "第四国际";
+    
+    // 自动拼装文件名
+    const themeNames = { 'classic': '日系风', 'cyber': '赛博风', 'paper': '信笺风', 'disco': '极乐风' };
+    const fileName = `${gameTitle}_${themeNames || theme}`;
 
     const gameData = {
         globalVars: globalVars || [],
@@ -3354,6 +3816,7 @@ function exportPlayableGame(theme = 'classic') {
 
     nodes.forEach(node => {
         gameData.nodes[node.id] = {
+            chapter: node.querySelector('.v-chapter') ? node.querySelector('.v-chapter').value : '公共线', // 新增并防错
             role: node.querySelector('.v-role').value,
             bgUrl: node.querySelector('.v-bg-url') ? node.querySelector('.v-bg-url').value : '',
             storyData: JSON.parse(node.querySelector('.v-story-data').value || '[]'),
@@ -3365,25 +3828,23 @@ function exportPlayableGame(theme = 'classic') {
     const rootNodeId = nodes[0].id;
     const selectedCSS = getThemeCSS(theme);
 
-    const htmlTemplate = `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <title>${gameTitle}</title>
-    <style>
-        ${selectedCSS}
-        /* 👉 导出版的纯CG模式样式 */
-        .cg-only-mode .dialogue-box { background: transparent !important; border: none !important; box-shadow: none !important; backdrop-filter: none !important; position: fixed !important; inset: 0 !important; width: 100% !important; height: 100vh !important; max-width: none !important; margin: 0 !important; padding: 0 !important; }
-        .cg-only-mode .name, .cg-only-mode .text, .cg-only-mode .next-arrow { display: none !important; }
-        .cg-only-mode #sprite-container { bottom: 0 !important; height: 100vh !important; align-items: center !important; max-width: 100% !important; z-index: -1; }
-    </style>
-</head>
-<body>
-    <img id="bg-image" src="" style="position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; opacity: 0; transition: opacity 0.8s;">
-    
-    <div id="hud" class="hud"></div>
-    <div id="choices" class="choices"></div>
-    
+    // 👇 1. 新增：根据主题动态生成唯一且正确的对话框 HTML，杜绝 ID 冲突！
+    const dialogueHTML = (theme === 'disco') ? `
+    <div id="folder-sidebar" class="folder open">
+        <div class="folder-tab" onclick="this.parentElement.classList.toggle('open')">TOP SECRET</div>
+        <div id="dialogue-wrapper" class="folder-content">
+            <div id="sprite-container" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); width: 100%; max-width: 800px; height: 60vh; display: flex; justify-content: center; align-items: flex-end; pointer-events: none;">
+                <img id="sprite-image" src="" style="max-height: 100%; max-width: 100%; object-fit: contain; opacity: 0; transform: translateY(20px); transition: all 0.4s;">
+            </div>
+            <div id="dialogue-box" class="dialogue-box" onclick="advancePlay()">
+                <div id="name" class="name"></div>
+                <div id="text" class="text"></div>
+                <div id="next-arrow" class="next-arrow"></div>
+            </div>
+            <div id="choices" class="choices"></div>
+        </div>
+    </div>
+    ` : `
     <div id="dialogue-wrapper" class="dialogue-wrapper">
         <div id="sprite-container" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); width: 100%; max-width: 800px; height: 60vh; display: flex; justify-content: center; align-items: flex-end; pointer-events: none;">
             <img id="sprite-image" src="" style="max-height: 100%; max-width: 100%; object-fit: contain; opacity: 0; transform: translateY(20px); transition: all 0.4s;">
@@ -3394,29 +3855,720 @@ function exportPlayableGame(theme = 'classic') {
             <div id="next-arrow" class="next-arrow"></div>
         </div>
     </div>
+    `;
+
+    const folderContent = document.getElementById('folder-content');
+    const htmlTemplate = `<!DOCTYPE html>
+    
+
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>${gameTitle}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jacquard+24&display=swap');
+        
+        /* 已读选项的通用灰色样式 */
+            .choice-btn.visited { 
+                color: #777 !important; 
+                border-color: #555 !important; 
+                opacity: 0.6 !important; 
+                font-style: italic !important;
+            }
+        ${selectedCSS}
+        /* 👉 导出版的纯CG模式样式 */
+        .cg-only-mode .dialogue-box { background: transparent !important; border: none !important; box-shadow: none !important; backdrop-filter: none !important; position: fixed !important; inset: 0 !important; width: 100% !important; height: 100vh !important; max-width: none !important; margin: 0 !important; padding: 0 !important; }
+        .cg-only-mode .name, .cg-only-mode .text, .cg-only-mode .next-arrow { display: none !important; }
+        .cg-only-mode #sprite-container { bottom: 0 !important; height: 100vh !important; align-items: center !important; max-width: 100% !important; z-index: -1; }
+
+
+        /* ================= 章节解密黑幕样式 ================= */
+            .chapter-screen {
+                position: fixed; inset: 0; background: #000; z-index: 2500;
+                display: none; flex-direction: column; justify-content: center; align-items: center;
+                opacity: 0; transition: opacity 1.5s ease-in-out; 
+                pointer-events: none; 
+            }
+            .chapter-screen.active { 
+                display: flex; opacity: 1; pointer-events: auto; 
+            }
+            .chapter-text { 
+                font-size: 38px; color: #D3A913; /* 使用档案夹的复古金黄色 */
+                letter-spacing: 12px; font-weight: bold; 
+                font-family: "Courier New", Courier, monospace; /* ⚠️等宽字体是解密特效的灵魂，绝对不能少 */
+                text-shadow: 0 0 15px rgba(211, 169, 19, 0.6); 
+                /* 删除了原版的缓慢放大动画，因为解密时文字频繁变动，固定大小才不会鬼畜 */
+            }
+        @keyframes slowZoom {
+            0% { transform: scale(0.95); }
+            100% { transform: scale(1.05); }
+        }
+
+        /* ================= 回看记录窗口样式 ================= */
+.log-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    z-index: 1000; display: none;
+    flex-direction: column; padding: 40px;
+}
+.log-container {
+    flex: 1; overflow-y: auto;
+    padding-right: 20px;
+    display: flex; flex-direction: column; gap: 20px;
+}
+/* 每一条记录的样式 */
+.log-item {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 15px;
+    animation: fadeIn 0.3s ease;
+}
+.log-role {
+    color: var(--accent, #4eb0a5);
+    font-weight: bold; font-size: 14px;
+    margin-bottom: 5px; text-transform: uppercase;
+}
+.log-text {
+    font-size: 18px; line-height: 1.6; color: #ddd;
+}
+.log-close {
+    align-self: flex-end; background: none; border: 1px solid #666;
+    color: #888; padding: 5px 20px; cursor: pointer; margin-bottom: 20px;
+}
+.log-close:hover { color: #fff; border-color: #fff; }
+
+/* 唤起按钮（放在屏幕角落） */
+.btn-log-trigger {
+    position: fixed; top: 20px; right: 20px;
+    background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2);
+    color: #888; padding: 6px 12px; cursor: pointer; z-index: 100;
+    font-size: 12px; border-radius: 4px;
+}
+.btn-log-trigger:hover { background: #4eb0a5; color: #000; }
+
+/* ================= 存档/读档面板样式 ================= */
+.save-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(5px);
+    z-index: 2000; display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+}
+.save-panel {
+    width: 80%; max-width: 500px;
+    background: #1e1e1e; border: 1px solid #444;
+    padding: 20px; border-radius: 8px;
+}
+.save-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px; color: var(--accent, #4eb0a5); font-size: 18px;
+}
+.save-slot {
+    background: #2a2a2a; border: 1px solid #444;
+    padding: 15px; margin-bottom: 10px; border-radius: 4px;
+    display: flex; justify-content: space-between; align-items: center;
+    color: #ccc;
+}
+.save-info { flex: 1; }
+.save-time { font-size: 12px; color: #888; margin-top: 5px; }
+.save-actions button {
+    background: #333; border: 1px solid #555; color: #fff;
+    padding: 5px 10px; margin-left: 5px; cursor: pointer; border-radius: 3px;
+}
+.save-actions button:hover { background: var(--accent, #4eb0a5); color: #000; }
+.btn-save-trigger {
+    position: fixed; top: 20px; right: 90px; /* 放在 LOG 按钮旁边 */
+    background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2);
+    color: #888; padding: 6px 12px; cursor: pointer; z-index: 100;
+    font-size: 12px; border-radius: 4px;
+}
+.btn-save-trigger:hover { background: var(--accent, #4eb0a5); color: #000; }
+
+/* ================= 标题页 (Title Screen) 探照灯绝密档案风 ================= */
+        :root {
+            --mouse-x: 50vw;
+            --mouse-y: 50vh;
+        }
+
+        .title-screen {
+            position: fixed; inset: 0; 
+            background: #720000; /* 大面积特工红 */
+            display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+            padding: 4vh 5vw 8vh 5vw; box-sizing: border-box;
+            z-index: 2000; transition: opacity 1.5s ease-out;
+            font-family: "Times New Roman", Times, Georgia, serif; 
+            overflow: hidden; /* 绝对禁止滚动 */
+        }
+        .title-screen.fade-out { opacity: 0; pointer-events: none; }
+        
+        /* --- 三栏报纸排版容器 --- */
+        .newspaper-container {
+            width: 100%; max-width: 1100px;
+            display: flex; flex-direction: column; align-items: center;
+            z-index: 10; /* 在黑暗遮罩下方 */
+        }
+
+        /* --- 报头排版 --- */
+        .news-header {
+            text-align: center; width: 100%;
+            border-top: 4px solid #000; border-bottom: 4px solid #000;
+            padding: 15px 0; margin-bottom: 20px;
+        }
+        .uncle-title {
+            font-family: 'Jacquard 24', serif; font-size: 50px;
+            color: #000; margin: 0 0 10px 0; font-weight: normal; line-height: 1;
+        }
+        .news-subtitle {
+            font-size: 14px; font-weight: bold; color: #000;
+            letter-spacing: 4px; padding-bottom: 10px; border-bottom: 1px solid #000;
+        }
+        .game-title {
+            font-size: 60px; font-weight: bold; letter-spacing: 20px; margin-right: -20px; margin-top: 10px;
+            color: #000; text-transform: uppercase;
+        }
+
+        /* --- 菜单和按钮 (挪到中间了) --- */
+        .title-menu { 
+            display: flex; flex-direction: column; gap: 15px; align-items: center; 
+            margin: 20px 0 40px 0; /* 控制上下间距 */
+            z-index: 2001; 
+        }
+        .title-btn {
+            width: 240px; padding: 12px 0; 
+            background: #000; border: 2px solid #000; color: #D3A913; 
+            font-size: 20px; cursor: pointer; border-radius: 0; 
+            letter-spacing: 6px; font-weight: bold; text-align: center; text-indent: 6px; 
+            transition: all 0.2s; position: relative; box-sizing: border-box; 
+        }
+        .title-btn:hover { background: #D3A913; color: #000; border-color: #D3A913; }
+        .title-btn:active { transform: scale(0.98); }
+
+        /* --- 三栏档案文字 (绝密表单风) --- */
+        .news-columns {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px;
+            width: 100%; text-align: left; color: #000;
+            border-top: 2px solid #000; padding-top: 20px;
+        }
+        
+        /* 打字机填表格式 */
+        .dossier-list {
+            list-style: none; padding: 0; margin: 0;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 13px; color: #000; line-height: 1.4;
+        }
+        .dossier-list li {
+            display: flex; border-bottom: 1px solid rgba(0,0,0,0.15);
+            padding: 5px 0; gap: 8px;
+        }
+        .dossier-list .d-label {
+            width: 110px; font-weight: bold; flex-shrink: 0; text-transform: uppercase;
+        }
+        .dossier-list .d-value {
+            flex: 1; word-break: break-word; font-weight: bold;
+        }
+
+        /* --- 探照灯特效核心 (完美停电版) --- */
+        
+        /* 1. 模拟全屏彻底停电的纯黑遮罩（连按钮一起盖住） */
+        .title-screen::after {
+            content: ''; position: absolute; inset: 0; background: #000; z-index: 3000; pointer-events: none;
+            opacity: 0;
+            animation: pureBlackout 4s forwards;
+        }
+
+        /* 2. 探照灯和隐藏文字：初始完全透明，等停电结束后“咔哒”打开 */
+        .overlay-darkness {
+            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); z-index: 50; pointer-events: none; 
+            mask-image: radial-gradient(circle at var(--mouse-x) var(--mouse-y), transparent 120px, black 160px);
+            -webkit-mask-image: radial-gradient(circle at var(--mouse-x) var(--mouse-y), transparent 120px, black 160px);
+            opacity: 0; 
+            animation: turnOnFlashlight 0.1s 3.2s forwards; /* 3.2秒时瞬间通电亮起 */
+        }
+        
+        .overlay-hidden-text {
+            position: absolute; inset: 0; pointer-events: none; z-index: 10;
+            mask-image: radial-gradient(circle at var(--mouse-x) var(--mouse-y), black 120px, transparent 160px);
+            -webkit-mask-image: radial-gradient(circle at var(--mouse-x) var(--mouse-y), black 120px, transparent 160px);
+            opacity: 0;
+            animation: turnOnFlashlight 0.1s 3.2s forwards;
+        }
+        .overlay-hidden-text p {
+            position: absolute; margin: 0; color: #D3A913; font-family: "Courier New", Courier, monospace; 
+            font-size: 3rem; font-weight: bold; opacity: 0.85; letter-spacing: 0.1em;
+            text-shadow: 0 0 10px rgba(211, 169, 19, 0.5);
+        }
+
+        /* 🎬 停电闪烁剧本 (4秒总时长) */
+        @keyframes pureBlackout {
+            0%, 35%   { opacity: 0; }    /* 0~1.4s: 正常亮灯，查阅档案 */
+            36%, 38%  { opacity: 1; }    /* 1.4s: 呲啦！第一次纯黑 */
+            39%, 43%  { opacity: 0; }    /* 1.5s: 挣扎恢复 */
+            44%, 46%  { opacity: 1; }    /* 1.7s: 呲啦！第二次纯黑 */
+            47%, 52%  { opacity: 0; }    /* 1.8s: 最后的回光返照 */
+            53%, 79%  { opacity: 1; }    /* 2.1s~3.1s: 彻底纯黑，陷入死寂...等待手电筒 */
+            80%, 100% { opacity: 0; }    /* 3.2s: 纯黑遮罩撤退，露出底下的探照灯 */
+        }
+
+        @keyframes turnOnFlashlight {
+            to { opacity: 1; }
+        }
+
+        /* 🎬 电影级开场：核弹级隐身，镇压一切原有显示属性 */
+        .btn-log-trigger, 
+        .btn-save-trigger,
+        .hud-container,
+        .status-bar, /* 👈 盲猜你的状态栏类名叫这个 */
+        #status-bar  /* 👈 或者是这个 ID，如果叫别的请在这里加上！ */ {
+            opacity: 0 !important;
+            visibility: hidden !important; /* 物理隐身，斩断一切闪烁可能 */
+            pointer-events: none !important;
+            transition: opacity 1.5s ease-in !important; 
+        }
+        
+            
+        /* ================= 状态栏按钮与面板 ================= */
+        .btn-status { 
+    position: fixed; 
+    top: 20px; 
+    left: 20px; /* 已将 right 更改为 left */
+    background: rgba(0,0,0,0.5); 
+    border: 1px solid rgba(255,255,255,0.2); 
+    color: #888; 
+    padding: 6px 12px; 
+    cursor: pointer; 
+    z-index: 100; 
+    font-size: 12px; 
+    border-radius: 4px; 
+    transition: 0.3s; 
+    letter-spacing: 1px;
+}
+
+.btn-status:hover { background: #4eb0a5; color: #000; border-color: #4eb0a5; }
+
+.status-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 2000; display: none; justify-content: center; align-items: center; }
+.status-panel { width: 80%; max-width: 450px; background: #1e1e1e; border: 1px solid #444; border-top: 3px solid #4eb0a5; padding: 30px; border-radius: 8px; box-shadow: 0 15px 40px rgba(0,0,0,0.9); }
+.status-header { font-size: 16px; font-weight: bold; color: #4eb0a5; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; letter-spacing: 2px;}
+.status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.status-item { background: rgba(0,0,0,0.3); border-left: 3px solid #4eb0a5; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-radius: 2px; color: #ccc; }
+.status-val { color: #fff; font-weight: bold; font-family: monospace; font-size: 16px;}
+
+/* ================= 📱 导出游戏：移动端终极适配补丁 ================= */
+/* ================= 绝密特工风：统一系统面板与按钮 UI ================= */
+        /* 1. 把右上角的按钮全部挪到左上角的空白区，横向整齐排布 */
+        .btn-status { top: 20px !important; left: 20px !important; right: auto !important; }
+        .btn-log-trigger { top: 20px !important; left: 115px !important; right: auto !important; }
+        .btn-save-trigger { top: 20px !important; left: 195px !important; right: auto !important; }
+
+        /* 2. 纯正冷战特工质感：黑底、档案红边、红字 */
+        .btn-status, .btn-log-trigger, .btn-save-trigger { 
+            background: #050505 !important; 
+            border: 1px solid #b80000 !important; 
+            color: #b80000 !important; /* 👇 这里把金字改成了红色 */
+            border-radius: 0 !important; 
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.8) !important; 
+            font-family: "Courier New", monospace !important;
+            font-weight: bold !important;
+            letter-spacing: 1px !important;
+            transition: all 0.2s !important;
+        }
+        
+        /* 鼠标悬停时：红色警报状态 */
+        .btn-status:hover, .btn-log-trigger:hover, .btn-save-trigger:hover { 
+            background: #b80000 !important; 
+            color: #000 !important; 
+            border-color: #ff3b30 !important; 
+            transform: translateY(-2px); /* 微微上浮按压感 */
+            box-shadow: 0 4px 12px rgba(184,0,0,0.4) !important;
+        }
+
+        /* 3. 让点开的系统面板内部也统一变成机密档案风 */
+        .status-panel, .save-panel, .log-overlay .log-container { 
+            background: rgba(10, 10, 10, 0.95) !important; 
+            border: 2px solid #b80000 !important; 
+            border-radius: 0 !important; 
+            border-top: 4px solid #b80000 !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.9) !important;
+        }
+        .status-header, .save-header { 
+            color: #D3A913 !important; 
+            border-bottom: 1px dashed #b80000 !important; 
+            font-family: "Courier New", monospace !important;
+        }
+        .status-item { 
+            background: #111 !important; 
+            border-left: 3px solid #b80000 !important; 
+            color: #ccc !important; 
+            font-family: "Courier New", monospace !important;
+        }
+        .status-val { color: #D3A913 !important; }
+        .log-role { color: #b80000 !important; font-family: "Courier New", monospace !important; font-weight: bold !important;}
+        .save-slot { background: #111 !important; border: 1px solid #333 !important; font-family: "Courier New", monospace !important;}
+        .save-actions button { background: #000 !important; border: 1px solid #b80000 !important; color: #D3A913 !important; font-family: "Courier New", monospace !important;}
+        .save-actions button:hover { background: #b80000 !important; color: #000 !important; }
+
+        /* 手机端防切割覆盖与极乐风特调（三分之二屏） */
+            @media screen and (max-width: 768px) {
+                /* 对话框：靠右停靠，占据屏幕的 66% */
+                .dialogue-wrapper { 
+                    top: 0 !important; right: 0 !important; bottom: 0 !important; left: auto !important;
+                    width: 66vw !important; min-width: 0 !important; max-width: none !important;
+                    border: none !important; border-left: 2px solid #5a6b77 !important; border-radius: 0 !important; 
+                    background: rgba(18, 20, 22, 0.95) !important; 
+                    padding: 30px 15px 120px 20px !important; 
+                    box-shadow: -5px 0 20px rgba(0,0,0,0.6) !important;
+                }
+                
+                /* 选项：对齐在右侧的 2/3 空间内 */
+                .choices { 
+                    right: 15px !important; left: auto !important;
+                    width: calc(66vw - 30px) !important; max-width: none !important; bottom: 20px !important; 
+                }
+
+                /* 立绘：在左边剩下的 1/3 区域露脸 */
+                #sprite-container { 
+                    left: 17vw !important; transform: translateX(-50%) !important; 
+                    height: 55vh !important; opacity: 0.6 !important; z-index: 10 !important; 
+                }
+                
+                /* 文本微调 */
+                .text { font-size: 15px !important; line-height: 1.8 !important; }
+                .name { font-size: 15px !important; margin-bottom: 4px !important; }
+                .choice-btn { font-size: 14px !important; padding: 10px 12px !important; margin-bottom: 8px !important; }
+                .disco-msg-block { margin-bottom: 20px !important; }
+
+                /* 🚀 核心修复：把三个系统按钮整齐地竖排在左侧空白区，绝对不会被挡住！ */
+                .btn-status { top: 15px !important; left: 15px !important; right: auto !important; }
+                .btn-log-trigger { top: 55px !important; left: 15px !important; right: auto !important; }
+                .btn-save-trigger { top: 95px !important; left: 15px !important; right: auto !important; }
+            }
+
+         /* 🎬 开局压制状态栏按钮，防止闪烁 */
+        .btn-status {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            transition: opacity 1.5s ease-in !important; 
+        }
+
+        /* 唤醒 UI 的强制魔法 */
+        .game-ui-awake {
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+        }
+    </style>
+</head>
+
+    <body>
+    <div id="title-screen" class="title-screen">
+        <div class="overlay-hidden-text">
+            <p style="top: 15%; left: 8%;">CLASSIFIED</p>
+            <p style="top: 80%; right: 5%;">TOP SECRET</p>
+            <p style="top: 45%; left: 5%;">EYES ONLY</p>
+            
+            <p style="top: 10%; right: 12%; font-size: 2rem;">RESTRICTED ACCESS</p>
+            <p style="top: 88%; left: 12%; font-size: 2.2rem; transform: rotate(-3deg);">DO NOT COPY</p>
+            <p style="top: 35%; right: 8%; font-size: 1.8rem; transform: rotate(5deg);">DECLASSIFY: 2050</p>
+            <p style="top: 62%; left: 25%; font-size: 1.5rem; opacity: 0.6;">DEPT OF INTELLIGENCE</p>
+            <p style="top: 70%; right: 30%; font-size: 1.6rem; letter-spacing: 0.2em; color: #b80000; text-shadow: none;">[ REDACTED ]</p>
+        </div>
+        
+        <div class="newspaper-container">
+            <div class="news-header">
+                <h1 class="uncle-title">United Network Command for Law and Enforcement</h1>
+                <div class="news-subtitle">FILE NO. 131313 &nbsp;&nbsp;|&nbsp;&nbsp; EUROPEAN THEATER</div>
+                <div class="game-title">${gameTitle}</div>
+            </div>
+
+            <div class="title-menu">
+                <div id="btn-continue" class="title-btn" style="display:none;" onclick="loadAutoSave()">继续旅程</div>
+                <div class="title-btn" onclick="startNewGame()">开始新旅程</div>
+            </div>
+
+            <div class="news-columns">
+                <div class="news-col">
+                    <ul class="dossier-list">
+                        <li><span class="d-label">1. NAME:</span><span class="d-value">Napoleon Solo</span></li>
+                        <li><span class="d-label">2. Place of Birth :</span><span class="d-value">New York</span></li>
+                        <li><span class="d-label">3. Date of Birth :</span><span class="d-value">9 MARCH 1929</span></li>
+                        <li><span class="d-label">4. Country of Origin :</span><span class="d-value">USA </span></li>
+                        <li><span class="d-label">5. Agency position :</span><span class="d-value">U. N. C. L. E.  Operative and Enforcer</span></li>
+                        <li><span class="d-label">6. Previou Intelligence Experience :</span><span class="d-value">N/A</span></li>
+                        <li><span class="d-label">7. Military History :</span><span class="d-value">Sergeant US Army, Distinguished service 1945-1952</span></li>
+                        <li><span class="d-label">8. Specialism :</span><span class="d-value">Larcenist -class A2, Safe Cracker -Leve 9 EX1</span></li>
+                        <li><span class="d-label">9. Other Skills / Knowledge :</span><span class="d-value">Expert in Art & Antiquities ,Textiles Connoisseur</span></li>
+                    </ul>
+                </div>
+                
+                <div class="news-col">
+                    <ul class="dossier-list">
+                        <li><span class="d-label">1. NAME :</span><span class="d-value">Illya Kuryakin</span></li>
+                        <li><span class="d-label">2. Place of Birth :</span><span class="d-value">Moscow</span></li>
+                        <li><span class="d-label">3. Date of Birth :</span><span class="d-value">25 JULY 1931</span></li>
+                        <li><span class="d-label">4. Country of Origin :</span><span class="d-value">RUSSIA</span></li>
+                        <li><span class="d-label">5. Agency position :</span><span class="d-value">U. N. C. L. E.  Operative and Enforcer</span></li>
+                        <li><span class="d-label">6. Previou Intelligence Experience :</span><span class="d-value">N/A</span></li>
+                        <li><span class="d-label">7. Combat Experience :</span><span class="d-value">Russian Sambo Champion RNS 1953,Judo 4th Dan</span></li>
+                        <li><span class="d-label">8. Specialist Training :</span><span class="d-value">Surveillance cert, X1 Level, Tech, comp FACT /COBOL</span></li>
+                        <li><span class="d-label">9. Other Skills /knowledge :</span><span class="d-value">Power Boat Champion (silver medal 1958),Chess IM -Elo rating 2401</span></li>
+                    </ul>
+                </div>
+
+                <div class="news-col">
+                    <ul class="dossier-list">
+                        <li><span class="d-label">1. NAME :</span><span class="d-value">Gabriella Teller</span></li>
+                        <li><span class="d-label">2. Place of Birth :</span><span class="d-value">Berlin</span></li>
+                        <li><span class="d-label">3. Date of Birth :</span><span class="d-value">13 September 1938</span></li>
+                        <li><span class="d-label">4. Country of Origin :</span><span class="d-value">RUSSIA</span></li>
+                        <li><span class="d-label">5. Agency position :</span><span class="d-value">U. N. C. L. E. Operative and Enforcer</span></li>
+                        <li><span class="d-label">6. Previou Intelligence Experience :</span><span class="d-value">N/A</span></li>
+                        <li><span class="d-label">7. Psychological Profile :</span><span class="d-value">Pass(low level anxiety with insomnia G3; APA )</span></li>
+                        <li><span class="d-label">8. Specialism :</span><span class="d-value">STrained at the Berlin Ballet School. 1st Soloist </span></li>
+                        <li><span class="d-label">9. Other Skills /knowledge :</span><span class="d-value">Trained at the Berlin Ballet School. 1st Soloist</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="overlay-darkness"></div>
+    </div>
+
+        <div class="overlay-darkness"></div>
+    </div>
+
+    <button class="btn-log-trigger" onclick="showLog()">📜 日志</button>
+    <button class="btn-save-trigger" onclick="openSaveMenu()">💾 存档</button>
+
+    <div id="save-overlay" class="save-overlay">
+    <div class="save-panel">
+        <div class="save-header">
+            <span>系统存档 / SYSTEM SAVE</span>
+            <button class="save-actions" style="background:none; border:none; color:#888; cursor:pointer;" onclick="closeSaveMenu()">[ 关闭 ]</button>
+        </div>
+        <div id="save-slots-container"></div>
+    </div>
+</div>
+
+<div id="log-overlay" class="log-overlay">
+    <button class="log-close" onclick="hideLog()">CLOSE [ESC]</button>
+    <div id="log-container" class="log-container"></div>
+</div>
+    <img id="bg-image" src="" style="position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; opacity: 0; transition: opacity 0.8s;">
+    
+    <button class="btn-status" onclick="document.getElementById('status-overlay').style.display='flex'">📊 状态栏</button>
+
+    <div id="status-overlay" class="status-overlay">
+        <div class="status-panel">
+            <div class="status-header">
+                <span>角色档案 / STATUS</span>
+                <button style="background:none; border:none; color:#888; cursor:pointer; font-size:13px;" onclick="document.getElementById('status-overlay').style.display='none'">[ 关闭 ]</button>
+            </div>
+            <div id="hud" class="status-grid"></div>
+        </div>
+    </div>
+    
+    ${dialogueHTML}
+
+    <div id="chapter-screen" class="chapter-screen">
+        <div id="chapter-text" class="chapter-text"></div>
+    </div>
 
     <div id="ending-screen" class="ending-screen">
         <div class="ending-title">达成结局</div>
         <div id="ending-name" class="ending-name"></div>
-        <button class="restart-btn" onclick="location.reload()">重新开始旅程</button>
+        <!-- 👉 新增：导出版的结局内容区块 -->
+        <div id="ending-content" class="ending-content" style="color: #ccc; margin-top: 20px; font-size: 18px; max-width: 600px; text-align: center; line-height: 1.6; white-space: pre-wrap;"></div>
+        <button class="restart-btn" onclick="restartGame()">重新开始旅程</button>
     </div>
 
     <script>
+        // ================= 存档/读档逻辑 =================
+        const gameTitleStr = "${gameTitle}"; 
+        // 👇 根据游戏标题生成独一无二的 UID，防止不同游戏互相串档
+        const GAME_UID = "game_" + btoa(encodeURIComponent(gameTitleStr)).replace(/[^a-zA-Z0-9]/g, '');
+        var SAVE_PREFIX = GAME_UID + '_slot_';
+        var AUTO_SAVE_KEY = GAME_UID + '_auto_save';
+        var TOTAL_SLOTS = 8; // 提供8个存档位
+
+        function openSaveMenu() {
+            var container = document.getElementById('save-slots-container');
+            var htmlStr = '';
+
+            for (var i = 1; i <= TOTAL_SLOTS; i++) {
+                var saveData = localStorage.getItem(SAVE_PREFIX + i);
+                var infoText = '空槽位 (Empty Slot)';
+                var timeText = '---';
+                var loadBtn = '';
+                var customNameHtml = ''; // 用来存放自定义名字的HTML标签
+
+                if (saveData) {
+                    try {
+                        var data = JSON.parse(saveData);
+                        infoText = '节点: ' + (data.nodeId || '未知');
+                        timeText = data.time || '未知时间';
+                        // 如果有玩家自己填的名字，就用醒目的颜色高亮显示出来
+                        if (data.saveName) {
+                            customNameHtml = '<span style="color: #4eb0a5; font-weight: bold; margin-right: 8px;">[' + data.saveName + ']</span>';
+                        }
+                        loadBtn = '<button onclick="loadGame(' + i + ')">读取</button>';
+                    } catch(e) {}
+                }
+
+                // 智能切换按钮文字
+                var btnText = saveData ? '覆盖存档' : '存入此处';
+
+                htmlStr += '<div class="save-slot">' +
+                               '<div class="save-info">' +
+                                   '<div style="margin-bottom: 6px;">' + customNameHtml + '槽位 0' + i + ' | ' + infoText + '</div>' +
+                                   '<div class="save-time">' + timeText + '</div>' +
+                               '</div>' +
+                               '<div class="save-actions">' +
+                                   '<button onclick="saveGame(' + i + ')">' + btnText + '</button>' +
+                                   loadBtn +
+                               '</div>' +
+                           '</div>';
+            }
+
+            container.innerHTML = htmlStr;
+            document.getElementById('save-overlay').style.display = 'flex';
+        }
+
+        function closeSaveMenu() {
+            document.getElementById('save-overlay').style.display = 'none';
+        }
+
+        function saveGame(slotIndex) {
+            // 呼出弹窗，让玩家填写存档名
+            var customName = prompt("请输入存档名称（可选，例如：第一章Boss战前）：", "");
+            
+            // 如果玩家点了取消，就直接中止存档动作
+            if (customName === null) return; 
+
+            var now = new Date();
+            var timeString = now.getFullYear() + '-' + (now.getMonth()+1) + '-' + now.getDate() + ' ' + now.getHours() + ':' + now.getMinutes();
+            
+            var saveData = {
+                saveName: customName.trim(), // 记录玩家自定义的名字
+                nodeId: currentNodeId,
+                variables: playState,
+                history: (typeof historyLog !== 'undefined') ? historyLog : [], 
+                visited: visitedNodes, 
+                time: timeString
+            };
+
+            localStorage.setItem(SAVE_PREFIX + slotIndex, JSON.stringify(saveData));
+            
+            var btn = event.target;
+            var oldText = btn.innerText;
+            btn.innerText = '保存成功!';
+            btn.style.background = '#4eb0a5';
+            btn.style.color = '#000';
+            
+            setTimeout(function() {
+                openSaveMenu(); // 刷新一下面板，让新名字立刻显示出来
+            }, 800);
+        }
+
+        function loadGame(slotIndex) {
+            var saveDataStr = localStorage.getItem(SAVE_PREFIX + slotIndex);
+            if (saveDataStr) {
+                try {
+                    var data = JSON.parse(saveDataStr);
+                    playState = data.variables || {};
+                    visitedNodes = data.visited || []; // 👉 新增：从行李箱里把足迹拿出来
+                    if (typeof historyLog !== 'undefined') {
+                        historyLog = data.history || [];
+                    }
+                    closeSaveMenu();
+                    
+                    enterNode(data.nodeId);
+                    updateHUD();
+                } catch(e) {
+                    alert('存档数据已损坏。');
+                }
+            }
+        }
+
         const gameData = ${JSON.stringify(gameData)};
         const rootNodeId = "${rootNodeId}";
+        const THEME_TYPE = "${theme}"; // 👉 新增这行，让 JS 知道现在是什么主题
         
         let playState = {};
+        let visitedNodes = []; // 👉 玩家在导出游戏里的足迹
         let currentNodeId = null;
+        let currentChapter = null; // 用来记住当前在哪个章节
         let currentSequence = [];
         let seqIndex = 0;
         let typeTimer = null;
         let isTyping = false;
         let targetHtml = "";
 
+        // ================= 探照灯鼠标追踪 =================
+        window.addEventListener("mousemove", function(e) {
+            document.documentElement.style.setProperty("--mouse-x", e.clientX + "px");
+            document.documentElement.style.setProperty("--mouse-y", e.clientY + "px");
+        });
+        
+        window.addEventListener("touchmove", function(e) {
+            if(e.touches.length > 0) {
+                document.documentElement.style.setProperty("--mouse-x", e.touches[0].clientX + "px");
+                document.documentElement.style.setProperty("--mouse-y", e.touches[0].clientY + "px");
+            }
+        });
+
+        // 👇 ================= 新增：🔌 探照灯与标题页拔除开关 =================
+        // 全局监听：只要玩家点击了进入游戏的按钮，执行分层销毁程序
+        window.addEventListener('click', function(e) {
+            let onclickStr = e.target.getAttribute('onclick') || '';
+            // 如果点击的按钮是“开始游戏”、“继续”或“读取存档”
+            if (onclickStr.includes('startNewGame') || onclickStr.includes('loadAutoSave') || onclickStr.includes('loadGame')) {
+                
+                // 1. 立刻隐藏：把按钮、档案文字和警告标语瞬间从屏幕上抹除
+                document.querySelectorAll('.title-menu, .newspaper-container, .overlay-hidden-text').forEach(el => {
+                    el.style.display = 'none'; 
+                });
+                
+                // 2. 平滑淡出：留下红底和探照灯黑幕平滑过渡，0.8秒后彻底清理
+                document.querySelectorAll('#title-screen, .overlay-darkness').forEach(el => {
+                    el.style.transition = 'opacity 0.8s ease-out'; 
+                    el.style.opacity = '0'; 
+                    el.style.pointerEvents = 'none'; 
+                    
+                    // 800毫秒后清理战场
+                    setTimeout(() => {
+                        el.style.display = 'none'; 
+                        
+                        // 👇 终极唤醒：把所有潜伏的游戏内 UI（包括调皮的状态栏）全部拉出来！
+                        document.querySelectorAll('.btn-log-trigger, .btn-save-trigger, .hud-container, .status-bar, #status-bar, .btn-status').forEach(ui => {
+                            ui.classList.add('game-ui-awake');
+                        });
+                        
+                    }, 800); 
+                });
+                
+                // 3. 驱散全屏停电黑幕
+                const style = document.createElement('style');
+                style.innerHTML = '.title-screen::after { display: none !important; animation: none !important; }';
+                document.head.appendChild(style);
+            }
+        });
+
         function updateHUD() {
-            document.getElementById('hud').innerHTML = Object.keys(playState).map(k => 
-                \`<div class="hud-item">\${k}<span class="hud-val">\${playState[k]}</span></div>\`
-            ).join('');
+            var hud = document.getElementById('hud');
+            if (!hud) return;
+            var keys = Object.keys(playState);
+            
+            // 如果压根没设置变量，显示一个空提示
+            if (keys.length === 0) {
+                hud.innerHTML = '<div style="color:#666; grid-column: span 2; text-align:center; padding: 20px 0;">暂无属性数据</div>';
+                return;
+            }
+            
+            // 拼接网格项
+            hud.innerHTML = keys.map(function(k) {
+                return '<div class="status-item"><span>' + k + '</span><span class="status-val">' + playState[k] + '</span></div>';
+            }).join('');
         }
 
         function processRules(nodeId) {
@@ -3474,10 +4626,117 @@ function exportPlayableGame(theme = 'classic') {
         }
 
         function enterNode(nodeId) {
+            if (!visitedNodes.includes(nodeId)) visitedNodes.push(nodeId);
             currentNodeId = nodeId;
             const node = gameData.nodes[nodeId];
             if (!node) return;
             
+            saveProgress(); 
+
+            // 👇 核心魔法：检测当前卡片的章节，如果和刚才不一样，就播放过场动画
+            const nodeChapter = node.chapter || '未知章节';
+            if (nodeChapter !== currentChapter) {
+                currentChapter = nodeChapter;
+                showChapterScreen(currentChapter, function() {
+                    executeNodeContent(nodeId, node); // 动画放完后再加载剧情
+                });
+            } else {
+                executeNodeContent(nodeId, node); // 章节没变，直接加载剧情
+            }
+        }
+
+        // ================= 核心解密算法 (纯乱码前置版) =================
+        function decryptText(elementId, finalText, onComplete) {
+            const element = document.getElementById(elementId);
+            const chars = ['!', '@', '#', '$', '%', '&', '?', '-', '+', '=', '~', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ж', 'З', 'И', 'Й', 'К', 'Л', 'М', 'Н', 'О', 'П'];
+            
+            let lockedCount = 0;
+            const totalLength = finalText.length;
+
+            if (element.dataset.scrambleTimer) clearInterval(element.dataset.scrambleTimer);
+            if (element.dataset.lockTimer) clearInterval(element.dataset.lockTimer);
+            if (element.dataset.chaosTimeout) clearTimeout(element.dataset.chaosTimeout);
+
+            // 1. 立即启动快速定时器：全屏纯乱码跳动
+            element.dataset.scrambleTimer = setInterval(() => {
+                let currentText = '';
+                for (let i = 0; i < totalLength; i++) {
+                    if (finalText[i] === ' ') {
+                        currentText += ' ';
+                    } else if (i < lockedCount) {
+                        currentText += finalText[i];
+                    } else {
+                        currentText += chars[Math.floor(Math.random() * chars.length)];
+                    }
+                }
+                element.innerText = currentText;
+            }, 30); 
+
+            // 2. 延迟启动慢速定时器：先让纯乱码飞 1.5 秒
+            element.dataset.chaosTimeout = setTimeout(() => {
+                element.dataset.lockTimer = setInterval(() => {
+                    lockedCount++;
+                    if (lockedCount >= totalLength) {
+                        clearInterval(element.dataset.lockTimer);
+                        clearInterval(element.dataset.scrambleTimer);
+                        element.innerText = finalText; 
+                        if (typeof onComplete === 'function') onComplete(); 
+                    }
+                }, 600); // 锁定速度：600ms
+            }, 1500); // 👈 这里的 1500 (1.5秒) 就是纯粹乱码跳动的时间，想更久可以直接加大
+        }
+
+        // ================= 播放黑幕与解密动画 =================
+        function showChapterScreen(chapterName, callback) {
+        // 👇 1. 瞬间隐藏档案袋，不让它播放滑动的动画
+            const sidebar = document.getElementById('folder-sidebar');
+            if (sidebar) {
+                sidebar.style.display = 'none';
+                sidebar.classList.remove('open'); 
+            }
+            
+            const screen = document.getElementById('chapter-screen');
+            const text = document.getElementById('chapter-text');
+            
+            text.innerText = "CLASSIFIED";
+
+            // 临时隐藏掉原本的对话框和选项，防止它们在黑幕后面穿帮
+            document.getElementById('dialogue-wrapper').style.display = 'none';
+            document.getElementById('choices').style.display = 'none';
+            
+            // 👇 加上这一行：让档案袋外壳也跟着隐身！
+            const folderWrap = document.getElementById('folder-wrapper');
+            if(folderWrap) folderWrap.style.display = 'none';
+
+            screen.style.display = 'flex';
+            void screen.offsetWidth; 
+            screen.classList.add('active'); // 耗时 1.5 秒淡入
+
+            // 延迟 0.6 秒开始解密
+            setTimeout(() => {
+                
+                // 传入第三个参数：当解密彻底完成时，才执行这个内部函数
+                decryptText('chapter-text', chapterName, () => {
+                    
+                    // 💡 这里的 3000 就是“解密完成后，纯净展示的阅读时间”，绝对不会被吞掉！
+                    setTimeout(function() {
+                        screen.classList.remove('active'); // 耗时 1.5 秒淡出
+                        
+                        // 等待淡出完成后清理现场
+                        setTimeout(function() {
+                            screen.style.display = 'none';
+                            callback(); // 恢复正常剧情
+                        }, 1500); 
+                        
+                    }, 3000); // 👈 如果觉得 3 秒停留还是短，直接改这个数字，比如改成 4000
+                    
+                });
+                
+            }, 600);
+        }
+
+        // 原本 enterNode 里加载图片、台词和数值的核心代码，被独立封装到这里了
+        function executeNodeContent(nodeId, node) {
             const bgImg = document.getElementById('bg-image');
             if (node.bgUrl) {
                 bgImg.src = node.bgUrl;
@@ -3492,12 +4751,44 @@ function exportPlayableGame(theme = 'classic') {
             currentSequence = node.storyData;
             seqIndex = 0;
             document.getElementById('choices').style.display = 'none';
+            
+            if (THEME_TYPE !== 'disco') {
+                const textEl = document.getElementById('text');
+                if (textEl) textEl.innerHTML = '';
+            }
+            
             document.getElementById('dialogue-wrapper').style.display = 'block';
-            renderBlock();
+            
+            // 👇 剧情加载完成后，立刻让档案袋抽出
+            setTimeout(() => {
+                const sidebar = document.getElementById('folder-sidebar');
+                if (sidebar) {
+                    sidebar.style.display = 'flex'; // 先解除隐身
+                    void sidebar.offsetWidth;       // 强行刷新一下浏览器渲染，防止动画失效
+                    sidebar.classList.add('open');  // 抽出档案袋
+                }
+            }, 100); // 👈 延迟从 1000 改成 100 毫秒
+        }
+
+        let activeTypingElement = 'text'; // 记住当前正在打字的元素ID
+
+        function saveProgress() {
+            // 👉 把 visited: visitedNodes 一起打包存入浏览器
+            localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify({ 
+                node: currentNodeId, 
+                vars: playState, 
+                visited: visitedNodes 
+            }));
+        }
+
+        function restartGame() {
+            localStorage.removeItem(AUTO_SAVE_KEY);
+            location.reload();
         }
 
         function typeWriter(elementId, htmlString) {
             const el = document.getElementById(elementId);
+            if (!el) return;
             clearInterval(typeTimer);
             el.innerHTML = '';
             targetHtml = htmlString;
@@ -3525,16 +4816,31 @@ function exportPlayableGame(theme = 'classic') {
                 } else {
                     el.innerHTML += char;
                 }
+                
+                // 👉 极乐模式：打字时自动把滚动条顶到最底端
+                if (THEME_TYPE === 'disco') {
+                    const wrapper = document.getElementById('dialogue-wrapper');
+                    wrapper.scrollTop = wrapper.scrollHeight;
+                }
+                
                 i++;
             }, 35); 
         }
 
         function completeTyping(elementId) {
             clearInterval(typeTimer);
-            document.getElementById(elementId).innerHTML = targetHtml;
+            const el = document.getElementById(elementId || activeTypingElement);
+            if (el) el.innerHTML = targetHtml;
             isTyping = false;
             document.getElementById('next-arrow').style.display = 'block';
+            
+            if (THEME_TYPE === 'disco') {
+                const wrapper = document.getElementById('dialogue-wrapper');
+                wrapper.scrollTop = wrapper.scrollHeight;
+            }
         }
+
+        let historyLog = []; // 👉 游戏运行时的“小本本”
 
         function renderBlock() {
             if (seqIndex >= currentSequence.length) {
@@ -3543,7 +4849,17 @@ function exportPlayableGame(theme = 'classic') {
             }
             const block = currentSequence[seqIndex];
             
-            // 👉 新增：智能检测纯CG模式
+            if (block.type !== 'ending') {
+                const logEntry = {
+                    role: block.role || (block.type === 'desc' ? '---' : '未知'),
+                    text: block.text
+                };
+                if (historyLog.length === 0 || historyLog[historyLog.length-1].text !== block.text) {
+                    historyLog.push(logEntry);
+                    if (historyLog.length > 100) historyLog.shift();
+                }
+            }
+            
             const cleanText = (block.text || '').replace(/<[^>]*>?/gm, '').trim();
             if (cleanText === '') {
                 document.body.classList.add('cg-only-mode');
@@ -3569,49 +4885,106 @@ function exportPlayableGame(theme = 'classic') {
             
             if (block.type === 'ending') {
                 document.getElementById('dialogue-wrapper').style.display = 'none';
-                document.getElementById('ending-name').innerHTML = block.text || '未命名结局';
+                // 👉 修改：分别绑定名字和内容
+                document.getElementById('ending-name').innerHTML = block.role || '未命名结局';
+                document.getElementById('ending-content').innerHTML = block.text || '';
                 document.getElementById('ending-screen').style.display = 'flex';
                 return;
-            }
+    }
 
-            const nameEl = document.getElementById('name');
-            const textEl = document.getElementById('text');
-            
-            if (block.type === 'dialogue' && block.role) {
-                nameEl.style.display = 'block';
-                nameEl.innerText = block.role;
-                textEl.className = 'text';
+            // 👉 核心分歧：极乐模式创建新块并追尾，传统模式复用旧框
+            if (THEME_TYPE === 'disco') {
+                const box = document.getElementById('dialogue-box');
+                const msgBlock = document.createElement('div');
+                msgBlock.className = 'disco-msg-block';
+                
+                let nameHtml = '';
+                if (block.type === 'dialogue' && block.role) {
+                    nameHtml = '<div class="name">' + block.role + '</div>';
+                }
+                
+                const textClass = (block.type === 'dialogue' && block.role) ? 'text' : 'text text-desc';
+                const newTextId = 'typing-text-' + Date.now() + '-' + seqIndex; // 唯一ID
+                
+                msgBlock.innerHTML = nameHtml + '<div class="' + textClass + '" id="' + newTextId + '"></div>';
+                
+                // 把新对话插在跳动的小箭头前面
+                box.insertBefore(msgBlock, document.getElementById('next-arrow'));
+                
+                activeTypingElement = newTextId;
+                typeWriter(newTextId, block.text);
             } else {
-                nameEl.style.display = 'none';
-                textEl.className = 'text text-desc';
+                const nameEl = document.getElementById('name');
+                const textEl = document.getElementById('text');
+                
+                if (block.type === 'dialogue' && block.role) {
+                    nameEl.style.display = 'block';
+                    nameEl.innerText = block.role;
+                    textEl.className = 'text';
+                } else {
+                    nameEl.style.display = 'none';
+                    textEl.className = 'text text-desc';
+                }
+                activeTypingElement = 'text';
+                typeWriter('text', block.text);
             }
-            typeWriter('text', block.text);
         }
 
         function advancePlay() {
             if (isTyping) {
-                completeTyping('text');
+                completeTyping(activeTypingElement);
                 return;
             }
             seqIndex++;
             renderBlock();
         }
 
+        // 👉 打开回看窗口 (VS Code 零报错版)
+    function showLog() {
+        const container = document.getElementById('log-container');
+        const overlay = document.getElementById('log-overlay');
+        
+        // 使用普通的引号拼接，彻底避开模板字符串嵌套问题
+        container.innerHTML = historyLog.map(function(item) {
+            return '<div class="log-item">' +
+                        '<div class="log-role">' + (item.role || "---") + '</div>' +
+                        '<div class="log-text">' + item.text + '</div>' +
+                   '</div>';
+        }).join('');
+        
+        overlay.style.display = 'flex';
+        container.scrollTop = container.scrollHeight;
+    }
+
+        function hideLog() {
+            document.getElementById('log-overlay').style.display = 'none';
+        }
+
+        // 快捷键支持：按 ESC 关闭，滑轮向上打开
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') hideLog();
+        });
+        
+
         function showChoices() {
-            document.getElementById('dialogue-wrapper').style.display = 'none';
+            // 👉 极乐模式下，选项出现时不能隐藏之前的对话！
+            if (THEME_TYPE !== 'disco') {
+                document.getElementById('dialogue-wrapper').style.display = 'none';
+            }
+            
             const choicesDiv = document.getElementById('choices');
             choicesDiv.innerHTML = '';
             
             const choices = gameData.nodes[currentNodeId].choicesData;
             if (choices.length === 0) {
-                choicesDiv.innerHTML = \`<div class="choice-btn" onclick="location.reload()">[ 旅途结束 / 点击重置 ]</div>\`;
+                choicesDiv.innerHTML = '<div class="choice-btn" onclick="location.reload()">[ 旅途结束 / 点击重置 ]</div>';
             } else {
                 choices.forEach(c => {
                     const btn = document.createElement('div');
                     btn.className = 'choice-btn';
                     const tNode = gameData.nodes[c.target];
                     if (!tNode) {
-                         btn.innerText = \`➔ [前路未卜] \${c.text}\`;
+                         btn.innerText = '➔ [前路未卜] ' + c.text;
                          btn.style.opacity = '0.5';
                          btn.style.cursor = 'not-allowed';
                     } else {
@@ -3629,9 +5002,24 @@ function exportPlayableGame(theme = 'classic') {
                         }
                         if (canEnter) {
                             btn.innerText = c.text;
-                            btn.onclick = () => enterNode(c.target);
+                            btn.onclick = () => {
+                                // 👉 极乐模式：点击选项后，把玩家的选项也当成对话打印到公屏上！
+                                if (THEME_TYPE === 'disco') {
+                                    const box = document.getElementById('dialogue-box');
+                                    const reply = document.createElement('div');
+                                    reply.style.cssText = 'color: #ff7e5f; margin: 10px 0 25px 0; font-style: italic; font-size: 16px; opacity: 0.8;';
+                                    reply.innerText = ">> " + c.text;
+                                    box.insertBefore(reply, document.getElementById('next-arrow'));
+                                }
+                                enterNode(c.target);
+                            };
+                            // 👇 如果去过目标节点，加上变灰效果
+                            if (visitedNodes.includes(c.target)) {
+                                btn.classList.add('visited');
+                            }
                         } else {
-                            btn.innerHTML = \`🔒 <span style="font-size:14px; opacity:0.6;">[条件未满足]</span> \${c.text}\`;
+
+                            btn.innerHTML = '🔒 <span style="font-size:14px; opacity:0.6;">[条件未满足]</span> ' + c.text;
                             btn.style.opacity = '0.4';
                             btn.style.cursor = 'not-allowed';
                         }
@@ -3640,9 +5028,56 @@ function exportPlayableGame(theme = 'classic') {
                 });
             }
             choicesDiv.style.display = 'flex';
+            
+            // 确保渲染选项后自动滚到最底下
+            if (THEME_TYPE === 'disco') {
+                setTimeout(() => {
+                    const wrapper = document.getElementById('dialogue-wrapper');
+                    wrapper.scrollTop = wrapper.scrollHeight;
+                }, 50);
+            }
         }
 
-        startGame(rootNodeId);
+        window.onload = function() {
+            // 👉 统一使用我们在上面定义的 AUTO_SAVE_KEY
+            let saved = localStorage.getItem(AUTO_SAVE_KEY);
+            if (saved) {
+                document.getElementById('btn-continue').style.display = 'block';
+            }
+        };
+
+        function startNewGame() {
+            document.getElementById('title-screen').style.opacity = '0';
+            document.getElementById('title-screen').style.pointerEvents = 'none';
+            
+            // 👇 去掉原本的 setTimeout 延迟，点击后立刻启动游戏逻辑
+            startGame(rootNodeId);
+        }
+
+
+        function loadAutoSave() {
+            let saved = localStorage.getItem(AUTO_SAVE_KEY);
+            if (saved) {
+                try {
+                    let data = JSON.parse(saved);
+                    playState = data.vars || {};
+                    visitedNodes = data.visited || []; // 👉 新增：从行李箱里把足迹拿出来
+                    document.getElementById('title-screen').style.display = 'none';
+                    enterNode(data.node);
+                    updateHUD();
+                } catch(e) { startNewGame(); }
+            }
+        }
+
+        window.onload = function() {
+            // 检查有没有上次玩到一半的自动存档
+            let saved = localStorage.getItem(AUTO_SAVE_KEY);
+            if (saved) {
+                document.getElementById('btn-continue').style.display = 'block';
+            }
+            // 停在标题界面，等待玩家点击
+        };
+        
     ${'</' + 'script>'}
 </body>
 </html>`;
@@ -3712,35 +5147,257 @@ function getThemeCSS(themeType) {
             .restart-btn { margin-top: 60px; background: none; border: none; color: #666; border-bottom: 1px dashed #666; padding: 5px; cursor: pointer; font-family: inherit; font-size: 16px; }
             .restart-btn:hover { color: #000; border-color: #000; }
         `;
-    } 
-    else {
-        // 🌌 主题 3 (默认)：经典日系 AVG 风 (上一版的高级磨砂玻璃质感)
+
+    } else if (themeType === 'disco') {
+        // 🩸 主题 4：绝密特工风 (双红线 + 悬浮侧边栏 + 档案黄选项)
         css = `
-            body { margin: 0; background: radial-gradient(circle at center, #1a2026 0%, #0a0c0e 100%); color: #eee; font-family: 'Segoe UI', sans-serif; user-select: none; overflow: hidden; height: 100vh; }
+            body { margin: 0; background: #000000; color: #d4d4d4; font-family: "Courier New", 'Noto Serif SC', serif; user-select: none; overflow: hidden; height: 100vh; }
             @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-            @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-            @keyframes bounceDown { 0%, 100% { transform: translateY(0) rotate(45deg); opacity: 0.5; } 50% { transform: translateY(6px) rotate(45deg); opacity: 1; } }
-            .hud { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 100; animation: fadeIn 1s ease-out; }
-            .hud-item { background: rgba(10, 15, 20, 0.7); padding: 6px 12px; border-left: 3px solid #4eb0a5; border-radius: 2px; font-family: monospace; font-size: 14px; color: #ccc; backdrop-filter: blur(4px); }
-            .hud-val { color: #4eb0a5; font-weight: bold; margin-left: 8px; }
-            .dialogue-wrapper { position: fixed; bottom: 40px; left: 0; right: 0; margin: auto; width: 85%; max-width: 900px; z-index: 50; display: none; animation: slideUp 0.4s ease; }
-            .dialogue-box { background: linear-gradient(135deg, rgba(30, 35, 40, 0.85) 0%, rgba(15, 18, 20, 0.95) 100%); border: 1px solid rgba(78, 176, 165, 0.3); border-top: 2px solid #4eb0a5; padding: 35px 40px 45px 40px; border-radius: 6px; cursor: pointer; box-shadow: 0 20px 50px rgba(0,0,0,0.8); backdrop-filter: blur(8px); position: relative; }
-            .dialogue-box:active { transform: scale(0.99); filter: brightness(0.9); }
-            .name { position: absolute; top: -20px; left: 30px; background: linear-gradient(90deg, #2b5c5c 0%, #1a3838 100%); border: 1px solid #4eb0a5; border-radius: 4px; color: #fff; padding: 6px 20px; font-size: 18px; font-weight: bold; letter-spacing: 1px; display: none; }
-            .text { font-size: 20px; line-height: 1.7; min-height: 90px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); color: #e0e0e0; }
-            .text-desc { color: #aaa; font-style: italic; }
-            .next-arrow { position: absolute; right: 35px; bottom: 30px; width: 10px; height: 10px; border-right: 3px solid #4eb0a5; border-bottom: 3px solid #4eb0a5; animation: bounceDown 1.2s infinite ease-in-out; display: none; }
-            .choices { position: fixed; bottom: 180px; left: 0; right: 0; margin: auto; width: 80%; max-width: 700px; display: none; flex-direction: column; gap: 15px; z-index: 60; animation: slideUp 0.3s; }
-            .choice-btn { background: linear-gradient(90deg, rgba(43,92,92,0.1) 0%, rgba(30,30,30,0.8) 20%, rgba(30,30,30,0.8) 80%, rgba(43,92,92,0.1) 100%); border: 1px solid rgba(78, 176, 165, 0.4); border-left: 3px solid #4eb0a5; border-right: 3px solid #4eb0a5; padding: 16px 20px; color: #ccc; cursor: pointer; text-align: center; font-size: 18px; transition: 0.2s; border-radius: 4px; }
-            .choice-btn:hover { background: linear-gradient(90deg, rgba(78,176,165,0.2) 0%, rgba(43,92,92,0.9) 50%, rgba(78,176,165,0.2) 100%); color: #fff; border-color: #4eb0a5; transform: scale(1.02); }
+            @keyframes slideLeft { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
+            
+            ::-webkit-scrollbar { width: 4px; }
+            ::-webkit-scrollbar-track { background: #000; }
+            ::-webkit-scrollbar-thumb { background: #4a0000; border-radius: 2px; }
+            ::-webkit-scrollbar-thumb:hover { background: #8c0000; }
+            
+            /* 状态栏：克格勃终端风 */
+            .hud { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 100; }
+            .hud-item { background: rgba(0, 0, 0, 0.9); border: 1px solid #333; border-left: 3px solid #b80000; padding: 6px 12px; font-family: monospace; font-size: 13px; color: #888; box-shadow: 0 4px 10px rgba(0,0,0,0.8); text-transform: uppercase; }
+            .hud-val { color: #D3A913; font-weight: bold; margin-left: 8px; }
+
+            /* 👉 核心侧边栏：档案袋抽屉版 (带抽出动画 + 全线红边) */
+            .folder {
+                display: flex;
+                flex-direction: row; 
+                width: 42vw; 
+                min-width: 400px; 
+                height: 92vh; 
+                position: fixed;
+                /* 初始状态：只露个标签，身体藏在屏幕右侧外 */
+                right: 0;
+                top: 4vh;
+                transform: translateX(calc(100% - 40px)); 
+                transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1); /* 丝滑的抽出感 */
+                z-index: 50;
+                /* 👇 加上这一行：让阴影包围整个档案袋的最外层轮廓！ */
+                filter: drop-shadow(-5px 0 15px rgba(0,0,0,0.5));
+            }
+
+            /* 展开状态 */
+            .folder.open {
+                transform: translateX(0);
+                filter: drop-shadow(-20px 0 40px rgba(0,0,0,0.9));
+            }
+
+            /* 突出的机密标签页 */
+            .folder-tab {
+                background: #1a1a1a;
+                width: 40px;  
+                height: 35%;  
+                margin-top: 15%; 
+                border-radius: 8px 0 0 8px; 
+                position: relative;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                writing-mode: vertical-lr; 
+                letter-spacing: 6px;
+                font-weight: bold;
+                color: #D3A913;
+                font-family: "Courier New", monospace;
+                /* 👉 核心：全长红线的上半段 */
+                border-left: 4px solid #e53935; 
+                cursor: pointer;
+                /* 👇 加上这两行魔法代码，让标签往右盖住主体的红线 */
+                margin-right: -4px;
+                z-index: 10;
+            }
+
+            .folder-tab:before {
+                content: ''; position: absolute; top: -15px; right: 0; width: 15px; height: 15px;
+                border-radius: 0 0 15px 0; box-shadow: 7px 7px 0px 7px #1a1a1a; background: transparent;
+            }
+
+            .folder-tab:after {
+                content: ''; position: absolute; bottom: -15px; right: 0; width: 15px; height: 15px;
+                border-radius: 0 15px 0 0; box-shadow: 7px -7px 0px 7px #1a1a1a; background: transparent;
+            }
+
+            /* 档案袋主体内容 */
+            .folder-content {
+                background: #1a1a1a;
+                flex-grow: 1; 
+                height: 100%;
+                border-radius: 0;
+                /* 👉 核心：全长红线的下半段，确保与标签边缘对齐 */
+                border-left: 4px solid #e53935; 
+                padding: 40px 30px 100px 40px;
+                box-sizing: border-box;
+                overflow-y: auto; 
+                scroll-behavior: smooth;
+            }
+
+            /* 📱 手机端档案袋专属适配 */
+            @media screen and (max-width: 768px) {
+                .folder { 
+                    width: 75vw !important; min-width: 0 !important; max-width: none !important;
+                    height: 100vh !important; top: 0 !important; right: 0 !important; 
+                }
+                .folder-content { padding: 40px 15px 120px 20px !important; border-radius: 0 !important; }
+                .folder-tab { width: 30px !important; font-size: 14px !important; margin-right: -6px !important; }
+                .choices { right: 15px !important; left: auto !important; width: calc(75vw - 35px) !important; max-width: none !important; bottom: 20px !important; }
+                #sprite-container { left: 10vw !important; transform: translateX(-50%) !important; height: 50vh !important; opacity: 0.7 !important; z-index: 10 !important; }
+                .text { font-size: 15px !important; line-height: 1.8 !important; }
+                .name { font-size: 15px !important; margin-bottom: 4px !important; }
+                .choice-btn { font-size: 13px !important; padding: 10px 12px !important; margin-bottom: 8px !important; }
+                .hud { top: 15px !important; left: 10px !important; transform: scale(0.8); transform-origin: top left; z-index: 100 !important; }
+                .disco-msg-block { margin-bottom: 20px !important; }
+            }
+            
+            .dialogue-box { background: transparent !important; border: none !important; padding: 0 !important; box-shadow: none !important; backdrop-filter: none !important; transform: none !important; cursor: pointer; display: flex; flex-direction: column; }
+            .dialogue-box:hover, .dialogue-box:active { transform: none !important; box-shadow: none !important; background: transparent !important; }
+
+            .disco-msg-block { margin-bottom: 25px; animation: fadeIn 0.3s ease; }
+
+            /* 角色名 */
+            /* 角色名：改为冷战蓝色 */
+            .name { 
+                position: static !important; 
+                display: inline-block !important; 
+                background: transparent !important; 
+                color: #38b6ff !important; /* 👈 这里换成了亮蓝色 */
+                font-size: 17px !important; 
+                font-weight: bold !important; 
+                padding: 0 !important; 
+                margin-bottom: 4px !important; 
+                border: none !important; 
+                box-shadow: none !important; 
+                text-shadow: none !important; 
+                letter-spacing: 2px !important; 
+                font-family: "Times New Roman", serif; 
+                text-transform: uppercase; 
+            }
+            .name::after { content: " ˵"; color: #555; margin-left: 6px; font-weight: normal; }
+            
+            /* 台词 */
+            .text { font-size: 16px !important; line-height: 1.9 !important; color: #e0e0e0 !important; text-shadow: none !important; min-height: auto !important; white-space: pre-wrap; word-wrap: break-word; }
+            .text-desc { color: #888 !important; font-style: normal !important; font-family: "Courier New", monospace !important; }
+            
+            #sprite-container { position: fixed !important; left: 12% !important; bottom: 0 !important; width: auto !important; height: 85vh !important; transform: none !important; align-items: flex-end !important; z-index: 40; pointer-events: none; }
+            #sprite-image { filter: drop-shadow(0 0 30px rgba(0,0,0,0.9)); }
+
+            /* 选项：进一步压缩间距，紧贴上方文本 */
+            .choices { 
+                position: relative !important; 
+                bottom: auto !important; right: auto !important; left: auto !important; 
+                width: 100% !important; 
+                display: none; flex-direction: column; 
+                gap: 4px; /* 👈 缩短选项之间的行距 */
+                z-index: 60; 
+                margin-top: 5px !important; /* 👈 缩短与上方剧情文字的距离 (从15px改到5px) */
+            }
+            .choice-btn { 
+                background: transparent !important; 
+                border: none !important; 
+                padding: 2px 0 !important; /* 👈 压缩选项自身的上下高度 */
+                color: #D3A913 !important; 
+                cursor: pointer; 
+                text-align: left !important; 
+                font-size: 16px !important; 
+                transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) !important; 
+                font-family: "Times New Roman", serif; 
+                letter-spacing: 2px; 
+                font-weight: bold; 
+                display: flex; 
+                align-items: center;
+            }
+            
+            /* 悬浮时滑出的红色指示箭头 */
+            .choice-btn::before {
+                content: ">>"; margin-right: 8px; color: #b80000; opacity: 0; transform: translateX(-10px); transition: all 0.2s ease;
+            }
+            
+            .choice-btn:hover { background: transparent !important; color: #fff !important; transform: translateX(10px) !important; box-shadow: none !important; }
+            .choice-btn:hover::before { opacity: 1; transform: translateX(0); }
+                
+            .next-arrow { position: relative !important; right: auto !important; bottom: auto !important; margin-top: 20px; align-self: flex-end; border-top-color: #b80000 !important; }
+
             .ending-screen { position: fixed; inset: 0; background: #000; z-index: 200; display: none; flex-direction: column; justify-content: center; align-items: center; animation: fadeIn 2s forwards; }
-            .ending-title { font-size: 24px; color: #888; letter-spacing: 6px; margin-bottom: 20px; }
-            .ending-name { font-size: 48px; color: #ff6b6b; font-weight: bold; letter-spacing: 4px; text-shadow: 0 0 30px rgba(255, 107, 107, 0.5); }
-            .restart-btn { margin-top: 60px; padding: 12px 30px; background: transparent; border: 1px solid #555; color: #888; cursor: pointer; border-radius: 4px; font-size: 16px; transition: 0.3s; }
-            .restart-btn:hover { border-color: #eee; color: #eee; }
+            .ending-title { font-size: 16px; color: #555; letter-spacing: 12px; margin-bottom: 24px; font-family: monospace; }
+            .ending-name { font-size: 40px; color: #b80000; font-weight: bold; letter-spacing: 6px; text-shadow: 0 0 20px rgba(184,0,0,0.5); font-family: "Times New Roman", serif; text-transform: uppercase; }
+            .restart-btn { margin-top: 50px; padding: 10px 30px; background: transparent; border: 1px solid #333; color: #666; cursor: pointer; font-size: 14px; transition: 0.3s; letter-spacing: 4px; }
+            .restart-btn:hover { border-color: #D3A913; color: #D3A913; background: rgba(211, 169, 19, 0.1); }
+
+            /* 📱 手机端适配 */
+            @media screen and (max-width: 768px) {
+                .dialogue-wrapper { 
+                    top: 0 !important; right: 0 !important; bottom: 0 !important; left: auto !important;
+                    width: 75vw !important; min-width: 0 !important; max-width: none !important;
+                    border: none !important; 
+                    border-left: 6px double #b80000 !important; 
+                    border-radius: 0 !important; 
+                    background: linear-gradient(to bottom, rgba(35, 38, 40, 0.95) 0%, rgba(18, 20, 22, 0.98) 100%) !important; 
+                    padding: 40px 15px 120px 20px !important; 
+                    box-shadow: -10px 0 30px rgba(0,0,0,0.9) !important;
+                }
+                
+                #sprite-container { left: 10vw !important; transform: translateX(-50%) !important; height: 50vh !important; opacity: 0.7 !important; z-index: 10 !important; }
+                
+                .text { font-size: 15px !important; line-height: 1.8 !important; }
+                .name { font-size: 15px !important; margin-bottom: 4px !important; }
+                .choice-btn { font-size: 13px !important; padding: 10px 12px !important; margin-bottom: 8px !important; }
+                .hud { top: 15px !important; left: 10px !important; transform: scale(0.8); transform-origin: top left; z-index: 100 !important; }
+                .disco-msg-block { margin-bottom: 20px !important; }
+            }
+        `;
+    }else {
+        // 🌌 主题 3 (默认)：现代经典日系 AVG 风 (通透毛玻璃质感)
+        css = `
+            body { margin: 0; background: radial-gradient(circle at center, #232931 0%, #111418 100%); color: #eee; font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; user-select: none; overflow: hidden; height: 100vh; }
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+            @keyframes pulseArrow { 0%, 100% { opacity: 0.4; transform: translateY(0); } 50% { opacity: 1; transform: translateY(4px); } }
+
+            /* HUD 状态栏 */
+            .hud { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 100; animation: fadeIn 1s ease-out; }
+            .hud-item { background: rgba(0, 0, 0, 0.4); padding: 6px 14px; border-radius: 20px; font-family: monospace; font-size: 13px; color: #ccc; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.05); }
+            .hud-val { color: #4eb0a5; font-weight: bold; margin-left: 8px; }
+
+            /* 对话框整体 */
+            .dialogue-wrapper { position: fixed; bottom: 6vh; left: 0; right: 0; margin: auto; width: 85%; max-width: 900px; z-index: 50; display: none; animation: slideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+            .dialogue-box { background: rgba(15, 20, 25, 0.65); border: 1px solid rgba(255, 255, 255, 0.1); border-top: 2px solid #4eb0a5; padding: 40px 50px; border-radius: 8px; cursor: pointer; box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 1px 15px rgba(255,255,255,0.05); backdrop-filter: blur(12px); position: relative; transition: all 0.3s ease; }
+            /* 鼠标悬停：微微上浮，背景变亮，光晕扩大 */
+            .dialogue-box:hover { background: rgba(25, 30, 35, 0.85); transform: translateY(-3px); box-shadow: 0 15px 50px rgba(0,0,0,0.7), inset 0 1px 25px rgba(78, 176, 165, 0.25); }
+            /* 鼠标按下：干脆利落地下陷 */
+            .dialogue-box:active { transform: translateY(1px); transition: all 0.1s ease; }
+            /* 角色名牌 */
+            .name { position: absolute; top: -16px; left: 40px; background: #4eb0a5; color: #0a0c0e; padding: 4px 24px; font-size: 18px; font-weight: bold; letter-spacing: 2px; display: none; border-radius: 4px; box-shadow: 0 4px 12px rgba(78, 176, 165, 0.3); }
+
+            /* 台词文本 */
+            .text { font-size: 21px; line-height: 1.8; min-height: 95px; text-shadow: 1px 1px 3px rgba(0,0,0,0.9); color: #fdfdfd; letter-spacing: 0.5px; }
+            .text-desc { color: #b0bec5; font-style: normal; }
+
+            /* 呼吸箭头 */
+            .next-arrow { position: absolute; right: 40px; bottom: 30px; width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid #4eb0a5; animation: pulseArrow 1.5s infinite ease-in-out; display: none; }
+
+            /* 分支选项 */
+            .choices { position: fixed; bottom: 22vh; left: 0; right: 0; margin: auto; width: 70%; max-width: 600px; display: none; flex-direction: column; gap: 12px; z-index: 60; animation: slideUp 0.4s ease-out; }
+            .choice-btn { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid #4eb0a5; padding: 16px 24px; color: #eee; cursor: pointer; text-align: center; font-size: 17px; transition: all 0.2s ease; border-radius: 4px; backdrop-filter: blur(10px); }
+            .choice-btn:hover { background: rgba(78, 176, 165, 0.15); color: #fff; border-color: rgba(78, 176, 165, 0.4); transform: translateX(8px); box-shadow: -4px 4px 15px rgba(0,0,0,0.3); }
+
+            /* 结局画面 */
+            .ending-screen { position: fixed; inset: 0; background: #000; z-index: 200; display: none; flex-direction: column; justify-content: center; align-items: center; animation: fadeIn 2s forwards; }
+            .ending-title { font-size: 20px; color: #888; letter-spacing: 8px; margin-bottom: 24px; }
+            .ending-name { font-size: 42px; color: #fff; font-weight: bold; letter-spacing: 4px; text-shadow: 0 0 20px rgba(255, 255, 255, 0.3); }
+            .restart-btn { margin-top: 60px; padding: 10px 30px; background: transparent; border: 1px solid #555; color: #aaa; cursor: pointer; border-radius: 20px; font-size: 15px; transition: 0.3s; }
+            .restart-btn:hover { border-color: #4eb0a5; color: #4eb0a5; background: rgba(78, 176, 165, 0.1); }
         `;
     }
+    
+    
     return css;
+
+    
 }
 
 // ================= 📱 移动端触摸交互补丁 (完整修复版) =================
@@ -3785,34 +5442,26 @@ function getThemeCSS(themeType) {
         if (e.touches.length !== 1) return;
         const touch = e.touches[0];
 
-        // 【新增】：正在拖拽连线
         if (isConnecting && connectStartNodeId) {
             const start = getSocketCoords(connectStartNodeId, connectStartType);
             const endX = (touch.clientX - panX) / scale;
             const endY = (touch.clientY - panY) / scale;
 
-            // 保持曲线顺滑的控制点计算
-            let cp1x, cp2x;
-            if (connectStartType === 'out') {
-                cp1x = start.x + 80; cp2x = endX - 80;
-            } else {
-                cp1x = start.x - 80; cp2x = endX + 80;
-            }
+            // 呼叫智能连线算法计算拖拽临时线
+            let pathString = calculateBezierPath(start.x, start.y, endX, endY, connectStartType);
 
             const tempLine = document.getElementById('temp-line');
             if (tempLine) {
-                tempLine.setAttribute('d', `M ${start.x} ${start.y} C ${cp1x} ${start.y}, ${cp2x} ${endY}, ${endX} ${endY}`);
+                tempLine.setAttribute('d', pathString);
             }
-            e.preventDefault(); // 阻止屏幕乱滚
+            e.preventDefault(); 
         }
-        // 正在拖拽卡片
         else if (isDraggingNode && currentDragNode) {
             currentDragNode.style.left = ((touch.clientX - panX) / scale - dragOffsetX) + 'px';
             currentDragNode.style.top = ((touch.clientY - panY) / scale - dragOffsetY) + 'px';
             drawAllLines();
             e.preventDefault(); 
         } 
-        // 正在平移画布
         else if (isPanning) {
             panX = touch.clientX - startPanX;
             panY = touch.clientY - startPanY;
@@ -3844,7 +5493,11 @@ function getThemeCSS(themeType) {
             if (tempLine) tempLine.remove();
         }
 
-        isPanning = false;
+        if (isPanning) {
+            isPanning = false;
+            // 手机端手指离开屏幕时，静默存盘
+            if (typeof saveToLocal === 'function') saveToLocal(true);
+        }
         isDraggingNode = false;
         currentDragNode = null;
     });
@@ -3871,6 +5524,35 @@ function getThemeCSS(themeType) {
         }
     }, {passive: false});
 
+    // ================= 存储空间实时监测逻辑 =================
+    function updateStorageUsage() {
+        let totalBytes = 0;
+        // 遍历所有存进浏览器的东西
+        for (let key in localStorage) {
+            if (localStorage.hasOwnProperty(key)) {
+                // 浏览器存储通常以 UTF-16 字符计，这里粗略估算字节数
+                totalBytes += localStorage[key].length;
+            }
+        }
+
+        const limit = 5 * 1024 * 1024; // 常见的 5MB 限制
+        const percent = Math.min((totalBytes / limit) * 100, 100).toFixed(1);
+        
+        const fill = document.getElementById('storage-bar-fill');
+        const text = document.getElementById('storage-text');
+        
+        if (fill && text) {
+            fill.style.width = percent + '%';
+            text.innerText = `MEM: ${percent}%`;
+
+            // 根据压力变色
+            fill.classList.remove('storage-warning', 'storage-danger');
+            if (percent > 85) fill.classList.add('storage-danger');
+            else if (percent > 60) fill.classList.add('storage-warning');
+        }
+    }
+        // 启动编辑器时，初始化章节系统
+        initChapters();
 </script>
 
 <!-- 侧边栏结构开始 -->
@@ -3898,27 +5580,23 @@ function getThemeCSS(themeType) {
   
     <!-- 试玩模式界面 -->
     <div id="play-overlay">
-        <img id="play-bg" src="" alt="">
+    <img id="play-bg" src="" alt="">
+    
+    <div id="play-ending-screen">
+        <div class="ending-title">达成结局</div>
+        <div id="ending-name-text" class="ending-name"></div>
         
-        <div id="play-ending-screen">
-            <div class="ending-title">达成结局</div>
-            <div id="ending-name-text" class="ending-name"></div>
-            <button class="btn" style="margin-top: 50px; background: transparent; border: 1px solid #444;" onclick="closePlayMode()">返回编辑器</button>
-        </div>
+        <div id="ending-content-text" style="color: #ccc; margin-top: 20px; font-size: 16px; max-width: 600px; text-align: center; line-height: 1.6; white-space: pre-wrap;"></div>
         
-        <button class="play-close" onclick="closePlayMode()">×</button>
-        <div id="play-choices" class="play-choices"></div>
-        
-        <div id="play-dialogue-box" class="play-dialogue-box" onclick="advancePlayMode()">
-            <div id="play-sprite-container" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); width: 100%; height: 60vh; display: flex; justify-content: center; align-items: flex-end; pointer-events: none;">
-                <img id="play-sprite" src="" style="max-height: 100%; max-width: 100%; object-fit: contain; opacity: 0; transition: all 0.4s;">
-            </div>
-            
-            <div id="play-name" class="play-name"></div>
-            <div id="play-text" class="play-text"></div>
-            <div class="play-next-arrow"></div> 
-        </div>
+        <button class="btn" style="margin-top: 50px; background: transparent; border: 1px solid #444;" onclick="closePlayMode()">返回编辑器</button>
     </div>
+    
+    <button class="play-close" onclick="closePlayMode()">×</button>
+    <div id="play-choices" class="play-choices"></div>
+    
+    <div id="play-dialogue-box" class="play-dialogue-box" onclick="advancePlayMode()">
+        </div>
+</div>
 
 <!-- 新手引导提示气泡 -->
     <div id="guide-tooltip">
@@ -3937,5 +5615,86 @@ function getThemeCSS(themeType) {
     <div id="img-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2a2a2a; padding: 20px; border-radius: 8px; z-index: 9999; width: 520px; box-shadow: 0 4px 24px rgba(0,0,0,0.6); border: 1px solid #444; color: #eee;"></div>
 
     <div id="sprite-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2a2a2a; padding: 20px; border-radius: 8px; z-index: 9999; width: 560px; box-shadow: 0 4px 24px rgba(0,0,0,0.6); border: 1px solid #444; color: #eee; max-height: 85vh;"></div>
+
+<div id="chapter-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2a2a2a; padding: 20px; border-radius: 8px; z-index: 9999; width: 420px; box-shadow: 0 4px 24px rgba(0,0,0,0.6); border: 1px solid #444; color: #eee;"></div>
+
+    // ================= 🍎 苹果/手机端终极下拉菜单补丁 =================  //
+    // 专门解决 iOS Safari 的 hover 失效问题和 overflow 裁剪牢笼问题
+    if (window.innerWidth <= 768 || ('ontouchstart' in window)) {
+        // 1. 废除 CSS 的 hover 规则，改用 JS 的 active 类控制
+        const style = document.createElement('style');
+        style.innerHTML = ".dropdown:hover > .dropdown-content { display: none !important; } .dropdown-content.active { display: block !important; }";
+        document.head.appendChild(style);
+
+        // 2. 找到最外层的两个下拉菜单（文件、编辑）
+        const mainDropdowns = document.querySelectorAll('.toolbar > .dropdown');
+        mainDropdowns.forEach((dropdown, index) => {
+            const btn = dropdown.querySelector('.dropbtn');
+            const content = dropdown.querySelector('.dropdown-content');
+            if (!btn || !content) return;
+
+            // ⭐️ 核心魔法：把菜单从工具栏里拔出来，挂载到 body 下
+            document.body.appendChild(content);
+
+            // 给拔出来的菜单重新定位
+            content.style.position = 'fixed';
+            content.style.top = '55px';
+            // 根据是“文件”还是“编辑”，稍微错开一点左边距
+            content.style.left = index === 0 ? '10px' : '90px'; 
+            content.style.zIndex = '99999';
+
+            // 处理里面的二级菜单（让它直接往下展开，而不是往右边飞出去）
+            const subDropdown = content.querySelector('.dropdown');
+            if (subDropdown) {
+                const subContent = subDropdown.querySelector('.dropdown-content');
+                if (subContent) {
+                    subContent.style.position = 'static';
+                    subContent.style.display = 'block';
+                    subContent.style.boxShadow = 'none';
+                    subContent.style.border = 'none';
+                    subContent.style.borderLeft = '2px solid #4eb0a5';
+                    subContent.style.paddingLeft = '10px';
+                    subContent.style.marginTop = '5px';
+                    subContent.style.background = 'rgba(0,0,0,0.2)';
+                }
+            }
+
+            // 3. 绑定纯粹的触摸点击事件
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // 先关掉别人的菜单
+                document.querySelectorAll('.dropdown-content').forEach(c => {
+                    if (c !== content) c.classList.remove('active');
+                });
+                
+                // 切换自己的显示状态
+                content.classList.toggle('active');
+            });
+            
+            // 点里面的按钮后，自动收起菜单
+            content.addEventListener('click', (e) => {
+                if (e.target.tagName.toLowerCase() === 'a') {
+                    setTimeout(() => content.classList.remove('active'), 150);
+                }
+            });
+        });
+
+        // 4. 点击屏幕空白处，收起所有菜单
+        const closeAllMenus = () => {
+            document.querySelectorAll('.dropdown-content').forEach(c => c.classList.remove('active'));
+        };
+        window.addEventListener('click', closeAllMenus);
+        window.addEventListener('touchstart', (e) => {
+            // 如果摸到的不是菜单相关的东西，就关掉菜单
+            if (!e.target.closest('.dropdown-content') && !e.target.closest('.dropbtn')) {
+                closeAllMenus();
+            }
+        });
+    }
+
+    </script> <div id="side-panel" class="side-panel">
+        </div>
 </body>
 </html>
