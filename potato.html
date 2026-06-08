@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>叙事番茄钟 - 终端模式</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&display=swap');
+
+        :root {
+            /* 色彩系统重构：采用偏冷的战术灰蓝色调 */
+            --bg-color: #07090b;
+            --panel-bg: rgba(16, 22, 28, 0.6);
+            --text-main: #e2e8f0;
+            --text-muted: #64748b;
+            --accent: #38bdf8;
+            --accent-dim: rgba(56, 189, 248, 0.15);
+            --line-color: rgba(100, 116, 139, 0.25);
+            --border-radius: 6px;
+        }
+
+        /* ================= 基础 ================= */
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            /* 引入现代等宽字体 */
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            margin: 0;
+            min-height: 100vh;
+            box-sizing: border-box;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 优化后的 CRT 屏幕噪点与扫描线 */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: 
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        /* ================= 主容器 ================= */
+        .container {
+    display: flex;
+    width: 100%;
+    max-width: 1050px;
+    min-height: 680px; /* 改为 min-height，允许向下伸展 */
+    background: var(--panel-bg);
+    border: 1px solid var(--line-color);
+    border-radius: var(--border-radius);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(12px);
+    position: relative;
+    overflow: hidden; 
+    box-sizing: border-box;
+}
+
+        /* 顶部装饰条 */
+        .container::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0.5;
+        }
+
+        /* ================= 左侧 ================= */
+        .left-panel {
+        flex: 1;
+        padding: 30px 40px; /* 稍微缩小上下内边距 */
+        border-right: 1px solid var(--line-color);
+        display: flex;
+        flex-direction: column;
+        gap: 20px; /* 将元素间距从 40px 缩小到 20px */
+        background: linear-gradient(to right, rgba(255,255,255,0.01), transparent);
+        }
+
+        /* ================= 右侧 ================= */
+        .right-panel {
+            flex: 1.5;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            /* height: 100%; /* 🌟 新增：让右侧面板完全填满容器高度 */
+            box-sizing: border-box; /* 防止 padding 撑破布局 */
+        }
+
+        /* ================= 标题 ================= */
+        .section-title {
+            display: flex;
+            align-items: center;
+            font-size: 11px;
+            letter-spacing: 2px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .section-title::before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent);
+            margin-right: 10px;
+            border-radius: 1px;
+            box-shadow: 0 0 8px var(--accent-dim);
+        }
+
+        /* ================= 计时器 ================= */
+        #timer {
+            font-size: 64px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin-bottom: 24px;
+            color: var(--text-main);
+            text-shadow: 0 0 20px rgba(226, 232, 240, 0.2);
+            font-variant-numeric: tabular-nums; /* 保持数字等宽对齐 */
+        }
+
+        #timer::before {
+            content: "OP_TIMER_ACTIVE";
+            display: block;
+            font-size: 10px;
+            letter-spacing: 3px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        /* ================= 控制按钮 ================= */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .controls button {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 14px;
+            text-align: left;
+            cursor: pointer;
+            padding: 6px 0;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .controls button::before {
+            content: ">>";
+            color: var(--accent);
+            margin-right: 8px;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .controls button:hover {
+            color: var(--text-main);
+            transform: translateX(5px);
+        }
+
+        .controls button:hover::before {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* ================= 设置 ================= */
+        .settings {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .settings label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* ================= 设置面板新样式 ================= */
+        .settings {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .settings label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* 模拟一个整体的输入框 */
+        .time-input-group {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--line-color);
+            border-radius: 4px;
+            padding: 2px 8px;
+            transition: all 0.2s;
+        }
+
+        /* 当内部有输入框被选中时，整个外框发光 */
+        .time-input-group:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-dim);
+        }
+
+        /* 隐藏原生输入框的边框和背景 */
+        .time-input-group input {
+            width: 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-family: inherit;
+            text-align: center;
+            font-size: 13px;
+            padding: 4px 0;
+            outline: none;
+            -moz-appearance: textfield; /* 隐藏火狐浏览器的上下箭头 */
+        }
+
+        /* 隐藏 Chrome/Safari 的上下箭头 */
+        .time-input-group input::-webkit-outer-spin-button,
+        .time-input-group input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .time-input-group span {
+            color: var(--text-muted);
+            margin: 0 2px;
+            font-weight: bold;
+            user-select: none;
+        }
+
+        /* ================= 角色信息 ================= */
+        .character-info {
+            margin-top: auto;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border-left: 2px solid var(--accent);
+            font-size: 12px;
+            color: var(--text-muted);
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .character-info div:first-child {
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 2px;
+            font-size: 10px;
+            letter-spacing: 1px;
+        }
+
+        .info-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .info-input-group label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .info-input-group input,
+        .info-input-group select {
+            width: 110px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--line-color);
+            border-radius: 4px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 12px;
+            padding: 4px 6px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .info-input-group input:focus,
+        .info-input-group select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-dim);
+        }
+
+        /* 原生下拉菜单选项样式调整 */
+        .info-input-group select option {
+            background: var(--bg-color);
+            color: var(--text-main);
+        }
+
+        .op-btn {
+            margin-top: 4px;
+            background: rgba(56, 189, 248, 0.05);
+            border: 1px solid var(--line-color);
+            border-radius: 4px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 11px;
+            letter-spacing: 1px;
+            padding: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .op-btn:hover {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        /* 隐藏元素的工具类 */
+        .hidden {
+            display: none !important;
+        }
+
+        /* 静态面板里的修改小按钮 */
+        .op-btn-small {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 10px;
+            padding: 0;
+            margin-top: 12px;
+            cursor: pointer;
+            transition: color 0.2s;
+            text-align: left;
+        }
+
+        .op-btn-small:hover {
+            color: var(--accent);
+        }
+
+        /* ================= 系统提示 ================= */
+        .sys-prompt p {
+            margin: 0 0 16px 0;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        /* ================= 右侧按钮 ================= */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-buttons button {
+            background: rgba(56, 189, 248, 0.05);
+            border: 1px solid var(--line-color);
+            border-radius: 4px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 12px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-buttons button:hover {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        /* ================= 分割线 ================= */
+        .divider-horizontal {
+            width: 100%;
+            height: 1px;
+            margin: 32px 0;
+            background: var(--line-color);
+            position: relative;
+        }
+
+        /* ================= 日志 ================= */
+        .task-log {
+    flex: 1;
+    position: relative; /* 🌟 核心修改：将其作为剧情内容的定位参照物 */
+    min-height: 0; 
+}
+
+.task-log-content {
+    position: absolute; /* 🌟 核心修改：脱离文档流，不再反向撑开父元素 */
+    top: 35px; /* 为顶部的 "Mission Log" 标题留出正常的排版空间 */
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin-top: 0; /* 清除原有的外边距 */
+    
+    /* 以下保留你原有的视觉样式 */
+    padding: 20px;
+    border: 1px solid var(--line-color);
+    border-radius: var(--border-radius);
+    background: rgba(0, 0, 0, 0.3);
+    line-height: 1.6;
+    color: var(--text-muted);
+    font-size: 13px;
+    overflow-y: auto; /* 文本超出时自然出现滚动条 */
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
+}
+
+        .task-log-content::before {
+            content: "[ SYS.LOG_READY ]";
+            display: block;
+            color: var(--accent);
+            margin-bottom: 16px;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--line-color);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* ================= 弹窗系统 ================= */
+        #sys-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-box {
+            width: 380px;
+            background: var(--bg-color);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            padding: 24px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(239, 68, 68, 0.1);
+            
+            /* 核心动画：利用 clip-path 从中间(50%)向两边(0)裁剪展开 */
+            animation: expandFromCenter 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes expandFromCenter {
+            0% {
+                clip-path: inset(0 50% 0 50%);
+                opacity: 0;
+            }
+            100% {
+                clip-path: inset(0 0 0 0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            color: #ef4444; /* 警告红 */
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .modal-header::before {
+            content: "!";
+            display: inline-block;
+            background: #ef4444;
+            color: #000;
+            width: 14px;
+            height: 14px;
+            text-align: center;
+            line-height: 14px;
+            font-size: 12px;
+            border-radius: 2px;
+            margin-right: 10px;
+        }
+
+        .modal-content {
+            font-size: 13px;
+            color: var(--text-main);
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .modal-actions button {
+            font-family: inherit;
+            font-size: 12px;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn-safe {
+            background: transparent;
+            border: 1px solid var(--line-color);
+            color: var(--text-muted);
+        }
+
+        .btn-safe:hover {
+            border-color: var(--text-main);
+            color: var(--text-main);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #ef4444;
+        }
+
+        .btn-danger:hover {
+            background: #ef4444;
+            color: #fff;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
+        }
+
+        /* ================= 历史记录视图 ================= */
+        .history-view-container {
+            position: absolute;
+            inset: 0;
+            background: var(--bg-color); /* 用背景色彻底盖住底层的面板 */
+            z-index: 20; /* 层级高于普通面板，但低于系统红框弹窗 */
+            display: flex;
+            flex-direction: column;
+            padding: 40px;
+            box-sizing: border-box;
+            
+            /* 核心：丝滑过渡动画 */
+            opacity: 0;
+            pointer-events: none; /* 隐藏时不阻挡底层的点击 */
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 激活状态 */
+        .history-view-container.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: none;
+            color: var(--accent);
+            font-family: inherit;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-back:hover {
+            color: #fff;
+            transform: translateX(-5px); /* 返回按钮悬停时向左微动，引导视觉 */
+        }
+
+        /* 历史文本框的独立样式，去掉了阴影和边框，使其看起来像干净的书页 */
+        /* 历史文本框的独立样式 */
+.history-scroll-area {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0 10px 0 0;
+    font-size: 14px;
+    color: var(--text-main);
+    
+    /* 🌟 核心修复 1：覆盖掉 task-log-content 带来的绝对定位 */
+    position: relative; 
+    top: auto;
+    bottom: auto;
+    left: auto;
+    right: auto;
+    margin-top: 0; 
+    flex: 1; /* 恢复 Flex 布局，让它自然撑满下方空间 */
+}
+        
+        .history-scroll-area::before {
+            display: none; /* 去掉里面的 [ SYS.LOG_READY ] */
+        }
+
+        .history-entry {
+            margin-bottom: 24px;
+            line-height: 1.8;
+            border-left: 2px solid rgba(100, 116, 139, 0.3);
+            padding-left: 16px;
+        }
+
+        /* ================= 奖励系统弹窗遮罩层 ================= */
+        #reward-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 特化增强：将奖励弹窗封装为固定比例的弹性视窗 */
+        #reward-modal {
+            width: 500px;
+            height: 520px; /* 🌟 核心修改1：固定整个弹窗的外部视窗高度 */
+            max-height: 80vh; /* 确保在矮屏幕或笔记本上不会顶破天窗 */
+            background: var(--bg-color);
+            border: 1px solid rgba(56, 189, 248, 0.3); /* 改为淡蓝色契合系统 */
+            padding: 24px;
+            box-shadow: 0 0 35px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(56, 189, 248, 0.05);
+            display: flex;
+            flex-direction: column; /* 纵向排列：页头 -> 内容(滚动) -> 页脚 */
+            animation: expandFromCenter 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            box-sizing: border-box;
+        }
+
+        /* 核心修改2：让内容容器撑满剩余空间，且内部独立滚动 */
+        #reward-content {
+            flex: 1; /* 自动撑满页头和页脚之间的所有空间 */
+            overflow-y: auto; /* 🌟 激活垂直滚动条 */
+            padding-right: 8px; /* 留出滚动条的右侧间距，防止挤压内容 */
+            margin-bottom: 20px;
+            min-height: 0; /* 打破 Flex 默认的自然高度撑开行为 */
+        }
+
+        /* 弹窗内部专属的细条滚动条，匹配整体面板质感 */
+        #reward-content::-webkit-scrollbar {
+            width: 4px;
+        }
+        #reward-content::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        #reward-content::-webkit-scrollbar-thumb {
+            background: var(--line-color);
+            border-radius: 4px;
+        }
+        #reward-content::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+
+        /* ================= 奖励面板内部布局美化 ================= */
+        .reward-tier {
+            margin-bottom: 24px;
+        }
+
+        .reward-tier:last-child {
+            margin-bottom: 0;
+        }
+
+        .reward-tier-title {
+            color: var(--accent);
+            font-size: 11px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(56, 189, 248, 0.15);
+            padding-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            background: linear-gradient(90deg, rgba(56, 189, 248, 0.03), transparent); /* 增加微弱的渐变底色，提升层级感 */
+            padding-left: 4px;
+        }
+
+        .reward-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* 升级选项按钮的细节质感 */
+        .reward-item {
+            background: rgba(16, 22, 28, 0.4);
+            border: 1px solid var(--line-color);
+            border-radius: 3px;
+            padding: 6px 14px;
+            font-size: 12px;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 选中状态：保持高亮与常驻发光 */
+.reward-item.selected {
+    background: rgba(56, 189, 248, 0.2); 
+    border-color: var(--accent); 
+    color: #fff; 
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.3); /* 增加外发光效果，以示区别 */
+}
+
+        .reward-item:hover {
+            border-color: var(--accent);
+            background: rgba(56, 189, 248, 0.08); /* 悬停时带有微弱的幽蓝色泛光 */
+            color: #fff;
+            box-shadow: 0 0 8px rgba(56, 189, 248, 0.1);
+        }
+
+        /* 未解锁状态 */
+        .reward-item.locked {
+            opacity: 0.25;
+            pointer-events: none;
+            border-style: dashed;
+            background: transparent;
+        }
+
+        .reward-tier-title.locked {
+            color: var(--text-muted);
+            border-color: var(--line-color);
+            background: transparent;
+        }
+
+        /* ================= 剧情逐行浮现动画 ================= */
+        @keyframes lineFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animated-line {
+            opacity: 0; /* 初始隐藏 */
+            /* forwards 保证动画结束后停留在 100% 的状态 */
+            animation: lineFadeIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            display: block; /* 让每一段都独占一行 */
+            margin-bottom: 6px;
+        }
+
+        /* 禁用历史记录中的浮现动画，让归档文本直接显示 */
+.history-entry .animated-line {
+    animation: none !important; /* 关掉逐行浮现动画 */
+    opacity: 1 !important;      /* 保持完全可见 */
+    transform: none !important; /* 取消位移 */
+}
+
+        /* ================= 移动端响应式适配 ================= */
+        @media screen and (max-width: 850px) {
+            body {
+                padding: 16px; /* 🌟 恢复页边距，让边缘有呼吸感 */
+            }
+
+            .container {
+                flex-direction: column;
+                height: auto; /* 🌟 取消固定高度，让容器随内容自然展开 */
+                min-height: calc(100vh - 32px); /* 保证至少撑满屏幕 */
+                border-radius: var(--border-radius); /* 恢复圆角外壳 */
+                border: 1px solid var(--line-color); /* 恢复边框 */
+            }
+
+            .left-panel {
+                flex: none; 
+                padding: 20px;
+                gap: 16px; /* 稍微缩小组件间距，显得没那么“巨大” */
+                border-right: none;
+                border-bottom: 1px solid var(--line-color);
+                max-height: none; /* 🌟 核心修复：取消上半部的限制高度 */
+                overflow-y: visible; /* 🌟 核心修复：取消上半部的独立滑动，直接完整显示 */
+            }
+
+            .right-panel {
+                flex: 1;
+                padding: 20px;
+                min-height: 500px; /* 🌟 核心修复：把下半部分（剧情容器）强行撑大，留出充足阅读区 */
+            }
+
+            /* 整体缩小一些文字和控件，解决手机上“太大了”的笨重感 */
+            #timer {
+                font-size: 38px; 
+                margin-bottom: 8px;
+            }
+
+            .section-title {
+                font-size: 10px;
+                margin-bottom: 12px;
+            }
+
+            .controls button {
+                font-size: 12px;
+                padding: 4px 0;
+            }
+
+            .settings {
+                gap: 12px;
+            }
+
+            .time-input-group input {
+                font-size: 12px;
+                width: 18px;
+            }
+
+            .character-info {
+                padding: 12px;
+                gap: 8px;
+            }
+
+            .op-btn {
+                font-size: 10px;
+                padding: 8px;
+            }
+
+            /* 弹窗适配：防止边缘溢出 */
+            #reward-modal {
+                width: 90% !important;
+                height: 70vh !important;
+                padding: 16px;
+            }
+
+            .reward-item {
+                flex: 1 1 45%; 
+                text-align: center;
+                padding: 8px 4px;
+            }
+
+            * 历史记录全屏面板适配 */
+    .history-view-container {
+        padding: 20px;
+        /* 🌟 核心修复 2：在移动端将其改为 fixed（固定定位） */
+        position: fixed; 
+        inset: 0;
+        z-index: 90; /* 层级提高，确保盖住整个手机屏幕 */
+        border-radius: 0; /* 全屏状态下不需要圆角 */
+    }
+    
+    .divider-horizontal {
+        margin: 16px 0;
+    }
+}
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="left-panel">
+            
+            <div>
+                <div class="section-title">Task Progress</div>
+                <div id="timer">00:25:00</div>
+                <div class="controls">
+                    <button id="btn-start">开始任务 / INITIALIZE</button>
+                    <button id="btn-pause">暂停任务 / SUSPEND</button>
+                    <button id="btn-reset">重置任务 / OVERRIDE</button>
+                </div>
+            </div>
+
+            <div class="settings">
+                <div class="section-title">Parameters</div>
+                <label>任务时长 : 
+                    <div class="time-input-group">
+                        <input type="number" id="work-h" value="00" min="0" max="99"><span>:</span>
+                        <input type="number" id="work-m" value="25" min="0" max="59"><span>:</span>
+                        <input type="number" id="work-s" value="00" min="0" max="59">
+                    </div>
+                </label>
+                <label>休息时间 : 
+                    <div class="time-input-group">
+                        <input type="number" id="rest-h" value="00" min="0" max="99"><span>:</span>
+                        <input type="number" id="rest-m" value="05" min="0" max="59"><span>:</span>
+                        <input type="number" id="rest-s" value="00" min="0" max="59">
+                    </div>
+                </label>
+            </div>
+
+            <div class="character-info" id="char-info-container">
+                
+                <div id="op-static-view" class="hidden">
+                    <div>// CURRENT OPERATIVE</div>
+                    <div id="display-name">姓名：[未知] 军衔：[<span id="display-rank">未知</span>]</div>
+                    <div id="display-race">种族：[基准人类]</div>
+                    <button id="edit-op-btn" class="op-btn-small">[ 修改档案 / EDIT ]</button>
+                </div>
+
+                <div id="op-edit-view">
+                    <div>// CURRENT OPERATIVE [SETUP]</div>
+                    <div class="info-input-group">
+                        <label>名: <input type="text" id="op-first-name" placeholder="如: 西蒙"></label>
+                        <label>代号: <input type="text" id="op-callsign" placeholder="如: 幽灵"></label>
+                        <label>姓: <input type="text" id="op-last-name" placeholder="如: 莱利"></label>
+                        <label>军衔: 
+                            <select id="op-rank">
+                                <option value="步兵">步兵</option>
+                                <option value="下士">下士</option>
+                                <option value="中士">中士</option>
+                                <option value="上士">上士</option>
+                                <option value="准尉">准尉</option>
+                                <option value="少尉">少尉</option>
+                                <option value="中尉">中尉</option>
+                            </select>
+                        </label>
+                        <label>种族: 
+                            <select id="op-race">
+                                <option value="基准人类">基准人类</option>
+                                <option value="豹混血种">豹混血种</option>
+                                <option value="犬混血种">犬混血种</option>
+                                <option value="狼混血种">狼混血种</option>
+                                <option value="蛇混血种">蛇混血种</option>
+                                <option value="鸟混血种">鸟混血种</option>
+                                <option value="鱼混血种">鱼混血种</option>
+                                <option value="狐混血种">狐混血种</option>
+                                <option value="龙混血种">龙混血种</option>
+                            </select>
+                        </label>
+                    </div>
+                    <button id="save-op-btn" class="op-btn">录入档案</button>
+                </div>
+
+            </div> </div> <div class="right-panel">
+            
+            <div class="sys-prompt">
+                <div class="section-title">System Status</div>
+                <p>约翰·麦克塔维什 好感度 [ <span id="affection-display" style="color: var(--accent); font-weight: 700;">0</span> ]</p>
+                <div class="action-buttons">
+                    <button id="btn-view-rewards">查看奖励</button>
+                    <button id="btn-view-history">查看历史</button>
+                </div>
+            </div>
+
+            <div class="divider-horizontal"></div>
+
+            <div class="task-log">
+                <div class="section-title">Mission Log</div>
+                <div class="task-log-content" id="dialogue-text">
+                    等待记录录入...
+                </div>
+            </div>
+
+        </div>
+
+        <div id="history-view" class="history-view-container">
+            <div class="history-header">
+                <button id="btn-back-history" class="btn-back"><< 返回终端 / RETURN</button>
+                <div class="section-title" style="margin-bottom: 0;">Archive Records</div>
+            </div>
+            <div class="divider-horizontal" style="margin: 20px 0;"></div>
+            <div id="history-content" class="task-log-content history-scroll-area">
+                </div>
+        </div>
+    </div>
+
+    <div id="sys-modal-overlay" class="hidden">
+        <div id="sys-modal" class="modal-box">
+            <div class="modal-header">WARNING // SYSTEM OVERRIDE</div>
+            <div class="modal-content">修改档案后剧情将会全部重新开始，确定要修改吗？</div>
+            <div class="modal-actions">
+                <button id="modal-confirm" class="btn-danger">确认重置</button>
+                <button id="modal-cancel" class="btn-safe">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="reward-modal-overlay" class="hidden">
+        <div id="reward-modal" class="modal-box">
+            <div class="modal-header" style="color: var(--accent); border-color: rgba(56, 189, 248, 0.2);">
+                SYSTEM LOG // REWARD PROTOCOL
+            </div>
+            <div id="reward-content" class="modal-content">
+                </div>
+            <div class="modal-actions">
+                <button id="reward-confirm" class="btn-danger" style="display: none; background: rgba(56, 189, 248, 0.1); border-color: var(--accent); color: var(--accent);">确认并执行 / CONFIRM</button>
+                <button id="reward-close" class="btn-safe">关闭面板</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+        // ================= 状态管理 =================
+        const gameState = {
+            player: { firstName: "", callsign: "", lastName: "", fullName: "", rank: "步兵", race: "基准人类" },
+            affection: 0,
+            storyLogs: [],
+            // 新增：可用的代币余额（完成番茄钟增加）
+            availableRewards: { tier0: 0, tier1: 0, tier2: 0, tier3: 0 }, 
+            // 历史兑换总次数（面板展示用）
+            rewardCounts: { tier0: 0, tier1: 0, tier2: 0, tier3: 0 } 
+        };
+
+        // ================= DOM 元素 =================
+        const staticView = document.getElementById('op-static-view');
+        const editView = document.getElementById('op-edit-view');
+        const displayName = document.getElementById('display-name');
+        const displayRace = document.getElementById('display-race');
+        const affectionDisplay = document.getElementById('affection-display');
+        const timerDisplay = document.getElementById('timer');
+        const logContent = document.getElementById('dialogue-text');
+        const displayRank = document.getElementById('display-rank');
+
+        // ================= 数据存取机制 =================
+        function loadData() {
+            const savedData = localStorage.getItem('terminalState');
+            if (savedData) {
+                const parsed = JSON.parse(savedData);
+                gameState.player = parsed.player || gameState.player; 
+                gameState.affection = parsed.affection || 0;
+                gameState.storyLogs = parsed.storyLogs || []; 
+                gameState.availableRewards = parsed.availableRewards || { tier0: 0, tier1: 0, tier2: 0, tier3: 0 };
+                gameState.rewardCounts = parsed.rewardCounts || { tier0: 0, tier1: 0, tier2: 0, tier3: 0 };
+                
+                updateStaticView();
+                showStaticView();
+            } else {
+                showEditView();
+            }
+            updateAffectionDisplay();
+        }
+
+        function saveData() {
+            localStorage.setItem('terminalState', JSON.stringify(gameState));
+        }
+
+        // ================= 静态界面渲染 =================
+        function updateStaticView() {
+            displayName.innerHTML = `姓名：[${gameState.player.fullName}] 军衔：[${gameState.player.rank}]`;
+            displayRace.textContent = `种族：[${gameState.player.race}]`;
+        }
+
+        function updateAffectionDisplay() {
+            affectionDisplay.textContent = gameState.affection;
+        }
+
+        // ================= 视图切换机制 =================
+        function showStaticView() {
+            staticView.classList.remove('hidden');
+            editView.classList.add('hidden');
+        }
+
+        // ================= 回填表单 =================
+        function showEditView() {
+            staticView.classList.add('hidden');
+            editView.classList.remove('hidden');
+            document.getElementById('op-first-name').value = gameState.player.firstName;
+            document.getElementById('op-callsign').value = gameState.player.callsign;
+            document.getElementById('op-last-name').value = gameState.player.lastName;
+            document.getElementById('op-rank').value = gameState.player.rank; // 回填军衔
+            document.getElementById('op-race').value = gameState.player.race;
+        }
+
+        // ================= 档案录入与修改 =================
+        document.getElementById('save-op-btn').addEventListener('click', function() {
+            const inputFirstName = document.getElementById('op-first-name').value.trim();
+            const inputCallsign = document.getElementById('op-callsign').value.trim();
+            const inputLastName = document.getElementById('op-last-name').value.trim();
+            
+            // 如果核心字段全空，阻止提交
+            if (!inputFirstName && !inputCallsign) {
+                printLog(`<span style="color: #ef4444;">[ERR] 无法生成空档案。请至少填写名或代号。</span>`);
+                return;
+            }
+
+            gameState.player.firstName = inputFirstName || "未知";
+            gameState.player.callsign = inputCallsign || "无名氏";
+            gameState.player.lastName = inputLastName;
+            gameState.player.rank = document.getElementById('op-rank').value; // 读取军衔
+            gameState.player.race = document.getElementById('op-race').value;
+
+            let assembledName = `${gameState.player.firstName}·“${gameState.player.callsign}”`;
+            if (inputLastName !== "") assembledName += `·${inputLastName}`;
+            gameState.player.fullName = assembledName;
+
+            saveData();
+            updateStaticView();
+            showStaticView();
+
+            printLog(`[SYS] 档案已覆盖。操作员: ${gameState.player.fullName} [${gameState.player.rank}] | 属性: ${gameState.player.race}`);
+        });
+
+        // 弹窗相关逻辑
+        const modalOverlay = document.getElementById('sys-modal-overlay');
+        document.getElementById('edit-op-btn').addEventListener('click', function() {
+            modalOverlay.classList.remove('hidden');
+            const modalBox = document.getElementById('sys-modal');
+            modalBox.style.animation = 'none';
+            modalBox.offsetHeight; 
+            modalBox.style.animation = null; 
+        });
+
+        document.getElementById('modal-cancel').addEventListener('click', function() {
+            modalOverlay.classList.add('hidden');
+        });
+
+        // ================= 确认重置逻辑 =================
+        document.getElementById('modal-confirm').addEventListener('click', function() {
+            modalOverlay.classList.add('hidden');
+            
+            // 清空当前的操作员核心数据，使其失效
+            gameState.player.firstName = "";
+            gameState.player.fullName = "";
+            saveData(); 
+            
+            showEditView(); 
+            printLog(`<span style="color: #ef4444;">[WARN] 协议启动。剧情节点已归零，请重新录入操作员数据。</span>`);
+        });
+
+        // ================= 计时器与好感度核心逻辑 =================
+        let timerInterval;
+        let timeRemaining = 0; // 以秒计算
+        let isRunning = false;
+        let focusSeconds = 0;  // 记录本轮已专注的秒数
+
+        // 解析输入框的时间为秒数 (type 传入 'work' 或 'rest')
+        function parseInputTime(type) {
+            const h = parseInt(document.getElementById(`${type}-h`).value) || 0;
+            const m = parseInt(document.getElementById(`${type}-m`).value) || 0;
+            const s = parseInt(document.getElementById(`${type}-s`).value) || 0;
+            return h * 3600 + m * 60 + s;
+        }
+
+        // 格式化秒数为 HH:MM:SS 显示
+        function formatTimeDisplay(totalSeconds) {
+            const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+            const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+            const s = (totalSeconds % 60).toString().padStart(2, '0');
+            timerDisplay.textContent = `${h}:${m}:${s}`;
+        }
+
+        // 监听工作时长的输入框，实现同步更新大屏幕倒计时
+        function syncTimerDisplay() {
+            // 只有在任务未开始（或彻底重置）的情况下，才同步显示
+            if (!isRunning && timeRemaining === 0) {
+                const totalSeconds = parseInputTime('work');
+                formatTimeDisplay(totalSeconds);
+            }
+        }
+
+        // 为三个工作时间输入框绑定输入事件
+        ['work-h', 'work-m', 'work-s'].forEach(id => {
+            const input = document.getElementById(id);
+            input.addEventListener('input', syncTimerDisplay);
+            
+            // 失去焦点时自动补齐两位数 (如输入 5 会变成 05)
+            input.addEventListener('blur', function() {
+                if (this.value === '') this.value = '00';
+                else if (this.value.length === 1) this.value = '0' + this.value;
+            });
+        });
+
+        // 休息时间输入框也加上自动补齐两位数的功能
+        ['rest-h', 'rest-m', 'rest-s'].forEach(id => {
+            const input = document.getElementById(id);
+            input.addEventListener('blur', function() {
+                if (this.value === '') this.value = '00';
+                else if (this.value.length === 1) this.value = '0' + this.value;
+            });
+        });
+
+        function printLog(message) {
+            if (logContent.innerHTML.includes("等待记录录入...")) logContent.innerHTML = "";
+            logContent.innerHTML += `<br>> ${message}`;
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+
+        // ================= 终端打字机特效 =================
+        // speed 控制打字速度，数值越小打字越快（单位：毫秒）
+        function typeTerminalText(text, color = "var(--text-main)", speed = 35) {
+            return new Promise(resolve => {
+                if (logContent.innerHTML.includes("等待记录录入...")) logContent.innerHTML = "";
+                
+                // 创建一个独立的容器装载这行字
+                const lineDiv = document.createElement('div');
+                lineDiv.style.color = color;
+                lineDiv.style.lineHeight = '1.6';
+                lineDiv.innerHTML = '<br>> '; // 保持终端的换行和前缀箭头
+                logContent.appendChild(lineDiv);
+
+                let i = 0;
+                function typing() {
+                    if (i < text.length) {
+                        lineDiv.innerHTML += text.charAt(i);
+                        // 保证打字时滚动条始终保持在最底部
+                        logContent.scrollTop = logContent.scrollHeight;
+                        i++;
+                        setTimeout(typing, speed);
+                    } else {
+                        // 打完字后稍微停顿 0.4 秒，让节奏更舒适，然后通知程序继续往下走
+                        setTimeout(resolve, 400); 
+                    }
+                }
+                typing();
+            });
+        }
+
+        // ================= 动态文本解析器 =================
+        function processStoryText(rawText) {
+            const player = gameState.player;
+            
+            // 1. 定义不同种族的专属昵称池
+            const raceNicknames = {
+                "狼混血种": ["小狗", "狼崽", "小狼"],
+                "犬混血种": ["小狗", "小猎犬", "乖狗狗"],
+                "豹混血种": ["小猫", "大猫", "小豹子"],
+                "基准人类": ["宝贝", "长官", "亲爱的"] 
+                // 其他种族可自行补充...
+            };
+            
+            // 2. 定义通用亲密昵称池
+            const sweetNicknames = ["甜心", "蜜糖", "亲爱的", "宝贝"];
+
+            // 3. 获取当前适用的昵称
+            const currentRaceNicks = raceNicknames[player.race] || ["长官"];
+            const getRand = (arr) => arr[Math.floor(Math.random() * arr.length)];
+            
+            const nicknameRace = getRand(currentRaceNicks);
+            const nicknameSweet = getRand(sweetNicknames);
+
+            // 4. 构建“全局随机池”（包含真名、代号、军衔和各种昵称）
+            // filter(Boolean) 是为了防止玩家没填姓氏时抽出一个空值
+            const allPossibleNames = [
+                player.firstName,
+                player.lastName,
+                player.callsign,
+                player.rank,
+                nicknameRace,
+                nicknameSweet
+            ].filter(Boolean);
+
+            // 每次调用时，随机抽一个
+            const randomName = getRand(allPossibleNames);
+
+            // 5. 替换文本中的所有占位符
+            return rawText
+                .replace(/%FIRST_NAME%/g, player.firstName !== "未知" ? player.firstName : player.callsign)
+                .replace(/%LAST_NAME%/g, player.lastName)
+                .replace(/%CALLSIGN%/g, player.callsign)
+                .replace(/%RANK%/g, player.rank)
+                .replace(/%NICKNAME_RACE%/g, nicknameRace)
+                .replace(/%NICKNAME_SWEET%/g, nicknameSweet)
+                .replace(/%RANDOM_NAME%/g, randomName);
+        }
+
+        // 专门用于输出和存储“纯剧情”的函数，方便你的引擎调用
+        function pushStory(text) {
+            // 1. 将剧情展现在右侧面板中
+            if (logContent.innerHTML.includes("等待记录录入...")) logContent.innerHTML = "";
+            logContent.innerHTML += `<br><br><span style="color: var(--text-main); font-size: 14px;">${text}</span>`;
+            logContent.scrollTop = logContent.scrollHeight;
+
+            // 2. 将纯文本写入后台数组并永久保存
+            gameState.storyLogs.push(text);
+            saveData();
+        }
+
+        // 开始任务
+        document.getElementById('btn-start').addEventListener('click', function() {
+            if (!gameState.player.firstName || gameState.player.firstName === "") {
+                printLog(`<span style="color: #ef4444;">[ERR] ACCESS DENIED. 检测到未授权终端。请先在左下角录入操作员档案。</span>`);
+                return;
+            }
+
+            if (isRunning) return;
+
+            if (timeRemaining === 0) {
+                timeRemaining = parseInputTime('work'); // 修改为新解析函数
+                focusSeconds = 0;
+                printLog(`[SYS] 任务开始，倒计时初始化...`);
+            } else {
+                printLog(`[SYS] 任务恢复执行。`);
+            }
+
+            isRunning = true;
+            timerInterval = setInterval(() => {
+                if (timeRemaining > 0) {
+                    timeRemaining--;
+                    focusSeconds++;
+                    formatTimeDisplay(timeRemaining);
+
+                    if (focusSeconds > 0 && focusSeconds % 60 === 0) {
+                        gameState.affection += 1;
+                        updateAffectionDisplay();
+                        saveData(); 
+                    }
+                } else {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    
+                    // 🌟 核心逻辑：根据完成的时间，给各个层级发放代币
+                    const timeCompleted = parseInputTime('work');
+                    if (timeCompleted > 0) gameState.availableRewards.tier0++;
+                    if (timeCompleted >= 600) gameState.availableRewards.tier1++;
+                    if (timeCompleted >= 1800) gameState.availableRewards.tier2++;
+                    if (timeCompleted >= 3600) gameState.availableRewards.tier3++;
+                    
+                    timeRemaining = 0;
+                    saveData();
+
+                    printLog(`[SYS] 节点完成。代币已发放至库存，请打开奖励面板查看。`);
+                }
+            }, 1000);
+        });
+
+        // 暂停任务
+        document.getElementById('btn-pause').addEventListener('click', function() {
+            if (!isRunning) return;
+            clearInterval(timerInterval);
+            isRunning = false;
+            printLog(`[SYS] 任务已挂起。`);
+        });
+
+        // 重置任务
+        document.getElementById('btn-reset').addEventListener('click', function() {
+            // 判定是否属于“中途放弃”：有剩余时间，且剩余时间小于设定的总时长
+            const totalTime = parseInputTime('work');
+            if (timeRemaining > 0 && timeRemaining < totalTime) {
+                // 扣除好感度（设定扣除2点，并且使用 Math.max 确保好感度不会跌破 0）
+                const penalty = 2;
+                gameState.affection = Math.max(0, gameState.affection - penalty);
+                updateAffectionDisplay();
+                saveData();
+
+                // 随机抽取一条中断任务的剧情文本
+                const penaltyLogs = [
+                    `[WARN] 任务强制中止。频道里传来轻微的静电杂音，麦克塔维什似乎对你的分心感到不悦。`,
+                    `[WARN] 专注中断。你听到他在通讯中短促地咂了下嘴：“专心点，长官。”`,
+                    `[WARN] 计时覆写。“遇到麻烦了吗？”他的声音听起来公事公办，战术面板显示好感度已折损。`,
+                    `[WARN] 协议终止。麦克塔维什切断了当前的视频链路，只留下一片幽绿的底噪。`
+                ];
+                const randomLog = penaltyLogs[Math.floor(Math.random() * penaltyLogs.length)];
+                
+                printLog(`<span style="color: #ef4444;">${randomLog}</span>`);
+            } else {
+                // 如果是没开始倒计时就点重置，只输出普通系统提示
+                printLog(`[SYS] 计时器已覆写重置。`);
+            }
+
+            // 清理状态
+            clearInterval(timerInterval);
+            isRunning = false;
+            timeRemaining = 0; 
+            focusSeconds = 0; 
+            
+            // 调用同步函数，让大屏幕重新读取并显示当前输入框的数字
+            syncTimerDisplay(); 
+        });
+
+        // 页面初始化加载时，将大屏幕的时间校准为输入框的默认值
+        syncTimerDisplay(); 
+        
+       // ================= 历史记录面板逻辑 =================
+        const historyView = document.getElementById('history-view');
+        const historyContent = document.getElementById('history-content');
+
+        // 打开历史
+        document.getElementById('btn-view-history').addEventListener('click', function() {
+            historyContent.innerHTML = ""; // 清空旧渲染
+            
+            if (gameState.storyLogs.length === 0) {
+                historyContent.innerHTML = "<div class='history-entry' style='color: var(--text-muted);'>// 当前暂无归档剧情。</div>";
+            } else {
+                // 遍历后台存储的剧情，逐条渲染出来
+                gameState.storyLogs.forEach(log => {
+                    historyContent.innerHTML += `<div class='history-entry'>${log}</div>`;
+                });
+            }
+            
+            // 增加 active 类，触发 CSS 的透明度渐变动画
+            historyView.classList.add('active');
+        });
+
+        // 返回终端
+        document.getElementById('btn-back-history').addEventListener('click', function() {
+            historyView.classList.remove('active');
+        });
+
+        // ================= 奖励面板逻辑 =================
+        const rewardOverlay = document.getElementById('reward-modal-overlay');
+        const rewardContent = document.getElementById('reward-content');
+        const rewardConfirmBtn = document.getElementById('reward-confirm');
+
+        const rewardCategories = {
+    tier0: { 
+        name: "微型节点权限 [ 碎片时间补偿 ]", 
+        items: ["看上尉自慰一次", 
+            "索要刚换下的内裤", 
+            "展示雌穴三十秒", // 增加：快速的视觉冲击，看一眼就拉上
+            "允许把脸埋进腿间深嗅气味",     // 增加：兽化特有的信息素安抚
+            "凑在耳边录制专属的发骚语音",   // 增加：听觉刺激，可以循环播放
+            "隔着作训服揉弄队员裆部一分钟", // 增加：长官主动的轻度肢体挑逗
+            "获得长官主动献上的法式深吻",   // 增加：短暂但足够深入的唇舌交缠
+            "允许重重揉捏胸肉或臀肉十下",   // 增加：量化的触觉奖励，捏完就得收手
+            "长官用军靴轻踩队员裆部挑逗",   // 增加：带点上位者恶趣味的足部动作
+            "舔舐长官刚从穴里抽出的手指"    // 增加：分享淫水，色气值拉满的短暂互动
+            ] 
+    },
+    tier1: { 
+        name: "常规权限 [ 专注 ≥ 10 MIN ]", 
+        items: [
+            "手淫", 
+            "口交", 
+            "乳交", 
+            "腿交", 
+            "指奸", 
+            "舔阴",           
+            "舔穴", 
+            "阴道",       
+            "后穴",       
+            "边缘控制"        
+        ] 
+    },
+    tier2: { 
+        name: "小型设备权限 [ 专注 ≥ 30 MIN ]", 
+        items: [
+            "按摩棒", 
+            "尿道棒", 
+            "乳夹", 
+            "狐尾肛塞",       // 增加：带点角色扮演性质的道具，填满后穴
+            "强力震动跳蛋",   // 增加：直接贴附在敏感处的持续刺激
+            "阴唇夹",         // 增加：针对雌穴外部软肉的惩罚性小道具
+            "凯格尔球",       // 增加：塞入腔体深处，强迫他在日常走动时夹紧
+            "医用扩阴器",     // 增加：撑开腔体方便队员们“仔细检查内部防线”
+            "皮鞭拍打",       // 增加：轻度的疼痛管教，留下红痕
+            "拘束项圈与牵引绳" // 增加：把高高在上的上尉当成宠物牵在手里
+        ] 
+    },
+    tier3: { 
+        name: "大型设施权限 [ 专注 ≥ 60 MIN ]", 
+        items: [
+            "三角木马", 
+            "性爱秋千", 
+            "全身绳缚",       // 原“绳缚”升级为全身拘束，剥夺行动力
+            "全自动炮机",     // 增加：冰冷机械的无情捣弄
+            "战术拘束椅",     // 增加：牢牢固定四肢，强迫承受所有奖励
+            "悬吊系统",       // 增加：利用重力让腔体吃得更深
+            "十字架站立拘束", // 增加：展示意味浓厚的站立姿态
+            "感官剥夺套件",   // 增加：眼罩加隔音耳机，放大身体的其他触觉
+            "强制高潮装置",   // 增加：设定好次数前不准停下的榨汁流程
+            "透明展示笼"      // 增加：放在办公室中央，供所有进来汇报的队员观赏
+        ] 
+    }
+};
+
+        // ================= 独立剧情剧本库 (支持种族差分) =================
+        //%FIRST_NAME% （固定叫名，如：西蒙）
+        //%LAST_NAME% （固定叫姓，如：莱利）
+        //%CALLSIGN% （固定叫代号，如：幽灵）
+        //%RANK% （固定叫军衔，如：中尉）
+        //%NICKNAME_RACE% （固定叫种族昵称，如：狼崽）
+        //%NICKNAME_SWEET% （固定叫亲昵称呼，如：甜心）
+        //%RANDOM_NAME% （纯随机抽取以上任意一种）
+
+        const storyScripts = {
+    // 1. 不受种族影响的通用文本（直接使用数组形式，内置对象）
+    "看皂队自慰一次": [
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 监控通道-04 已建立加密连接 ]</span><br>夜视滤镜下的画面呈现出一片幽绿，波形图在屏幕边缘轻微抖动。麦克塔维什靠在靠窗的行军床上，战术外套被随意丢在水泥地面上。<br>“%RANDOM_NAME%……”无线电里传来他压抑在喉咙里的低唤，夹杂着沙沙的底噪。他仰起头，手指的动作带着长期任务后的宣泄，“操……%FIRST_NAME%……”<br>他并没有意识到监控的存在，只是在呼吸彻底乱掉的瞬间，咬着牙喊出了长官的代号：“%CALLSIGN%……”` 
+        },
+        { 
+            minAff: 30, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 备用频道-B 信号接入 ]</span><br>肥皂坐在淋浴间的长椅上，水珠顺着肌肉线条滑落。他低喘着，手上的动作加快了些许。<br>水声掩盖了他的部分声音，但你依然能从嘴型分辨出他在反复念着那个名字：“%LAST_NAME%……%FIRST_NAME%……”` 
+        },
+        { 
+            minAff: 60, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 监控通道-04 覆写模式 ]</span><br>他停下了动作，抬头准确地盯住了墙角那枚微亮的摄像头红灯。他知道你在看。<br>“长官，你看够了吗？”他胸膛起伏着，蓝眼睛里带着直接的挑衅与引诱，手指重新握住前端，“过来……%FIRST_NAME%。”` 
+        }
+    ],
+
+    // 2. 受种族影响的差分文本（使用对象嵌套数组的形式）
+    "手淫": {
+        "基准人类": [
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 隔离舱-B3 // 种族认证：基准人类 ]</span><br>作为基准人类，你缺乏那些混血种天然的感知器官，但在这种幽闭环境下，皮肤对温度和触觉的反馈反而变得敏锐。<br>“交给我，%FIRST_NAME%。”他的掌心包裹上来，动作并不算温柔，却带着让人不容拒绝的控制力，“闭上眼睛，%NICKNAME_SWEET%。”` 
+            },
+            { 
+                minAff: 50, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 隔离舱-B3 // 权限覆写 ]</span><br>剥离了战术装备的阻碍，肌肤相贴的触感变得清晰。他的指腹擦过敏感的软肉，惹来你一阵轻颤。<br>“别躲，%FIRST_NAME%。”他低声哄着，动作放缓了许多，带有明显的安抚意味，目光紧紧锁定你的表情，“看着我。”` 
+            }
+        ],
+        "豹混血种": [
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 隔离舱-B3 // 种族认证：豹混血种 ]</span><br>无声的气压阀排出一股冰冷的白雾。昏暗中，你微弱的猫科夜视能力让房间的轮廓无所遁形。<br>你的长尾在金属台面上焦躁地轻扫，发出细微的沙沙声。混血种的掠食本能和亢奋感在体内拉扯，连带着掌心的动作都带上了一丝兽性的粗糙。` 
+            },
+            { 
+                minAff: 50, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 休息室-09 // 种族认证：豹混血种 ]</span><br>他熟练地顺着你的脊椎向下抚摸，准确地找到了安抚猫科混血种的力道。你喉咙里不由自主地发出微弱的呼噜声。<br>“这就受不了了，小猫？”他轻笑着，手上的动作却并未停歇，反而更加深入。` 
+            }
+        ],
+        "犬混血种": [
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 隔离舱-B3 // 种族认证：犬混血种 ]</span><br>空间内的气味复杂而沉闷。你敏锐的听觉捕捉到了走廊深处巡逻兵经过的微弱脚步声，这让原本隐秘的行为增添了战术反差带来的紧迫感。<br>犬类特有的顺从或服从天性在视线交汇时显露出来，在衣物摩擦的轻响中，呼吸逐渐失去原有的频率。` 
+            }
+        ],
+        "狼混血种": [
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 隔离舱-B3 // 种族认证：狼混血种 ]</span><br>金属舱门在身后落锁，应急照明切换为战术暗红。麦克塔维什把你抵在冰冷的金属墙壁上，带着枪茧的手指强势地顺着你的后颈抚摸，安抚着你因密闭空间而微微竖起的狼耳。<br>“放松点，%NICKNAME_RACE%。”他低声命令，温热的呼吸喷洒在你的侧颈，“这里只有我们。”<br>他的一只手向下探去，隔着战术布料重重揉捏。你因为混血种的本能而发出微弱的呜咽，换来他轻笑一声，咬住你的耳廓：“好%NICKNAME_RACE%，%NICKNAME_SWEET%，让我看看%RANK%现在的样子……”` 
+            },
+            { 
+                minAff: 30, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 休息室-09 权限确认 ]</span><br>狼类的嗅觉让你能清晰地闻到他身上残留的硝烟味和淡淡的荷尔蒙气息。他单膝跪在你的两腿之间，粗糙的手指拉开拉链。<br>“平时在训练场上发号施令的%RANK%，现在怎么连气都喘不匀了？”他故意用拇指按压在那一点上，抬起眼看着你，蓝眼睛里带着狡黠，“说话，%RANDOM_NAME%。”` 
+            },
+            { 
+                minAff: 80, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 私人权限解锁 ]</span><br>他埋首在你的颈间，贪婪地嗅闻着狼混血种特有的气味，动作里少了几分强硬，多了些近乎献祭般的沉迷。<br>“你属于我，对吧，%FIRST_NAME%？”他喘息着确认，手上的动作与言语里的占有欲交织在一起。` 
+            }
+        ],
+        "蛇混血种": [
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 隔离舱-B3 // 种族认证：蛇混血种 ]</span><br>冷血特性的混血身体在触碰到温热的掌心时产生了战栗。他粗糙的手指碾过你体表细密的鳞片边缘，带来一阵难以言喻的酥麻感。` 
+            }
+        ],
+        "鸟混血种": [ { minAff: 0, text: `……` } ],
+        "鱼混血种": [ { minAff: 0, text: `……` } ],
+        "狐混血种": [ { minAff: 0, text: `……` } ],
+        "龙混血种": [ { minAff: 0, text: `……` } ]
+    },
+
+    "口交": {
+        "基准人类": [ { minAff: 0, text: `人类口交文本……` } ],
+        "豹混血种": [ { minAff: 0, text: `豹混血口交文本……（可以描写一些带有倒刺或猫科特征的细节）` } ],
+        "犬混血种": [ { minAff: 0, text: `……` } ],
+        "狼混血种": [ { minAff: 0, text: `……` } ],
+        "蛇混血种": [ { minAff: 0, text: `……` } ],
+        "鸟混血种": [ { minAff: 0, text: `……` } ],
+        "鱼混血种": [ { minAff: 0, text: `……` } ],
+        "狐混血种": [ { minAff: 0, text: `……` } ],
+        "龙混血种": [ { minAff: 0, text: `……` } ]
+    },
+
+    "按摩棒": {
+        "基准人类": [ { minAff: 0, text: `……` } ],
+        "豹混血种": [ { minAff: 0, text: `……` } ]
+        // 依此类推
+    }
+};
+
+        // UI 临时状态区（关闭面板会重置）
+        let sessionAvailable = {}; 
+        let sessionSelected = []; // 格式: [{ tier: 'tier1', item: '手淫' }]
+
+        // 渲染整个面板
+        function renderRewardUI() {
+            let totalAvailable = Object.values(sessionAvailable).reduce((a, b) => a + b, 0);
+            
+            // 如果既没有可用点数，也没有选中任何东西
+            if (totalAvailable === 0 && sessionSelected.length === 0) {
+                rewardContent.innerHTML = "<div style='color: #ef4444; font-size: 13px; text-align: center; padding: 20px 0;'>[ERR] 无可用兑换点数。请先完成新的专注任务。</div>";
+                rewardConfirmBtn.style.display = 'none';
+                return;
+            }
+
+            let html = "";
+            ['tier0', 'tier1', 'tier2', 'tier3'].forEach(tierId => {
+                const tierData = rewardCategories[tierId];
+                const availCount = sessionAvailable[tierId] || 0;
+                
+                // 判断该层级是否有被选中的项目
+                const hasSelectedInTier = sessionSelected.some(s => s.tier === tierId);
+                // 只有当有余额，或者已经选中了里面的项目时，该层级标题才亮起
+                const isTierUnlocked = availCount > 0 || hasSelectedInTier; 
+                const tierStatusClass = isTierUnlocked ? "" : "locked";
+
+                html += `<div class="reward-tier">
+                    <div class="reward-tier-title ${tierStatusClass}">
+                        <span>${tierData.name}</span>
+                        <span style="color: var(--accent);">[ 可兑换: ${availCount} 次 ]</span>
+                    </div>
+                    <div class="reward-grid">`;
+                
+                tierData.items.forEach(item => {
+                    const isSelected = sessionSelected.some(s => s.item === item);
+                    // 没被选中，且当前层级也没点数了，该词条锁定
+                    const itemLocked = !isSelected && availCount <= 0;
+                    
+                    let itemClasses = "reward-item";
+                    if (isSelected) itemClasses += " selected";
+                    else if (itemLocked) itemClasses += " locked";
+                    
+                    html += `<div class="${itemClasses}" data-tier="${tierId}" data-item="${item}">${item}</div>`;
+                });
+                html += `</div></div>`;
+            });
+
+            rewardContent.innerHTML = html;
+            // 如果选了东西，显示确认按钮
+            rewardConfirmBtn.style.display = sessionSelected.length > 0 ? 'inline-block' : 'none';
+        }
+
+        // 1. 打开奖励面板
+        document.getElementById('btn-view-rewards').addEventListener('click', function() {
+            // 将后台的真实余额拷贝到临时的UI中
+            sessionAvailable = { ...gameState.availableRewards };
+            sessionSelected = []; // 清空之前的选择
+            
+            renderRewardUI();
+
+            rewardOverlay.classList.remove('hidden');
+            const modalBox = document.getElementById('reward-modal');
+            modalBox.style.animation = 'none';
+            modalBox.offsetHeight; 
+            modalBox.style.animation = null; 
+        });
+
+        // 2. 监听点击选项（选中 / 取消选中）
+        rewardContent.addEventListener('click', function(e) {
+            const target = e.target;
+            
+            if (target.classList.contains('reward-item')) {
+                const tierId = target.getAttribute('data-tier');
+                const itemName = target.getAttribute('data-item');
+                
+                const existingIndex = sessionSelected.findIndex(s => s.item === itemName);
+                
+                if (existingIndex > -1) {
+                    // 如果已经选中了，就取消选中，并退还点数
+                    sessionSelected.splice(existingIndex, 1);
+                    sessionAvailable[tierId]++;
+                    renderRewardUI();
+                } else {
+                    // 如果没选中，且还有点数，就加入购物车，扣除临时点数
+                    if (sessionAvailable[tierId] > 0) {
+                        sessionSelected.push({ tier: tierId, item: itemName });
+                        sessionAvailable[tierId]--;
+                        renderRewardUI();
+                    }
+                }
+            }
+        });
+
+        // 3. 确认提交（支持种族差分路由的版本）
+        rewardConfirmBtn.addEventListener('click', async function() {
+            if (sessionSelected.length === 0) return;
+            
+            const itemNames = sessionSelected.map(s => s.item);
+            const playerRace = gameState.player.race; // 获取当前操作员的种族
+            
+            // 正式写入后台，扣除余额
+            sessionSelected.forEach(s => {
+                gameState.availableRewards[s.tier]--;
+                gameState.rewardCounts[s.tier] = (gameState.rewardCounts[s.tier] || 0) + 1;
+            });
+            saveData();
+            
+            // 🎬 关闭弹窗
+            rewardOverlay.classList.add('hidden');
+            
+            // 🎬 系统提示打字机效果
+            const sysPromptText = `[SYS] 权限已提取。正在执行协议: [ ${itemNames.join(' / ')} ]。`;
+            await typeTerminalText(sysPromptText, 'var(--accent)', 40);
+            
+            // 🎬 剧情文本生成
+            let fullStoryText = `<div style="margin-bottom: 16px; color: var(--accent);">当前操作员 [${gameState.player.callsign}] 选择兑换：<b>${itemNames.join('、')}</b>。</div>`;
+            
+            let baseDelay = 0; 
+            const delayIncrement = 700; 
+
+            sessionSelected.forEach(s => {
+                const itemName = s.item;
+                const scriptData = storyScripts[itemName];
+                let pool = [];
+
+                // 🌟 1. 【种族差分路由】先提取对应种族的剧本池
+                if (Array.isArray(scriptData)) {
+                    pool = scriptData; // 无种族差分
+                } else if (scriptData && typeof scriptData === 'object') {
+                    if (scriptData[playerRace] && scriptData[playerRace].length > 0) {
+                        pool = scriptData[playerRace];
+                    } else if (scriptData["基准人类"] && scriptData["基准人类"].length > 0) {
+                        pool = scriptData["基准人类"]; // 兜底机制
+                    }
+                }
+                
+                fullStoryText += `<div style="margin-top: 16px;">`;
+                
+                // 🌟 2. 【好感度差分路由】再根据好感度过滤剧情
+                if (pool && pool.length > 0) {
+                    // 找出当前好感度能够解锁的所有剧本
+                    const validScripts = pool.filter(scriptObj => gameState.affection >= scriptObj.minAff);
+                    
+                    if (validScripts.length > 0) {
+                        // 找到能解锁的最高好感度阈值
+                        const maxAff = Math.max(...validScripts.map(s => s.minAff));
+                        
+                        // 把符合最高阈值的剧本都拿出来（如果同级别有多个，方便做随机）
+                        const highestScripts = validScripts.filter(s => s.minAff === maxAff);
+                        
+                        // 随机抽取一条
+                        const randomIndex = Math.floor(Math.random() * highestScripts.length);
+                        const rawScript = highestScripts[randomIndex].text; // 注意这里要读取 .text
+                        
+                        // 送入解析器翻译名字和代号
+                        const selectedScript = processStoryText(rawScript);
+                        const lines = selectedScript.split('<br>');
+                        
+                        lines.forEach(line => {
+                            if (line.trim() !== "") {
+                                fullStoryText += `<span class="animated-line" style="animation-delay: ${baseDelay}ms;">${line}</span>`;
+                                baseDelay += delayIncrement;
+                            }
+                        });
+                    } else {
+                        // 预防错误：如果设定的好感度要求比当前高
+                        fullStoryText += `<span class="animated-line" style="animation-delay: ${baseDelay}ms; color: var(--text-muted);">[ 系统提示：需要提升好感度以解锁该交互档案 ]</span>`;
+                        baseDelay += delayIncrement;
+                    }
+                } else {
+                    fullStoryText += `<span class="animated-line" style="animation-delay: ${baseDelay}ms; color: var(--text-muted);">（暂无 [${itemName}] 对应的文本归档）</span>`;
+                    baseDelay += delayIncrement;
+                }
+                
+                fullStoryText += `</div>`;
+            });
+
+            // 统一推送到右侧记录框
+            pushStory(fullStoryText);
+        });
+
+        // 4. 关闭奖励面板
+        document.getElementById('reward-close').addEventListener('click', function() {
+            rewardOverlay.classList.add('hidden');
+        });
+
+        // 执行缓存数据加载
+        loadData();
+    </script>
+
+</body>
+</html>
