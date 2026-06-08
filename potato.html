@@ -198,6 +198,35 @@
             justify-content: space-between;
         }
 
+        /* ================= 左侧参数栏操作按钮 ================= */
+        .param-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px; /* 和上方的时间输入框稍微拉开一点距离 */
+        }
+
+        .param-actions button {
+            flex: 1; /* 让两个按钮平分容器的宽度 */
+            background: rgba(56, 189, 248, 0.05);
+            border: 1px solid var(--line-color);
+            border-radius: 4px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 11px;
+            letter-spacing: 1px;
+            padding: 8px 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .param-actions button:hover {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: #fff;
+            box-shadow: 0 0 8px rgba(56, 189, 248, 0.15); /* 增加轻微的外发光 */
+        }
+
         /* ================= 设置面板新样式 ================= */
         .settings {
             display: flex;
@@ -558,6 +587,152 @@
             box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
         }
 
+        /* ================= 任务清单弹窗样式 ================= */
+        .task-input-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .task-input-area input[type="text"] {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--line-color);
+            border-radius: 4px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 12px;
+            padding: 6px 8px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .task-input-area input[type="text"]:focus {
+            border-color: var(--accent);
+        }
+
+        .qty-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--line-color);
+            border-radius: 4px;
+            padding: 2px 6px;
+        }
+
+        .qty-wrapper input {
+            width: 30px;
+            background: transparent;
+            border: none;
+            color: var(--accent);
+            font-weight: 700;
+            font-family: inherit;
+            text-align: center;
+            font-size: 12px;
+            outline: none;
+            -moz-appearance: textfield;
+        }
+        
+        .qty-wrapper input::-webkit-outer-spin-button,
+        .qty-wrapper input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        #task-list-container {
+            max-height: 250px;
+            overflow-y: auto;
+            padding-right: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* 滚动条细化 */
+        #task-list-container::-webkit-scrollbar { width: 4px; }
+        #task-list-container::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); }
+        #task-list-container::-webkit-scrollbar-thumb { background: var(--line-color); border-radius: 4px; }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(16, 22, 28, 0.4);
+            border: 1px solid var(--line-color);
+            padding: 10px 12px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .task-item:hover {
+            border-color: rgba(100, 116, 139, 0.6);
+        }
+
+        .task-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+        }
+
+        /* 自定义打勾框 */
+        .task-checkbox {
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border: 1px solid var(--text-muted);
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+            background: transparent;
+        }
+        .task-checkbox:checked {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        .task-checkbox:checked::after {
+            content: "";
+            position: absolute;
+            left: 3px; top: 1px;
+            width: 4px; height: 8px;
+            border: solid #000;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .task-item.done .task-name {
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+
+        .task-item-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .task-qty-badge {
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--accent);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 2px;
+        }
+
+        .btn-del-task {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+            padding: 0;
+        }
+        .btn-del-task:hover { opacity: 1; }
+
         /* ================= 历史记录视图 ================= */
         .history-view-container {
             position: absolute;
@@ -604,8 +779,7 @@
             transform: translateX(-5px); /* 返回按钮悬停时向左微动，引导视觉 */
         }
 
-        /* 历史文本框的独立样式，去掉了阴影和边框，使其看起来像干净的书页 */
-        /* 历史文本框的独立样式 */
+        /* 历史文本框的独立样式：使用防弹级别的 Flex 修复方案 */
 .history-scroll-area {
     background: transparent;
     border: none;
@@ -614,14 +788,19 @@
     font-size: 14px;
     color: var(--text-main);
     
-    /* 🌟 核心修复 1：覆盖掉 task-log-content 带来的绝对定位 */
-    position: relative; 
-    top: auto;
-    bottom: auto;
-    left: auto;
-    right: auto;
+    /* 🌟 核心修复 1：利用 !important 彻底剥离绝对定位的负面影响 */
+    position: relative !important; 
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    
+    /* 🌟 核心修复 2：专治 Safari/iOS 滚动条消失、内容溢出 */
+    flex: 1 1 auto; /* 允许元素伸缩 */
+    min-height: 0;  /* 强制打破 Flex 子元素的默认无限撑高机制，激活内部滚动 */
+    overflow-y: auto; /* 明确声明垂直滚动 */
+    
     margin-top: 0; 
-    flex: 1; /* 恢复 Flex 布局，让它自然撑满下方空间 */
 }
         
         .history-scroll-area::before {
@@ -633,6 +812,30 @@
             line-height: 1.8;
             border-left: 2px solid rgba(100, 116, 139, 0.3);
             padding-left: 16px;
+        }
+
+        /* ================= 任务清单弹窗遮罩层 ================= */
+        #task-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* ================= 删除任务弹窗遮罩层 ================= */
+        #delete-task-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 150; /* 🌟 核心：层级150，确保能盖住层级100的任务清单弹窗 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         /* ================= 奖励系统弹窗遮罩层 ================= */
@@ -861,7 +1064,7 @@
                 padding: 8px 4px;
             }
 
-            * 历史记录全屏面板适配 */
+            /* 历史记录全屏面板适配 */
     .history-view-container {
         padding: 20px;
         /* 🌟 核心修复 2：在移动端将其改为 fixed（固定定位） */
@@ -874,7 +1077,150 @@
     .divider-horizontal {
         margin: 16px 0;
     }
+
+    /* ================= 🌟 移动端：全弹窗体系响应式适配 ================= */
+        
+        /* 1. 强制覆盖所有行内定宽，让所有弹窗（任务、历史、确认删除等）适应手机屏幕 */
+        .modal-box {
+            width: 90% !important; 
+            max-width: 400px;
+            padding: 16px !important;
+            box-sizing: border-box;
+        }
+
+        /* 2. 任务清单弹窗 - 录入区域折行显示 */
+        .task-input-area {
+            flex-wrap: wrap; /* 允许内容换行 */
+            gap: 8px;
+        }
+        .task-input-area input[type="text"] {
+            flex: 0 0 100% !important; /* 第一行：任务名称输入框占满全宽 */
+            box-sizing: border-box;
+        }
+        .qty-wrapper {
+            flex: 1; /* 第二行左侧：数量框平分 */
+            justify-content: center;
+        }
+        #btn-add-task {
+            flex: 1; /* 第二行右侧：录入按钮平分 */
+            margin: 0 !important; /* 抹除原有的外边距 */
+        }
+
+        /* 3. 任务清单弹窗 - 列表条目改成上下两行布局 */
+        .task-item {
+            flex-direction: column; 
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px;
+        }
+        .task-item-right {
+            width: 100%;
+            justify-content: flex-end; /* 右侧的时间、徽章和删除按钮强制靠右 */
+            border-top: 1px dashed rgba(100, 116, 139, 0.3); /* 加一条隐约的分割线 */
+            padding-top: 8px;
+        }
+
+        /* 4. 历史日历弹窗适配 */
+        #history-task-modal {
+            max-height: 85vh; /* 防止日历过长顶破手机屏幕边缘 */
+        }
+        #stats-container {
+            grid-template-columns: 1fr !important; /* 把统计区域的双列强制改成单列往下排 */
+        }
+        .calendar-grid {
+            gap: 2px; /* 缩小格子间距，防挤破 */
+        }
+        .cal-day {
+            font-size: 11px; /* 稍微缩小日期数字 */
+        }
+
+        /* ================= 🌟 修复：历史弹窗内容过长吞掉底部按钮 ================= */
+        #history-task-modal .modal-content {
+            overflow-y: auto; /* 允许中间内容区域独立滑动 */
+            min-height: 0;    /* 再次使用这个魔法：打破 Flex 撑高限制 */
+            padding-right: 8px; /* 给滚动条留出呼吸空间 */
+        }
+        
+        /* 移动端下取消内部详情区域的固定高度，让整个中间面板统一滑动，手感更好 */
+        #cal-day-details {
+            max-height: none !important;
+            overflow-y: visible !important;
+        }
+
+        /* 移动端历史弹窗滚动条细化美化 */
+        #history-task-modal .modal-content::-webkit-scrollbar { width: 4px; }
+        #history-task-modal .modal-content::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); }
+        #history-task-modal .modal-content::-webkit-scrollbar-thumb { background: var(--line-color); border-radius: 4px; }
 }
+
+
+    /* ================= 历史日历组件样式 ================= */
+        #history-task-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); 
+            backdrop-filter: blur(4px); z-index: 100; display: flex; 
+            justify-content: center; align-items: center;
+        }
+
+        .calendar-header { 
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; 
+        }
+        
+        .calendar-weekdays { 
+            display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; 
+            font-size: 10px; color: var(--text-muted); margin-bottom: 8px; 
+        }
+        
+        .calendar-grid { 
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; 
+        }
+        
+        .cal-day { 
+            aspect-ratio: 1; display: flex; justify-content: center; align-items: center; 
+            font-size: 12px; color: var(--text-main); background: rgba(0, 0, 0, 0.2); 
+            border: 1px solid var(--line-color); border-radius: 3px; cursor: pointer; transition: all 0.2s; 
+        }
+        
+        .cal-day:hover { border-color: var(--accent); }
+        .cal-day.empty { background: transparent; border-color: transparent; cursor: default; }
+        
+        /* 有任务记录的日子底部会有蓝色标线 */
+        .cal-day.has-task { 
+            color: var(--accent); font-weight: 700; border-bottom: 2px solid var(--accent); 
+        }
+        
+        /* 当前选中的日子高亮 */
+        .cal-day.selected { 
+            background: rgba(56, 189, 248, 0.2); border-color: var(--accent); 
+            color: #fff; box-shadow: 0 0 8px rgba(56, 189, 248, 0.15); 
+        }
+        
+        .history-record-item { 
+            background: rgba(16, 22, 28, 0.4); border-left: 2px solid var(--accent); 
+            padding: 10px 12px; border-radius: 0 4px 4px 0; margin-bottom: 8px; 
+            display: flex; flex-direction: column; gap: 4px; 
+        }
+        
+        .record-time { color: var(--text-muted); font-size: 10px; font-family: inherit; }
+        .record-title { color: var(--text-main); font-size: 12px; }
+        .record-duration { font-size: 11px; color: var(--accent); align-self: flex-end; }
+
+        /* 历史任务详情区域及滚动条细化 */
+        #cal-day-details {
+            max-height: 180px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+
+        #cal-day-details::-webkit-scrollbar { 
+            width: 4px; 
+        }
+        #cal-day-details::-webkit-scrollbar-track { 
+            background: rgba(0, 0, 0, 0.1); 
+        }
+        #cal-day-details::-webkit-scrollbar-thumb { 
+            background: var(--line-color); 
+            border-radius: 4px; 
+        }
     </style>
 </head>
 <body>
@@ -884,17 +1230,27 @@
             
             <div>
                 <div class="section-title">Task Progress</div>
-                <div id="timer">00:25:00</div>
+                <!-- 👇 替换：当前任务选择器 👇 -->
+                <div id="current-task-display" style="font-size: 11px; margin-bottom: 16px; display: flex; align-items: center; justify-content: flex-start; gap: 12px; font-weight: 700; letter-spacing: 1px;">
+                    <span style="color: var(--accent);">当前任务</span>
+                    <select id="active-task-select" style="background: #000000; color: var(--accent); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 3px; font-family: inherit; font-size: 12px; padding: 4px 8px; outline: none; width: 180px; cursor: pointer; font-weight: normal; letter-spacing: normal; box-shadow: inset 0 0 8px rgba(56, 189, 248, 0.1);">
+                        <option value="">-- 未分配任务 --</option>
+                    </select>
+                </div>
+                <!-- 👆 替换结束 👆 -->
+                <div id="cycle-display" style="font-size: 12px; color: var(--accent); margin-bottom: 12px; letter-spacing: 1px; font-weight: 700; display: none;">当前状态<br> <span style="color: var(--text-muted); font-size: 10px;">Round <span id="current-round">1</span> / 4</span></div>
+                <div id="timer">--:--:--</div>
                 <div class="controls">
-                    <button id="btn-start">开始任务 / INITIALIZE</button>
+                    <button id="btn-start">开始任务 / 继续任务 / 开始休息 / 继续休息</button>
                     <button id="btn-pause">暂停任务 / SUSPEND</button>
                     <button id="btn-reset">重置任务 / OVERRIDE</button>
                 </div>
             </div>
 
-            <div class="settings">
-                <div class="section-title">Parameters</div>
-                <label>任务时长 : 
+            <!-- 👇 给 settings 加上 gap: 10px，给 section-title 加上 margin-bottom: 4px 👇 -->
+            <div class="settings" style="gap: 10px;">
+                <div class="section-title" style="margin-bottom: 4px;">参数设置</div>
+                <label>任务时长 :
                     <div class="time-input-group">
                         <input type="number" id="work-h" value="00" min="0" max="99"><span>:</span>
                         <input type="number" id="work-m" value="25" min="0" max="59"><span>:</span>
@@ -902,12 +1258,41 @@
                     </div>
                 </label>
                 <label>休息时间 : 
-                    <div class="time-input-group">
-                        <input type="number" id="rest-h" value="00" min="0" max="99"><span>:</span>
-                        <input type="number" id="rest-m" value="05" min="0" max="59"><span>:</span>
-                        <input type="number" id="rest-s" value="00" min="0" max="59">
-                    </div>
-                </label>
+        <div class="time-input-group">
+            <input type="number" id="rest-h" value="00" min="0" max="99"><span>:</span>
+            <input type="number" id="rest-m" value="05" min="0" max="59"><span>:</span>
+            <input type="number" id="rest-s" value="00" min="0" max="59">
+        </div>
+    </label>
+    <label>长休时间 : 
+        <div class="time-input-group">
+            <input type="number" id="long-rest-h" value="00" min="0" max="99"><span>:</span>
+            <input type="number" id="long-rest-m" value="15" min="0" max="59"><span>:</span>
+            <input type="number" id="long-rest-s" value="00" min="0" max="59">
+        </div>
+    </label>
+    
+    <!-- 👇 替换为这个全新的同行双输入框 👇 -->
+    <label>循环设置 : 
+        <div style="display: flex; gap: 8px;">
+            <div class="time-input-group">
+                <span style="margin-left: 4px;">共</span>
+                <input type="number" id="total-rounds" value="4" min="1" max="99" style="width: 20px; text-align: center;">
+                <span style="margin-right: 4px;">轮</span>
+            </div>
+            <div class="time-input-group">
+                <span style="margin-left: 4px;">每</span>
+                <input type="number" id="long-rest-interval" value="2" min="1" max="99" style="width: 20px; text-align: center;">
+                <span style="margin-right: 4px;">轮长休</span>
+            </div>
+        </div>
+    </label>
+    <!-- 👆 替换结束 👆 -->
+                
+                <div class="param-actions">
+                    <button id="btn-task-list">任务列表 / TASKS</button>
+                    <button id="btn-task-history">历史任务 / HISTORY</button>
+                </div>
             </div>
 
             <div class="character-info" id="char-info-container">
@@ -967,7 +1352,10 @@
             <div class="divider-horizontal"></div>
 
             <div class="task-log">
-                <div class="section-title">Mission Log</div>
+                <div class="section-title">
+                    Mission Log
+                    <span id="unread-badge" style="margin-left: auto; color: #ef4444; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.4); padding: 2px 6px; border-radius: 3px; font-size: 10px; letter-spacing: 1px; display: none; box-shadow: 0 0 8px rgba(239, 68, 68, 0.2);">UNREAD [0]</span>
+                </div>
                 <div class="task-log-content" id="dialogue-text">
                     等待记录录入...
                 </div>
@@ -1011,17 +1399,498 @@
         </div>
     </div>
 
+    <div id="task-modal-overlay" class="hidden">
+        <div id="task-modal" class="modal-box" style="width: 420px;">
+            <div class="modal-header" style="color: var(--accent); border-color: rgba(56, 189, 248, 0.2);">
+                // ACTIVE TASKS 任务清单
+            </div>
+            
+            <div class="modal-content" style="margin-bottom: 16px;">
+                <div class="task-input-area">
+                    <input type="text" id="new-task-name" placeholder="输入任务名称 (如: 整理战术文档)...">
+                    <div class="qty-wrapper">
+                        <span style="color: var(--text-muted); font-size: 12px;">数量:</span>
+                        <input type="number" id="new-task-qty" value="1" min="1" max="99">
+                    </div>
+                    <button id="btn-add-task" class="op-btn" style="margin-top: 0; padding: 6px 12px;">录入</button>
+                </div>
+                
+                <div class="divider-horizontal" style="margin: 16px 0;"></div>
+
+                <div id="task-list-container">
+                    </div>
+            </div>
+
+            <div class="modal-actions">
+                <button id="task-modal-close" class="btn-safe">关闭面板</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="delete-task-modal-overlay" class="hidden">
+        <div class="modal-box" style="width: 380px;">
+            <div class="modal-header">WARNING // DATA PURGE</div>
+            <div id="delete-task-modal-content" class="modal-content">
+                确定要删除该任务吗？
+            </div>
+            <div class="modal-actions">
+                <button id="delete-task-confirm" class="btn-danger">确认清除 / PURGE</button>
+                <button id="delete-task-cancel" class="btn-safe">取消 / CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="history-task-modal-overlay" class="hidden">
+        <div id="history-task-modal" class="modal-box" style="width: 420px; display: flex; flex-direction: column;">
+            <div class="modal-header" style="color: var(--accent); border-color: rgba(56, 189, 248, 0.2);">
+                // ARCHIVE CALENDAR 历史任务归档
+            </div>
+            
+            <div class="modal-content" style="flex: 1; margin-bottom: 16px;">
+                <!-- 👇 新增：历史统计面板 👇 -->
+                <div id="history-stats" style="margin-bottom: 16px; padding: 12px; background: rgba(0,0,0,0.2); border: 1px solid var(--line-color); border-radius: 4px;">
+                    <div style="color: var(--accent); font-size: 11px; font-weight: 700; margin-bottom: 8px; letter-spacing: 1px;">// TOTAL TIME TRACKING 累计投入</div>
+                    <div id="stats-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; color: var(--text-main);">
+                        <!-- 统计数据将在这里生成 -->
+                    </div>
+                </div>
+                <!-- 👆 新增结束 👆 -->
+                <div class="calendar-header">
+                    <button id="cal-prev" class="op-btn" style="margin:0; padding:4px 12px;">&lt;</button>
+                    <span id="cal-month-year" style="color: var(--text-main); font-size: 13px; font-weight: 700; letter-spacing: 1px;"></span>
+                    <button id="cal-next" class="op-btn" style="margin:0; padding:4px 12px;">&gt;</button>
+                </div>
+                <div class="calendar-weekdays">
+                    <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+                </div>
+                <div class="calendar-grid" id="cal-grid"></div>
+                
+                <div class="divider-horizontal" style="margin: 16px 0;"></div>
+                
+                <div style="color: var(--accent); font-size: 11px; margin-bottom: 8px; font-weight: 700;" id="cal-selected-date">请选择日期</div>
+                <div id="cal-day-details" style="max-height: 180px; overflow-y: auto; padding-right: 4px;">
+                    </div>
+            </div>
+
+            <div class="modal-actions">
+                <button id="history-task-close" class="btn-safe">关闭面板</button>
+            </div>
+        </div>
+    </div>
+
 <script>
         // ================= 状态管理 =================
         const gameState = {
-            player: { firstName: "", callsign: "", lastName: "", fullName: "", rank: "步兵", race: "基准人类" },
-            affection: 0,
-            storyLogs: [],
-            // 新增：可用的代币余额（完成番茄钟增加）
-            availableRewards: { tier0: 0, tier1: 0, tier2: 0, tier3: 0 }, 
-            // 历史兑换总次数（面板展示用）
-            rewardCounts: { tier0: 0, tier1: 0, tier2: 0, tier3: 0 } 
+    player: { firstName: "", callsign: "", lastName: "", fullName: "", rank: "步兵", race: "基准人类" },
+    affection: 0,
+    storyLogs: [],
+    customTasks: [],
+    taskHistory: {}, 
+    lastActiveTime: Date.now(), 
+    startTime: 0, 
+    availableRewards: { tier0: 0, tier1: 0, tier2: 0, tier3: 0 }, 
+    rewardCounts: { tier0: 0, tier1: 0, tier2: 0, tier3: 0 },
+    taskStreak: 0,
+    focusStreak: 0,
+    timerState: {
+        isRunning: false,
+        targetEndTime: 0,
+        focusSeconds: 0,
+        timeRemaining: 0,
+        totalWorkTime: 0,
+        mode: 'idle', 
+        round: 1      
+    },
+    // 保留这一个通讯记录即可
+    communicationLog: [] 
+};
+
+        // ================= 时间驱动通讯池 (麦克塔维什 专属定制版) =================
+        const timeBasedMessagePool = {
+            morning: [ 
+                // 【陌生阶段 0-20】公事公办，带点上尉的威严
+                { minAff: 0, sender: 'MAC', template: '早安，{rank}。新的一天，希望你已经把装备检查过了。开启你的战术节点。' },
+                { minAff: 0, sender: 'MAC', template: '晨间巡视结束。防线安全，动作快点，别在早晨磨磨蹭蹭的。' },
+                
+                // 【信任阶段 51-80】熟络的战友，带点苏格兰式的调侃
+                { minAff: 51, sender: 'SOAP', template: '早上好！昨晚睡得怎么样？今天也要像爆破 C4 一样把任务清单炸得粉碎！' },
+                { minAff: 51, sender: 'SOAP', template: '早，{player_name}。我已经跑完五公里武装越野了，你才刚上线？动作快点，别让我去宿舍掀你的被子。' },
+
+                // 【特殊关系 120+】隐约的发骚，利用职务之便的私密挑逗
+                { minAff: 121, sender: 'SOAP', template: '早安……你昨晚睡得好吗？我可是做了一整晚关于你的梦。现在作训裤还紧得难受……咳，专心任务，{rank}。' },
+                { minAff: 121, sender: 'SOAP', template: '你终于醒了。知不知道我盯着你的离线状态看了多久？真想现在就把你叫到办公室，让你帮我“晨练”一下……' }
+            ],
+            afternoon: [ 
+                // 【陌生阶段 0-20】
+                { minAff: 0, sender: 'MAC', template: '午后时间容易犯困。如果需要提神，我不介意去训练场陪你练练格斗，{rank}。' },
+                { minAff: 0, sender: 'MAC', template: '保持警惕。下午最容易放松防备，别让我逮到你在屏幕前打瞌睡。' },
+
+                // 【信任阶段 51-80】
+                { minAff: 51, sender: 'SOAP', template: '下午好！别在椅子上坐太久，活动一下脖子。要是你得了颈椎病，我可不会背你上直升机。' },
+                { minAff: 51, sender: 'SOAP', template: '进度怎么样了？如果遇到麻烦随时报告，上尉来帮你解决。' },
+
+                // 【特殊关系 120+】
+                { minAff: 121, sender: 'SOAP', template: '下午最容易犯困了……要不要来我办公室“提提神”？我保证把你弄得清醒过来，或者……让你累得直接睡过去。' },
+                { minAff: 121, sender: 'SOAP', template: '别总盯着那些枯燥的战术文档了，{player_name}。把频道切到私人影像，我给你看点……能让你精神百倍的东西。' }
+            ],
+            evening: [ 
+                // 【陌生阶段 0-20】
+                { minAff: 0, sender: 'MAC', template: '太阳落山了。注意保护视力，{rank}，防线安全交给我。' },
+                { minAff: 0, sender: 'SYS', template: '[ 夜间环境已载入 ] 终端背光已自动调整。' },
+
+                // 【信任阶段 51-80】
+                { minAff: 51, sender: 'SOAP', template: '晚上好。今天进度不错，但别把自己逼得太紧。去吃点热的，这是上尉的命令。' },
+                { minAff: 51, sender: 'SOAP', template: '天黑了。如果你需要去后勤处拿夜宵，我可以顺路替你带一份。' },
+
+                // 【特殊关系 120+】
+                { minAff: 121, sender: 'SOAP', template: '天黑了……监控死角变多了，对吧？如果你现在溜进我的宿舍，没人会发现的。我的门没锁，{player_name}。' },
+                { minAff: 121, sender: 'SOAP', template: '晚上好。我刚洗完澡，身上只有一件浴巾。猜猜看，如果你现在打视频通讯过来，浴巾会不会刚好掉在地上？' }
+            ],
+            night: [ 
+                // 【陌生阶段 0-20】
+                { minAff: 0, sender: 'MAC', template: '夜间行动开始。如果你还不打算睡，最好保持十二分的专注，{rank}。' },
+                { minAff: 0, sender: 'MAC', template: '这么晚还在前线死磕？你的作息时间表需要重新规划了。' },
+
+                // 【信任阶段 51-80】
+                { minAff: 51, sender: 'SOAP', template: '嘿，你还没睡？看来今天又是我们在深夜频道作伴了。别硬撑，困了就去睡。' },
+                { minAff: 51, sender: 'SOAP', template: '还在忙？需要我给你讲个苏格兰的冷笑话提提神吗？虽然幽灵总说我的笑话很烂。' },
+
+                // 【特殊关系 120+】
+                { minAff: 121, sender: 'SOAP', template: '这么晚还在前线死磕？还是说……你其实是在等我的私人通讯？我大腿根现在全是湿的，就因为想到你还在看着屏幕……' },
+                { minAff: 121, sender: 'SOAP', template: '夜深人静的时候最难熬了，对吧？听听我的呼吸声，{player_name}……想象一下我现在正跨坐在你腿上。' }
+            ],
+            lateNight: [ 
+                // 【陌生阶段 0-20】
+                { minAff: 0, sender: 'SYS_WARN', template: '[ 警告 ] 监测到操作员生命体征处于疲劳临界点。建议立即切断电源去睡觉。' },
+                { minAff: 0, sender: 'MAC', template: '凌晨了。我还在守夜，但你该去休息了。立刻切断电源，{rank}。' },
+
+                // 【信任阶段 51-80】
+                { minAff: 51, sender: 'SOAP', template: '现在几点了？如果你因为熬夜导致明天射击脱靶，我会让你去洗一整个月的土豆。去睡觉！' },
+                { minAff: 51, sender: 'SOAP', template: '老天，你不要命了吗？赶紧滚去床上闭上眼睛，这是来自上尉的强制命令！' },
+
+                // 【特殊关系 120+】
+                { minAff: 121, sender: 'SOAP', template: '求你了，去睡吧……你再不切断通讯，我就要忍不住在监控里自慰给你看了。你想让整个基地都听到上尉发情的声音吗？' },
+                { minAff: 121, sender: 'SOAP', template: '你是不是非要我亲自过去，把你按在床上操到你连一根手指都抬不起来，你才肯乖乖睡觉？嗯？' }
+            ]
         };
+
+        // ================= 好感度阶段系统 =================
+        function getAffectionStage() {
+            const aff = gameState.affection;
+            if (aff > 120) return "特殊关系";
+            if (aff > 80) return "亲近";
+            if (aff > 50) return "信任";
+            if (aff > 20) return "熟悉";
+            return "陌生";
+        }
+
+        // 智能剧本抽取器：自动根据当前好感度，抽取符合条件的最高级文本
+        function pickMessageFromPool(pool) {
+            if (!pool || pool.length === 0) return null;
+            
+            // 1. 过滤出所有当前好感度能解锁的剧本 (如果没有写 minAff，默认要求为 0)
+            const validMsgs = pool.filter(msg => gameState.affection >= (msg.minAff || 0));
+            if (validMsgs.length === 0) return null;
+
+            // 2. 找出这些剧本中，要求最高的好感度阈值
+            const maxAff = Math.max(...validMsgs.map(msg => msg.minAff || 0));
+
+            // 3. 把符合最高阈值的剧本全拿出来（如果有多个同级的，方便做随机）
+            const highestMsgs = validMsgs.filter(msg => (msg.minAff || 0) === maxAff);
+
+            // 4. 随机抽取一条返回
+            return highestMsgs[Math.floor(Math.random() * highestMsgs.length)];
+        }
+
+        // ================= 通讯模板解析引擎 =================
+        function renderCommTemplate(templateObj, dynamicVars = {}) {
+            const player = gameState.player || {};
+            
+            // 🌟 修复设定 Bug：如果玩家没填名字，Soap 应该叫你“士兵”或“队员”，而不是“长官”
+            const safeName = (player.firstName && player.firstName !== "未知") ? player.firstName : (player.callsign || "士兵");
+            
+            const affStage = getAffectionStage();
+
+            const vars = {
+                player_name: safeName,
+                callsign: player.callsign || "操作员",
+                rank: player.rank || "步兵", // 这里依然保留，意思是没选军衔就默认是新兵/步兵
+                affection_stage: affStage,
+                sender: templateObj.sender || "SYS",
+                ...(templateObj.variables || {}),
+                ...dynamicVars
+            };
+
+            let text = templateObj.template || templateObj.text || ""; 
+            text = text.replace(/\{(\w+)\}/g, (match, key) => {
+                return vars[key] !== undefined ? vars[key] : match;
+            });
+
+            if (typeof processStoryText === 'function') {
+                text = processStoryText(text);
+            }
+
+            return {
+                sender: vars.sender,
+                text: text
+            };
+        }
+
+        // 核心：时间条件判定与智能抽取接口
+        function getTimeBasedMessage() {
+            const hour = new Date().getHours();
+            let timeSlot = 'morning';
+
+            if (hour >= 8 && hour < 12) timeSlot = 'morning';
+            else if (hour >= 12 && hour < 18) timeSlot = 'afternoon';
+            else if (hour >= 18 && hour < 23) timeSlot = 'evening';
+            else if (hour === 23 || hour < 2) timeSlot = 'night';
+            else if (hour >= 2 && hour < 8) timeSlot = 'lateNight';
+
+            const pool = timeBasedMessagePool[timeSlot];
+            
+            if (pool && pool.length > 0) {
+                const selectedMsg = pickMessageFromPool(pool); // 🌟 使用智能抽取
+                return renderCommTemplate(selectedMsg); // 🌟 顺便接入模板引擎
+            }
+            return null;
+        }
+
+        // ================= 任务反馈剧本池 (模板化版) =================
+        const taskFeedbackPool = {
+            generic: [
+                { sender: 'SYS', template: '[ 节点更新 ] 任务 "{task_name}" 状态已变更为：完成。' },
+                { sender: 'SOAP', template: '我看到清单更新了。"{task_name}" 搞定了对吧？漂亮。' },
+                { sender: 'MAC', template: '进度稳步推进中。"{task_name}" 已归档。' }
+            ],
+            shortTask: [ 
+                { sender: 'SOAP', template: '干脆利落！"{task_name}" 这么快就搞定了。' },
+                { sender: 'MAC', template: '效率不错。清单上又少了一项："{task_name}"。' },
+                { sender: 'MAC', template: '微型节点 "{task_name}" 已清除。干得漂亮，保持这个节奏。' }
+            ],
+            longTask: [ 
+                { sender: 'MAC', template: '长时间作战辛苦了。"{task_name}" 终于结束了，整整投入了 {time_spent}，去喝口水吧，{player_name}。' },
+                { sender: 'MAC', template: '这场硬仗打得漂亮。"{task_name}" 耗时可不短，{rank}，干得好。' },
+                { sender: 'SOAP', template: '呼……"{task_name}" 终于搞定了！我都替你捏把汗，快休息一下！' }
+            ],
+            streak: [ 
+                { sender: 'MAC', template: '连续完成 {streak} 个任务了。你的专注力令人印象深刻，{rank}。' },
+                { sender: 'MAC', template: '连战连捷。{streak} 个节点被连续拔除，不愧是你。' },
+                { sender: 'SOAP', template: '哇哦，连续搞定 {streak} 个任务！你今天是开了无双吗，{player_name}？' }
+            ],
+            timeBased: {
+                morning: [ { sender: 'MAC', template: '早上的效率很高。"{task_name}" 完成，是个好开局。' } ],
+                afternoon: [ { sender: 'SOAP', template: '下午的进度稳步推进中！"{task_name}" 拿下！' } ],
+                evening: [ { sender: 'MAC', template: '天黑了，但你的进度没停。"{task_name}" 已确认完成。' } ],
+                night: [ { sender: 'MAC', template: '夜间行动顺利。"{task_name}" 归档。别熬太晚。' } ],
+                lateNight: [ { sender: 'SOAP', template: '凌晨还在推进 "{task_name}"……任务虽然完成了，但你该睡觉了。听话。' } ]
+            }
+        };
+
+        // ================= 专注连击剧本池 (模板化版) =================
+        const focusStreakPool = {
+            streak2: [
+                { sender: 'MAC', template: '连续 {streak} 个周期了。状态不错，{rank}，继续保持。' },
+                { sender: 'SOAP', template: '两次专注达成。趁着休息时间活动一下手腕，别僵住了。' }
+            ],
+            streak4: [
+                { sender: 'MAC', template: '连续 {streak} 个周期。你的专注力简直像锁定了目标的狙击手。' },
+                { sender: 'SOAP', template: '四个回合了，干得漂亮！不过别忘了喝水，我可不想看你脱水晕倒。' }
+            ],
+            streak6: [
+                { sender: 'MAC', template: '六个周期连胜。老天，你今天是打算把战术板看穿吗？' },
+                { sender: 'SOAP', template: '连续 {streak} 次专注。{rank}，你的效率高得有点吓人了。趁现在好好喘口气。' }
+            ],
+            streak8: [
+                { sender: 'MAC', template: '八个周期！你简直是个不知疲倦的机器……但就算是机器也得散热。立刻，马上，给我去休息！' },
+                { sender: 'SOAP', template: '连续 {streak} 次！我都替你觉得累了。听着，{player_name}，放下手头的事，去闭上眼睛休息一会儿。这是命令。' }
+            ]
+        };
+
+        // ================= 统一事件系统 (Event System) =================
+        
+        const eventHandlers = {
+            'focus_complete': (data) => {
+                if (data.duration >= 1500) { 
+                    // 剔除 Ghost，换成 MAC
+                    addCommunicationMessage('MAC', `检测到长时间生命体征平稳。干得不错，{rank}，保持这个节奏。`);
+                }
+            },
+            
+            'short_break_start': (data) => {
+                // data: { round: number }
+                addCommunicationMessage('SYS', `[ 战术协议 ] 短休已开启。请活动关节，补充水分。`);
+            },
+            
+            'long_break_start': (data) => {
+                // data: { round: number }
+                addCommunicationMessage('MAC', `呼……这个阶段总算熬过去了。去休息区待着，{rank}，别让我逮到你还在看屏幕。`);
+            },
+
+            // 🌟 新增：专注连击事件
+            'focus_streak': (data) => {
+                const streak = data.streak;
+                const pool = focusStreakPool[`streak${streak}`];
+                
+                if (pool && pool.length > 0) {
+                    const selectedMsg = pickMessageFromPool(pool); // 🌟 使用智能抽取
+                    const parsedMsg = renderCommTemplate(selectedMsg, { streak: streak });
+                    
+                    setTimeout(() => {
+                        addCommunicationMessage(parsedMsg.sender, parsedMsg.text);
+                    }, 1500);
+                }
+            },
+            
+            'task_complete': (data) => {
+                // 🌟 核心升级：动态任务反馈逻辑
+                const task = data.task;
+                const taskName = task.name;
+                const accumulatedTime = task.accumulatedTime || 0;
+                
+                // 1. 连击数 +1
+                gameState.taskStreak = (gameState.taskStreak || 0) + 1;
+                saveData();
+
+                let pool = [];
+                
+                // 2. 获取当前时间段
+                const hour = new Date().getHours();
+                let timeSlot = 'generic';
+                if (hour >= 8 && hour < 12) timeSlot = 'morning';
+                else if (hour >= 12 && hour < 18) timeSlot = 'afternoon';
+                else if (hour >= 18 && hour < 23) timeSlot = 'evening';
+                else if (hour === 23 || hour < 2) timeSlot = 'night';
+                else if (hour >= 2 && hour < 8) timeSlot = 'lateNight';
+
+                // 3. 路由分发：决定使用哪个剧本池
+                if (gameState.taskStreak > 1 && gameState.taskStreak % 3 === 0) {
+                    // 每连续完成 3 个任务，触发一次连击夸奖
+                    pool = taskFeedbackPool.streak;
+                } else if (accumulatedTime >= 2700) { 
+                    // 耗时超过 45 分钟 (2700秒) 算作长任务
+                    pool = taskFeedbackPool.longTask;
+                } else if (accumulatedTime > 0 && accumulatedTime < 900) { 
+                    // 耗时小于 15 分钟 (900秒) 算作短任务
+                    pool = taskFeedbackPool.shortTask;
+                } else {
+                    // 普通任务：混合通用反馈和时间段专属反馈
+                    pool = taskFeedbackPool.generic.concat(taskFeedbackPool.timeBased[timeSlot] || []);
+                }
+
+                // 4. 智能抽取并发送通讯 (接入模板引擎与阶段系统)
+                if (pool.length > 0) {
+                    const selectedMsg = pickMessageFromPool(pool); // 🌟 使用智能抽取
+                    
+                    const mins = Math.floor(accumulatedTime / 60);
+                    const timeSpentStr = mins >= 60 ? `${Math.floor(mins/60)}小时${mins%60}分钟` : `${mins}分钟`;
+                    
+                    const parsedMsg = renderCommTemplate(selectedMsg, {
+                        task_name: taskName,
+                        time_spent: timeSpentStr,
+                        streak: gameState.taskStreak
+                    });
+                    
+                    setTimeout(() => {
+                        addCommunicationMessage(parsedMsg.sender, parsedMsg.text);
+                    }, 500);
+                }
+            },
+            
+            'task_switch': (data) => {
+                // data: { oldTask: string, newTask: string }
+                if (data.newTask) {
+                    addCommunicationMessage('SYS', `[ 节点重定向 ] 算力已转移至目标：${data.newTask}`);
+                }
+            },
+            
+            'daily_login': (data) => {
+                gameState.taskStreak = 0; // 🌟 新的一天，重置连击数
+                saveData();
+                
+                addCommunicationMessage('SYS', `[ 权限验证通过 ] 欢迎回来。系统已重新校准。`);
+                const timeMsg = getTimeBasedMessage();
+                if (timeMsg) addCommunicationMessage(timeMsg.sender, timeMsg.text);
+            },
+
+            // 🌟 新增：同一天内离开超过 2 小时再回来，也会触发问候
+            'return_after_absence': (data) => {
+                const hours = data.hoursAway;
+                addCommunicationMessage('SYS', `[ 节点重新连接 ] 离线时长: ${hours} 小时。`);
+                
+                const msgs = [
+                    { minAff: 0, sender: 'MAC', template: '终端重新激活了。休息够了就继续推进任务吧，{rank}。' },
+                    { minAff: 51, sender: 'SOAP', template: '欢迎回来！刚才去忙什么了？' },
+                    { minAff: 121, sender: 'SOAP', template: '你总算回来了，知不知道我盯着灰色的通讯头像看了多久？' }
+                ];
+                const selectedMsg = pickMessageFromPool(msgs); // 🌟 使用智能抽取
+                const parsedMsg = renderCommTemplate(selectedMsg);
+                
+                setTimeout(() => {
+                    addCommunicationMessage(parsedMsg.sender, parsedMsg.text);
+                }, 800);
+            },
+            
+            // 🌟 新增：玩家长时间离线归来事件
+            'long_absence_return': (data) => {
+                gameState.taskStreak = 0; 
+                saveData();
+                
+                const days = data.daysAway;            
+                // 剧本池定义
+                const absenceScripts = {
+                    days1: [
+                        { sender: 'SOAP', text: '终于回来了！我还以为这破终端的信号接收器坏了。' },
+                        { sender: 'MAC', text: '失联超过24小时。我还以为你需要我派搜救小队去找你了，%FIRST_NAME%。' },
+                        { sender: 'MAC', text: '一整天没见人影。最好是在忙什么正事，{rank}。' }
+                    ],
+                    days3: [
+                        { sender: 'MAC', text: '三天。如果这是实战，你已经被判定为 MIA 了。赶紧归队，{rank}。' },
+                        { sender: 'SOAP', text: '老天，你终于上线了！我差点就要去查你的真实坐标了。' },
+                        { sender: 'MAC', text: '整整三天完全静默。战术面板都快生锈了。最好给我个合理的解释，%RANDOM_NAME%。' }
+                    ],
+                    days7: [
+                        { sender: 'SOAP', text: '……一周。我还以为你把我忘了。回来就好，别再切断通讯这么久了。' },
+                        { sender: 'SOAP', text: '{rank}？你再不出现，基地里都要给你开追悼会了。' },
+                        { sender: 'MAC', text: '七天。哪怕是被俘虏了也该有个求救信号。终端权限重新激活，下次消失前记得打个报告。' }
+                    ]
+                };
+
+                let pool = [];
+                if (days >= 7) {
+                    pool = absenceScripts.days7;
+                    addCommunicationMessage('SYS_WARN', `[ 严重警告 ] 检测到长达 ${days} 天的连接中断。数据归档可能存在断层。`);
+                } else if (days >= 3) {
+                    pool = absenceScripts.days3;
+                    addCommunicationMessage('SYS_WARN', `[ 警告 ] 终端离线 ${days} 天。战术网络已重新同步。`);
+                } else if (days >= 1) {
+                    pool = absenceScripts.days1;
+                    addCommunicationMessage('SYS', `[ 系统提示 ] 距上次登录已过去 ${days} 天。`);
+                }
+
+                if (pool.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * pool.length);
+                    const selectedMsg = pool[randomIndex];
+                    const finalMsg = typeof processStoryText === 'function' ? processStoryText(selectedMsg.text) : selectedMsg.text;
+                    
+                    setTimeout(() => {
+                        addCommunicationMessage(selectedMsg.sender, finalMsg);
+                    }, 800);
+                }
+            }
+
+            
+        };
+
+        // 核心触发器
+        function triggerEvent(eventType, data = {}) {
+            if (eventHandlers[eventType]) {
+                console.log(`[SYS EVENT] ${eventType} triggered.`, data);
+                eventHandlers[eventType](data);
+            } else {
+                console.warn(`[SYS WARNING] 未知事件触发尝试: ${eventType}`);
+            }
+        }
 
         // ================= DOM 元素 =================
         const staticView = document.getElementById('op-static-view');
@@ -1031,7 +1900,6 @@
         const affectionDisplay = document.getElementById('affection-display');
         const timerDisplay = document.getElementById('timer');
         const logContent = document.getElementById('dialogue-text');
-        const displayRank = document.getElementById('display-rank');
 
         // ================= 数据存取机制 =================
         function loadData() {
@@ -1043,6 +1911,68 @@
                 gameState.storyLogs = parsed.storyLogs || []; 
                 gameState.availableRewards = parsed.availableRewards || { tier0: 0, tier1: 0, tier2: 0, tier3: 0 };
                 gameState.rewardCounts = parsed.rewardCounts || { tier0: 0, tier1: 0, tier2: 0, tier3: 0 };
+
+                // 读取上次活跃时间
+                gameState.lastActiveTime = parsed.lastActiveTime || Date.now();
+                
+                // --- 🌟 离线事件判定逻辑 ---
+                const now = new Date();
+                const lastActive = new Date(gameState.lastActiveTime);
+                const msAway = now - lastActive;
+                
+                const hoursAway = Math.floor(msAway / (1000 * 60 * 60));
+                const daysAway = Math.floor(hoursAway / 24); // 计算绝对离线天数
+                
+                // 判定是否跨过了午夜 0 点
+                const isNewDay = now.toLocaleDateString() !== lastActive.toLocaleDateString();
+
+                // 路由分发：按照离线严重程度，从高到低拦截
+                if (daysAway >= 1) {
+                    // 离开达到或超过 24 小时（1天/3天/7天）
+                    triggerEvent('long_absence_return', { daysAway: daysAway });
+                } else if (isNewDay) {
+                    // 离开没到24小时，但在不同的自然日（比如昨晚11点睡，今早8点起）
+                    triggerEvent('daily_login', { date: now.toLocaleDateString() });
+                } else if (hoursAway >= 2) {
+                    // 同一天内，离开超过 2 小时算作暂离回归
+                    triggerEvent('return_after_absence', { hoursAway: hoursAway });
+                }
+                
+                // 更新活跃时间并静默保存
+                gameState.lastActiveTime = Date.now();
+                saveData();
+                // -----------------------------
+
+                // 🌟 2. 新增：读取持久化的通讯记录
+                gameState.communicationLog = parsed.communicationLog || [];
+                gameState.taskStreak = parsed.taskStreak || 0; // 🌟 读取连击记录
+                
+                // 🌟 修复1：确保任务列表和历史记录被正确读取（防止刷新后丢失）
+                gameState.customTasks = parsed.customTasks || []; 
+                gameState.taskHistory = parsed.taskHistory || {};
+
+                // 🌟 修复2：读取计时器存档，并兼容旧版本存档（防止出现 undefined）
+                const savedTimer = parsed.timerState || {};
+                gameState.timerState = {
+                    isRunning: savedTimer.isRunning || false,
+                    targetEndTime: savedTimer.targetEndTime || 0,
+                    focusSeconds: savedTimer.focusSeconds || 0,
+                    timeRemaining: savedTimer.timeRemaining || 0,
+                    totalWorkTime: savedTimer.totalWorkTime || 0,
+                    mode: savedTimer.mode || 'idle', // 如果旧存档没有 mode，默认设为 idle
+                    round: savedTimer.round || 1 ,    // 如果旧存档没有 round，默认设为 1
+                    focusStreak: savedTimer.focusStreak || 0, // 🌟 读取专注连击记录
+                    // 👇 新增：分别读取总轮次和长休间隔
+                    totalRounds: savedTimer.totalRounds || 4,
+                    longRestInterval: savedTimer.longRestInterval || 2,
+                    // 👇 新增这两行 👇
+                    activeTaskName: savedTimer.activeTaskName || "",
+                    currentSegmentStartTime: savedTimer.currentSegmentStartTime || 0
+                };
+
+                // 👇 回填到输入框
+                document.getElementById('total-rounds').value = gameState.timerState.totalRounds;
+                document.getElementById('long-rest-interval').value = gameState.timerState.longRestInterval;
                 
                 updateStaticView();
                 showStaticView();
@@ -1050,11 +1980,221 @@
                 showEditView();
             }
             updateAffectionDisplay();
+            updateActiveTaskDropdown();
+            
+            // 🌟 3. 新增：读取完毕后，立即渲染通讯面板
+            renderMissionLog();
+
+            if (typeof restoreTimerState === "function") {
+                restoreTimerState();
+            }
+        }
+
+        // ================= 通讯系统核心引擎 =================
+
+        // 渲染通讯记录面板 (Mission Log)
+        // 渲染通讯记录面板 (Mission Log)
+        function renderMissionLog() {
+            const logContent = document.getElementById('dialogue-text');
+            
+            if (gameState.communicationLog.length === 0) {
+                logContent.innerHTML = "<div style='color: var(--text-muted);'>等待通讯链路接入...</div>";
+                return;
+            }
+
+            let htmlString = "";
+            
+            gameState.communicationLog.forEach(msg => {
+                const date = new Date(msg.timestamp);
+                const timeStr = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+
+                // 默认样式 (系统常规)
+                let senderColor = "var(--text-muted)"; 
+                let senderPrefix = "SYSTEM";
+                let borderColor = "rgba(100, 116, 139, 0.25)"; 
+                let bgOpacity = "0"; 
+                let contentColor = "var(--text-main)";
+
+                // 🌟 核心：根据发送者区分样式
+                if (msg.sender.startsWith("SYS")) {
+                    // 【系统消息样式】
+                    senderColor = "var(--text-muted)";
+                    if (msg.sender === "SYS_ERR") {
+                        senderColor = "#ef4444"; 
+                        senderPrefix = "ERROR";
+                        borderColor = "rgba(239, 68, 68, 0.4)";
+                        bgOpacity = "0.08";
+                        contentColor = "#fca5a5";
+                    } else if (msg.sender === "SYS_WARN") {
+                        senderColor = "#f59e0b"; 
+                        senderPrefix = "WARNING";
+                        borderColor = "rgba(245, 158, 11, 0.3)";
+                    } else if (msg.sender === "SYS.ARCHIVE") {
+                        senderColor = "#c084fc"; // 紫色，代表剧情档案
+                        senderPrefix = "ARCHIVE";
+                        borderColor = "rgba(192, 132, 252, 0.3)";
+                        bgOpacity = "0.05";
+                    }
+                } else {
+                    // 【角色通讯样式】(MAC / SOAP)
+                    senderColor = "#38bdf8"; // 亮蓝色
+                    senderPrefix = "INCOMING";
+                    borderColor = "rgba(56, 189, 248, 0.4)"; // 边框高亮
+                    bgOpacity = "0.08"; // 带有微弱的蓝色背景，突出角色发言
+                }
+
+                // 未读消息的专属视觉强化
+                let unreadTag = "";
+                if (!msg.read) {
+                    unreadTag = `<span style="color: #ef4444; font-weight: bold; margin-right: 6px;">[NEW]</span>`;
+                    borderColor = "rgba(239, 68, 68, 0.6)"; 
+                }
+
+                // 组装单条记录的 HTML
+                htmlString += `
+                    <div class="comm-message" style="margin-bottom: 16px; border-left: 2px solid ${borderColor}; padding-left: 12px; background: rgba(0,0,0,${bgOpacity}); padding-top: 4px; padding-bottom: 4px; border-radius: 0 4px 4px 0;">
+                        <div style="font-size: 10px; color: ${senderColor}; letter-spacing: 1px; margin-bottom: 6px; font-weight: bold;">
+                            ${unreadTag}<span style="opacity: 0.5; color: var(--text-main); font-weight: normal;">[ ${timeStr} ]</span> // ${senderPrefix} : ${msg.sender}
+                        </div>
+                        <div style="font-size: 13px; color: ${contentColor}; line-height: 1.6; opacity: 0.9;">
+                            ${msg.text}
+                        </div>
+                    </div>
+                `;
+            });
+
+            logContent.innerHTML = htmlString;
+            logContent.scrollTop = logContent.scrollHeight; // 自动滚动到底部
+            updateUnreadBadge(); 
+        }
+
+        // ================= 未读消息系统 =================
+        let isHoveringLog = false;
+        const logContentArea = document.getElementById('dialogue-text');
+
+        // 更新右上角的 UNREAD 角标
+        function updateUnreadBadge() {
+            const unreadCount = gameState.communicationLog.filter(msg => !msg.read).length;
+            const badge = document.getElementById('unread-badge');
+            if (!badge) return;
+            
+            if (unreadCount > 0) {
+                badge.textContent = `UNREAD [${unreadCount}]`;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // 将所有消息标记为已读
+        function markAllAsRead() {
+            let hasUnread = false;
+            gameState.communicationLog.forEach(msg => {
+                if (!msg.read) {
+                    msg.read = true;
+                    hasUnread = true;
+                }
+            });
+            
+            if (hasUnread) {
+                saveData();
+                renderMissionLog(); // 重新渲染以消除 [NEW] 标签和红色边框
+            }
+        }
+
+        // 绑定交互事件：鼠标移入、点击、触摸时自动标记已读
+        logContentArea.addEventListener('mouseenter', () => { 
+            isHoveringLog = true; 
+            markAllAsRead(); 
+        });
+        logContentArea.addEventListener('mouseleave', () => { 
+            isHoveringLog = false; 
+        });
+        logContentArea.addEventListener('click', markAllAsRead);
+        logContentArea.addEventListener('touchstart', markAllAsRead, {passive: true});
+
+        // 核心通讯写入接口 (增加防错拦截)
+        function addCommunicationMessage(sender, text) {
+            if (text === undefined || text === null || text === "undefined") {
+                console.error("[SYS ERR] 拦截到一条空通讯记录，已阻止渲染。");
+                return;
+            }
+
+            const newMessage = {
+                id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                sender: sender || "SYS.LOG", 
+                text: text,
+                timestamp: Date.now(),
+                // 🌟 核心修改：默认为未读。但如果玩家鼠标正停留在日志区，则直接视为已读
+                read: typeof isHoveringLog !== 'undefined' ? isHoveringLog : false 
+            };
+
+            gameState.communicationLog.push(newMessage);
+
+            if (gameState.communicationLog.length > 50) {
+                gameState.communicationLog.shift();
+            }
+
+            saveData();
+            renderMissionLog();
         }
 
         function saveData() {
             localStorage.setItem('terminalState', JSON.stringify(gameState));
         }
+
+        // 监听循环设置的修改
+        function updateCycleSettings() {
+    let totalInput = document.getElementById('total-rounds');
+    let intervalInput = document.getElementById('long-rest-interval');
+    
+    let total = parseInt(totalInput.value);
+    let interval = parseInt(intervalInput.value);
+    
+    // 基础防御：如果是 NaN 或者小于 1，先用 1 兜底后台数据
+    if (isNaN(total) || total < 1) total = 1;
+    if (isNaN(interval) || interval < 1) interval = 1;
+    
+    gameState.timerState.totalRounds = total;
+    gameState.timerState.longRestInterval = interval;
+    gameState.lastActiveTime = Date.now();
+    saveData();
+    
+    if (gameState.timerState.mode !== 'idle') updateCycleDisplay();
+}
+
+// 🌟 新增：用户点击输入框外面时，强行把界面的乱码或空值重置为合法数字
+document.getElementById('total-rounds').addEventListener('blur', function() {
+    let val = parseInt(this.value);
+    if (isNaN(val) || val < 1) this.value = 1;
+    updateCycleSettings();
+});
+document.getElementById('long-rest-interval').addEventListener('blur', function() {
+    let val = parseInt(this.value);
+    if (isNaN(val) || val < 1) this.value = 1;
+    updateCycleSettings();
+});
+
+// 保留原有的 change 监听，应对点击上下小箭头的微调
+document.getElementById('total-rounds').addEventListener('change', updateCycleSettings);
+document.getElementById('long-rest-interval').addEventListener('change', updateCycleSettings);
+
+
+        // 监听长休间隔的修改
+        document.getElementById('long-rest-interval').addEventListener('change', function() {
+            let val = parseInt(this.value);
+            if (isNaN(val) || val < 1) val = 1; // 防止输入乱码或负数
+            this.value = val;
+            
+            gameState.timerState.targetRounds = val;
+            gameState.lastActiveTime = Date.now();
+            saveData();
+            
+            // 如果当前正在任务中，实时更新大屏幕上的总轮次
+            if (gameState.timerState.mode !== 'idle') {
+                updateCycleDisplay(); 
+            }
+        });
 
         // ================= 静态界面渲染 =================
         function updateStaticView() {
@@ -1063,7 +2203,8 @@
         }
 
         function updateAffectionDisplay() {
-            affectionDisplay.textContent = gameState.affection;
+            // 🌟 核心修改：同时显示数字和阶段名称
+            affectionDisplay.textContent = `${gameState.affection} | ${getAffectionStage()}`;
         }
 
         // ================= 视图切换机制 =================
@@ -1105,6 +2246,7 @@
             if (inputLastName !== "") assembledName += `·${inputLastName}`;
             gameState.player.fullName = assembledName;
 
+            gameState.lastActiveTime = Date.now();
             saveData();
             updateStaticView();
             showStaticView();
@@ -1133,6 +2275,7 @@
             // 清空当前的操作员核心数据，使其失效
             gameState.player.firstName = "";
             gameState.player.fullName = "";
+            gameState.lastActiveTime = Date.now();
             saveData(); 
             
             showEditView(); 
@@ -1141,9 +2284,10 @@
 
         // ================= 计时器与好感度核心逻辑 =================
         let timerInterval;
-        let timeRemaining = 0; // 以秒计算
+        let timeRemaining = 0; 
         let isRunning = false;
-        let focusSeconds = 0;  // 记录本轮已专注的秒数
+        let focusSeconds = 0;  
+        let targetEndTime = 0;
 
         // 解析输入框的时间为秒数 (type 传入 'work' 或 'rest')
         function parseInputTime(type) {
@@ -1161,41 +2305,540 @@
             timerDisplay.textContent = `${h}:${m}:${s}`;
         }
 
-        // 监听工作时长的输入框，实现同步更新大屏幕倒计时
+        // 监听时长的输入框，实现同步更新大屏幕倒计时
         function syncTimerDisplay() {
-            // 只有在任务未开始（或彻底重置）的情况下，才同步显示
             if (!isRunning && timeRemaining === 0) {
-                const totalSeconds = parseInputTime('work');
+                // 🌟 核心修复：根据当前所处的模式，读取对应的时间
+                let type = 'work';
+                if (gameState.timerState.mode === 'rest') type = 'rest';
+                if (gameState.timerState.mode === 'longRest') type = 'long-rest';
+                
+                const totalSeconds = parseInputTime(type);
                 formatTimeDisplay(totalSeconds);
             }
         }
 
-        // 为三个工作时间输入框绑定输入事件
-        ['work-h', 'work-m', 'work-s'].forEach(id => {
-            const input = document.getElementById(id);
-            input.addEventListener('input', syncTimerDisplay);
-            
-            // 失去焦点时自动补齐两位数 (如输入 5 会变成 05)
-            input.addEventListener('blur', function() {
-                if (this.value === '') this.value = '00';
-                else if (this.value.length === 1) this.value = '0' + this.value;
-            });
-        });
-
-        // 休息时间输入框也加上自动补齐两位数的功能
-        ['rest-h', 'rest-m', 'rest-s'].forEach(id => {
-            const input = document.getElementById(id);
-            input.addEventListener('blur', function() {
-                if (this.value === '') this.value = '00';
-                else if (this.value.length === 1) this.value = '0' + this.value;
-            });
-        });
-
-        function printLog(message) {
-            if (logContent.innerHTML.includes("等待记录录入...")) logContent.innerHTML = "";
-            logContent.innerHTML += `<br>> ${message}`;
-            logContent.scrollTop = logContent.scrollHeight;
+        function updateCycleDisplay() {
+            const cycleDiv = document.getElementById('cycle-display');
+            if (gameState.timerState.mode === 'idle') {
+                cycleDiv.style.display = 'none';
+            } else {
+                cycleDiv.style.display = 'block';
+                const modeMap = { work: '专注', rest: '短休', longRest: '长休' };
+                // 👇 替换下面这一行，去掉了 <br>，加上了 margin-left 间距
+                cycleDiv.innerHTML = `当前状态 [ ${modeMap[gameState.timerState.mode]} ] <span style="color: var(--text-muted); font-size: 10px; margin-left: 12px;">Round ${gameState.timerState.round} / ${gameState.timerState.totalRounds}</span>`;
+            }
         }
+
+        // 为时间输入框绑定输入事件
+        ['work-h', 'work-m', 'work-s', 'rest-h', 'rest-m', 'rest-s', 'long-rest-h', 'long-rest-m', 'long-rest-s'].forEach(id => {
+            const input = document.getElementById(id);
+            // 🌟 核心修复：去掉了 if 判断，让修改休息时间也能实时反馈到大屏幕上
+            input.addEventListener('input', syncTimerDisplay); 
+            input.addEventListener('blur', function() {
+                if (this.value === '') this.value = '00';
+                else if (this.value.length === 1) this.value = '0' + this.value;
+            });
+        });
+
+        // 核心循环函数
+        function startTimerLoop() {
+            timerInterval = setInterval(() => {
+                const now = Date.now();
+                const newTimeRemaining = Math.max(0, Math.round((targetEndTime - now) / 1000));
+                const deltaSeconds = timeRemaining - newTimeRemaining;
+                
+                if (deltaSeconds > 0) {
+                    // 🌟 核心修改：将 60 秒改为 600 秒（即 10 分钟）
+                    const oldIntervals = Math.floor(focusSeconds / 600);
+                    focusSeconds += deltaSeconds;
+                    const newIntervals = Math.floor(focusSeconds / 600);
+                    
+                    const affectionGain = newIntervals - oldIntervals;
+                    if (affectionGain > 0) {
+                        gameState.affection += affectionGain;
+                        updateAffectionDisplay();
+                    }
+                    
+                    timeRemaining = newTimeRemaining;
+                    formatTimeDisplay(timeRemaining);
+                    
+                    // 每秒将当前进度写入存档
+                    gameState.timerState.timeRemaining = timeRemaining;
+                    gameState.timerState.focusSeconds = focusSeconds;
+                    gameState.lastActiveTime = Date.now();
+                    saveData(); 
+                }
+
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    
+                    const timeCompleted = gameState.timerState.totalWorkTime;
+                    
+                    /// 判断当前完成的是什么模式
+                    if (gameState.timerState.mode === 'work') {
+
+                        // 👇【核心修复】：必须先结算当前的时间切片，否则自然结束的任务时长会丢失！
+                        commitCurrentTaskSegment(); 
+                        
+                        // 🌟 1. 连击数 +1
+                        gameState.timerState.focusStreak = (gameState.timerState.focusStreak || 0) + 1;
+                        const currentStreak = gameState.timerState.focusStreak;
+
+                        // 🌟 触发专注完成事件
+                        triggerEvent('focus_complete', {
+                            duration: gameState.timerState.totalWorkTime,
+                            taskName: gameState.timerState.activeTaskName || "未分配任务",
+                            round: gameState.timerState.round
+                        });
+
+                        // 2. 结算代币
+                        if (timeCompleted > 0) gameState.availableRewards.tier0++;
+                        if (timeCompleted >= 600) gameState.availableRewards.tier1++;
+                        if (timeCompleted >= 1800) gameState.availableRewards.tier2++;
+                        if (timeCompleted >= 3600) gameState.availableRewards.tier3++;
+                        
+                        // 3. 状态切换 (全新解耦逻辑)
+                        const currentRound = gameState.timerState.round;
+                        const totalRounds = gameState.timerState.totalRounds;
+                        const interval = gameState.timerState.longRestInterval;
+
+                        // 判断是否是最后一轮，或者是触发长休的轮次
+                        const isFinalRound = (currentRound >= totalRounds);
+                        const isLongRestRound = (currentRound % interval === 0);
+
+                        if (isFinalRound) {
+                            gameState.timerState.mode = 'longRest';
+                            printLog(`[SYS] 完整战术周期 (${totalRounds}轮) 专注完成。代币已发放。准备进入最终长休。`);
+                            triggerEvent('long_break_start', { round: currentRound });
+                        } else if (isLongRestRound) {
+                            gameState.timerState.mode = 'longRest';
+                            printLog(`[SYS] Round ${currentRound} 专注完成。触发长休节点。代币已发放。准备进入长休。`);
+                            // 🌟 触发长休事件
+                            triggerEvent('long_break_start', { round: currentRound });
+                        } else {
+                            gameState.timerState.mode = 'rest';
+                            printLog(`[SYS] Round ${currentRound} 专注完成。代币已发放。准备进入短休。`);
+                            // 🌟 触发短休事件
+                            triggerEvent('short_break_start', { round: currentRound });
+                        }
+                    // 🌟 2. 触发专注连击事件 (仅在 2, 4, 6, 8 次时触发)
+                        if ([2, 4, 6, 8].includes(currentStreak)) {
+                            triggerEvent('focus_streak', { streak: currentStreak });
+                        }
+
+                    } else if (gameState.timerState.mode === 'rest' || gameState.timerState.mode === 'longRest') {
+                        // 休息结束后，判断是否整个周期都结束了
+                        const currentRound = gameState.timerState.round;
+                        const totalRounds = gameState.timerState.totalRounds;
+                        
+                        if (currentRound >= totalRounds) {
+                            gameState.timerState.round = 1;
+                            gameState.timerState.mode = 'idle';
+                            printLog(`[SYS] 完整战术周期结束。系统已重置，准备开启新一轮协议。`);
+                        } else {
+                            gameState.timerState.round++;
+                            gameState.timerState.mode = 'work';
+                            printLog(`[SYS] 休整结束。准备进入 Round ${gameState.timerState.round} 专注协议。请点击开始。`);
+                        }
+                    }
+                    
+                    timeRemaining = 0;
+                    gameState.timerState.isRunning = false;
+                    gameState.timerState.timeRemaining = 0;
+                    
+                    gameState.lastActiveTime = Date.now();
+                    saveData();
+                    updateCycleDisplay();
+                    syncTimerDisplay(); // 🌟 新增：倒计时结束时，立刻把下一阶段的时间加载到大屏幕上！
+                }
+            }, 1000);
+        }
+
+        
+        // 覆写原有的 printLog，使其全面接入新的通讯系统
+        function printLog(message) {
+            // 清理旧代码中自带的 HTML 换行和前缀，适配新 UI
+            let cleanText = message.replace(/<br>> /g, "").replace(/\[SYS\] /g, "");
+            
+            // 自动侦测旧代码里的报错与警告标签，路由到不同的发送者
+            let sender = "SYS";
+            if (cleanText.includes("[ERR]")) {
+                sender = "SYS_ERR";
+                cleanText = cleanText.replace(/\[ERR\] /g, "");
+            } else if (cleanText.includes("[WARN]")) {
+                sender = "SYS_WARN";
+                cleanText = cleanText.replace(/\[WARN\] /g, "");
+            }
+
+            // 调用新的统一接口写入
+            addCommunicationMessage(sender, cleanText);
+        }
+
+        // ================= 任务时间切片核心逻辑 =================
+        
+        // 更新下拉菜单选项
+        function updateActiveTaskDropdown() {
+            const select = document.getElementById('active-task-select');
+            const currentVal = gameState.timerState.activeTaskName;
+            select.innerHTML = '<option value="">-- 未分配任务 --</option>';
+            
+            gameState.customTasks.forEach(task => {
+                const opt = document.createElement('option');
+                opt.value = task.name;
+                opt.textContent = task.name;
+                select.appendChild(opt);
+            });
+            
+            if (gameState.customTasks.some(t => t.name === currentVal)) {
+                select.value = currentVal;
+            } else {
+                select.value = "";
+                gameState.timerState.activeTaskName = "";
+            }
+        }
+
+        // 监听下拉菜单切换（中途换任务）
+        document.getElementById('active-task-select').addEventListener('change', function() {
+            const oldTask = gameState.timerState.activeTaskName; // 获取旧值
+            const newTask = this.value; // 获取新值
+
+            if (isRunning && gameState.timerState.mode === 'work') {
+                commitCurrentTaskSegment();
+                gameState.timerState.currentSegmentStartTime = Date.now();
+            }
+            gameState.timerState.activeTaskName = newTask;
+            
+            // 🌟 触发任务切换事件
+            if (oldTask !== newTask) {
+                triggerEvent('task_switch', { oldTask: oldTask, newTask: newTask });
+            }
+            saveData();
+        });
+
+        // 结算当前时间切片（核心算法）
+        function commitCurrentTaskSegment(forceEndTime = null) {
+            const startTime = gameState.timerState.currentSegmentStartTime;
+            if (!startTime || startTime === 0 || gameState.timerState.mode !== 'work') return;
+            
+            const now = forceEndTime || Date.now();
+            const durationSec = Math.round((now - startTime) / 1000);
+            
+            if (durationSec > 0) {
+                const taskName = gameState.timerState.activeTaskName || "未分配任务";
+                
+                // 1. 写入历史记录（带具体任务名）
+                const d = new Date(startTime);
+                const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                if (!gameState.taskHistory[dateStr]) gameState.taskHistory[dateStr] = [];
+                
+                gameState.taskHistory[dateStr].push({
+                    name: taskName,
+                    startTime: startTime,
+                    endTime: now,
+                    duration: durationSec
+                });
+
+                // 2. 累加到具体任务的总时长中
+                const taskObj = gameState.customTasks.find(t => t.name === taskName);
+                if (taskObj) {
+                    taskObj.accumulatedTime = (taskObj.accumulatedTime || 0) + durationSec;
+                }
+            }
+            
+            // 结算完毕，清空切片起点
+            gameState.timerState.currentSegmentStartTime = 0;
+            gameState.lastActiveTime = Date.now();
+            saveData();
+        }
+
+        // ================= 任务清单面板逻辑 =================
+        const taskOverlay = document.getElementById('task-modal-overlay');
+        const taskListContainer = document.getElementById('task-list-container');
+
+        // 渲染列表函数
+        function renderTaskList() {
+    if (gameState.customTasks.length === 0) {
+        taskListContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 12px; text-align: center; padding: 20px 0;">// 当前无挂起任务。</div>';
+        return;
+    }
+
+    let htmlString = ""; // 🌟 核心：使用变量拼接
+    gameState.customTasks.forEach((task, index) => {
+        const isDoneClass = task.completed ? 'done' : '';
+        const isChecked = task.completed ? 'checked' : '';
+        
+        const hours = Math.floor((task.accumulatedTime || 0) / 3600);
+        const mins = Math.floor(((task.accumulatedTime || 0) % 3600) / 60);
+        const timeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+        
+        htmlString += `
+            <div class="task-item ${isDoneClass}">
+                <div class="task-item-left">
+                    <input type="checkbox" class="task-checkbox" data-index="${index}" ${isChecked}>
+                    <span class="task-name">${task.name}</span>
+                </div>
+                <div class="task-item-right">
+                    <span style="color: var(--text-muted); font-size: 11px; margin-right: 8px;">[ ${timeStr} ]</span>
+                    <span class="task-qty-badge">x ${task.quantity}</span>
+                    <button class="btn-del-task" data-index="${index}">[ 删除 ]</button>
+                </div>
+            </div>
+        `;
+    });
+    taskListContainer.innerHTML = htmlString; // 🌟 循环结束后一次性渲染
+}
+
+        // 1. 打开弹窗
+        document.getElementById('btn-task-list').addEventListener('click', function() {
+            renderTaskList();
+            taskOverlay.classList.remove('hidden');
+            // 触发动画
+            const modalBox = document.getElementById('task-modal');
+            modalBox.style.animation = 'none';
+            modalBox.offsetHeight; 
+            modalBox.style.animation = null; 
+        });
+
+        // 2. 关闭弹窗
+        document.getElementById('task-modal-close').addEventListener('click', function() {
+            taskOverlay.classList.add('hidden');
+        });
+
+        // 3. 录入新任务
+        document.getElementById('btn-add-task').addEventListener('click', function() {
+            const nameInput = document.getElementById('new-task-name');
+            const qtyInput = document.getElementById('new-task-qty');
+            
+            const nameVal = nameInput.value.trim();
+            const qtyVal = parseInt(qtyInput.value) || 1;
+            
+            if (nameVal === '') return; // 名字为空不给加
+
+            // 存入后台并保存
+            gameState.customTasks.push({
+                name: nameVal,
+                quantity: qtyVal,
+                completed: false
+            });
+            gameState.lastActiveTime = Date.now();
+            saveData();
+            
+            // 清空输入框并重新渲染
+            nameInput.value = '';
+            qtyInput.value = '1';
+            renderTaskList();
+
+            updateActiveTaskDropdown();
+        });
+
+        // 🌟 新增一个变量，用于记住当前要删除的是哪个任务
+        let pendingDeleteTaskIndex = null;
+
+        // 4. 勾选/取消勾选 与 删除操作 (事件委托)
+        taskListContainer.addEventListener('click', function(e) {
+            // 处理勾选完成
+            if (e.target.classList.contains('task-checkbox')) {
+                const index = e.target.getAttribute('data-index');
+                const isChecked = e.target.checked;
+                const taskName = gameState.customTasks[index].name;
+
+                gameState.customTasks[index].completed = isChecked;
+                
+                // 🌟 仅在“从没打勾”变成“打勾”时触发完成事件
+                if (isChecked) {
+                    // 核心修改：把整个任务对象传过去，包含 accumulatedTime
+                    triggerEvent('task_complete', { task: gameState.customTasks[index] });
+                }
+
+                saveData();
+                renderTaskList(); 
+            }
+            
+            // 处理删除 (接入定制的战术弹窗)
+            if (e.target.classList.contains('btn-del-task')) {
+                const index = e.target.getAttribute('data-index');
+                const taskToDelete = gameState.customTasks[index];
+                
+                // 将准备删除的索引存入临时变量
+                pendingDeleteTaskIndex = index; 
+
+                const modalContent = document.getElementById('delete-task-modal-content');
+
+                // 根据是否正在计时，渲染不同的警告文案
+                if (gameState.timerState.activeTaskName === taskToDelete.name && isRunning && gameState.timerState.mode === 'work') {
+                    modalContent.innerHTML = `<span style="color: #ef4444; font-weight: bold;">[ 警告 // FATAL WARNING ]</span><br><br>任务 <span style="color: var(--accent);">"${taskToDelete.name}"</span> 正在专注协议中！<br>现在强制清除将导致当前切片的专注时间<span style="color: #ef4444;">永久丢失</span>。<br><br>确定要执行数据覆盖吗？`;
+                } else {
+                    modalContent.innerHTML = `确定要从系统中清除节点任务 <span style="color: var(--accent);">"${taskToDelete.name}"</span> 吗？`;
+                }
+
+                // 唤起弹窗并触发中间往两边展开的动画
+                const overlay = document.getElementById('delete-task-modal-overlay');
+                overlay.classList.remove('hidden');
+                
+                const modalBox = overlay.querySelector('.modal-box');
+                modalBox.style.animation = 'none';
+                modalBox.offsetHeight; 
+                modalBox.style.animation = null; 
+            }
+        });
+
+        // 👇 新增：绑定定制删除弹窗的【确认】与【取消】按钮操作 👇
+
+        document.getElementById('delete-task-confirm').addEventListener('click', function() {
+            if (pendingDeleteTaskIndex !== null) {
+                // 执行删除
+                gameState.customTasks.splice(pendingDeleteTaskIndex, 1);
+                gameState.lastActiveTime = Date.now();
+                saveData();
+                renderTaskList();
+                updateActiveTaskDropdown();
+                
+                // 释放临时变量
+                pendingDeleteTaskIndex = null; 
+            }
+            // 关闭弹窗
+            document.getElementById('delete-task-modal-overlay').classList.add('hidden');
+        });
+
+        document.getElementById('delete-task-cancel').addEventListener('click', function() {
+            // 清除临时记录，避免后续错乱
+            pendingDeleteTaskIndex = null; 
+            document.getElementById('delete-task-modal-overlay').classList.add('hidden');
+        });
+        
+        // ================= 历史日历面板逻辑 =================
+        const calOverlay = document.getElementById('history-task-modal-overlay');
+        const calGrid = document.getElementById('cal-grid');
+        const calMonthYear = document.getElementById('cal-month-year');
+        const calSelectedDate = document.getElementById('cal-selected-date');
+        const calDayDetails = document.getElementById('cal-day-details');
+        
+        let currentDate = new Date();
+        let selectedDateStr = "";
+
+        // 格式化时间为 HH:MM
+        function formatTimeHM(timestamp) {
+            const d = new Date(timestamp);
+            return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        }
+
+        // 渲染日历网格
+        function renderCalendar() {
+            calGrid.innerHTML = '';
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            calMonthYear.textContent = `${year} . ${String(month + 1).padStart(2, '0')}`;
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // 填充当月第一天前的空白格子
+            for (let i = 0; i < firstDay; i++) {
+                calGrid.innerHTML += `<div class="cal-day empty"></div>`;
+            }
+            
+            // 填充真实天数
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                const hasTask = gameState.taskHistory[dateStr] && gameState.taskHistory[dateStr].length > 0;
+                
+                let classes = 'cal-day';
+                if (hasTask) classes += ' has-task';
+                if (dateStr === selectedDateStr) classes += ' selected';
+                
+                const dayDiv = document.createElement('div');
+                dayDiv.className = classes;
+                dayDiv.textContent = i;
+                
+                // 点击某一天时触发查询
+                dayDiv.onclick = () => selectDate(dateStr);
+                calGrid.appendChild(dayDiv);
+            }
+        }
+
+        // 选择日期并展示详情
+        function selectDate(dateStr) {
+    selectedDateStr = dateStr;
+    renderCalendar(); 
+    
+    calSelectedDate.textContent = `[ 归档日期: ${dateStr.replace(/-/g, '.')} ]`;
+    
+    const tasks = gameState.taskHistory[dateStr] || [];
+    if (tasks.length === 0) {
+        calDayDetails.innerHTML = '<div style="color: var(--text-muted); font-size: 12px; text-align: center; padding: 20px 0;">// 暂无节点接入记录。</div>';
+        return;
+    }
+    
+    let detailsHtml = ""; // 🌟 使用变量拼接
+    tasks.forEach(task => {
+        const minutes = Math.floor(task.duration / 60);
+        detailsHtml += `
+            <div class="history-record-item">
+                <div class="record-time">${formatTimeHM(task.startTime)} - ${formatTimeHM(task.endTime)}</div>
+                <div class="record-title">${task.name}</div>
+                <div class="record-duration">专注时长: ${minutes} 分钟</div>
+            </div>
+        `;
+    });
+    calDayDetails.innerHTML = detailsHtml; // 🌟 一次性渲染
+}
+
+        // 按钮绑定：打开日历面板
+        document.getElementById('btn-task-history').addEventListener('click', function() {
+            currentDate = new Date(); // 每次打开重置为当前月份
+            
+            // 默认选中并查询今天
+            const today = new Date();
+            selectedDateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+            
+            renderCalendar();
+            selectDate(selectedDateStr);
+            
+            calOverlay.classList.remove('hidden');
+
+            // 👇 新增：渲染累计投入时间统计
+            const statsContainer = document.getElementById('stats-container');
+            statsContainer.innerHTML = '';
+            let hasStats = false;
+            
+            gameState.customTasks.forEach(task => {
+                if (task.accumulatedTime > 0) {
+                    hasStats = true;
+                    const hours = Math.floor(task.accumulatedTime / 3600);
+                    const mins = Math.floor((task.accumulatedTime % 3600) / 60);
+                    const timeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+                    
+                    statsContainer.innerHTML += `
+                        <div style="display: flex; justify-content: space-between; background: rgba(16,22,28,0.6); padding: 4px 8px; border-radius: 3px; border: 1px solid rgba(100,116,139,0.2);">
+                            <span>${task.name}</span>
+                            <span style="color: var(--accent); font-weight: 700;">${timeStr}</span>
+                        </div>
+                    `;
+                }
+            });
+            
+            if (!hasStats) {
+                statsContainer.innerHTML = '<div style="color: var(--text-muted); grid-column: span 2;">暂无任务投入记录。</div>';
+            }
+            // 👆 新增结束 👆
+        });
+
+        document.getElementById('cal-prev').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        });
+
+        document.getElementById('cal-next').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        });
+
+        document.getElementById('history-task-close').addEventListener('click', () => {
+            calOverlay.classList.add('hidden');
+        });
 
         // ================= 终端打字机特效 =================
         // speed 控制打字速度，数值越小打字越快（单位：毫秒）
@@ -1227,160 +2870,177 @@
             });
         }
 
-        // ================= 动态文本解析器 =================
+        // ================= 动态文本解析器 (防弹装甲版) =================
         function processStoryText(rawText) {
-            const player = gameState.player;
+            if (!rawText) return ""; 
             
-            // 1. 定义不同种族的专属昵称池
+            const player = gameState.player || {};
+            
+            // 🌟 修复设定 Bug：把这里的 "长官" 全部换成 "士兵"
+            const safeFirstName = (player.firstName && player.firstName !== "未知") ? player.firstName : (player.callsign || "士兵");
+            const safeLastName = player.lastName || "";
+            const safeCallsign = player.callsign || "操作员";
+            const safeRank = player.rank || "步兵";
+            const safeRace = player.race || "基准人类";
+
             const raceNicknames = {
                 "狼混血种": ["小狗", "狼崽", "小狼"],
                 "犬混血种": ["小狗", "小猎犬", "乖狗狗"],
                 "豹混血种": ["小猫", "大猫", "小豹子"],
-                "基准人类": ["宝贝", "长官", "亲爱的"] 
-                // 其他种族可自行补充...
+                "基准人类": ["宝贝", "士兵", "亲爱的"] // 这里也改一下
             };
-            
-            // 2. 定义通用亲密昵称池
             const sweetNicknames = ["甜心", "蜜糖", "亲爱的", "宝贝"];
 
-            // 3. 获取当前适用的昵称
-            const currentRaceNicks = raceNicknames[player.race] || ["长官"];
+            const currentRaceNicks = raceNicknames[safeRace] || ["士兵"]; // 这里也改一下
             const getRand = (arr) => arr[Math.floor(Math.random() * arr.length)];
             
             const nicknameRace = getRand(currentRaceNicks);
             const nicknameSweet = getRand(sweetNicknames);
 
-            // 4. 构建“全局随机池”（包含真名、代号、军衔和各种昵称）
-            // filter(Boolean) 是为了防止玩家没填姓氏时抽出一个空值
             const allPossibleNames = [
-                player.firstName,
-                player.lastName,
-                player.callsign,
-                player.rank,
+                safeFirstName,
+                safeLastName,
+                safeCallsign,
+                safeRank,
                 nicknameRace,
                 nicknameSweet
-            ].filter(Boolean);
+            ].filter(Boolean); 
 
-            // 每次调用时，随机抽一个
-            const randomName = getRand(allPossibleNames);
+            const randomName = getRand(allPossibleNames) || "士兵"; // 这里也改一下
 
-            // 5. 替换文本中的所有占位符
             return rawText
-                .replace(/%FIRST_NAME%/g, player.firstName !== "未知" ? player.firstName : player.callsign)
-                .replace(/%LAST_NAME%/g, player.lastName)
-                .replace(/%CALLSIGN%/g, player.callsign)
-                .replace(/%RANK%/g, player.rank)
+                .replace(/%FIRST_NAME%/g, safeFirstName)
+                .replace(/%LAST_NAME%/g, safeLastName)
+                .replace(/%CALLSIGN%/g, safeCallsign)
+                .replace(/%RANK%/g, safeRank)
                 .replace(/%NICKNAME_RACE%/g, nicknameRace)
                 .replace(/%NICKNAME_SWEET%/g, nicknameSweet)
                 .replace(/%RANDOM_NAME%/g, randomName);
         }
 
-        // 专门用于输出和存储“纯剧情”的函数，方便你的引擎调用
+        // 专门用于输出和存储“纯剧情”的函数
         function pushStory(text) {
-            // 1. 将剧情展现在右侧面板中
-            if (logContent.innerHTML.includes("等待记录录入...")) logContent.innerHTML = "";
-            logContent.innerHTML += `<br><br><span style="color: var(--text-main); font-size: 14px;">${text}</span>`;
-            logContent.scrollTop = logContent.scrollHeight;
-
-            // 2. 将纯文本写入后台数组并永久保存
+            // 1. 将纯文本写入后台数组并永久保存 (供历史面板查看)
             gameState.storyLogs.push(text);
+            gameState.lastActiveTime = Date.now();
             saveData();
+
+            // 2. 统一推送到 Mission Log (作为档案消息)
+            addCommunicationMessage('SYS.ARCHIVE', text);
         }
 
         // 开始任务
         document.getElementById('btn-start').addEventListener('click', function() {
             if (!gameState.player.firstName || gameState.player.firstName === "") {
-                printLog(`<span style="color: #ef4444;">[ERR] ACCESS DENIED. 检测到未授权终端。请先在左下角录入操作员档案。</span>`);
+                printLog(`<span style="color: #ef4444;">[ERR] ACCESS DENIED. 请先在左下角录入操作员档案。</span>`);
                 return;
             }
-
             if (isRunning) return;
 
             if (timeRemaining === 0) {
-                timeRemaining = parseInputTime('work'); // 修改为新解析函数
+                // 初始化轮次系统
+                if (gameState.timerState.mode === 'idle') {
+                    gameState.timerState.mode = 'work';
+                    gameState.timerState.round = 1;
+                }
+                
+                let timeToSet = 0;
+                if (gameState.timerState.mode === 'work') {
+                    timeToSet = parseInputTime('work');
+                    // 👇 更新这里的变量为 totalRounds
+                    printLog(`[SYS] 专注协议 [Round ${gameState.timerState.round}/${gameState.timerState.totalRounds}] 启动。`);
+                } else if (gameState.timerState.mode === 'rest') {
+                    timeToSet = parseInputTime('rest');
+                    printLog(`[SYS] 短休协议启动。`);
+                } else if (gameState.timerState.mode === 'longRest') {
+                    timeToSet = parseInputTime('long-rest');
+                    printLog(`[SYS] 深度休整协议启动。`);
+                }
+
+                timeRemaining = timeToSet;
                 focusSeconds = 0;
-                printLog(`[SYS] 任务开始，倒计时初始化...`);
+                gameState.timerState.totalWorkTime = timeRemaining; 
+                gameState.timerState.startTime = Date.now(); 
             } else {
-                printLog(`[SYS] 任务恢复执行。`);
+                printLog(`[SYS] 协议恢复执行。`);
             }
 
             isRunning = true;
-            timerInterval = setInterval(() => {
-                if (timeRemaining > 0) {
-                    timeRemaining--;
-                    focusSeconds++;
-                    formatTimeDisplay(timeRemaining);
 
-                    if (focusSeconds > 0 && focusSeconds % 60 === 0) {
-                        gameState.affection += 1;
-                        updateAffectionDisplay();
-                        saveData(); 
-                    }
-                } else {
-                    clearInterval(timerInterval);
-                    isRunning = false;
-                    
-                    // 🌟 核心逻辑：根据完成的时间，给各个层级发放代币
-                    const timeCompleted = parseInputTime('work');
-                    if (timeCompleted > 0) gameState.availableRewards.tier0++;
-                    if (timeCompleted >= 600) gameState.availableRewards.tier1++;
-                    if (timeCompleted >= 1800) gameState.availableRewards.tier2++;
-                    if (timeCompleted >= 3600) gameState.availableRewards.tier3++;
-                    
-                    timeRemaining = 0;
-                    saveData();
+            // 👇 新增：如果是工作模式，记录切片起点
+            if (gameState.timerState.mode === 'work') {
+                gameState.timerState.currentSegmentStartTime = Date.now();
+            }
 
-                    printLog(`[SYS] 节点完成。代币已发放至库存，请打开奖励面板查看。`);
-                }
-            }, 1000);
+            targetEndTime = Date.now() + (timeRemaining * 1000);
+            updateCycleDisplay();
+
+            // 更新持久化存档
+            gameState.timerState.isRunning = true;
+            gameState.timerState.targetEndTime = targetEndTime;
+            gameState.timerState.focusSeconds = focusSeconds;
+            gameState.timerState.timeRemaining = timeRemaining;
+            gameState.lastActiveTime = Date.now();
+            saveData();
+
+            startTimerLoop();
         });
 
-        // 暂停任务
+        // 暂停任务（保持不变，或者直接确认是否有修改需求）
         document.getElementById('btn-pause').addEventListener('click', function() {
             if (!isRunning) return;
+            commitCurrentTaskSegment(); // 结算当前切片
             clearInterval(timerInterval);
             isRunning = false;
-            printLog(`[SYS] 任务已挂起。`);
+            
+            gameState.timerState.isRunning = false;
+            gameState.timerState.timeRemaining = timeRemaining;
+            gameState.lastActiveTime = Date.now();
+            saveData();
+            
+            printLog(`[SYS] 协议已挂起。`);
         });
 
         // 重置任务
         document.getElementById('btn-reset').addEventListener('click', function() {
-            // 判定是否属于“中途放弃”：有剩余时间，且剩余时间小于设定的总时长
-            const totalTime = parseInputTime('work');
-            if (timeRemaining > 0 && timeRemaining < totalTime) {
-                // 扣除好感度（设定扣除2点，并且使用 Math.max 确保好感度不会跌破 0）
+            const totalTime = gameState.timerState.totalWorkTime || parseInputTime('work');
+            if (timeRemaining > 0 && timeRemaining < totalTime && gameState.timerState.mode === 'work') {
                 const penalty = 2;
                 gameState.affection = Math.max(0, gameState.affection - penalty);
                 updateAffectionDisplay();
-                saveData();
+                
+                gameState.timerState.focusStreak = 0; // 🌟 中途放弃，连击清零
 
-                // 随机抽取一条中断任务的剧情文本
                 const penaltyLogs = [
                     `[WARN] 任务强制中止。频道里传来轻微的静电杂音，麦克塔维什似乎对你的分心感到不悦。`,
-                    `[WARN] 专注中断。你听到他在通讯中短促地咂了下嘴：“专心点，长官。”`,
-                    `[WARN] 计时覆写。“遇到麻烦了吗？”他的声音听起来公事公办，战术面板显示好感度已折损。`,
-                    `[WARN] 协议终止。麦克塔维什切断了当前的视频链路，只留下一片幽绿的底噪。`
+                    `[WARN] 专注中断。你听到他在通讯中短促地咂了下嘴：“专心点，士兵。”`,
+                    `[WARN] 计时覆写。“遇到麻烦了吗？”他的声音听起来公事公办，战术面板显示好感度已下降。`
                 ];
-                const randomLog = penaltyLogs[Math.floor(Math.random() * penaltyLogs.length)];
-                
-                printLog(`<span style="color: #ef4444;">${randomLog}</span>`);
+                printLog(`<span style="color: #ef4444;">${penaltyLogs[Math.floor(Math.random() * penaltyLogs.length)]}</span>`);
             } else {
-                // 如果是没开始倒计时就点重置，只输出普通系统提示
-                printLog(`[SYS] 计时器已覆写重置。`);
+                gameState.timerState.focusStreak = 0; // 🌟 正常重置，连击也清零
+                printLog(`[SYS] 计时器及战术轮次已覆写重置。`);
             }
-
-            // 清理状态
+            
+            commitCurrentTaskSegment(); // 结算当前切片
             clearInterval(timerInterval);
             isRunning = false;
             timeRemaining = 0; 
             focusSeconds = 0; 
             
-            // 调用同步函数，让大屏幕重新读取并显示当前输入框的数字
+            // 彻底重置轮次
+            gameState.timerState.mode = 'idle';
+            gameState.timerState.round = 1;
+
+            gameState.timerState.isRunning = false;
+            gameState.timerState.timeRemaining = 0;
+            gameState.timerState.focusSeconds = 0;
+            gameState.lastActiveTime = Date.now();
+            saveData();
+
+            updateCycleDisplay();
             syncTimerDisplay(); 
         });
-
-        // 页面初始化加载时，将大屏幕的时间校准为输入框的默认值
-        syncTimerDisplay(); 
         
        // ================= 历史记录面板逻辑 =================
         const historyView = document.getElementById('history-view');
@@ -1388,20 +3048,17 @@
 
         // 打开历史
         document.getElementById('btn-view-history').addEventListener('click', function() {
-            historyContent.innerHTML = ""; // 清空旧渲染
-            
-            if (gameState.storyLogs.length === 0) {
-                historyContent.innerHTML = "<div class='history-entry' style='color: var(--text-muted);'>// 当前暂无归档剧情。</div>";
-            } else {
-                // 遍历后台存储的剧情，逐条渲染出来
-                gameState.storyLogs.forEach(log => {
-                    historyContent.innerHTML += `<div class='history-entry'>${log}</div>`;
-                });
-            }
-            
-            // 增加 active 类，触发 CSS 的透明度渐变动画
-            historyView.classList.add('active');
+    if (gameState.storyLogs.length === 0) {
+        historyContent.innerHTML = "<div class='history-entry' style='color: var(--text-muted);'>// 当前暂无归档剧情。</div>";
+    } else {
+        let historyHtml = ""; // 🌟 使用变量拼接
+        gameState.storyLogs.forEach(log => {
+            historyHtml += `<div class='history-entry'>${log}</div>`;
         });
+        historyContent.innerHTML = historyHtml; // 🌟 一次性渲染
+    }
+    historyView.classList.add('active');
+});
 
         // 返回终端
         document.getElementById('btn-back-history').addEventListener('click', function() {
@@ -1415,7 +3072,7 @@
 
         const rewardCategories = {
     tier0: { 
-        name: "微型节点权限 [ 碎片时间补偿 ]", 
+        name: "微型节点权限 [ 碎片时间专用 ]", 
         items: ["看上尉自慰一次", 
             "索要刚换下的内裤", 
             "展示雌穴三十秒", // 增加：快速的视觉冲击，看一眼就拉上
@@ -1465,7 +3122,7 @@
             "性爱秋千", 
             "全身绳缚",       // 原“绳缚”升级为全身拘束，剥夺行动力
             "全自动炮机",     // 增加：冰冷机械的无情捣弄
-            "战术拘束椅",     // 增加：牢牢固定四肢，强迫承受所有奖励
+            "拘束椅",     // 增加：牢牢固定四肢，强迫承受所有奖励
             "悬吊系统",       // 增加：利用重力让腔体吃得更深
             "十字架站立拘束", // 增加：展示意味浓厚的站立姿态
             "感官剥夺套件",   // 增加：眼罩加隔音耳机，放大身体的其他触觉
@@ -1486,20 +3143,185 @@
 
         const storyScripts = {
     // 1. 不受种族影响的通用文本（直接使用数组形式，内置对象）
-    "看皂队自慰一次": [
-        { 
-            minAff: 0, 
-            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 监控通道-04 已建立加密连接 ]</span><br>夜视滤镜下的画面呈现出一片幽绿，波形图在屏幕边缘轻微抖动。麦克塔维什靠在靠窗的行军床上，战术外套被随意丢在水泥地面上。<br>“%RANDOM_NAME%……”无线电里传来他压抑在喉咙里的低唤，夹杂着沙沙的底噪。他仰起头，手指的动作带着长期任务后的宣泄，“操……%FIRST_NAME%……”<br>他并没有意识到监控的存在，只是在呼吸彻底乱掉的瞬间，咬着牙喊出了长官的代号：“%CALLSIGN%……”` 
-        },
-        { 
-            minAff: 30, 
-            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 备用频道-B 信号接入 ]</span><br>肥皂坐在淋浴间的长椅上，水珠顺着肌肉线条滑落。他低喘着，手上的动作加快了些许。<br>水声掩盖了他的部分声音，但你依然能从嘴型分辨出他在反复念着那个名字：“%LAST_NAME%……%FIRST_NAME%……”` 
-        },
-        { 
-            minAff: 60, 
-            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 监控通道-04 覆写模式 ]</span><br>他停下了动作，抬头准确地盯住了墙角那枚微亮的摄像头红灯。他知道你在看。<br>“长官，你看够了吗？”他胸膛起伏着，蓝眼睛里带着直接的挑衅与引诱，手指重新握住前端，“过来……%FIRST_NAME%。”` 
-        }
-    ],
+    "看上尉自慰一次": [
+    // minAff: 0 (初级权限：直白展示，带有挑逗性的短暂停留)
+    { 
+        minAff: 0, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 私人频段视频通讯接入 ]</span>
+
+        <br><br>屏幕闪烁了一下，麦克塔维什的脸出现在画面里。他靠在椅背上，制服外套敞开，镜头故意下压，直白地对准了他早就泥泞不堪的大腿根。
+
+        <br><br>“别装没看见，%CALLSIGN%……”他轻笑着，手指毫不掩饰地在那处湿软的穴口打转，“这可是给你的专属直播，看清楚长官是怎么自己弄出水来的。”` 
+    },
+    { 
+        minAff: 0, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术终端收到阅后即焚影像 ]</span>
+
+        <br><br>影像里，约翰正跨坐在行军床上，作训裤褪到了膝盖。他直视着镜头，眼神里带着挑衅，两根手指已经在饱满的软肉间抽插得啧啧作响。
+        
+        <br><br>“这是你今天专注的奖励。”他微微喘息着，水声顺着扬声器传来，“好好看着，我有多想要你。”` 
+    },
+    { 
+        minAff: 0, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 备用频道-B 信号主动接入 ]</span>
+
+        <br><br>他故意把终端支在洗手台上，水流冲刷着他健康的蜜色肌肤。他一只手撑着瓷砖，另一只手在自己的腿间快速揉弄。腔体溢出的白浊被水流冲走。
+
+        <br><br>“怎么不说话？%FIRST_NAME%……”他喘着气，蓝眼睛隔着屏幕死死盯着你，“别光看着，用眼睛好好把我全吃下去。”` 
+    },
+    { 
+        minAff: 0, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术背心记录仪-强制开启 ]</span>
+
+        <br><br>镜头晃动了一下，对准了弹药箱。他大喇喇地敞开着作训裤，手指在腿间快速抽插，带出黏稠的水声。
+
+        <br><br>“别急着切断通讯，%CALLSIGN%。”他挑起眉，眼底带着戏谑，“长官需要释放一点压力，而你需要好好看着。”` 
+    },
+    { 
+        minAff: 0, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 无人机夜视链路-私人覆盖 ]</span>
+
+        <br><br>热成像的画面里，代表高温的亮色集中在他的下半身。他靠在掩体后，手指规律地揉弄着自己，哪怕在热成像下也能看出那一片湿滑。
+
+        <br><br>“晚上睡不着吗？凑巧我也一样。”他低喘着，声音通过无线电传来，“看看这个温度，%FIRST_NAME%，猜猜我现在满手都是什么？”` 
+    },
+    { 
+        minAff: 0, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 安全屋监控-线路C ]</span>
+
+        <br><br>他躺在破旧的沙发上，一只手遮着眼睛，另一只手早就探入了褪下的内裤里，指尖熟练地拨弄着那颗充血的节点。
+
+        <br><br>“我知道你在看，%CALLSIGN%。”他没有挪开遮挡眼睛的手，嘴角却勾了起来，“不用装正人君子，把画面放大点，这点福利算我赏你的。”` 
+    },
+    { 
+        minAff: 0, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 枪械室终端-加密直连 ]</span>
+
+        <br><br>空气里仿佛混杂着枪油和汗水的味道。他坐在操作台前，双腿大张，沾着透明液体的两根手指缓缓没入紧致的软肉里。
+
+        <br><br>“保养武器可不是个轻松活儿……我也需要一点润滑。”他直视着镜头，眼神带着勾引，“仔细看，%FIRST_NAME%，教教我该怎么弄。”` 
+    },
+    { 
+        minAff: 0, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 个人终端-附加影像信息 ]</span>
+
+        <br><br>一段循环播放的短片。镜头很近，只能看到他修长的手指在泥泞的唇瓣间滑弄，每一次挤压都带出透明的拉丝。
+
+        <br><br>“别让别人发现你在看什么。”文字信息伴随着短片发送过来，“深呼吸，%FIRST_NAME%，长官现在可是把最脆弱的地方敞开给你看了。”` 
+    },
+    { 
+        minAff: 0, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 撤离直升机后舱-私人频道 ]</span>
+
+        <br><br>机舱昏暗的红光下，他借着装备的掩护，手掌覆在战术裤的裆部，隔着布料用力地揉压着自己，水声被引擎声掩盖。
+
+        <br><br>“很吵，所以你听不见我喘气的声音，对吧？”他凑近麦克风，“把耳机音量调到最大，%CALLSIGN%，听听我流了多少水。”` 
+    },
+    { 
+        minAff: 0, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 办公室终端-强制视频弹窗 ]</span>
+
+        <br><br>军靴毫不客气地架在办公桌上，作训裤的拉链完全拉开。他用指腹慢条斯理地刮擦着穴口，刻意向镜头展示着那里的泥泞。
+
+        <br><br>“工作时间摸鱼可不符合规矩，但我允许你现在破例。”他低声笑着，带着不容置疑的命令感，“眼睛睁大点，%CALLSIGN%，这可是最高级别的机密。”` 
+    },
+
+    // minAff: 30 (中级权限：动作加深，带有言语上的露骨煽情)
+    { 
+        minAff: 30, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 加密频道-C 实时画面传输 ]</span>
+        
+        <br><br>昏暗的宿舍里，他将战术手电固定在床头，光束刚好照亮他泥泞的下半身。他故意把双腿分得很开，手指已经深深探入了那处隐秘的甬道。
+        
+        <br><br>“%FIRST_NAME%……进得好深……”他对着镜头咬着嘴唇，伴随着黏腻的水声，“想象一下这是你的手……正在把我弄开……”` 
+    },
+    { 
+        minAff: 30, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 内部通讯网络 视频接入 ]</span>
+        
+        <br><br>镜头里的约翰只穿着一件宽大的T恤，下半身完全赤裸。他把腿架在办公桌沿上，任由内壁的体液顺着大腿流下。他的手指在里面翻搅，带出淫靡的声音。
+        
+        <br><br>“你不在的时候，我只能靠想你来解渴。”他的声音沙哑，带着浓重的鼻音，“看清楚这里是怎么为你吐水的……满意你看到的吗？”` 
+    },
+    { 
+        minAff: 30, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 监控通道-04 主动覆写模式 ]</span>
+        
+        <br><br>他主动切入了你的监控画面，镜头固定在他的正前方。他仰着头，修长的脖颈绷紧，两根手指正在那处泥泞的地方快速进出。
+        
+        <br><br>“长官现在很难受……里面全是空荡荡的……”他一边抽气一边挺起腰肢，对着镜头展示更深处，“仔细看，%CALLSIGN%……我是怎么被你想得发情的……”` 
+    },
+    { 
+        minAff: 30, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术平板-私密留言 ]</span>
+        
+        <br><br>画面微微摇晃，他靠在装甲车的车厢后座，三根手指已经完全没入了湿滑的穴口。随着他粗暴的抽插，清液溅落在了黑色的战术防弹衣上。
+        
+        <br><br>“听见这个声音了吗？”他喘息着把终端拉近，眼神幽暗，“光是看着镜头里你的名字，我就停不下来了……%FIRST_NAME%，真想让你现在就操进来。”` 
+    },
+    { 
+        minAff: 30, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 无人机中继站-单线接通 ]</span>
+        
+        <br><br>通讯接通时，他正跪在行军毯上，腰肢下榻，迎合着自己手指的捣弄。镜头从侧后方拍下了他被撑开的软肉和不断滴落的水渍。
+        
+        <br><br>“%CALLSIGN%……我需要更硬的东西……”他的声音通过麦克风传过来，带着难耐的鼻音，“手指根本不够……看着我怎么把自己弄到高潮，然后滚回来填满我。”` 
+    },
+    { 
+        minAff: 30, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 淋浴间监控-管理员权限覆盖 ]</span>
+        
+        <br><br>水汽弥漫的屏幕里，水流顺着他宽阔的肩膀滑进股间。他靠在湿滑的瓷砖上，用拇指重重碾压着前端的节点，中指在深处快速抠挖。
+        
+        <br><br>“水温太低了……降不下火。”他仰头喘着粗气，眼睛透过水雾死死盯着摄像头，“%FIRST_NAME%……用眼睛操我，告诉我你现在有多想干死你的长官。”` 
+    },
+    { 
+        minAff: 30, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 个人通讯器-录像模式 ]</span>
+        
+        <br><br>他把通讯器咬在嘴里，腾出双手去掰开自己饱满的穴肉。画面因为他急促的呼吸而上下起伏，清晰地记录下了内壁怎样绞紧他的手指。
+        
+        <br><br>“呜……看着里面……”他拿下通讯器，嗓音已经完全哑了，眼里泛着水光，“你看它咬得多紧……如果是你的东西在里面，我大概会被操得连名字都忘了。”` 
+    },
+    { 
+        minAff: 30, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 基地安保网络-独立频道 ]</span>
+        
+        <br><br>他坐在冰冷的地板上，一条腿曲起。手指抽出时带出了黏稠的透明拉丝，在昏暗的光线下闪着水光。他把沾满体液的手指送进嘴里舔了舔。
+        
+        <br><br>“味道不错，可惜你尝不到。”他对着镜头低低地笑了一声，胸膛剧烈起伏着，“快点结束任务，%CALLSIGN%……我的里面已经湿得一塌糊涂了，全都是给你准备的。”` 
+    },
+    { 
+        minAff: 30, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 后勤仓库-定点摄像捕捉 ]</span>
+        
+        <br><br>他坐在木板箱上，作训服的下摆被撩起咬在嘴里。下半身完全暴露，手指在红肿的入口处不断画圈，却故意不肯深深捅进去。
+        
+        <br><br>“想要我插进去吗，%FIRST_NAME%？”他喘息着，蓝眼睛里满是情欲和挑逗，“求我。告诉我你想看我怎么弄坏自己，长官就表演给你看。”` 
+    },
+    { 
+        minAff: 30, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 医疗室终端-强行唤醒 ]</span>
+        
+        <br><br>白色的冷光灯下，他躺在诊疗床上，双腿大张着搭在边缘。两根手指在泥泞中快速进出，每次都能顶到最深处，发出沉闷的咕叽声。
+        
+        <br><br>“这里平时是用来检查伤口的……”他咬着牙，忍耐着即将到来的高潮，“但现在，它只属于你……看看你的长官发情的样子，%CALLSIGN%……我快被自己操射了。”` 
+    },
+
+    // minAff: 60 (高级权限：彻底失控，伴随高潮喷发与乞求)
+    { 
+        minAff: 60, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 终极权限-长官专属视界 ]</span><br>画面里的约翰完全卸下了防备，他趴在办公桌上，将自己柔软的部位完全暴露在镜头前。三根手指正在体内翻搅，大腿内侧全都是溢出的汁水。<br>“啊……%FIRST_NAME%……主人……”他哭叫着，毫不廉耻地对着镜头挺起腰肢迎合自己的手指，“看我看我！你的长官正在为你流水……马上就要喷出来了……啊！”` 
+    },
+    { 
+        minAff: 60, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 终极权限-长官专属视界 ]</span><br>他不知从哪里找来了你的一件旧战术服，紧紧捂在口鼻处深嗅。画面中，他颤抖着把手指从泥泞的腔体中抽出，又含进嘴里色气地舔舐干净。<br>“好涨……全是水了……”他在镜头前痉挛着，眼角挂着泪水，声音甜腻得发颤，“拍下来了吗，%CALLSIGN%？记得一会来我房间，亲自检查我有没有把自己弄干净……”` 
+    },
+    { 
+        minAff: 60, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 终极权限-长官专属视界 ]</span><br>伴随着急促的喘息声，约翰死死盯着镜头，眼底泛起生理性的红晕。手指最后一次重重按下那个敏感点，腔体猛地收缩，一股温热的液体毫无预兆地从画面中央喷发而出，甚至飞溅到了镜头边缘。<br>“哈啊……喷了……全喷给你看了……”他脱力地靠在椅背上，胸口剧烈起伏，眼神迷离地对着镜头扯出一个浪荡的笑，“下次……不准再让我自己动手了。”` 
+    }
+],
 
     // 2. 受种族影响的差分文本（使用对象嵌套数组的形式）
     "手淫": {
@@ -1667,92 +3489,68 @@
             }
         });
 
-        // 3. 确认提交（支持种族差分路由的版本）
-        rewardConfirmBtn.addEventListener('click', async function() {
+        // 3. 确认提交（统一接入 Mission Log 版）
+        rewardConfirmBtn.addEventListener('click', function() {
             if (sessionSelected.length === 0) return;
             
             const itemNames = sessionSelected.map(s => s.item);
-            const playerRace = gameState.player.race; // 获取当前操作员的种族
+            const playerRace = gameState.player.race; 
             
             // 正式写入后台，扣除余额
             sessionSelected.forEach(s => {
                 gameState.availableRewards[s.tier]--;
                 gameState.rewardCounts[s.tier] = (gameState.rewardCounts[s.tier] || 0) + 1;
             });
+            gameState.lastActiveTime = Date.now();
             saveData();
             
             // 🎬 关闭弹窗
             rewardOverlay.classList.add('hidden');
             
-            // 🎬 系统提示打字机效果
-            const sysPromptText = `[SYS] 权限已提取。正在执行协议: [ ${itemNames.join(' / ')} ]。`;
-            await typeTerminalText(sysPromptText, 'var(--accent)', 40);
+            // 🎬 1. 发送系统执行提示
+            const sysPromptText = `权限已提取。正在执行协议: [ ${itemNames.join(' / ')} ]。`;
+            addCommunicationMessage('SYS', sysPromptText);
             
-            // 🎬 剧情文本生成
-            let fullStoryText = `<div style="margin-bottom: 16px; color: var(--accent);">当前操作员 [${gameState.player.callsign}] 选择兑换：<b>${itemNames.join('、')}</b>。</div>`;
-            
-            let baseDelay = 0; 
-            const delayIncrement = 700; 
+            // 🎬 2. 剧情文本生成
+            let fullStoryText = `<div style="margin-bottom: 8px; color: var(--accent);">当前操作员 [${gameState.player.callsign}] 兑换：<b>${itemNames.join('、')}</b>。</div>`;
 
             sessionSelected.forEach(s => {
                 const itemName = s.item;
                 const scriptData = storyScripts[itemName];
                 let pool = [];
 
-                // 🌟 1. 【种族差分路由】先提取对应种族的剧本池
                 if (Array.isArray(scriptData)) {
-                    pool = scriptData; // 无种族差分
+                    pool = scriptData; 
                 } else if (scriptData && typeof scriptData === 'object') {
                     if (scriptData[playerRace] && scriptData[playerRace].length > 0) {
                         pool = scriptData[playerRace];
                     } else if (scriptData["基准人类"] && scriptData["基准人类"].length > 0) {
-                        pool = scriptData["基准人类"]; // 兜底机制
+                        pool = scriptData["基准人类"]; 
                     }
                 }
                 
-                fullStoryText += `<div style="margin-top: 16px;">`;
-                
-                // 🌟 2. 【好感度差分路由】再根据好感度过滤剧情
                 if (pool && pool.length > 0) {
-                    // 找出当前好感度能够解锁的所有剧本
                     const validScripts = pool.filter(scriptObj => gameState.affection >= scriptObj.minAff);
-                    
                     if (validScripts.length > 0) {
-                        // 找到能解锁的最高好感度阈值
                         const maxAff = Math.max(...validScripts.map(s => s.minAff));
-                        
-                        // 把符合最高阈值的剧本都拿出来（如果同级别有多个，方便做随机）
                         const highestScripts = validScripts.filter(s => s.minAff === maxAff);
-                        
-                        // 随机抽取一条
                         const randomIndex = Math.floor(Math.random() * highestScripts.length);
-                        const rawScript = highestScripts[randomIndex].text; // 注意这里要读取 .text
+                        const rawScript = highestScripts[randomIndex].text; 
                         
-                        // 送入解析器翻译名字和代号
                         const selectedScript = processStoryText(rawScript);
-                        const lines = selectedScript.split('<br>');
-                        
-                        lines.forEach(line => {
-                            if (line.trim() !== "") {
-                                fullStoryText += `<span class="animated-line" style="animation-delay: ${baseDelay}ms;">${line}</span>`;
-                                baseDelay += delayIncrement;
-                            }
-                        });
+                        fullStoryText += `<div style="margin-top: 8px;">${selectedScript}</div>`;
                     } else {
-                        // 预防错误：如果设定的好感度要求比当前高
-                        fullStoryText += `<span class="animated-line" style="animation-delay: ${baseDelay}ms; color: var(--text-muted);">[ 系统提示：需要提升好感度以解锁该交互档案 ]</span>`;
-                        baseDelay += delayIncrement;
+                        fullStoryText += `<div style="margin-top: 8px; color: var(--text-muted);">[ 系统提示：需要提升好感度以解锁该交互档案 ]</div>`;
                     }
                 } else {
-                    fullStoryText += `<span class="animated-line" style="animation-delay: ${baseDelay}ms; color: var(--text-muted);">（暂无 [${itemName}] 对应的文本归档）</span>`;
-                    baseDelay += delayIncrement;
+                    fullStoryText += `<div style="margin-top: 8px; color: var(--text-muted);">（暂无 [${itemName}] 对应的文本归档）</div>`;
                 }
-                
-                fullStoryText += `</div>`;
             });
 
-            // 统一推送到右侧记录框
-            pushStory(fullStoryText);
+            // 延迟 800ms 推送剧情，模拟系统加载档案的时间
+            setTimeout(() => {
+                pushStory(fullStoryText);
+            }, 800);
         });
 
         // 4. 关闭奖励面板
@@ -1762,6 +3560,109 @@
 
         // 执行缓存数据加载
         loadData();
+
+        // ================= 恢复计时器现场的函数 (已彻底修复离线结算Bug) =================
+function restoreTimerState() {
+    const savedTimer = gameState.timerState;
+    
+    if (savedTimer && savedTimer.timeRemaining > 0) {
+        timeRemaining = savedTimer.timeRemaining;
+        focusSeconds = savedTimer.focusSeconds;
+        
+        if (savedTimer.isRunning) {
+            const now = Date.now();
+            if (now < savedTimer.targetEndTime) {
+                // ================= 1. 还在运行中，计算剩余时间并继续 =================
+                isRunning = true;
+                targetEndTime = savedTimer.targetEndTime;
+                timeRemaining = Math.max(0, Math.round((targetEndTime - now) / 1000));
+                printLog(`[SYS] 正在恢复后台节点任务...`);
+                
+                // 强制瞬间渲染正确时间，不让它等那一秒钟
+                formatTimeDisplay(timeRemaining); 
+                
+                startTimerLoop(); 
+            } else {
+                // ================= 2. 在你关闭网页或刷新期间，任务时间已经走完了 =================
+                isRunning = false;
+                savedTimer.isRunning = false;
+                savedTimer.timeRemaining = 0;
+                timeRemaining = 0;
+                
+                if (savedTimer.mode === 'work') {
+                    // (1) 结算离线期间的工作时间切片，确保图表有记录
+                    commitCurrentTaskSegment(savedTimer.targetEndTime);
+
+                    // (2) 结算代币
+                    const timeCompleted = savedTimer.totalWorkTime;
+                    if (timeCompleted > 0) gameState.availableRewards.tier0++;
+                    if (timeCompleted >= 600) gameState.availableRewards.tier1++;
+                    if (timeCompleted >= 1800) gameState.availableRewards.tier2++;
+                    if (timeCompleted >= 3600) gameState.availableRewards.tier3++;
+
+                    // (3) 增加连击数并触发事件（和在线完成时一致）
+                    savedTimer.focusStreak = (savedTimer.focusStreak || 0) + 1;
+                    triggerEvent('focus_complete', {
+                        duration: timeCompleted,
+                        taskName: savedTimer.activeTaskName || "未分配任务",
+                        round: savedTimer.round
+                    });
+                    
+                    if ([2, 4, 6, 8].includes(savedTimer.focusStreak)) {
+                        triggerEvent('focus_streak', { streak: savedTimer.focusStreak });
+                    }
+
+                    // (4) 阶段推进：判断该进入长休还是短休
+                    const currentRound = savedTimer.round;
+                    const totalRounds = savedTimer.totalRounds;
+                    const interval = savedTimer.longRestInterval;
+
+                    if (currentRound >= totalRounds || currentRound % interval === 0) {
+                        savedTimer.mode = 'longRest';
+                        triggerEvent('long_break_start', { round: currentRound });
+                    } else {
+                        savedTimer.mode = 'rest';
+                        triggerEvent('short_break_start', { round: currentRound });
+                    }
+
+                    printLog(`[SYS] 离线期间 [专注] 已完成。代币已发放，系统转入休整阶段。`);
+
+                } else if (savedTimer.mode === 'rest' || savedTimer.mode === 'longRest') {
+                    // 如果离线期间走完的是“休息”阶段
+                    const currentRound = savedTimer.round;
+                    const totalRounds = savedTimer.totalRounds;
+
+                    if (currentRound >= totalRounds) {
+                        savedTimer.round = 1;
+                        savedTimer.mode = 'idle';
+                        printLog(`[SYS] 离线期间战术周期结束。系统已重置，可开启新一轮协议。`);
+                    } else {
+                        savedTimer.round++;
+                        savedTimer.mode = 'work';
+                        printLog(`[SYS] 离线期间休整结束。准备进入 Round ${savedTimer.round}。`);
+                    }
+                }
+                
+                gameState.lastActiveTime = Date.now();
+                saveData();
+                formatTimeDisplay(0);
+                
+                // 瞬间将新阶段的默认倒计时（如5分钟的短休）加载到大屏幕
+                syncTimerDisplay(); 
+            }
+        } else {
+            // ================= 3. 任务被你暂停了，恢复显示但暂时不走字 =================
+            formatTimeDisplay(timeRemaining);
+            printLog(`[SYS] 检测到挂起的任务，点击开始以恢复。`);
+        }
+    } else {
+        // ================= 4. 如果没有进行中的任务，才显示默认的 25 分钟 =================
+        syncTimerDisplay(); 
+    }
+    
+    // 同步刷新侧边栏的 Round 状态显示
+    updateCycleDisplay();
+}
     </script>
 
 </body>
