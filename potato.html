@@ -19,7 +19,7 @@
             --accent-dim: rgba(56, 189, 248, 0.15);
             --line-color: rgba(100, 116, 139, 0.25);
             --border-radius: 6px;
-        } 
+        }
 
         /* ================= 基础 ================= */
         body {
@@ -1267,9 +1267,44 @@
             background: var(--line-color); 
             border-radius: 4px; 
         }
+
+        /* ================= 战术悬浮提示框 (Custom Tooltip) ================= */
+        #custom-tooltip {
+            position: fixed;
+            background: rgba(7, 9, 11, 0.95);
+            border: 1px solid var(--accent);
+            color: var(--text-main);
+            font-size: 11px;
+            letter-spacing: 1px;
+            padding: 6px 12px;
+            border-radius: 3px;
+            pointer-events: none; /* 关键：不阻挡鼠标点击事件 */
+            z-index: 9999; /* 保证在最顶层 */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(56, 189, 248, 0.2);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.15s ease, visibility 0.15s ease;
+            white-space: nowrap;
+            backdrop-filter: blur(4px);
+        }
+
+        /* 给提示框加一个小光点前缀，增加科技感 */
+        #custom-tooltip::before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            background-color: var(--accent);
+            margin-right: 8px;
+            vertical-align: middle;
+            box-shadow: 0 0 6px var(--accent);
+        }
     </style>
 </head>
 <body>
+
+    <!-- 战术悬浮提示框 -->
+    <div id="custom-tooltip"></div>
 
     <div class="container">
         <div class="left-panel">
@@ -1531,8 +1566,11 @@
             <div class="modal-actions">
                 <button id="history-task-close" class="btn-safe">关闭窗口</button>
             </div>
+            
         </div>
     </div>
+
+    
 
 <script>
         // ================= 状态管理 =================
@@ -2919,10 +2957,10 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
                             round: gameState.timerState.round
                         });
 
-                        // 2. 结算代币
-                        if (timeCompleted > 0) gameState.availableRewards.tier0++;
-                        if (timeCompleted >= 600) gameState.availableRewards.tier1++;
-                        if (timeCompleted >= 1800) gameState.availableRewards.tier2++;
+                        // 2. 结算代币 (防刷分机制：单轮至少专注10分钟才给奖)
+                        if (timeCompleted >= 600) gameState.availableRewards.tier0++;
+                        if (timeCompleted >= 1500) gameState.availableRewards.tier1++;
+                        if (timeCompleted >= 2700) gameState.availableRewards.tier2++;
                         if (timeCompleted >= 3600) gameState.availableRewards.tier3++;
                         
                         // 3. 状态切换 (全新解耦逻辑)
@@ -3635,7 +3673,7 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
         // ================= 奖励面板数据结构重构 =================
         const rewardCategories = {
             tier0: { 
-                name: "微型节点权限 [ 碎片时间专用 ]", 
+                name: "微型节点权限 [ 专注 ≥ 10 MIN ]", // 👈 修改这里
                 items: [
                     { name: "看上尉自慰一次", unlock: { type: 'affection', val: 0 } },
                     { name: "索要刚换下的内裤", unlock: { type: 'affection', val: 10 } },
@@ -3651,7 +3689,7 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
                 ] 
             },
             tier1: { 
-                name: "常规权限 [ 专注 ≥ 10 MIN ]", 
+                name: "常规权限 [ 专注 ≥ 25 MIN ]", 
                 items: [
                     { name: "手淫", unlock: { type: 'affection', val: 0 } },
                     { name: "口交", unlock: { type: 'affection', val: 20 } },
@@ -3666,7 +3704,7 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
                 ] 
             },
             tier2: { 
-                name: "小型设备权限 [ 专注 ≥ 30 MIN ]", 
+                name: "小型设备权限 [ 专注 ≥ 45 MIN ]", 
                 items: [
                     { name: "按摩棒", unlock: { type: 'affection', val: 30 } },
                     { name: "尿道棒", unlock: { type: 'affection', val: 50 } },
@@ -4719,6 +4757,54 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
     }
 };
 
+// ================= 自定义战术悬浮提示框逻辑 =================
+        const customTooltip = document.getElementById('custom-tooltip');
+        const rewardContentArea = document.getElementById('reward-content');
+
+        // 1. 鼠标移入时显示
+        rewardContentArea.addEventListener('mouseover', function(e) {
+            if (e.target.classList.contains('reward-item')) {
+                const tipText = e.target.getAttribute('data-tooltip');
+                if (tipText) {
+                    customTooltip.innerHTML = tipText;
+                    customTooltip.style.opacity = '1';
+                    customTooltip.style.visibility = 'visible';
+                }
+            }
+        });
+
+        // 2. 鼠标移动时跟随，并作边缘防溢出处理
+        rewardContentArea.addEventListener('mousemove', function(e) {
+            if (e.target.classList.contains('reward-item')) {
+                // 默认位置：鼠标右下方 15px
+                let x = e.clientX + 15;
+                let y = e.clientY + 15;
+                
+                // 获取提示框的宽高度
+                const rect = customTooltip.getBoundingClientRect();
+                
+                // 如果右边超出屏幕边缘，就把提示框翻转到鼠标左边
+                if (x + rect.width > window.innerWidth) {
+                    x = e.clientX - rect.width - 15;
+                }
+                // 如果下边超出屏幕边缘，就把提示框翻转到鼠标上边
+                if (y + rect.height > window.innerHeight) {
+                    y = e.clientY - rect.height - 15;
+                }
+
+                customTooltip.style.left = x + 'px';
+                customTooltip.style.top = y + 'px';
+            }
+        });
+
+        // 3. 鼠标移出时隐藏
+        rewardContentArea.addEventListener('mouseout', function(e) {
+            if (e.target.classList.contains('reward-item')) {
+                customTooltip.style.opacity = '0';
+                customTooltip.style.visibility = 'hidden';
+            }
+        });
+
         // ================= 自动轮换开关事件 =================
         document.getElementById('auto-flow-toggle').addEventListener('change', function() {
             gameState.timerState.autoFlow = this.checked;
@@ -4797,8 +4883,8 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
                         displayTitle = isFundsLocked ? "[ 锁定 ] 兑换点数不足" : "点击兑换";
                     }
 
-                    // 加上 title 属性，鼠标悬停时会显示原生提示框
-                    html += `<div class="${itemClasses}" data-tier="${tierId}" data-item="${itemName}" title="${displayTitle}">${displayName}</div>`;
+                    // 废弃原生的 title，改用自定义的 data-tooltip
+                    html += `<div class="${itemClasses}" data-tier="${tierId}" data-item="${itemName}" data-tooltip="${displayTitle}">${displayName}</div>`;
                 });
                 html += `</div></div>`;
             });
@@ -4824,11 +4910,51 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
         });
 
         // 2. 监听点击选项（选中 / 取消选中）
+        let mobileTooltipTimer = null; // 用于存储定时器，防止连续点击出错
+        
         rewardContent.addEventListener('click', function(e) {
             const target = e.target;
             
             if (target.classList.contains('reward-item')) {
-                // 🌟 新增：如果这个选项是锁定的，直接拦截，不执行后面的代码
+                
+                // 🌟 手机端适配：当点击按钮时，如果在手机屏幕上，或者点到了锁定的奖励
+                // 就在被点击的按钮正上方弹出战术提示框，2秒后自动消失
+                if (window.innerWidth <= 850 || target.classList.contains('locked')) {
+                    const tipText = target.getAttribute('data-tooltip');
+                    if (tipText) {
+                        customTooltip.innerHTML = tipText;
+                        
+                        // 获取被点击按钮的真实坐标和大小
+                        const rect = target.getBoundingClientRect();
+                        
+                        // 计算居中位置：按钮中心点 - 提示框宽度的一半
+                        let x = rect.left + (rect.width / 2) - (customTooltip.offsetWidth / 2);
+                        // 高度放在按钮正上方 10px 处
+                        let y = rect.top - customTooltip.offsetHeight - 10;
+                        
+                        // 防溢出装甲：如果提示框靠左或靠右超出了屏幕边缘，往里挤一挤
+                        if (x < 10) x = 10;
+                        if (x + customTooltip.offsetWidth > window.innerWidth - 10) {
+                            x = window.innerWidth - customTooltip.offsetWidth - 10;
+                        }
+                        // 如果顶部的空间不够弹出提示框，就把它放到按钮的正下方
+                        if (y < 10) y = rect.bottom + 10;
+                        
+                        customTooltip.style.left = x + 'px';
+                        customTooltip.style.top = y + 'px';
+                        customTooltip.style.visibility = 'visible';
+                        customTooltip.style.opacity = '1';
+                        
+                        // 2秒后自动淡出隐藏
+                        if (mobileTooltipTimer) clearTimeout(mobileTooltipTimer);
+                        mobileTooltipTimer = setTimeout(() => {
+                            customTooltip.style.opacity = '0';
+                            customTooltip.style.visibility = 'hidden';
+                        }, 2000);
+                    }
+                }
+
+                // 🌟 原有的拦截逻辑：如果是被锁定的，只弹提示，决不执行下面的扣点数代码
                 if (target.classList.contains('locked')) return; 
                 
                 const tierId = target.getAttribute('data-tier');
@@ -5029,11 +5155,11 @@ function restoreTimerState() {
                     // (1) 结算离线期间的工作时间切片，确保图表有记录
                     commitCurrentTaskSegment(savedTimer.targetEndTime);
 
-                    // (2) 结算代币
+                    // (2) 结算代币 (离线挂机防刷分机制)
                     const timeCompleted = savedTimer.totalWorkTime;
-                    if (timeCompleted > 0) gameState.availableRewards.tier0++;
-                    if (timeCompleted >= 600) gameState.availableRewards.tier1++;
-                    if (timeCompleted >= 1800) gameState.availableRewards.tier2++;
+                    if (timeCompleted >= 600) gameState.availableRewards.tier0++;
+                    if (timeCompleted >= 1500) gameState.availableRewards.tier1++;
+                    if (timeCompleted >= 2700) gameState.availableRewards.tier2++;
                     if (timeCompleted >= 3600) gameState.availableRewards.tier3++;
 
                     // (3) 增加连击数并触发事件（和在线完成时一致）
