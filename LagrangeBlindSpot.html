@@ -819,6 +819,94 @@
         }
         .delete-btn:hover { background: rgba(244, 67, 54, 0.3); }
 
+        /* =========================================
+           移动端战术雷达扫描仪样式
+           ========================================= */
+        .mobile-scanner {
+            display: none; /* 默认在电脑端隐藏 */
+            position: relative;
+            width: 100%;
+            height: 250px;
+            background: #03060a;
+            border: 1px solid rgba(18, 168, 255, 0.4);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 0 15px rgba(18, 168, 255, 0.1);
+            overflow: hidden;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scanner-hud {
+            position: absolute;
+            top: 10px; left: 10px;
+            color: #12a8ff;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        /* 雷达表盘 */
+        .radar {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            border: 1px solid rgba(18, 168, 255, 0.5);
+            background: 
+                linear-gradient(90deg, transparent 49.5%, rgba(18, 168, 255, 0.5) 49.5%, rgba(18, 168, 255, 0.5) 50.5%, transparent 50.5%),
+                linear-gradient(0deg, transparent 49.5%, rgba(18, 168, 255, 0.5) 49.5%, rgba(18, 168, 255, 0.5) 50.5%, transparent 50.5%),
+                radial-gradient(circle, transparent 30%, rgba(18, 168, 255, 0.2) 31%, transparent 32%),
+                radial-gradient(circle, transparent 60%, rgba(18, 168, 255, 0.2) 61%, transparent 62%);
+        }
+
+        /* 扫描指针 */
+        .sweep {
+            position: absolute;
+            top: 0; left: 50%;
+            width: 50%; height: 50%;
+            background: linear-gradient(45deg, rgba(18, 168, 255, 0.8) 0%, transparent 60%);
+            transform-origin: 0% 100%;
+            animation: spin 2s linear infinite;
+            border-left: 2px solid #12a8ff;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 雷达上的干员光点 */
+        .radar-blip {
+            position: absolute;
+            width: 4px; height: 4px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #fff, 0 0 15px #12a8ff;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        /* 💥 核心：媒体查询 (当屏幕宽度小于 768px 时触发) 💥 */
+        @media (max-width: 768px) {
+            #viewport {
+                display: none !important; /* 隐藏 3D 隧道 */
+            }
+            .mobile-scanner {
+                display: flex !important; /* 显示雷达 */
+            }
+            .system-notice {
+                font-size: 12px; /* 手机端稍微缩小提示文字 */
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -996,7 +1084,7 @@
                     <p>141特遣队 - 已归档的特遣队员战术档案检索系统</p>
                 </div>
 
-                <!-- 3D 数据隧道视窗 -->
+                <!-- 3D 数据隧道视窗 (PC端显示) -->
                 <div class="viewport-container" id="viewport">
                     <div class="tunnel-hud">
                         <span>VELOCITY: <span id="vel-readout">0.00</span></span>
@@ -1005,6 +1093,19 @@
                         <span style="color:#ffffff;">[滚轮操作 // SCROLL TO NAVIGATE]</span>
                     </div>
                     <div id="world"></div>
+                </div>
+
+                <!-- 💥 新增：移动端战术雷达视窗 (手机端显示) 💥 -->
+                <div class="mobile-scanner" id="mobileScanner">
+                    <div class="scanner-hud">
+                        <span>UPLINK: ACTIVE</span>
+                        <span>SCANNING SECTOR...</span>
+                    </div>
+                    <div class="radar">
+                        <div class="sweep"></div>
+                        <!-- 动态生成的雷达光点会放在这里 -->
+                        <div id="radar-blips"></div>
+                    </div>
                 </div>
 
                 <!-- 💥 新增：干员列表与详情面板 💥 -->
@@ -1111,6 +1212,7 @@
                 characterDB = data.record || [];
                 renderRoster();
                 init3DTunnel();
+                renderRadar();
             } catch (error) {
                 console.error("卫星连接失败:", error);
                 grid.innerHTML = '<div style="color:#f44336;">[ ❌ ERROR: 无法连接到情报服务器 ]</div>';
@@ -1151,6 +1253,32 @@
             });
         }
 
+        // 渲染手机端雷达光点
+        function renderRadar() {
+            const blipsContainer = document.getElementById('radar-blips');
+            if (!blipsContainer) return;
+            blipsContainer.innerHTML = '';
+            
+            // 为每个干员生成一个雷达光点
+            characterDB.forEach(() => {
+                const blip = document.createElement('div');
+                blip.className = 'radar-blip';
+                
+                // 随机分布在雷达圆盘内 (半径 90px，留点边距设为 80)
+                const angle = Math.random() * Math.PI * 2;
+                const radius = Math.random() * 80; 
+                const x = 90 + Math.cos(angle) * radius - 2; // 90是中心，-2是光点一半大小
+                const y = 90 + Math.sin(angle) * radius - 2;
+                
+                blip.style.left = `${x}px`;
+                blip.style.top = `${y}px`;
+                // 随机闪烁延迟，让光点不要同时闪
+                blip.style.animationDelay = `${Math.random() * 2}s`;
+                
+                blipsContainer.appendChild(blip);
+            });
+        }
+
         // 展开显示详细档案
         function showDetail(index) {
             const char = characterDB[index];
@@ -1188,6 +1316,7 @@
                 document.getElementById('roster-detail').style.display = 'none';
                 renderRoster();
                 init3DTunnel(); 
+                renderRadar();
             }
         }
 
@@ -1229,6 +1358,7 @@
             
             renderRoster();
             init3DTunnel(); 
+            renderRadar();
         });
 
         /* =========================================================
