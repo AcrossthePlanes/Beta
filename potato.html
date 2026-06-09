@@ -183,6 +183,49 @@
             transform: translateX(0);
         }
 
+        /* ================= 自动轮换开关样式 (校准修复版) ================= */
+        .toggle-switch-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .toggle-track {
+            width: 28px;
+            height: 16px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--line-color);
+            border-radius: 10px;
+            position: relative;
+            box-sizing: border-box; /* 强制锁定战术框架模型 */
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-thumb {
+            width: 10px;
+            height: 10px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;  /* 纵向完美居中校准 */
+            left: 2px; /* 初始靠左 */
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* 选中时的战术发光与位移动画 */
+        input[type="checkbox"]:checked + .toggle-track {
+            background: rgba(56, 189, 248, 0.15);
+            border-color: var(--accent);
+        }
+        
+        input[type="checkbox"]:checked + .toggle-track .toggle-thumb {
+            background: var(--accent);
+            left: 14px; /* 横向精确位移动画 */
+            box-shadow: 0 0 6px var(--accent-dim);
+        }
+
         /* ================= 设置 ================= */
         .settings {
             display: flex;
@@ -286,6 +329,8 @@
             font-weight: bold;
             user-select: none;
         }
+
+        
 
         /* ================= 角色信息 ================= */
         .character-info {
@@ -948,7 +993,8 @@
         /* 未解锁状态 */
         .reward-item.locked {
             opacity: 0.25;
-            pointer-events: none;
+            /* pointer-events: none; 🌟 删掉这一行！ */
+            cursor: not-allowed; /* 🌟 新增：鼠标悬停时变成“禁止点击”的图标 */
             border-style: dashed;
             background: transparent;
         }
@@ -1249,7 +1295,16 @@
 
             <!-- 👇 给 settings 加上 gap: 10px，给 section-title 加上 margin-bottom: 4px 👇 -->
             <div class="settings" style="gap: 10px;">
-                <div class="section-title" style="margin-bottom: 4px;">参数设置</div>
+                <div class="section-title" style="margin-bottom: 4px;">
+        参数设置
+        <label class="toggle-switch-wrapper" style="margin-left: auto;">
+            <span style="color: var(--text-muted); font-size: 10px; font-weight: normal; letter-spacing: 1px; text-transform: none;">自动轮换</span>
+            <input type="checkbox" id="auto-flow-toggle" style="display: none;">
+            <div class="toggle-track">
+                <div class="toggle-thumb"></div>
+            </div>
+        </label>
+    </div>
                 <label>任务时长 :
                     <div class="time-input-group">
                         <input type="number" id="work-h" value="00" min="0" max="99"><span>:</span>
@@ -1332,6 +1387,7 @@
                                 <option value="鱼混血种">鱼混血种</option>
                                 <option value="狐混血种">狐混血种</option>
                                 <option value="龙混血种">龙混血种</option>
+                                <option value="章鱼混血">章鱼混血</option>
                             </select>
                         </label>
                     </div>
@@ -1394,7 +1450,7 @@
                 </div>
             <div class="modal-actions">
                 <button id="reward-confirm" class="btn-danger" style="display: none; background: rgba(56, 189, 248, 0.1); border-color: var(--accent); color: var(--accent);">确认并执行 / CONFIRM</button>
-                <button id="reward-close" class="btn-safe">关闭面板</button>
+                <button id="reward-close" class="btn-safe">关闭窗口</button>
             </div>
         </div>
     </div>
@@ -1407,7 +1463,7 @@
             
             <div class="modal-content" style="margin-bottom: 16px;">
                 <div class="task-input-area">
-                    <input type="text" id="new-task-name" placeholder="输入任务名称 (如: 整理战术文档)...">
+                    <input type="text" id="new-task-name" placeholder="输入任务名称 (如: 写一小时论文)...">
                     <div class="qty-wrapper">
                         <span style="color: var(--text-muted); font-size: 12px;">数量:</span>
                         <input type="number" id="new-task-qty" value="1" min="1" max="99">
@@ -1422,7 +1478,7 @@
             </div>
 
             <div class="modal-actions">
-                <button id="task-modal-close" class="btn-safe">关闭面板</button>
+                <button id="task-modal-close" class="btn-safe">关闭窗口</button>
             </div>
         </div>
     </div>
@@ -1434,8 +1490,8 @@
                 确定要删除该任务吗？
             </div>
             <div class="modal-actions">
-                <button id="delete-task-confirm" class="btn-danger">确认清除 / PURGE</button>
-                <button id="delete-task-cancel" class="btn-safe">取消 / CANCEL</button>
+                <button id="delete-task-confirm" class="btn-danger">确认删除</button>
+                <button id="delete-task-cancel" class="btn-safe">取消删除</button>
             </div>
         </div>
     </div>
@@ -1443,7 +1499,7 @@
     <div id="history-task-modal-overlay" class="hidden">
         <div id="history-task-modal" class="modal-box" style="width: 420px; display: flex; flex-direction: column;">
             <div class="modal-header" style="color: var(--accent); border-color: rgba(56, 189, 248, 0.2);">
-                // ARCHIVE CALENDAR 历史任务归档
+                // ARCHIVE CALENDAR 历史任务
             </div>
             
             <div class="modal-content" style="flex: 1; margin-bottom: 16px;">
@@ -1473,7 +1529,7 @@
             </div>
 
             <div class="modal-actions">
-                <button id="history-task-close" class="btn-safe">关闭面板</button>
+                <button id="history-task-close" class="btn-safe">关闭窗口</button>
             </div>
         </div>
     </div>
@@ -1484,14 +1540,18 @@
     player: { firstName: "", callsign: "", lastName: "", fullName: "", rank: "步兵", race: "基准人类" },
     affection: 0,
     storyLogs: [],
+    currentStoryChapter: 0, // 🌟 新增：记录当前主线剧情推到了第几章
+    hasSeenIntro: false, // 🌟 新增：记录是否看过开场剧情
     customTasks: [],
     taskHistory: {}, 
     lastActiveTime: Date.now(), 
     startTime: 0, 
     availableRewards: { tier0: 0, tier1: 0, tier2: 0, tier3: 0 }, 
     rewardCounts: { tier0: 0, tier1: 0, tier2: 0, tier3: 0 },
+    counters: { squirt: 0, orgasm: 0, edge: 0 }, // 🌟 新增：隐藏行为计数器（潮吹、高潮、边缘控制等）
     taskStreak: 0,
     focusStreak: 0,
+    rewardBags: {}, // 🌟 新增：用来记录每个奖励池的抽卡袋进度
     timerState: {
         isRunning: false,
         targetEndTime: 0,
@@ -1508,69 +1568,351 @@
         // ================= 时间驱动通讯池 (麦克塔维什 专属定制版) =================
         const timeBasedMessagePool = {
             morning: [ 
-                // 【陌生阶段 0-20】公事公办，带点上尉的威严
-                { minAff: 0, sender: 'MAC', template: '早安，{rank}。新的一天，希望你已经把装备检查过了。开启你的战术节点。' },
-                { minAff: 0, sender: 'MAC', template: '晨间巡视结束。防线安全，动作快点，别在早晨磨磨蹭蹭的。' },
-                
-                // 【信任阶段 51-80】熟络的战友，带点苏格兰式的调侃
-                { minAff: 51, sender: 'SOAP', template: '早上好！昨晚睡得怎么样？今天也要像爆破 C4 一样把任务清单炸得粉碎！' },
-                { minAff: 51, sender: 'SOAP', template: '早，{player_name}。我已经跑完五公里武装越野了，你才刚上线？动作快点，别让我去宿舍掀你的被子。' },
+                // 【陌生阶段 0-10】公事公办，带点上尉的威严
+                { minAff: 0, sender: 'MACTAVISH', template: '早上好，{rank}，要不要开始工作？' },
+                { minAff: 0, sender: 'MACTAVISH', template: '动作快点，{rank}，别在早晨磨磨蹭蹭的。' },
+                { minAff: 0, sender: 'MACTAVISH', template: '希望你今天的状态比昨天好一些，{rank}。' },
+                { minAff: 0, sender: 'MACTAVISH', template: '{rank}，该干活了。' },
+                { minAff: 0, sender: 'MACTAVISH', template: '今天的任务不少，做好准备了吗？' },
+                { minAff: 0, sender: 'MACTAVISH', template: '起床了吗，{rank}？' },
+                { minAff: 0, sender: 'MACTAVISH', template: '新的一天，新的麻烦，希望你应付得来。' },
+                { minAff: 0, sender: 'MACTAVISH', template: '至少先把咖啡喝完再开始发呆，{rank}。' },
+                { minAff: 0, sender: 'MACTAVISH', template: '别告诉我你又睡过头了。' },
+                { minAff: 0, sender: 'MACTAVISH', template: '看到这条消息的时候，你最好已经醒了。' },
+                { minAff: 0, sender: 'MACTAVISH', template: '我不在乎你昨晚几点睡的，任务不会等人。' },
+                { minAff: 0, sender: 'MACTAVISH', template: '保持专注，{rank}，这是个不错的开始。' },
+                { minAff: 0, sender: 'MACTAVISH', template: '天气不错，可惜我们大概率没空欣赏。' },
+                { minAff: 0, sender: 'MACTAVISH', template: '今天尽量别给我惹麻烦，好吗？' },
+                { minAff: 0, sender: 'MACTAVISH', template: '检查装备，检查状态，然后开始工作。' },
+                { minAff: 0, sender: 'MACTAVISH', template: '希望你已经准备好面对今天的一切。' },
+                { minAff: 0, sender: 'MACTAVISH', template: '准时出现总能给人留下好印象，{rank}。' },
+                { minAff: 0, sender: 'MACTAVISH', template: '别紧张，我只是确认你还活着。' },
+                { minAff: 0, sender: 'MACTAVISH', template: '例行问候结束，现在去完成你的任务。' },
+                { minAff: 0, sender: 'MACTAVISH', template: '早，{rank}。别浪费这个早晨。' },
 
-                // 【特殊关系 120+】隐约的发骚，利用职务之便的私密挑逗
-                { minAff: 121, sender: 'SOAP', template: '早安……你昨晚睡得好吗？我可是做了一整晚关于你的梦。现在作训裤还紧得难受……咳，专心任务，{rank}。' },
-                { minAff: 121, sender: 'SOAP', template: '你终于醒了。知不知道我盯着你的离线状态看了多久？真想现在就把你叫到办公室，让你帮我“晨练”一下……' }
-            ],
+                // 【11-20】逐渐熟悉，但仍然保持职业距离
+                { minAff: 11, sender: 'MACTAVISH', template: '早安，{rank}。希望今天不用替你收拾烂摊子。' },
+                { minAff: 11, sender: 'MACTAVISH', template: '你最近状态不错，继续保持。' },
+                { minAff: 11, sender: 'MACTAVISH', template: '至少你比某些人靠谱一点。别让我改主意。' },
+                { minAff: 11, sender: 'MACTAVISH', template: '别浪费时间，今天还有不少事等着处理。' },
+                { minAff: 11, sender: 'MACTAVISH', template: '看见你在线了。很好，省得我去找人。' },
+                { minAff: 11, sender: 'MACTAVISH', template: '希望你今天带上脑子一起工作，{rank}。' },
+                { minAff: 11, sender: 'MACTAVISH', template: '你适应得比我预想中快。' },
+                { minAff: 11, sender: 'MACTAVISH', template: '睡醒了就来报到，别让我等太久。' },
+                { minAff: 11, sender: 'MACTAVISH', template: '今天争取别挨骂。虽然概率不大。' },
+                { minAff: 11, sender: 'MACTAVISH', template: '说真的，你最近没那么让人头疼了。' },
+                { minAff: 11, sender: 'MACTAVISH', template: '我开始记住你的习惯了，这未必是件好事。' },
+                { minAff: 11, sender: 'MACTAVISH', template: '别紧张，这条消息不是任务通知。暂时不是。' },
+                { minAff: 11, sender: 'MACTAVISH', template: '今天保持警惕，其他的交给训练。' },
+                { minAff: 11, sender: 'MACTAVISH', template: '希望你的咖啡比基地的好喝一点。' },
+                { minAff: 11, sender: 'MACTAVISH', template: '你已经证明过自己一次了，别让我失望第二次。' },
+                { minAff: 11, sender: 'MACTAVISH', template: '有时候我真分不清你是聪明还是运气好。' },
+                { minAff: 11, sender: 'MACTAVISH', template: '我开始理解为什么队里有人愿意替你说话了。' },
+                { minAff: 11, sender: 'MACTAVISH', template: '别把今天搞砸，剩下的应该没问题。' },
+                { minAff: 11, sender: 'MACTAVISH', template: '继续干活吧，{rank}。到目前为止你做得还行。' },
+                { minAff: 11, sender: 'MACTAVISH', template: '早上好。至少这次我不用担心你迟到。' },
+
+
+                { minAff: 21, sender: 'MACTAVISH', template: '早上好，%CALLSIGN%。希望你今天别给我增加工作量。' },
+{ minAff: 21, sender: 'MACTAVISH', template: '你最近表现不错，别骄傲。' },
+{ minAff: 21, sender: 'MACTAVISH', template: '看见你上线了。总算有个熟面孔。' },
+{ minAff: 21, sender: 'MACTAVISH', template: '早安，%LAST_NAME%。昨晚睡够了吗？' },
+{ minAff: 21, sender: 'MACTAVISH', template: '今天有什么计划，还是准备继续替141卖命？' },
+{ minAff: 21, sender: 'MACTAVISH', template: '我开始怀疑你是不是故意表现得这么靠谱。' },
+{ minAff: 21, sender: 'MACTAVISH', template: '别告诉我你又是靠咖啡活到现在的。' },
+{ minAff: 21, sender: 'MACTAVISH', template: '你应该知道，我可不会随便夸人。' },
+{ minAff: 21, sender: 'MACTAVISH', template: '今天状态怎么样，%CALLSIGN%？' },
+{ minAff: 21, sender: 'MACTAVISH', template: '基地里安静得可怕。我猜其他人还没起。' },
+{ minAff: 21, sender: 'MACTAVISH', template: '早上好，%NICKNAME_RACE%。还活着就回个消息。' },
+{ minAff: 21, sender: 'MACTAVISH', template: '有时候我真搞不懂你在想什么。' },
+{ minAff: 21, sender: 'MACTAVISH', template: '你已经比刚来的时候顺眼多了。' },
+{ minAff: 21, sender: 'MACTAVISH', template: '别让%RANDOM_NAME%发现我在夸你。' },
+{ minAff: 21, sender: 'MACTAVISH', template: '希望今天别有人把简报搞得一团糟。' },
+{ minAff: 21, sender: 'MACTAVISH', template: '有件事我得承认——和你共事没那么糟。' },
+{ minAff: 21, sender: 'MACTAVISH', template: '醒了的话去吃点东西，别空着肚子训练。' },
+{ minAff: 21, sender: 'MACTAVISH', template: '你最近是不是比以前更忙了？' },
+{ minAff: 21, sender: 'MACTAVISH', template: '今天要是没任务，我可能会去靶场待一会儿。' },
+{ minAff: 21, sender: 'MACTAVISH', template: '早安。别担心，我今天心情还不错。' },
+
+
+{ minAff: 31, sender: 'MACTAVISH', template: '早安，%CALLSIGN%。今天别让我一个人面对这帮疯子。' },
+{ minAff: 31, sender: 'MACTAVISH', template: '你知道吗？我刚刚下意识想问你今天在哪。' },
+{ minAff: 31, sender: 'MACTAVISH', template: '基地的咖啡还是和机油一个味道。' },
+{ minAff: 31, sender: 'MACTAVISH', template: '看见你在线我就放心了。至少今天有人能正常交流。' },
+{ minAff: 31, sender: 'MACTAVISH', template: '早上好，%NICKNAME_RACE%。希望你没惹出什么新麻烦。' },
+{ minAff: 31, sender: 'MACTAVISH', template: '我刚才听见有人提起你。别紧张，不是投诉。' },
+{ minAff: 31, sender: 'MACTAVISH', template: '如果今天有什么乐子，记得给我留一份。' },
+{ minAff: 31, sender: 'MACTAVISH', template: '你最近是不是越来越难抓到了？' },
+{ minAff: 31, sender: 'MACTAVISH', template: '我敢打赌你现在还没完全清醒。' },
+{ minAff: 31, sender: 'MACTAVISH', template: '有时候我真怀疑你是怎么通过筛选的。' },
+{ minAff: 31, sender: 'MACTAVISH', template: '别露出那副表情，我隔着屏幕都能猜到。' },
+{ minAff: 31, sender: 'MACTAVISH', template: '今天没什么大事。我只是刚好想起你。' },
+{ minAff: 31, sender: 'MACTAVISH', template: '不知道为什么，你最近总在我视线范围里出现。' },
+{ minAff: 31, sender: 'MACTAVISH', template: '如果%RANDOM_NAME%又开始废话，记得替我逃跑。' },
+{ minAff: 31, sender: 'MACTAVISH', template: '我发现和你搭档比想象中轻松。' },
+{ minAff: 31, sender: 'MACTAVISH', template: '你应该把某些本事用在正经地方。' },
+{ minAff: 31, sender: 'MACTAVISH', template: '刚结束训练。你猜谁又拿了第一？' },
+{ minAff: 31, sender: 'MACTAVISH', template: '别误会，我不是专门来找你的。只是顺便。' },
+{ minAff: 31, sender: 'MACTAVISH', template: '有空的话来靶场，我需要个人证明我还没退步。' },
+{ minAff: 31, sender: 'MACTAVISH', template: '早安，%LAST_NAME%。希望今天能有点好消息。' },
+
+
+{ minAff: 41, sender: 'MACTAVISH', template: '早安，%CALLSIGN%。我刚才差点把你的那份咖啡一起拿了。' },
+{ minAff: 41, sender: 'MACTAVISH', template: '基地今天安静得反常。我有点不习惯。' },
+{ minAff: 41, sender: 'MACTAVISH', template: '你今天应该不会消失一整天吧？' },
+{ minAff: 41, sender: 'MACTAVISH', template: '刚结束晨跑。路过的时候想起你了。' },
+{ minAff: 41, sender: 'MACTAVISH', template: '说真的，你已经成了我每天都能看见的人之一。' },
+{ minAff: 41, sender: 'MACTAVISH', template: '早上好，%FIRST_NAME%。希望你今天别让我失望。' },
+{ minAff: 41, sender: 'MACTAVISH', template: '有件好笑的事。你绝对会喜欢。' },
+{ minAff: 41, sender: 'MACTAVISH', template: '不知道为什么，我总觉得你现在还没起床。' },
+{ minAff: 41, sender: 'MACTAVISH', template: '如果今天过得不顺利，记得怪天气。' },
+{ minAff: 41, sender: 'MACTAVISH', template: '我刚才下意识准备给你发消息，然后发现我已经在发了。' },
+{ minAff: 41, sender: 'MACTAVISH', template: '你知道最离谱的是什么吗？我已经习惯你在旁边了。' },
+{ minAff: 41, sender: 'MACTAVISH', template: '早安，%NICKNAME_RACE%。今天争取别丢人。' },
+{ minAff: 41, sender: 'MACTAVISH', template: '昨晚梦见训练场了。你肯定又在作弊。' },
+{ minAff: 41, sender: 'MACTAVISH', template: '如果有人问我最信任谁，你大概能排进前几名。' },
+{ minAff: 41, sender: 'MACTAVISH', template: '我刚刚意识到，我们认识已经有段时间了。' },
+{ minAff: 41, sender: 'MACTAVISH', template: '你是不是也觉得最近时间过得特别快？' },
+{ minAff: 41, sender: 'MACTAVISH', template: '今天路过靶场的时候没看见你，怪不习惯的。' },
+{ minAff: 41, sender: 'MACTAVISH', template: '别告诉别人，但我其实挺喜欢和你搭档。' },
+{ minAff: 41, sender: 'MACTAVISH', template: '如果你今天有空，来陪我消磨会儿时间。' },
+{ minAff: 41, sender: 'MACTAVISH', template: '早上好，%FIRST_NAME%。很高兴看到你。' },
+
+
+      { minAff: 51, sender: 'MACTAVISH', template: '早安，%FIRST_NAME%。昨晚睡得怎么样？' },
+{ minAff: 51, sender: 'MACTAVISH', template: '你最近是不是有点累？' },
+{ minAff: 51, sender: 'MACTAVISH', template: '别只顾着工作，记得吃东西。' },
+{ minAff: 51, sender: 'MACTAVISH', template: '今天状态还好吗？' },
+{ minAff: 51, sender: 'MACTAVISH', template: '不知道为什么，总觉得你最近安静了不少。' },
+{ minAff: 51, sender: 'MACTAVISH', template: '如果有什么事，记得告诉我。' },
+{ minAff: 51, sender: 'MACTAVISH', template: '昨晚看见你房间灯亮得挺晚。' },
+{ minAff: 51, sender: 'MACTAVISH', template: '别把自己累垮了，%FIRST_NAME%。' },
+{ minAff: 51, sender: 'MACTAVISH', template: '今天的天气不错。适合偷懒五分钟。' },
+{ minAff: 51, sender: 'MACTAVISH', template: '你是不是又没按时吃早餐？' },
+{ minAff: 51, sender: 'MACTAVISH', template: '我刚路过你常待的地方。没看见你。' },
+{ minAff: 51, sender: 'MACTAVISH', template: '有时候我会忘记你不是一直都在141。' },
+{ minAff: 51, sender: 'MACTAVISH', template: '早安，%NICKNAME_RACE%。今天照顾好自己。' },
+{ minAff: 51, sender: 'MACTAVISH', template: '你知道你不用什么事都自己扛吧？' },
+{ minAff: 51, sender: 'MACTAVISH', template: '别总想着照顾别人。偶尔也顾顾自己。' },
+{ minAff: 51, sender: 'MACTAVISH', template: '说真的，我开始担心你那些坏习惯了。' },
+{ minAff: 51, sender: 'MACTAVISH', template: '今天如果不顺利，记得来找我。' },
+{ minAff: 51, sender: 'MACTAVISH', template: '我刚泡了咖啡，然后想起你可能会嫌难喝。' },
+{ minAff: 51, sender: 'MACTAVISH', template: '你今天看起来比平时没精神。' },
+{ minAff: 51, sender: 'MACTAVISH', template: '早安，%FIRST_NAME%。很高兴今天还能看见你。' },
+
+
+{ minAff: 61, sender: 'MACTAVISH', template: '早安，%FIRST_NAME%。我今天第一个想到的人居然是你。' },
+{ minAff: 61, sender: 'MACTAVISH', template: '你去哪了？我刚才还在找你。' },
+{ minAff: 61, sender: 'MACTAVISH', template: '基地里少个人本来没什么，但少了你还挺明显。' },
+{ minAff: 61, sender: 'MACTAVISH', template: '昨晚没看见你上线。有点不习惯。' },
+{ minAff: 61, sender: 'MACTAVISH', template: '你最近是不是故意躲着我？' },
+{ minAff: 61, sender: 'MACTAVISH', template: '别误会，我只是想确认你还活着。' },
+{ minAff: 61, sender: 'MACTAVISH', template: '我今天路过靶场的时候，下意识往你常站的位置看了一眼。' },
+{ minAff: 61, sender: 'MACTAVISH', template: '早安，%NICKNAME_SWEET%。别告诉别人我这么叫你。' },
+{ minAff: 61, sender: 'MACTAVISH', template: '你知道吗？我已经能猜到你会怎么回复了。' },
+{ minAff: 61, sender: 'MACTAVISH', template: '我发现我越来越习惯有你在旁边。' },
+{ minAff: 61, sender: 'MACTAVISH', template: '今天碰到件有趣的事。我第一反应是想讲给你听。' },
+{ minAff: 61, sender: 'MACTAVISH', template: '有时候我觉得你已经成了我的某种习惯。' },
+{ minAff: 61, sender: 'MACTAVISH', template: '如果今天过得不顺利，记得来找我。真的。' },
+{ minAff: 61, sender: 'MACTAVISH', template: '你不在的时候，连吐槽都少了个对象。' },
+{ minAff: 61, sender: 'MACTAVISH', template: '别笑。我刚刚真的以为看见你了。' },
+{ minAff: 61, sender: 'MACTAVISH', template: '我开始理解为什么Ghost总说我太明显了。' },
+{ minAff: 61, sender: 'MACTAVISH', template: '你有没有发现，我们最近总是在一起？' },
+{ minAff: 61, sender: 'MACTAVISH', template: '早安，%FIRST_NAME%。看到你在线，我心情都好了点。' },
+{ minAff: 61, sender: 'MACTAVISH', template: '有件事我得承认——我比自己想象中更在意你。' },
+{ minAff: 61, sender: 'MACTAVISH', template: '如果今天能见到你，大概会是不错的一天。' },
+
+
+{ minAff: 71, sender: 'MACTAVISH', template: '早安，%NICKNAME_SWEET%。我给你留了咖啡。' },
+{ minAff: 71, sender: 'MACTAVISH', template: '今天路过食堂的时候顺手拿了两份早餐。习惯了。' },
+{ minAff: 71, sender: 'MACTAVISH', template: '刚准备给你发消息，然后发现你已经在线了。' },
+{ minAff: 71, sender: 'MACTAVISH', template: '早上好。我猜你现在大概还没完全醒。' },
+{ minAff: 71, sender: 'MACTAVISH', template: '今天训练结束之后来找我。没什么事，就是想见见你。' },
+{ minAff: 71, sender: 'MACTAVISH', template: '有时候我觉得你比基地里大多数东西都更让我安心。' },
+{ minAff: 71, sender: 'MACTAVISH', template: '我刚才在想，你今天会不会出现。然后你就出现了。' },
+{ minAff: 71, sender: 'MACTAVISH', template: '别笑，我真的记得你喜欢什么口味。' },
+{ minAff: 71, sender: 'MACTAVISH', template: '你知道吗？我已经开始提前给你留位置了。' },
+{ minAff: 71, sender: 'MACTAVISH', template: '早安，%FIRST_NAME%。希望今天能多看见你几次。' },
+
+{ minAff: 71, sender: 'MACTAVISH', template: '本来想一个人去的，后来觉得带上你更好。' },
+{ minAff: 71, sender: 'MACTAVISH', template: '你已经快变成我每天的固定项目了。' },
+{ minAff: 71, sender: 'MACTAVISH', template: '刚才有人问我在笑什么。我没告诉他们。' },
+{ minAff: 71, sender: 'MACTAVISH', template: '我发现很多事情有你参与会更有意思。' },
+{ minAff: 71, sender: 'MACTAVISH', template: '早安，%NICKNAME_SWEET%。今天也让我看看你。' },
+{ minAff: 71, sender: 'MACTAVISH', template: '你最近是不是故意这么讨人喜欢？' },
+{ minAff: 71, sender: 'MACTAVISH', template: '我现在闭着眼都能猜到你会说什么。' },
+{ minAff: 71, sender: 'MACTAVISH', template: '如果今天过得不错，我想第一时间告诉你。' },
+{ minAff: 71, sender: 'MACTAVISH', template: '不知道从什么时候开始，我习惯先想到你。' },
+{ minAff: 71, sender: 'MACTAVISH', template: '早上好，亲爱的。别紧张，我只是在测试这个称呼。' },
+
+
+{ minAff: 81, sender: 'MACTAVISH', template: '早安，%NICKNAME_SWEET%。昨晚梦见你了。别问内容。' },
+{ minAff: 81, sender: 'MACTAVISH', template: '你知道吗？你最近越来越影响我判断了。' },
+{ minAff: 81, sender: 'MACTAVISH', template: '今天路过的时候差点伸手去拍你肩膀，然后想起来你根本不在。' },
+{ minAff: 81, sender: 'MACTAVISH', template: '早安，亲爱的。你现在是不是在笑？' },
+{ minAff: 81, sender: 'MACTAVISH', template: '有时候我真想把你揣兜里带着走。' },
+{ minAff: 81, sender: 'MACTAVISH', template: '别这么看我。我只是喜欢和你待在一起。' },
+{ minAff: 81, sender: 'MACTAVISH', template: '你是不是知道自己很招人喜欢？' },
+{ minAff: 81, sender: 'MACTAVISH', template: '我刚才看见个和你有点像的人，结果白高兴了一场。' },
+{ minAff: 81, sender: 'MACTAVISH', template: '今天心情不错。你猜为什么？' },
+{ minAff: 81, sender: 'MACTAVISH', template: '如果你现在在我旁边，我大概会更高兴一点。' },
+{ minAff: 81, sender: 'MACTAVISH', template: '早安，漂亮男孩。别得意，我只是实话实说。' },
+{ minAff: 81, sender: 'MACTAVISH', template: '你有没有发现，我已经很少叫你代号了？' },
+{ minAff: 81, sender: 'MACTAVISH', template: '我今天想起你很多次。次数有点不正常。' },
+{ minAff: 81, sender: 'MACTAVISH', template: '有件事我得承认——你确实很好看。' },
+{ minAff: 81, sender: 'MACTAVISH', template: '你再这样下去，我可要怀疑你是故意的了。' },
+{ minAff: 81, sender: 'MACTAVISH', template: '早安，%FIRST_NAME%。希望今天能离你近一点。' },
+{ minAff: 81, sender: 'MACTAVISH', template: '我发现自己越来越喜欢找借口联系你。' },
+{ minAff: 81, sender: 'MACTAVISH', template: '如果有人问起，我可不会承认自己这么惦记你。' },
+{ minAff: 81, sender: 'MACTAVISH', template: '你出现之后，我的自制力水平直线下降。' },
+{ minAff: 81, sender: 'MACTAVISH', template: '早安，甜心。今天也让我高兴一下？' },
+
+
+{ minAff: 91, sender: 'MACTAVISH', template: '终于醒了？我差点以为得亲自去把你捞出来。' },
+{ minAff: 91, sender: 'MACTAVISH', template: '早安，%NICKNAME_SWEET%。你再晚一点上线，我就要开始胡思乱想了。' },
+{ minAff: 91, sender: 'MACTAVISH', template: '我刚才就在想，你什么时候会出现。结果还真出现了。' },
+{ minAff: 91, sender: 'MACTAVISH', template: '知道吗？你现在已经严重影响我的工作效率了。' },
+{ minAff: 91, sender: 'MACTAVISH', template: '今天早点来找我。别让我等太久。' },
+{ minAff: 91, sender: 'MACTAVISH', template: '你不在的时候，基地都显得无聊不少。' },
+{ minAff: 91, sender: 'MACTAVISH', template: '早安，漂亮男孩。希望你今天是我的。至少一部分时间是。' },
+{ minAff: 91, sender: 'MACTAVISH', template: '有时候我觉得自己快把你宠坏了。' },
+{ minAff: 91, sender: 'MACTAVISH', template: '别这么看我。我只是特别喜欢你而已。' },
+{ minAff: 91, sender: 'MACTAVISH', template: '今天路过办公室的时候，我第一反应是你会不会在里面。' },
+{ minAff: 91, sender: 'MACTAVISH', template: '你知道自己有多难让人专心吗？' },
+{ minAff: 91, sender: 'MACTAVISH', template: '早安，亲爱的。昨晚睡得好吗？我可没有。' },
+{ minAff: 91, sender: 'MACTAVISH', template: '我最近越来越习惯把你算进我的计划里。' },
+{ minAff: 91, sender: 'MACTAVISH', template: '如果现在能见到你，今天大概就圆满了。' },
+{ minAff: 91, sender: 'MACTAVISH', template: '别告诉Price，但我明显偏心你。' },
+{ minAff: 91, sender: 'MACTAVISH', template: '你是不是故意的？每次都能让我心情变好。' },
+{ minAff: 91, sender: 'MACTAVISH', template: '我刚准备给你发消息，然后发现我已经在这么干了。' },
+{ minAff: 91, sender: 'MACTAVISH', template: '早安，%FIRST_NAME%。我今天第一个想联系的人还是你。' },
+{ minAff: 91, sender: 'MACTAVISH', template: '有空来办公室一趟。我保证理由绝对正当……大概。' },
+{ minAff: 91, sender: 'MACTAVISH', template: '看见你在线的那一刻，我今天都顺眼了不少。' },
+
+
+        // 【101+ 阶段：发情期人妻长官的含蓄早安】
+        { minAff: 101, sender: 'SOAP', template: '早安，%RANK%。刚结束晨跑……奇怪，明明出了很多汗，大腿根却还是觉得空虚得发冷。' },
+        { minAff: 101, sender: 'SOAP', template: '%NICKNAME_SWEET%……你终于上线了。我盯着你的状态看了一早上，总觉得现在的办公椅坐垫潮湿得有些不舒服。' },
+        { minAff: 101, sender: 'SOAP', template: '早。今天没穿多余的内层就套上了作训服……粗糙的布料每次摩擦到前面那块软肉，我都得咬着牙才能不在走廊上发出声音。' },
+        { minAff: 101, sender: 'SOAP', template: '汇报今日防线状况：%RANK%，我前方的某处“闸门”正处于毫无防备的松懈状态，随时会溢出液体，需要你立刻来填补空缺。' },
+        { minAff: 101, sender: 'SOAP', template: '你再不连接通讯，我的手就要控制不住往下探了。早安，%NICKNAME_RACE%……长官现在的身体情况很需要“检修”。' },
+        { minAff: 101, sender: 'SOAP', template: '昨晚做了一个不太符合军规的梦……结果今天早上醒来，发现床单前面弄脏了一大片。你该负全责，%FIRST_NAME%。' },
+        { minAff: 101, sender: 'SOAP', template: '早安。刚洗完澡，故意用了你的配给香皂。现在我浑身上下都是你的味道，总觉得身体最深处开始莫名地发热了。' },
+        { minAff: 101, sender: 'SOAP', template: '终端终于亮了。知不知道你的长官等你等得双腿都有些发软？赶紧开始专注，早点结束好来“辅导”我的内勤工作。' },
+        { minAff: 101, sender: 'SOAP', template: '呼……早安。别在意我呼吸有点重，我只是在进行一点常规的“晨间疏解”。你要接通视频确认一下内部的湿润度吗？' },
+        { minAff: 101, sender: 'SOAP', template: '你的专属“后勤保障”已经准备就绪了，%RANK%。只要是你下的命令，不管要在办公桌上摆出什么姿势，我都会服从的哦。' },
+        { minAff: 101, sender: 'SOAP', template: '早上好……刚翻开战术板，脑子里却全是你昨天看我的眼神。某种难以启齿的清液又开始弄脏我的大腿内侧了，真糟糕。' },
+        { minAff: 101, sender: 'SOAP', template: '%RANDOM_NAME%，早。今天经过兵营时我特意走得很快，生怕别人闻出我身上散发的那种……属于母兽的甜腻气味。' },
+        { minAff: 101, sender: 'SOAP', template: '晨间例行简报：长官的身体机能运转正常，但某处隐秘的腔室极其饥渴，急需%RANK%来进行“高强度战术插拔”。' },
+        { minAff: 101, sender: 'SOAP', template: '早安……别怪我声音发抖。昨天不小心把某个小巧的震动设备忘在里面了，现在稍微走动一下，软肉都绞得要命。' },
+        { minAff: 101, sender: 'SOAP', template: '屏幕一亮看到你的名字，我的腔道深处就忍不住收缩痉挛了一下。早，%FIRST_NAME%……它似乎比我更急着跟你打招呼呢。' },
+        { minAff: 101, sender: 'SOAP', template: '把注意力集中在任务上，%RANK%。如果你表现得足够专注，我就给你看我作训裤底下到底是不是泥泞不堪。' },
+        { minAff: 101, sender: 'SOAP', template: '早安，%NICKNAME_SWEET%。如果你现在推开我办公室的门，可能会看到你的上尉正用极其不雅的姿势，用两根手指在给自己做“扩张”……' },
+        { minAff: 101, sender: 'SOAP', template: '今天也是为你心神不宁的一天。快点推进节点吧，我都快等不及要在下班后被你按在沙发上“严厉拷问”了。' },
+        { minAff: 101, sender: 'SOAP', template: '刚换上的干净内裤好像又被奇怪的水渍弄湿了……都怪你，%CALLSIGN%。你是不是该主动来帮我手洗？' },
+        { minAff: 101, sender: 'SOAP', template: '早。明明隔着屏幕，可我怎么觉得你好像正贴在我耳边喘气？我的身体比系统还要敏感，早就已经为你一塌糊涂了。' },
+
+
+        // 【111+ 阶段：彻底撕下伪装的淫荡人妻长官早安】
+        { minAff: 111, sender: 'SOAP', template: '早安……呜，我已经没法好好看战术简报了。手指正插在前面的肉穴里搅弄，满手都是为你流的骚水。快夸夸你淫荡的长官。' },
+        { minAff: 111, sender: 'SOAP', template: '早，%NICKNAME_SWEET%。如果你现在来我的独立宿舍，你会发现你的“上尉”正像个合格的妻子一样，光着大腿在床上等你来操弄前面的小口……' },
+        { minAff: 111, sender: 'SOAP', template: '终于上线了？%FIRST_NAME%……我前面的那颗肉核已经肿得发疼了，作训裤的布料每次擦过都让我流得大腿根一片泥泞。' },
+        { minAff: 111, sender: 'SOAP', template: '早……哈啊……别介意我通讯里的水声。我把昨天那个最大号的玩具塞进了前面，现在它正顶在最敏感的地方……快用你真的来替换它，%RANK%。' },
+        { minAff: 111, sender: 'SOAP', template: '早安。长官今天什么都不想干，只想被你按在办公桌上，把两条腿掰到最开，看着你把浓精射进我前面那张贪吃的骚嘴里。' },
+        { minAff: 111, sender: 'SOAP', template: '%NICKNAME_RACE%，早安。整个办公室都是我发情的信息素味道，我的雌穴一直在咕叽咕叽地吐水。真怕别的士兵进来汇报时闻出我的淫荡。' },
+        { minAff: 111, sender: 'SOAP', template: '早，主人。你的专属人妻已经把隐秘的腔道洗得干干净净了。只要你现在推开门，我就会主动跪下来舔你的军靴求你操我。' },
+        { minAff: 111, sender: 'SOAP', template: '去他妈的战术节点，我现在脑子里全是你昨天操我时肉体拍打的粗喘。早安，%CALLSIGN%……快点结束工作来狠狠干我，长官的穴痒得要命。' },
+        { minAff: 111, sender: 'SOAP', template: '早安。刚才开早会的时候，我没穿内裤。他们都在看大屏幕，只有我知道，随着你的名字被提起，清液正顺着我的大腿一直流进军靴里。' },
+        { minAff: 111, sender: 'SOAP', template: '看私人频道的附件，%FIRST_NAME%。这是我今早把自己前面撑开的录像……看清楚里面的软肉是怎么绞紧两根手指，哭着求你射进来的。' },
+        { minAff: 111, sender: 'SOAP', template: '晨起汇报：%RANK%，你的母狗长官正对着终端上你的头像自慰。我把两根手指插在最深处模拟你的形状……呜，快被自己抠高潮了。' },
+        { minAff: 111, sender: 'SOAP', template: '早。昨晚没被你填满，前面那张小嘴一整晚都在空虚地痉挛。%RANDOM_NAME%，今晚你必须扇着我的阴蒂把我操到失神，这是命令。' },
+        { minAff: 111, sender: 'SOAP', template: '早安……老天，我现在随便夹一下腿，前面都能挤出水来。%NICKNAME_SWEET%，帮帮你的长官吧，再不被你插进来我真的要疯了。' },
+        { minAff: 111, sender: 'SOAP', template: '哪怕挂着上尉的军衔，现在也只想被你操到只能翻白眼流口水。早安，%LAST_NAME%。快点来检查你老婆前面的软肉是不是随时都在为你敞开。' },
+        { minAff: 111, sender: 'SOAP', template: '早……哈啊……你刚才是不是按了跳蛋的遥控器？把它塞在前面本来就够折磨了，现在整个穴口都被震得发麻……太坏了，%CALLSIGN%。' },
+        { minAff: 111, sender: 'SOAP', template: '早安。今天的早餐什么都不想吃，只想吃%RANK%射在最深处的滚烫浓精。快点把它喂给饥渴的长官好不好？' },
+        { minAff: 111, sender: 'SOAP', template: '%NICKNAME_RACE%……早。我正一边揉弄着自己涨硬的胸肉，一边用手指操开前面的水穴。只要听见你的通讯提示音，我就会敏感得一塌糊涂。' },
+        { minAff: 111, sender: 'SOAP', template: '早安。我把你的常服衬衫当睡衣穿了一晚。现在衣服的下摆已经被前面喷出来的淫水彻底打湿了……想看我穿着它挨肏的样子吗？' },
+        { minAff: 111, sender: 'SOAP', template: '长官现在的指令只有一个：放下你的战术板，走到我面前，拉开拉链，狠狠塞进我那张饥不择食的肉嘴里。早，%FIRST_NAME%。' },
+        { minAff: 111, sender: 'SOAP', template: '早安，亲爱的。不管我在外面是对着几百人发号施令的上尉，关起门来，我也只是个前面离了你的大鸡巴就会不停流水的荡妇人妻罢了。' },
+
+
+
+        // 【121+ 阶段：理智崩坏、终极痴迷的疯批发情人妻早安】
+        { minAff: 121, sender: 'SOAP', template: '早安……我已经把办公室的门反锁，监控也切断了。立刻滚进来，%RANK%。你的长官前面的骚穴已经滴水滴得地板上都是了，我命令你现在就来堵住它！' },
+        { minAff: 121, sender: 'SOAP', template: '早，%NICKNAME_SWEET%……我一整晚都在做被你按着肏进子宫的梦。我现在什么战术都看不进去，满脑子只想被你当成母狗一样狠狠配种……' },
+        { minAff: 121, sender: 'SOAP', template: '早安。我现在正对着全体新兵做晨间广播，但我办公桌底下连内裤都没穿，手指正插在自己的肉穴里抠挖。听见我汇报时发颤的尾音了吗，%FIRST_NAME%？全是因为你……' },
+        { minAff: 121, sender: 'SOAP', template: '早……哈啊……我把你没洗过的作训服揉成一团垫在两腿中间了，一边闻着你的汗味一边疯狂揉阴蒂。我快被逼疯了，%CALLSIGN%，给我真的，求求你给我真的！' },
+        { minAff: 121, sender: 'SOAP', template: '早安，老公……你最淫荡的军嫂已经把前面的小嘴洗得干干净净了。只要你现在推开门，我就会跪在地上，把腿掰到最开等你来享用。' },
+        { minAff: 121, sender: 'SOAP', template: '%NICKNAME_RACE%……早。昨天你留在里面的浓精，我全都没洗掉，现在稍微一动就顺着大腿根往下流。我的身体已经被你彻底改造成离不开你的肉壶了。' },
+        { minAff: 121, sender: 'SOAP', template: '你终于亮灯了！知不知道我夹着那个最大号的扩阴器等了你多久？！前面的软肉都被撑到透明了……快点来操我，%LAST_NAME%，把你长官的逼彻底操烂！' },
+        { minAff: 121, sender: 'SOAP', template: '早安。我已经不在乎谁会看到了，如果五分钟内你不来办公室把大鸡巴塞进我前面那张贪吃的嘴里，我就光着下半身去你的兵营找你。听懂了吗，%RANK%？！' },
+        { minAff: 121, sender: 'SOAP', template: '呜……早安……我的肉核肿得好痛，自己用手怎么弄都不够。%FIRST_NAME%，来把你的长官按在墙上，用靴子狠狠踩我的裆部，直到我喷水高潮好不好？' },
+        { minAff: 121, sender: 'SOAP', template: '早安。今天不需要看什么狗屁节点任务，你今天的唯一战术目标，就是弄清楚你上尉的前穴到底能喷出多少次水。随便你怎么玩弄我，%NICKNAME_SWEET%。' },
+        { minAff: 121, sender: 'SOAP', template: '屏幕上的指示灯一亮，我的肚子就猛地抽搐了一下。早，%RANDOM_NAME%……我现在连站都站不稳，只想躺平了把逼露出来，任由你射满我的每一个腔道。' },
+        { minAff: 121, sender: 'SOAP', template: '早安……你昨晚是故意把我操到合不拢腿的对不对？现在不仅一碰就敏感得发抖，还一直在流骚水。你得负责清理干净，用舌头，%CALLSIGN%。' },
+        { minAff: 121, sender: 'SOAP', template: '早……别管那些战术板了，来看看我的私人链接。我正把摄像头塞进我前面的肉洞里，看清楚里面是怎么为你疯狂绞紧、怎么红肿着求欢的！' },
+        { minAff: 121, sender: 'SOAP', template: '早安，主人。你的专属母狗正在发情。我不需要尊严，也不需要军衔，我只需要你粗暴地撕开我的制服，把我干到只能翻着白眼流口水，%FIRST_NAME%。' },
+        { minAff: 121, sender: 'SOAP', template: '%NICKNAME_RACE%……早。刚才开会的时候，幽灵问我为什么制服的裆部是湿的。我一边看着你，一边跟他说是不小心洒了水……你想看我被别人发现有多骚吗？' },
+        { minAff: 121, sender: 'SOAP', template: '早安。我现在就趴在战术沙盘上，皮带已经解开了。快点从后面插进来，让我一边看着前线的坐标，一边被你操得惨叫连连，%RANK%。' },
+        { minAff: 121, sender: 'SOAP', template: '早……昨天晚上你射在里面的东西，似乎让我产生了假孕的错觉。肚子涨得好舒服……真想真的怀上你的小崽子，%NICKNAME_SWEET%。再给我一点浓精好不好？' },
+        { minAff: 121, sender: 'SOAP', template: '早安。我的手指已经被穴里的水泡得发皱了，可还是觉得空虚。如果今天不能被你的肉刃狠狠贯穿子宫口，你的上尉绝对会死掉的，%LAST_NAME%。' },
+        { minAff: 121, sender: 'SOAP', template: '别再盯着屏幕了！快来看看你的荡妇长官！我已经把作训服脱得只剩一件防弹衣，下半身全裸着在终端前自慰了半个小时了，快来干死我，%FIRST_NAME%！' },
+        { minAff: 121, sender: 'SOAP', template: '早安，老公……我把你送的狗项圈戴上了，就藏在衣领下面。只要你拉一拉牵引绳，我就会乖乖爬过去，张开大腿让你操烂我前面那张小嘴。' },
+
+        ],
+
+
             afternoon: [ 
                 // 【陌生阶段 0-20】
-                { minAff: 0, sender: 'MAC', template: '午后时间容易犯困。如果需要提神，我不介意去训练场陪你练练格斗，{rank}。' },
-                { minAff: 0, sender: 'MAC', template: '保持警惕。下午最容易放松防备，别让我逮到你在屏幕前打瞌睡。' },
+                { minAff: 0, sender: 'MACTAVISH', template: '午后时间容易犯困。如果需要提神，我不介意去训练场陪你练练格斗，{rank}。' },
+                { minAff: 0, sender: 'MACTAVISH', template: '保持警惕。下午最容易放松防备，别让我逮到你在屏幕前打瞌睡。' },
 
                 // 【信任阶段 51-80】
-                { minAff: 51, sender: 'SOAP', template: '下午好！别在椅子上坐太久，活动一下脖子。要是你得了颈椎病，我可不会背你上直升机。' },
-                { minAff: 51, sender: 'SOAP', template: '进度怎么样了？如果遇到麻烦随时报告，上尉来帮你解决。' },
+                { minAff: 51, sender: 'MACTAVISH', template: '下午好！别在椅子上坐太久，活动一下脖子。要是你得了颈椎病，我可不会背你上直升机。' },
+                { minAff: 51, sender: 'MACTAVISH', template: '进度怎么样了？如果遇到麻烦随时报告，上尉来帮你解决。' },
 
                 // 【特殊关系 120+】
-                { minAff: 121, sender: 'SOAP', template: '下午最容易犯困了……要不要来我办公室“提提神”？我保证把你弄得清醒过来，或者……让你累得直接睡过去。' },
-                { minAff: 121, sender: 'SOAP', template: '别总盯着那些枯燥的战术文档了，{player_name}。把频道切到私人影像，我给你看点……能让你精神百倍的东西。' }
+                { minAff: 121, sender: 'MACTAVISH', template: '下午最容易犯困了……要不要来我办公室“提提神”？我保证把你弄得清醒过来，或者……让你累得直接睡过去。' },
+                { minAff: 121, sender: 'MACTAVISH', template: '别总盯着那些枯燥的战术文档了，{player_name}。把频道切到私人影像，我给你看点……能让你精神百倍的东西。' }
             ],
             evening: [ 
                 // 【陌生阶段 0-20】
-                { minAff: 0, sender: 'MAC', template: '太阳落山了。注意保护视力，{rank}，防线安全交给我。' },
+                { minAff: 0, sender: 'MACTAVISH', template: '太阳落山了。注意保护视力，{rank}，防线安全交给我。' },
                 { minAff: 0, sender: 'SYS', template: '[ 夜间环境已载入 ] 终端背光已自动调整。' },
 
                 // 【信任阶段 51-80】
-                { minAff: 51, sender: 'SOAP', template: '晚上好。今天进度不错，但别把自己逼得太紧。去吃点热的，这是上尉的命令。' },
-                { minAff: 51, sender: 'SOAP', template: '天黑了。如果你需要去后勤处拿夜宵，我可以顺路替你带一份。' },
+                { minAff: 51, sender: 'MACTAVISH', template: '晚上好。今天进度不错，但别把自己逼得太紧。去吃点热的，这是上尉的命令。' },
+                { minAff: 51, sender: 'MACTAVISH', template: '天黑了。如果你需要去后勤处拿夜宵，我可以顺路替你带一份。' },
 
                 // 【特殊关系 120+】
-                { minAff: 121, sender: 'SOAP', template: '天黑了……监控死角变多了，对吧？如果你现在溜进我的宿舍，没人会发现的。我的门没锁，{player_name}。' },
-                { minAff: 121, sender: 'SOAP', template: '晚上好。我刚洗完澡，身上只有一件浴巾。猜猜看，如果你现在打视频通讯过来，浴巾会不会刚好掉在地上？' }
+                { minAff: 121, sender: 'MACTAVISH', template: '天黑了……监控死角变多了，对吧？如果你现在溜进我的宿舍，没人会发现的。我的门没锁，{player_name}。' },
+                { minAff: 121, sender: 'MACTAVISH', template: '晚上好。我刚洗完澡，身上只有一件浴巾。猜猜看，如果你现在打视频通讯过来，浴巾会不会刚好掉在地上？' }
             ],
             night: [ 
                 // 【陌生阶段 0-20】
-                { minAff: 0, sender: 'MAC', template: '夜间行动开始。如果你还不打算睡，最好保持十二分的专注，{rank}。' },
-                { minAff: 0, sender: 'MAC', template: '这么晚还在前线死磕？你的作息时间表需要重新规划了。' },
+                { minAff: 0, sender: 'MACTAVISH', template: '夜间行动开始。如果你还不打算睡，最好保持十二分的专注，{rank}。' },
+                { minAff: 0, sender: 'MACTAVISH', template: '这么晚还在前线死磕？你的作息时间表需要重新规划了。' },
 
                 // 【信任阶段 51-80】
-                { minAff: 51, sender: 'SOAP', template: '嘿，你还没睡？看来今天又是我们在深夜频道作伴了。别硬撑，困了就去睡。' },
-                { minAff: 51, sender: 'SOAP', template: '还在忙？需要我给你讲个苏格兰的冷笑话提提神吗？虽然幽灵总说我的笑话很烂。' },
+                { minAff: 51, sender: 'MACTAVISH', template: '嘿，你还没睡？看来今天又是我们在深夜频道作伴了。别硬撑，困了就去睡。' },
+                { minAff: 51, sender: 'MACTAVISH', template: '还在忙？需要我给你讲个苏格兰的冷笑话提提神吗？虽然幽灵总说我的笑话很烂。' },
 
                 // 【特殊关系 120+】
-                { minAff: 121, sender: 'SOAP', template: '这么晚还在前线死磕？还是说……你其实是在等我的私人通讯？我大腿根现在全是湿的，就因为想到你还在看着屏幕……' },
-                { minAff: 121, sender: 'SOAP', template: '夜深人静的时候最难熬了，对吧？听听我的呼吸声，{player_name}……想象一下我现在正跨坐在你腿上。' }
+                { minAff: 121, sender: 'MACTAVISH', template: '这么晚还在前线死磕？还是说……你其实是在等我的私人通讯？我大腿根现在全是湿的，就因为想到你还在看着屏幕……' },
+                { minAff: 121, sender: 'MACTAVISH', template: '夜深人静的时候最难熬了，对吧？听听我的呼吸声，{player_name}……想象一下我现在正跨坐在你腿上。' }
             ],
             lateNight: [ 
                 // 【陌生阶段 0-20】
                 { minAff: 0, sender: 'SYS_WARN', template: '[ 警告 ] 监测到操作员生命体征处于疲劳临界点。建议立即切断电源去睡觉。' },
-                { minAff: 0, sender: 'MAC', template: '凌晨了。我还在守夜，但你该去休息了。立刻切断电源，{rank}。' },
+                { minAff: 0, sender: 'MACTAVISH', template: '凌晨了。我还在守夜，但你该去休息了。立刻切断电源，{rank}。' },
 
                 // 【信任阶段 51-80】
-                { minAff: 51, sender: 'SOAP', template: '现在几点了？如果你因为熬夜导致明天射击脱靶，我会让你去洗一整个月的土豆。去睡觉！' },
-                { minAff: 51, sender: 'SOAP', template: '老天，你不要命了吗？赶紧滚去床上闭上眼睛，这是来自上尉的强制命令！' },
+                { minAff: 51, sender: 'MACTAVISH', template: '现在几点了？如果你因为熬夜导致明天射击脱靶，我会让你去洗一整个月的土豆。去睡觉！' },
+                { minAff: 51, sender: 'MACTAVISH', template: '老天，你不要命了吗？赶紧滚去床上闭上眼睛，这是来自上尉的强制命令！' },
 
                 // 【特殊关系 120+】
-                { minAff: 121, sender: 'SOAP', template: '求你了，去睡吧……你再不切断通讯，我就要忍不住在监控里自慰给你看了。你想让整个基地都听到上尉发情的声音吗？' },
-                { minAff: 121, sender: 'SOAP', template: '你是不是非要我亲自过去，把你按在床上操到你连一根手指都抬不起来，你才肯乖乖睡觉？嗯？' }
+                { minAff: 121, sender: 'MACTAVISH', template: '求你了，去睡吧……你再不切断通讯，我就要忍不住在监控里自慰给你看了。你想让整个基地都听到上尉发情的声音吗？' },
+                { minAff: 121, sender: 'MACTAVISH', template: '你是不是非要我亲自过去，把你按在床上操到你连一根手指都抬不起来，你才肯乖乖睡觉？嗯？' }
             ]
         };
 
@@ -1656,6 +1998,93 @@
             return null;
         }
 
+        // ================= 主线剧情档案库 =================
+        const mainStoryData = [
+            {
+                chapter: 0,
+                reqAffection: 5,        // 条件1：好感度达到 5
+                reqFocusMinutes: 0,     // 条件2：总专注时长达到 0 分钟
+                title: "FILE 01：报到日",
+                text: `你推开办公室的门，里面弥漫着劣质咖啡和枪油混合的味道。麦克塔维什正背对着你，研究墙上的战术白板。
+                <br><br>“新来的%RANK%？”他没有回头，只是用马克笔在地图上画了个圈，“把你的档案放下，然后随便找台空闲的终端。141不养闲人，希望你的实战成绩和纸面数据一样漂亮。”
+                <br><br>他转过身，蓝眼睛上下打量了你一圈。你注意到他的视线在你的军衔肩章上多停留了半秒。`
+            },
+            {
+                chapter: 1,
+                reqAffection: 15,       // 条件1：好感度达到 15
+                reqFocusMinutes: 60,    // 条件2：历史总专注必须满 60 分钟
+                title: "FILE 02：夜间巡航",
+                text: `基地的走廊很空。你端着咖啡路过休息室时，听到了里面传来轻微的金属碰撞声。
+                <br><br>“%FIRST_NAME%。”他叫住了你。他在擦枪，桌上散落着零件。“这么晚还没睡？过来陪我坐一会儿。”
+                <br><br>他的语气比第一次见面时熟络了不少，甚至带着一点不易察觉的疲惫。他拍了拍身边的空位，示意你坐下。`
+            },
+            {
+                chapter: 2,
+                reqAffection: 30,       // 条件1：好感度达到 30
+                reqFocusMinutes: 180,   // 条件2：历史总专注必须满 3 个小时 (180分钟)
+                title: "FILE 03：火力覆盖",
+                text: `“干得漂亮，%CALLSIGN%！”通讯频道里传来他伴随着枪声的低吼，“你的掩护很精准，看来你不仅能在终端前坐得住，实战也没落下。”
+                <br><br>你从瞄准镜里看到他冲你竖起了一个大拇指。这大概是他第一次对你展现出毫无保留的认可。`
+            }
+        ];
+
+        // ================= 主线剧情触发系统 (多维判定版) =================
+        function checkMainStoryUnlock() {
+            const nextChapterIndex = gameState.currentStoryChapter;
+            
+            // 如果已经看完了所有写好的主线，就不执行
+            if (nextChapterIndex >= mainStoryData.length) return; 
+
+            const nextChapterData = mainStoryData[nextChapterIndex];
+
+            // --- 计算玩家的全局投入数据 ---
+            const currentAffection = gameState.affection;
+
+            let totalFocusSeconds = 0;
+            Object.values(gameState.taskHistory).forEach(dayTasks => {
+                dayTasks.forEach(task => {
+                    totalFocusSeconds += (task.duration || 0);
+                });
+            });
+            const totalFocusMinutes = Math.floor(totalFocusSeconds / 60);
+
+            // --- 综合条件判定 ---
+            let canUnlock = true;
+
+            if (nextChapterData.reqAffection !== undefined && currentAffection < nextChapterData.reqAffection) {
+                canUnlock = false;
+            }
+
+            if (nextChapterData.reqFocusMinutes !== undefined && totalFocusMinutes < nextChapterData.reqFocusMinutes) {
+                canUnlock = false;
+            }
+
+            // 如果满足条件，触发解锁
+            if (canUnlock) {
+                const processedText = typeof processStoryText === 'function' ? processStoryText(nextChapterData.text) : nextChapterData.text;
+                
+                const storyHtml = `
+                    <div style="border: 1px solid var(--accent); background: rgba(56, 189, 248, 0.05); padding: 16px; border-radius: 4px; margin: 16px 0;">
+                        <div style="color: var(--accent); font-weight: bold; font-size: 14px; margin-bottom: 12px; border-bottom: 1px solid rgba(56, 189, 248, 0.3); padding-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">
+                            [ 核心档案解密 // ${nextChapterData.title} ]
+                        </div>
+                        <div style="color: var(--text-main); line-height: 1.8; font-size: 13px;">
+                            ${processedText}
+                        </div>
+                    </div>
+                `;
+
+                addCommunicationMessage('SYS.ARCHIVE', storyHtml);
+                gameState.storyLogs.push(`【${nextChapterData.title}】<br>${processedText}`);
+                
+                gameState.currentStoryChapter++;
+                saveData();
+
+                // 递归检查
+                checkMainStoryUnlock(); 
+            }
+        }
+
         // ================= 任务反馈剧本池 (模板化版) =================
         const taskFeedbackPool = {
             generic: [
@@ -1712,19 +2141,50 @@
         const eventHandlers = {
             'focus_complete': (data) => {
                 if (data.duration >= 1500) { 
-                    // 剔除 Ghost，换成 MAC
-                    addCommunicationMessage('MAC', `检测到长时间生命体征平稳。干得不错，{rank}，保持这个节奏。`);
+                    const rank = gameState.player.rank;
+                    const msgs = [
+                        { sender: 'MAC', text: `检测到长时间生命体征平稳。干得不错，${rank}，保持这个节奏。` },
+                        { sender: 'MAC', text: `专注度评级：优秀。战术记录已同步，继续保持，${rank}。` },
+                        { sender: 'SOAP', text: `连姿势都没怎么换过吧？我都替你觉得肩膀酸。活动一下。` },
+                        { sender: 'SYS', text: `[ 节点归档 ] 长时间沉浸式协议执行完毕。` }
+                    ];
+                    const chosen = msgs[Math.floor(Math.random() * msgs.length)];
+                    addCommunicationMessage(chosen.sender, chosen.text);
                 }
+
+                // 🌟 新增：专注结束后，如果有好感度提升，检查是否解锁了主线！
+                setTimeout(() => {
+                    checkMainStoryUnlock();
+                }, 2000); // 延迟 2 秒推送，让系统的通报先弹出来，更有仪式感
             },
             
             'short_break_start': (data) => {
-                // data: { round: number }
-                addCommunicationMessage('SYS', `[ 战术协议 ] 短休已开启。请活动关节，补充水分。`);
+                const rank = gameState.player.rank;
+                const msgs = [
+                    { sender: 'SYS', text: `[ 战术协议 ] 短休已开启。请活动关节，补充水分。` },
+                    { sender: 'SYS', text: `[ 战术节点冷却 ] 建议操作员暂时转移视线，预防视觉疲劳。` },
+                    { sender: 'MAC', text: `离开屏幕。站起来走走，${rank}，这是强制医嘱。` },
+                    { sender: 'SOAP', text: `呼，终于可以喘口气了。要不要去后勤处顺两罐功能饮料？` },
+                    { sender: 'SOAP', text: `5分钟休息。你可以选择闭目养神，或者……发个消息来骚扰一下你的上尉。` }
+                ];
+                const chosen = msgs[Math.floor(Math.random() * msgs.length)];
+                addCommunicationMessage(chosen.sender, chosen.text);
             },
             
             'long_break_start': (data) => {
-                // data: { round: number }
-                addCommunicationMessage('MAC', `呼……这个阶段总算熬过去了。去休息区待着，{rank}，别让我逮到你还在看屏幕。`);
+                const rank = gameState.player.rank;
+                // 获取玩家名字（优先用名字，没有用代号，都没填兜底用“士兵”）
+                const name = (gameState.player.firstName && gameState.player.firstName !== "未知") ? gameState.player.firstName : (gameState.player.callsign || "士兵");
+                
+                const msgs = [
+                    { sender: 'MAC', text: `呼……这个阶段总算熬过去了。去休息区待着，${rank}，别让我逮到你还在看屏幕。` },
+                    { sender: 'MAC', text: `完整的战术循环结束。现在，放下一切，给我滚去闭目养神。` },
+                    { sender: 'SOAP', text: `老天，你终于完成这轮长线任务了。辛苦了，${name}……快去休息。` },
+                    { sender: 'SOAP', text: `干得漂亮！这可是个大工程。把终端锁上，现在是属于你自己的私人时间了。` },
+                    { sender: 'SYS', text: `[ 深度休整 ] 长休协议激活。正在清理临时缓存... 准许离线。` }
+                ];
+                const chosen = msgs[Math.floor(Math.random() * msgs.length)];
+                addCommunicationMessage(chosen.sender, chosen.text);
             },
 
             // 🌟 新增：专注连击事件
@@ -1805,13 +2265,20 @@
             },
             
             'daily_login': (data) => {
-                gameState.taskStreak = 0; // 🌟 新的一天，重置连击数
-                saveData();
-                
-                addCommunicationMessage('SYS', `[ 权限验证通过 ] 欢迎回来。系统已重新校准。`);
-                const timeMsg = getTimeBasedMessage();
-                if (timeMsg) addCommunicationMessage(timeMsg.sender, timeMsg.text);
-            },
+            gameState.taskStreak = 0; // 🌟 新的一天，重置连击数
+            saveData();
+    
+            // 如果离线超过 2 小时（比如睡了一觉），顺便播报一下离线时长
+            if (data.hoursAway && data.hoursAway >= 2) {
+            addCommunicationMessage('SYS', `[ 节点重新连接 ] 离线时长: ${data.hoursAway} 小时。权限验证通过。`);
+            } else {
+            addCommunicationMessage('SYS', `[ 权限验证通过 ] 欢迎回来。系统已重新校准。`);
+            }
+    
+           // 照常抽取早安问候
+           const timeMsg = getTimeBasedMessage();
+           if (timeMsg) addCommunicationMessage(timeMsg.sender, timeMsg.text);
+           },
 
             // 🌟 新增：同一天内离开超过 2 小时再回来，也会触发问候
             'return_after_absence': (data) => {
@@ -1842,16 +2309,16 @@
                     days1: [
                         { sender: 'SOAP', text: '终于回来了！我还以为这破终端的信号接收器坏了。' },
                         { sender: 'MAC', text: '失联超过24小时。我还以为你需要我派搜救小队去找你了，%FIRST_NAME%。' },
-                        { sender: 'MAC', text: '一整天没见人影。最好是在忙什么正事，{rank}。' }
+                        { sender: 'MAC', text: '一整天没见人影。最好是在忙什么正事，%RANK%。' }
                     ],
                     days3: [
-                        { sender: 'MAC', text: '三天。如果这是实战，你已经被判定为 MIA 了。赶紧归队，{rank}。' },
+                        { sender: 'MAC', text: '三天。如果这是实战，你已经被判定为 MIA 了。赶紧归队，%RANK%。' },
                         { sender: 'SOAP', text: '老天，你终于上线了！我差点就要去查你的真实坐标了。' },
                         { sender: 'MAC', text: '整整三天完全静默。战术面板都快生锈了。最好给我个合理的解释，%RANDOM_NAME%。' }
                     ],
                     days7: [
                         { sender: 'SOAP', text: '……一周。我还以为你把我忘了。回来就好，别再切断通讯这么久了。' },
-                        { sender: 'SOAP', text: '{rank}？你再不出现，基地里都要给你开追悼会了。' },
+                        { sender: 'SOAP', text: '%RANK%？你再不出现，基地里都要给你开追悼会了。' },
                         { sender: 'MAC', text: '七天。哪怕是被俘虏了也该有个求救信号。终端权限重新激活，下次消失前记得打个报告。' }
                     ]
                 };
@@ -1907,10 +2374,14 @@
             if (savedData) {
                 const parsed = JSON.parse(savedData);
                 gameState.player = parsed.player || gameState.player; 
+                gameState.currentStoryChapter = parsed.currentStoryChapter || 0;
                 gameState.affection = parsed.affection || 0;
                 gameState.storyLogs = parsed.storyLogs || []; 
                 gameState.availableRewards = parsed.availableRewards || { tier0: 0, tier1: 0, tier2: 0, tier3: 0 };
                 gameState.rewardCounts = parsed.rewardCounts || { tier0: 0, tier1: 0, tier2: 0, tier3: 0 };
+                gameState.counters = parsed.counters || { squirt: 0, orgasm: 0, edge: 0 }; // 🌟 新增：读取计数器存档
+                gameState.rewardBags = parsed.rewardBags || {}; // 🌟 新增：读取抽卡袋存档
+                gameState.hasSeenIntro = parsed.hasSeenIntro || false; // 🌟 新增：读取开场标记
 
                 // 读取上次活跃时间
                 gameState.lastActiveTime = parsed.lastActiveTime || Date.now();
@@ -1931,8 +2402,8 @@
                     // 离开达到或超过 24 小时（1天/3天/7天）
                     triggerEvent('long_absence_return', { daysAway: daysAway });
                 } else if (isNewDay) {
-                    // 离开没到24小时，但在不同的自然日（比如昨晚11点睡，今早8点起）
-                    triggerEvent('daily_login', { date: now.toLocaleDateString() });
+                    // 把 hoursAway 一并传给 daily_login
+                    triggerEvent('daily_login', { date: now.toLocaleDateString(), hoursAway: hoursAway });
                 } else if (hoursAway >= 2) {
                     // 同一天内，离开超过 2 小时算作暂离回归
                     triggerEvent('return_after_absence', { hoursAway: hoursAway });
@@ -1967,8 +2438,13 @@
                     longRestInterval: savedTimer.longRestInterval || 2,
                     // 👇 新增这两行 👇
                     activeTaskName: savedTimer.activeTaskName || "",
-                    currentSegmentStartTime: savedTimer.currentSegmentStartTime || 0
+                    currentSegmentStartTime: savedTimer.currentSegmentStartTime || 0,
+                    autoFlow: savedTimer.autoFlow || false
                 };
+
+                // 👇 2. 在大括号后面，新增下面这两行代码，用来读取开关状态 👇
+                const autoFlowToggle = document.getElementById('auto-flow-toggle');
+                if (autoFlowToggle) autoFlowToggle.checked = gameState.timerState.autoFlow;
 
                 // 👇 回填到输入框
                 document.getElementById('total-rounds').value = gameState.timerState.totalRounds;
@@ -1993,7 +2469,6 @@
         // ================= 通讯系统核心引擎 =================
 
         // 渲染通讯记录面板 (Mission Log)
-        // 渲染通讯记录面板 (Mission Log)
         function renderMissionLog() {
             const logContent = document.getElementById('dialogue-text');
             
@@ -2015,9 +2490,8 @@
                 let bgOpacity = "0"; 
                 let contentColor = "var(--text-main)";
 
-                // 🌟 核心：根据发送者区分样式
+                // 核心：根据发送者区分样式
                 if (msg.sender.startsWith("SYS")) {
-                    // 【系统消息样式】
                     senderColor = "var(--text-muted)";
                     if (msg.sender === "SYS_ERR") {
                         senderColor = "#ef4444"; 
@@ -2030,29 +2504,34 @@
                         senderPrefix = "WARNING";
                         borderColor = "rgba(245, 158, 11, 0.3)";
                     } else if (msg.sender === "SYS.ARCHIVE") {
-                        senderColor = "#c084fc"; // 紫色，代表剧情档案
+                        senderColor = "#c084fc"; 
                         senderPrefix = "ARCHIVE";
                         borderColor = "rgba(192, 132, 252, 0.3)";
                         bgOpacity = "0.05";
                     }
                 } else {
-                    // 【角色通讯样式】(MAC / SOAP)
-                    senderColor = "#38bdf8"; // 亮蓝色
+                    senderColor = "#38bdf8"; 
                     senderPrefix = "INCOMING";
-                    borderColor = "rgba(56, 189, 248, 0.4)"; // 边框高亮
-                    bgOpacity = "0.08"; // 带有微弱的蓝色背景，突出角色发言
+                    borderColor = "rgba(56, 189, 248, 0.4)"; 
+                    bgOpacity = "0.08"; 
                 }
 
-                // 未读消息的专属视觉强化
                 let unreadTag = "";
                 if (!msg.read) {
                     unreadTag = `<span style="color: #ef4444; font-weight: bold; margin-right: 6px;">[NEW]</span>`;
                     borderColor = "rgba(239, 68, 68, 0.6)"; 
                 }
 
-                // 组装单条记录的 HTML
+                // 🌟 核心动画逻辑：判定是否为新消息
+                let animClass = "";
+                if (msg.isNew) {
+                    animClass = "animated-line"; // 挂载 CSS 里写好的淡入上浮动画
+                    msg.isNew = false; // 渲染一次后立刻消除标记，确保旧消息永远不再乱动
+                }
+
+                // 组装单条记录的 HTML (注意 class 里面加了 ${animClass})
                 htmlString += `
-                    <div class="comm-message" style="margin-bottom: 16px; border-left: 2px solid ${borderColor}; padding-left: 12px; background: rgba(0,0,0,${bgOpacity}); padding-top: 4px; padding-bottom: 4px; border-radius: 0 4px 4px 0;">
+                    <div class="comm-message ${animClass}" style="margin-bottom: 16px; border-left: 2px solid ${borderColor}; padding-left: 12px; background: rgba(0,0,0,${bgOpacity}); padding-top: 4px; padding-bottom: 4px; border-radius: 0 4px 4px 0;">
                         <div style="font-size: 10px; color: ${senderColor}; letter-spacing: 1px; margin-bottom: 6px; font-weight: bold;">
                             ${unreadTag}<span style="opacity: 0.5; color: var(--text-main); font-weight: normal;">[ ${timeStr} ]</span> // ${senderPrefix} : ${msg.sender}
                         </div>
@@ -2125,8 +2604,8 @@
                 sender: sender || "SYS.LOG", 
                 text: text,
                 timestamp: Date.now(),
-                // 🌟 核心修改：默认为未读。但如果玩家鼠标正停留在日志区，则直接视为已读
-                read: typeof isHoveringLog !== 'undefined' ? isHoveringLog : false 
+                read: typeof isHoveringLog !== 'undefined' ? isHoveringLog : false,
+                isNew: true // 🌟 核心新增：标记这是一条刚接入的“新消息”，用来触发动画
             };
 
             gameState.communicationLog.push(newMessage);
@@ -2239,12 +2718,18 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
             gameState.player.firstName = inputFirstName || "未知";
             gameState.player.callsign = inputCallsign || "无名氏";
             gameState.player.lastName = inputLastName;
-            gameState.player.rank = document.getElementById('op-rank').value; // 读取军衔
+            gameState.player.rank = document.getElementById('op-rank').value; 
             gameState.player.race = document.getElementById('op-race').value;
 
             let assembledName = `${gameState.player.firstName}·“${gameState.player.callsign}”`;
             if (inputLastName !== "") assembledName += `·${inputLastName}`;
             gameState.player.fullName = assembledName;
+
+            // 🌟 检查是否是第一次录入
+            const isFirstTime = !gameState.hasSeenIntro;
+            if (isFirstTime) {
+                gameState.hasSeenIntro = true;
+            }
 
             gameState.lastActiveTime = Date.now();
             saveData();
@@ -2252,6 +2737,27 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
             showStaticView();
 
             printLog(`[SYS] 档案已覆盖。操作员: ${gameState.player.fullName} [${gameState.player.rank}] | 属性: ${gameState.player.race}`);
+
+            // 🌟 新增：如果是第一次录入，延迟 1.5 秒后推送开场剧情
+            if (isFirstTime) {
+                setTimeout(() => {
+                    const introText = `
+                        <div style="border: 1px solid var(--accent); background: rgba(56, 189, 248, 0.05); padding: 16px; border-radius: 4px; margin: 16px 0;">
+                            <div style="color: var(--accent); font-weight: bold; font-size: 14px; margin-bottom: 12px; border-bottom: 1px solid rgba(56, 189, 248, 0.3); padding-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">
+                                [ 核心档案解密 // FILE 00：系统激活 ]
+                            </div>
+                            <div style="color: var(--text-main); line-height: 1.8; font-size: 13px;">
+                                终端屏幕闪烁了几下，幽蓝色的光芒照亮了你面前的桌面。系统正在读取你的生物特征与身份识别码。<br><br>
+                                “身份确认。欢迎加入141特遣队，%LAST_NAME%%RANK%。”<br><br>
+                                通讯频道里传来一个低沉而带着苏格兰口音的男声。那是约翰·麦克塔维什上尉，你的新直属长官。<br><br>
+                                “我是麦克塔维什。从今天起，你的战术节点由我直接接管。别让我看到你在终端前打瞌睡，士兵。现在，开始你的第一个专注周期。”
+                            </div>
+                        </div>
+                    `;
+                    // 使用 processStoryText 解析里面的 %RANK% 等变量，然后推送到面板和历史记录
+                    pushStory(processStoryText(introText));
+                }, 1500);
+            }
         });
 
         // 弹窗相关逻辑
@@ -2272,14 +2778,33 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
         document.getElementById('modal-confirm').addEventListener('click', function() {
             modalOverlay.classList.add('hidden');
             
-            // 清空当前的操作员核心数据，使其失效
-            gameState.player.firstName = "";
-            gameState.player.fullName = "";
+            // 🌟 1. 彻底重置剧情进度、好感度、日志（保留了 gameState.player 不做清理，旧名字会留在框里）
+            gameState.hasSeenIntro = false; 
+            gameState.currentStoryChapter = 0;
+            gameState.communicationLog = [];    // 清空通讯记录(右侧面板正在显示的内容)
+            gameState.affection = 0;            // 好感度归零
+            
+            // 🌟 2. 重置所有兑换奖励、隐藏计数器（避免前任进度的“遗留物”被继承）
+            gameState.availableRewards = { tier0: 0, tier1: 0, tier2: 0, tier3: 0 };
+            gameState.rewardCounts = { tier0: 0, tier1: 0, tier2: 0, tier3: 0 };
+            gameState.counters = { squirt: 0, orgasm: 0, edge: 0 };
+            gameState.rewardBags = {};
+            
+            // (可选) 如果你希望连之前建立的【番茄钟任务清单】和【历史日历记录】也彻底清空，
+            // 可以把下面两行前面的双斜杠去掉：
+            // gameState.customTasks = [];
+            // gameState.taskHistory = {};
+
             gameState.lastActiveTime = Date.now();
             saveData(); 
             
+            // 🌟 3. 立即刷新页面上的 UI 显示
+            updateAffectionDisplay(); // 刷新左下角好感度显示
+            renderMissionLog();       // 刷新右侧文本框（使其清空）
+            
+            // 切换回编辑面板，因为 gameState.player 没被清空，旧档案会自动回填在输入框里
             showEditView(); 
-            printLog(`<span style="color: #ef4444;">[WARN] 协议启动。剧情节点已归零，请重新录入操作员数据。</span>`);
+            printLog(`<span style="color: #ef4444;">[WARN] 协议启动。进度已重置。请确认或修改操作员档案以重新开始。</span>`);
         });
 
         // ================= 计时器与好感度核心逻辑 =================
@@ -2288,6 +2813,7 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
         let isRunning = false;
         let focusSeconds = 0;  
         let targetEndTime = 0;
+        let autoFlowTimeout = null; // 用于防误触的定时器
 
         // 解析输入框的时间为秒数 (type 传入 'work' 或 'rest')
         function parseInputTime(type) {
@@ -2452,6 +2978,17 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
                     saveData();
                     updateCycleDisplay();
                     syncTimerDisplay(); // 🌟 新增：倒计时结束时，立刻把下一阶段的时间加载到大屏幕上！
+
+                    // 👇 新增：自动轮换判定逻辑 👇
+                    if (gameState.timerState.autoFlow && gameState.timerState.mode !== 'idle') {
+                        printLog(`[SYS] 自动轮换激活：3秒后自动接入下一阶段...`);
+                        autoFlowTimeout = setTimeout(() => {
+                            // 确保在这3秒内，玩家没有手动点暂停或者重置
+                            if (!isRunning && gameState.timerState.mode !== 'idle') {
+                                document.getElementById('btn-start').click(); // 模拟点击开始按钮
+                            }
+                        }, 3000); 
+                    }
                 }
             }, 1000);
         }
@@ -2884,12 +3421,34 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
             const safeRace = player.race || "基准人类";
 
             const raceNicknames = {
-                "狼混血种": ["小狗", "狼崽", "小狼"],
-                "犬混血种": ["小狗", "小猎犬", "乖狗狗"],
-                "豹混血种": ["小猫", "大猫", "小豹子"],
-                "基准人类": ["宝贝", "士兵", "亲爱的"] // 这里也改一下
+                "基准人类": ["宝贝", "士兵", "亲爱的", "好男孩"],
+                "豹混血种": ["小猫", "大猫", "小豹子", "野猫"],
+                "犬混血种": ["小狗", "小猎犬", "乖狗狗", "大狗狗"],
+                "狼混血种": ["小狗", "狼崽", "小狼", "大灰狼"],
+                "蛇混血种": ["小蛇", "小毒牙", "小蟒蛇", "冷血小怪物"],
+                "鸟混血种": ["小鸟", "小雏鸟", "小羽毛", "小猛禽"],
+                "鱼混血种": ["小鱼", "小人鱼", "小鲨鱼", "小水怪"],
+                "狐混血种": ["小狐狸", "小狐崽", "狡猾的小家伙", "小赤狐"],
+                "龙混血种": ["小龙", "龙崽子", "大蜥蜴", "小恶龙"],
+                "章鱼混血": ["小章鱼", "小海怪", "触手怪", "八爪小怪物"]
             };
-            const sweetNicknames = ["甜心", "蜜糖", "亲爱的", "宝贝"];
+            const sweetNicknames = [
+                                    "甜心",      // 经典英美式调情称呼，带有强烈的反差感
+                                    "蜜糖",      // 甜腻，适合高感度下的耳语
+                                    "亲爱的",    // 绝对的亲密与专属
+                                    "宝贝",      // 毫无防备的宠溺
+                                    "乖男孩",    // (Good boy) 极度适合男性上位者对下属的安抚与奖赏
+                                    "我的男孩",  // (My boy) 充满强烈的占有欲与保护欲
+                                    "宝贝男孩",  // (Baby boy) 在极度私密环境下的黏人称呼
+                                    "好孩子",    // 混杂了长官的肯定与伴侣的纵容
+                                    "帅哥",      // 战友之间熟络后略带痞气的调情
+                                    "小笨蛋",    // 看到队员因为自己而手足无措时，带着无奈与怜爱的嗔怪
+                                    "心肝",      // 极度动情或高潮失控时脱口而出的爱语
+                                    "小子",      // 表面粗犷公事公办，实则是“自己人”的专属称呼
+                                    "我的士兵",  // 强调职务之便与绝对的所有权，制服感极强
+                                    "帅小伙",   
+                                    "好男孩"    
+                                ];
 
             const currentRaceNicks = raceNicknames[safeRace] || ["士兵"]; // 这里也改一下
             const getRand = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -2926,11 +3485,12 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
             saveData();
 
             // 2. 统一推送到 Mission Log (作为档案消息)
-            addCommunicationMessage('SYS.ARCHIVE', text);
+            addCommunicationMessage('PLOG', text);
         }
 
         // 开始任务
         document.getElementById('btn-start').addEventListener('click', function() {
+            if (autoFlowTimeout) clearTimeout(autoFlowTimeout);
             if (!gameState.player.firstName || gameState.player.firstName === "") {
                 printLog(`<span style="color: #ef4444;">[ERR] ACCESS DENIED. 请先在左下角录入操作员档案。</span>`);
                 return;
@@ -2988,6 +3548,7 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
 
         // 暂停任务（保持不变，或者直接确认是否有修改需求）
         document.getElementById('btn-pause').addEventListener('click', function() {
+            if (autoFlowTimeout) clearTimeout(autoFlowTimeout);
             if (!isRunning) return;
             commitCurrentTaskSegment(); // 结算当前切片
             clearInterval(timerInterval);
@@ -3003,6 +3564,7 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
 
         // 重置任务
         document.getElementById('btn-reset').addEventListener('click', function() {
+            if (autoFlowTimeout) clearTimeout(autoFlowTimeout);
             const totalTime = gameState.timerState.totalWorkTime || parseInputTime('work');
             if (timeRemaining > 0 && timeRemaining < totalTime && gameState.timerState.mode === 'work') {
                 const penalty = 2;
@@ -3070,67 +3632,73 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
         const rewardContent = document.getElementById('reward-content');
         const rewardConfirmBtn = document.getElementById('reward-confirm');
 
+        // ================= 奖励面板数据结构重构 =================
         const rewardCategories = {
-    tier0: { 
-        name: "微型节点权限 [ 碎片时间专用 ]", 
-        items: ["看上尉自慰一次", 
-            "索要刚换下的内裤", 
-            "展示雌穴三十秒", // 增加：快速的视觉冲击，看一眼就拉上
-            "允许把脸埋进腿间深嗅气味",     // 增加：兽化特有的信息素安抚
-            "凑在耳边录制专属的发骚语音",   // 增加：听觉刺激，可以循环播放
-            "隔着作训服揉弄队员裆部一分钟", // 增加：长官主动的轻度肢体挑逗
-            "获得长官主动献上的法式深吻",   // 增加：短暂但足够深入的唇舌交缠
-            "允许重重揉捏胸肉或臀肉十下",   // 增加：量化的触觉奖励，捏完就得收手
-            "长官用军靴轻踩队员裆部挑逗",   // 增加：带点上位者恶趣味的足部动作
-            "舔舐长官刚从穴里抽出的手指"    // 增加：分享淫水，色气值拉满的短暂互动
-            ] 
-    },
-    tier1: { 
-        name: "常规权限 [ 专注 ≥ 10 MIN ]", 
-        items: [
-            "手淫", 
-            "口交", 
-            "乳交", 
-            "腿交", 
-            "指奸", 
-            "舔阴",           
-            "舔穴", 
-            "阴道",       
-            "后穴",       
-            "边缘控制"        
-        ] 
-    },
-    tier2: { 
-        name: "小型设备权限 [ 专注 ≥ 30 MIN ]", 
-        items: [
-            "按摩棒", 
-            "尿道棒", 
-            "乳夹", 
-            "狐尾肛塞",       // 增加：带点角色扮演性质的道具，填满后穴
-            "强力震动跳蛋",   // 增加：直接贴附在敏感处的持续刺激
-            "阴唇夹",         // 增加：针对雌穴外部软肉的惩罚性小道具
-            "凯格尔球",       // 增加：塞入腔体深处，强迫他在日常走动时夹紧
-            "医用扩阴器",     // 增加：撑开腔体方便队员们“仔细检查内部防线”
-            "皮鞭拍打",       // 增加：轻度的疼痛管教，留下红痕
-            "拘束项圈与牵引绳" // 增加：把高高在上的上尉当成宠物牵在手里
-        ] 
-    },
-    tier3: { 
-        name: "大型设施权限 [ 专注 ≥ 60 MIN ]", 
-        items: [
-            "三角木马", 
-            "性爱秋千", 
-            "全身绳缚",       // 原“绳缚”升级为全身拘束，剥夺行动力
-            "全自动炮机",     // 增加：冰冷机械的无情捣弄
-            "拘束椅",     // 增加：牢牢固定四肢，强迫承受所有奖励
-            "悬吊系统",       // 增加：利用重力让腔体吃得更深
-            "十字架站立拘束", // 增加：展示意味浓厚的站立姿态
-            "感官剥夺套件",   // 增加：眼罩加隔音耳机，放大身体的其他触觉
-            "强制高潮装置",   // 增加：设定好次数前不准停下的榨汁流程
-            "透明展示笼"      // 增加：放在办公室中央，供所有进来汇报的队员观赏
-        ] 
-    }
-};
+            tier0: { 
+                name: "微型节点权限 [ 碎片时间专用 ]", 
+                items: [
+                    { name: "看上尉自慰一次", unlock: { type: 'affection', val: 0 } },
+                    { name: "索要刚换下的内裤", unlock: { type: 'affection', val: 10 } },
+                    { name: "展示雌穴三十秒", unlock: { type: 'affection', val: 20 } },
+                    { name: "允许把脸埋进腿间深嗅气味", unlock: { type: 'affection', val: 30 } },
+                    { name: "凑在耳边录制专属的发骚语音", unlock: { type: 'story', val: 1, hint: "触发主线 FILE 02 后解锁" } },
+                    { name: "隔着作训服揉弄队员裆部一分钟", unlock: { type: 'affection', val: 40 } },
+                    { name: "获得长官主动献上的法式深吻", unlock: { type: 'affection', val: 50 } },
+                    { name: "允许重重揉捏胸肉或臀肉十下", unlock: { type: 'affection', val: 60 } },
+                    { name: "长官用军靴轻踩队员裆部挑逗", unlock: { type: 'affection', val: 70 } },
+                    // 带有 effect 的奖励，兑换后会增加对应的隐藏计数器
+                    { name: "舔舐长官刚从穴里抽出的手指", unlock: { type: 'affection', val: 80 }, effect: { counter: 'squirt', add: 1 } }
+                ] 
+            },
+            tier1: { 
+                name: "常规权限 [ 专注 ≥ 10 MIN ]", 
+                items: [
+                    { name: "手淫", unlock: { type: 'affection', val: 0 } },
+                    { name: "口交", unlock: { type: 'affection', val: 20 } },
+                    { name: "乳交", unlock: { type: 'affection', val: 40 } },
+                    { name: "腿交", unlock: { type: 'affection', val: 50 } },
+                    { name: "指奸", unlock: { type: 'affection', val: 60 }, effect: { counter: 'squirt', add: 1 } },
+                    { name: "舔阴", unlock: { type: 'affection', val: 70 }, effect: { counter: 'squirt', add: 1 } },
+                    { name: "舔穴", unlock: { type: 'affection', val: 80 } },
+                    { name: "阴道", unlock: { type: 'story', val: 2, hint: "触发主线 FILE 03 后解锁" } },
+                    { name: "后穴", unlock: { type: 'affection', val: 100 } },
+                    { name: "边缘控制", unlock: { type: 'affection', val: 110 }, effect: { counter: 'edge', add: 1 } }
+                ] 
+            },
+            tier2: { 
+                name: "小型设备权限 [ 专注 ≥ 30 MIN ]", 
+                items: [
+                    { name: "按摩棒", unlock: { type: 'affection', val: 30 } },
+                    { name: "尿道棒", unlock: { type: 'affection', val: 50 } },
+                    { name: "乳夹", unlock: { type: 'affection', val: 60 } },
+                    { name: "狐尾肛塞", unlock: { type: 'affection', val: 70 } },
+                    { name: "强力震动跳蛋", unlock: { type: 'affection', val: 80 }, effect: { counter: 'orgasm', add: 1 } },
+                    { name: "阴唇夹", unlock: { type: 'affection', val: 90 } },
+                    { name: "凯格尔球", unlock: { type: 'affection', val: 100 } },
+                    { name: "医用扩阴器", unlock: { type: 'story', val: 2, hint: "触发主线 FILE 03 后解锁" } },
+                    { name: "皮鞭拍打", unlock: { type: 'affection', val: 110 } },
+                    { name: "拘束项圈与牵引绳", unlock: { type: 'affection', val: 120 } }
+                ] 
+            },
+            tier3: { 
+                name: "大型设施权限 [ 专注 ≥ 60 MIN ]", 
+                items: [
+                    { name: "三角木马", unlock: { type: 'affection', val: 50 } },
+                    { name: "性爱秋千", unlock: { type: 'affection', val: 70 } },
+                    { name: "全身绳缚", unlock: { type: 'affection', val: 90 } },
+                    { name: "全自动炮机", unlock: { type: 'affection', val: 100 }, effect: { counter: 'orgasm', add: 1 } },
+                    { name: "拘束椅", unlock: { type: 'affection', val: 110 } },
+                    { name: "悬吊系统", unlock: { type: 'affection', val: 120 } },
+                    { name: "十字架站立拘束", unlock: { type: 'affection', val: 130 } },
+                    { name: "感官剥夺套件", unlock: { type: 'affection', val: 140 } },
+                    { name: "强制高潮装置", unlock: { type: 'affection', val: 150 }, effect: { counter: 'orgasm', add: 1 } },
+                    { name: "透明展示笼", unlock: { type: 'story', val: 3, hint: "触发后续主线解锁" } },
+                    // 🌟 隐藏奖励示例：完全不显示，直到计数器达标
+                    { name: "失禁排尿耻辱", unlock: { type: 'hidden', counter: 'squirt', val: 5, hint: "累计让上尉潮吹 5 次后解锁" } },
+                    { name: "强制榨汁指令", unlock: { type: 'hidden', counter: 'orgasm', val: 5, hint: "累计让上尉高潮 5 次后解锁" } }
+                ] 
+            }
+        };
 
         // ================= 独立剧情剧本库 (支持种族差分) =================
         //%FIRST_NAME% （固定叫名，如：西蒙）
@@ -3311,16 +3879,191 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
     // minAff: 60 (高级权限：彻底失控，伴随高潮喷发与乞求)
     { 
         minAff: 60, 
-        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 终极权限-长官专属视界 ]</span><br>画面里的约翰完全卸下了防备，他趴在办公桌上，将自己柔软的部位完全暴露在镜头前。三根手指正在体内翻搅，大腿内侧全都是溢出的汁水。<br>“啊……%FIRST_NAME%……主人……”他哭叫着，毫不廉耻地对着镜头挺起腰肢迎合自己的手指，“看我看我！你的长官正在为你流水……马上就要喷出来了……啊！”` 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 终极权限-长官专属视界 ]</span>
+        <br><br>画面里的约翰完全卸下了防备，他趴在办公桌上，将自己柔软的部位完全暴露在镜头前。三根手指正在体内翻搅，大腿内侧全都是溢出的汁水。
+        <br><br>“啊……%FIRST_NAME%……主人……”他哭叫着，毫不廉耻地对着镜头挺起腰肢迎合自己的手指，“看我看我！你的长官正在为你流水……马上就要喷出来了……啊！”` 
     },
     { 
         minAff: 60, 
-        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 终极权限-长官专属视界 ]</span><br>他不知从哪里找来了你的一件旧战术服，紧紧捂在口鼻处深嗅。画面中，他颤抖着把手指从泥泞的腔体中抽出，又含进嘴里色气地舔舐干净。<br>“好涨……全是水了……”他在镜头前痉挛着，眼角挂着泪水，声音甜腻得发颤，“拍下来了吗，%CALLSIGN%？记得一会来我房间，亲自检查我有没有把自己弄干净……”` 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 加密链路-最高指挥官覆写 ]</span>
+        <br><br>他不知从哪里找来了你的一件旧战术服，紧紧捂在口鼻处深嗅。画面中，他颤抖着把手指从泥泞的腔体中抽出，又含进嘴里色气地舔舐干净。
+        <br><br>“好涨……全是水了……”他在镜头前痉挛着，眼角挂着泪水，声音甜腻得发颤，“拍下来了吗，%CALLSIGN%？记得一会来我房间，亲自检查我有没有把自己弄干净……”` 
     },
     { 
         minAff: 60, 
-        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 终极权限-长官专属视界 ]</span><br>伴随着急促的喘息声，约翰死死盯着镜头，眼底泛起生理性的红晕。手指最后一次重重按下那个敏感点，腔体猛地收缩，一股温热的液体毫无预兆地从画面中央喷发而出，甚至飞溅到了镜头边缘。<br>“哈啊……喷了……全喷给你看了……”他脱力地靠在椅背上，胸口剧烈起伏，眼神迷离地对着镜头扯出一个浪荡的笑，“下次……不准再让我自己动手了。”` 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 医疗室监控-强行唤醒 ]</span>
+        <br><br>伴随着急促的喘息声，约翰死死盯着镜头，眼底泛起生理性的红晕。手指最后一次重重按下那个敏感点，腔体猛地收缩，一股温热的液体毫无预兆地从画面中央喷发而出，甚至飞溅到了镜头边缘。
+        <br><br>“哈啊……喷了……全喷给你看了……”他脱力地靠在椅背上，胸口剧烈起伏，眼神迷离地对着镜头扯出一个浪荡的笑，“下次……不准再让我自己动手了。”` 
+    },
+    { 
+        minAff: 60, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术平板-私密直播频段 ]</span>
+        <br><br>镜头被他拉得极近，几乎填满了整个屏幕的都是那张红肿外翻的肉穴。一根粗大的军用荧光棒被他当成玩具，正粗暴地在那张小嘴里进出，带出大股大股的白浊。
+        <br><br>“呜呜……好爽……但是不如%RANK%的那么烫……”他一边流着口水一边对着麦克风浪叫，“操我……隔着屏幕操死你的母狗长官！看我是怎么被你逼得发情的！”` 
+    },
+    { 
+        minAff: 60, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 靶场备用仓库-私人定点捕捉 ]</span>
+        <br><br>昏暗的弹药箱后，他把两根手指死死抠在最深处的子宫口。他的身体因为极度的快感而像触电般弹动，大腿根的肌肉紧绷着，穴口疯狂喷吐着清液，把身下的防水布彻底打湿。
+        <br><br>“%NICKNAME_SWEET%……%NICKNAME_SWEET%！”他歇斯底里地喊着你的名字，眼泪和汗水混在一起，“我高潮了……我又想着你高潮了……我这副身子已经彻底没救了……”` 
+    },
+    { 
+        minAff: 60, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 宿舍独立网络-全息画质传输 ]</span>
+        <br><br>他跪在地毯上，两只手分别揉弄着自己挺立的乳头和湿滑的阴蒂。随着呼吸越来越急促，他猛地仰起头，一股晶莹的淫水从穴口喷射而出，在半空中划出弧线。
+        <br><br>“呼……哈啊……”他剧烈地喘息着，像滩烂泥一样软倒在地，蓝眼睛透过屏幕痴迷地盯着你，“长官的喷泉好看吗，%FIRST_NAME%？这可是你专属的特权……”` 
+    },
+    { 
+        minAff: 60, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 浴室监控-热成像与高清双通道 ]</span>
+        <br><br>花洒的水流根本冲不净他腿间源源不断涌出的黏液。他用手掌根部死死抵着那个泥泞的洞口，腰肢疯狂地前后摆动，仿佛在假想那里有一根粗硬的性器。
+        <br><br>“给我……%RANK%，给我真的……”他带着哭腔哀求，身体猛地一僵，大股的热液再次从指缝间涌了出来，“只有你能喂饱我……快来填满我这口烂逼……”` 
+    },
+    { 
+        minAff: 60, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术背心记录仪-强制上传 ]</span>
+        <br><br>他躲在基地的死角，作训裤褪到了膝盖。任何随时可能经过的脚步声都成了强效春药，他的手指在穴里搅弄得越来越快，内壁的媚肉几乎要被翻出来。
+        <br><br>“嘘……别出声，%CALLSIGN%……”他压低了声音，脸上却是失控的淫靡，“如果被别人看到上尉现在这副喷水的荡妇样……我就只能彻底给你当性奴了……”` 
+    },
+    { 
+        minAff: 60, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 办公室终端-管理员权限覆写 ]</span>
+        <br><br>战术简报被扫落一地，他仰躺在宽大的办公桌上，双腿大张。一个运作到最大档位的跳蛋正塞在最深处，震得他连一句完整的话都说不出，只有大股的淫水顺着桌沿往下滴。
+        <br><br>“关掉……%NICKNAME_RACE%……求你帮我关掉……”他失神地对着镜头哭喊，小腹一阵剧烈的痉挛，竟是被硬生生震到了失禁般的高潮，“我要坏掉了……啊啊！”` 
+    },
+    { 
+        minAff: 60, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 终极权限-长官专属视界 ]</span>
+        <br><br>高潮过后的余韵让他浑身都在打颤。他抽出沾满白浊和淫水的手指，颤抖着在自己的大腿内侧写下了你的代号。
+        <br><br>“看清楚了，%RANDOM_NAME%。”他喘着粗气，用手指指着腿上的字，眼神里满是病态的痴迷，“这里，还有这里面……全都被你刻下名字了。你必须对我负责操到底……”` 
+    },
+
+
+    // minAff: 90 (深度沉迷：主动献祭、人妻觉醒与极度谄媚)
+    { 
+        minAff: 90, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术终端-私密影像接收 ]</span>
+        <br><br>画面里，他正跪在你的行军床上。他不仅脱光了下半身，还用两根战术扎带把自己的大腿强行绑开，让那张泥泞不堪的肉穴毫无保留地敞露在镜头前。
+        <br><br>“看，%FIRST_NAME%……我把自己固定好了。”他一边用手指在穴里快速抽插，一边痴迷地舔着嘴唇，“你的母狗正在乖乖做扩张……等你回来，直接插进来就好，不用怜惜我……”` 
+    },
+    { 
+        minAff: 90, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 监控通道-07 玩家宿舍 ]</span>
+        <br><br>他居然偷偷潜入了你的房间。他把脸埋在你的枕头里深嗅，下半身赤裸着跨坐在你的被子上，疯狂地用阴蒂摩擦着残留你气味的布料，淫水把床单洇湿了一大片。
+        <br><br>“哈啊……%CALLSIGN%的味道……好浓……”他对着镜头露出一个甜腻又放荡的笑，“对不起，长官没忍住……今晚你只能睡在这片被我弄脏的床单上了，或者……睡在我里面。”` 
+    },
+    { 
+        minAff: 90, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 办公室终端-加密直连 ]</span>
+        <br><br>他坐在办公桌上，手里拿着一根冰冷的战术手电柄。他没有急着插进去，而是用粗糙的防滑纹理不断刮擦着外翻的媚肉，逼得自己浑身发抖、汁水四溢。
+        <br><br>“太冷了……这种死物根本没法满足我……”他喘息着把手电柄扔到一边，手指急不可耐地捅进深处，“%RANK%，我需要你滚烫的肉刃……快来把你老婆的肚子烫坏……”` 
+    },
+    { 
+        minAff: 90, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 个人通讯器-边缘控制模式 ]</span>
+        <br><br>他把自己逼到了高潮的边缘，却死死掐住大腿根，强行忍住了喷水的冲动。憋得通红的脸上满是汗水，蓝眼睛里透着近乎病态的顺从。
+        <br><br>“我没射……呼……没有你的命令，长官一滴都不敢射……”他对着麦克风急促地喘息，声音里带着浓浓的哭腔和渴望，“求你了，%NICKNAME_SWEET%，下命令吧……让我为你高潮……”` 
+    },
+    { 
+        minAff: 90, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 医疗室-妇科检查台监控 ]</span>
+        <br><br>他自己躺上了那张冰冷的检查台，双脚踩在金属脚踏上。他用医用扩阴器把自己的前穴残忍地撑到最大，粉红色的内壁和不断蠕动的媚肉在冷光灯下一览无余。
+        <br><br>“看清楚了吗，%RANDOM_NAME%？”他一边揉弄着肿胀的肉核，一边痴痴地笑着，“这里面每一寸都是为你准备的……快来看看你的专属肉壶有多健康、多渴望被你播种……”` 
+    },
+    { 
+        minAff: 90, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术会议室-桌下隐秘视角 ]</span>
+        <br><br>会议正在进行，普莱斯的声音在背景里回荡。而镜头却藏在桌下——约翰的作训裤拉链大开，他正借着桌布的掩护，用两根手指在自己的水穴里无声地搅弄，淫水甚至滴到了军靴上。
+        <br><br>“他们都在看战术板……只有你在看我发情……”他发来一条文字简讯，附带一个湿漉漉的特写，“%FIRST_NAME%，我现在满脑子都是被你按在会议桌上肏翻的画面……”` 
+    },
+    { 
+        minAff: 90, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 淋浴间-防水终端录像 ]</span>
+        <br><br>他跪在淋浴间的瓷砖上，双手把饱满的臀肉掰到最开，向你展示那个因为过度自慰而红肿不堪的入口。他甚至把整整三根手指塞了进去，模仿着粗暴的抽插。
+        <br><br>“呜……好空……怎么塞都填不满……”他仰着头，任由水流冲刷着脸上的泪水和情欲，“%RANK%，你的母狗饿坏了……快把你的大鸡巴喂给我，我要被你操到子宫口都翻出来……”` 
+    },
+    { 
+        minAff: 90, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 终极权限-长官专属视界 ]</span>
+        <br><br>他用嘴咬着自己的身份牌，防止自己叫出声。手指在泥泞的甬道里疯狂抠挖，每一次抽出都带出浓稠的白浊。他故意把沾满淫水的手指抹在自己的胸肌和腹肌上。
+        <br><br>“看我把自己弄得多脏……”他吐出身份牌，大口喘着粗气，眼神拉丝地盯着镜头，“%NICKNAME_RACE%，我已经是你专属的荡妇了……除了被你操，我什么都不想干……”` 
+    },
+    { 
+        minAff: 90, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 武器库-死角监控覆写 ]</span>
+        <br><br>空气里弥漫着枪油味。他靠在冰冷的枪架上，手指深深没入体内，指腹刻意去碾压最深处的宫颈口，模仿着被彻底贯穿的错觉，身体随之剧烈痉挛。
+        <br><br>“啊！顶到了……就是那里……”他失神地尖叫了一声，随后对着镜头露出一个极度渴求的笑，“%CALLSIGN%，下次换你来顶这里好不好？把你的浓精全都射进我的子宫里……”` 
+    },
+    { 
+        minAff: 90, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 个人终端-睡前私密留言 ]</span>
+        <br><br>昏暗的灯光下，他躺在床上，双腿大张。他没有用手，而是用一个粗大的假阳具在自己体内进出。随着假阳具的拔出，内壁的媚肉恋恋不舍地翻卷出来，吐出一大口清液。
+        <br><br>“我把它想象成你的形状了，%NICKNAME_SWEET%……”他迷离地看着镜头，声音沙哑得要命，“但它没有温度……也没有你操得狠。今晚来我房间好不好？我想做你真正的妻子……”` 
+    },
+
+    
+    // minAff: 120 (理智崩坏：终极发情、公开露出与重度配种渴望)
+    { 
+        minAff: 120, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 基地广播室-单线音视频劫持 ]</span>
+        <br><br>他的手指悬停在“全频段广播”的按钮上，另一只手正深深埋在自己泥泞的肉穴里疯狂搅弄，大股的淫水顺着大腿滴落在控制台上。
+        <br><br>“如果你三分钟内不来广播室把我操到失神，%LAST_NAME%……”他喘息着，眼神疯狂又病态，“我就按下这个按钮，让整个基地的士兵都听听，他们的上尉是怎么一边喷水一边哭着求你干我的。”` 
+    },
+    { 
+        minAff: 120, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 玩家私人储物柜-内部微型监控 ]</span>
+        <br><br>他居然把自己硬塞进了你的储物柜里！他浑身赤裸，把自己埋在你没洗过的战术服和脏袜子里，像发情的母兽一样，疯狂地用肿胀的阴蒂摩擦着带有你汗味的布料。
+        <br><br>“好浓……全是%NICKNAME_SWEET%的味道……”他双眼翻白，嘴角流着口水，“把你发情的母狗锁在柜子里好不好？每天训练完，就打开柜门用大鸡巴喂我……”` 
+    },
+    { 
+        minAff: 120, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术指挥中心-主屏幕私密覆写 ]</span>
+        <br><br>他坐在指挥中心的沙盘正中央，双腿大张。虽然门外随时会有巡逻兵经过，但他毫不在乎，正用一根粗大的战术警棍残忍地捣弄着自己的前穴，媚肉被带得外翻出可怕的弧度。
+        <br><br>“看啊，%FIRST_NAME%……我就在下达作战指令的地方发骚。”他一边流泪一边浪叫，“快来当着所有监控的面操烂我！让所有人都知道我是你的专属肉壶！”` 
+    },
+    { 
+        minAff: 120, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 审讯室-单向玻璃后 ]</span>
+        <br><br>他把自己死死绑在了审讯椅上，双腿被拘束带强行拉开到极限。他无法用手，只能绝望地扭动着腰肢，让那个塞在最深处的巨型跳蛋疯狂震动宫颈口。
+        <br><br>“审讯我……%RANK%……快来审讯我……”他崩溃地哭喊着，淫水在椅子下积了一小滩，“逼我承认我是一个离了你的鸡巴就活不下去的荡妇……求你来代替这个玩具操死我！”` 
+    },
+    { 
+        minAff: 120, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 办公室-最高权限强制通讯 ]</span>
+        <br><br>他脖子上戴着一个写有你名字的狗项圈，正狠狠地扇打着自己湿透的阴部，白皙的大腿根布满了鲜红的巴掌印，每打一下，穴口就吐出一大口清液。
+        <br><br>“坏老婆……欠操的烂逼……”他一边自虐一边病态地对着镜头笑，“%CALLSIGN%，我管不住自己流水……快来惩罚我，用你的皮带抽我，然后把浓精射满我的子宫！”` 
+    },
+    { 
+        minAff: 120, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 军械库-重型武器区 ]</span>
+        <br><br>他跨坐在冰冷的炮弹壳上，疯狂地用那张泥泞的小嘴在粗糙的金属表面摩擦，留下一道道蜗牛般的黏液轨迹。
+        <br><br>“太冷了……这种死物根本没法让我怀孕……”他绝望地喘息着，蓝眼睛死死盯着屏幕，“%NICKNAME_RACE%，我需要你滚烫的肉刃……把我的肚子彻底搞大，让我生下你的小崽子……”` 
+    },
+    { 
+        minAff: 120, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 淋浴间-公共区域监控 ]</span>
+        <br><br>大白天，随时会有士兵进来洗澡。他却赤裸着贴在毛玻璃上，两根手指死死抠住宫口，在听到门外传来脚步声的瞬间，他猛地痉挛，喷出了一道夸张的水柱。
+        <br><br>“有人来了……哈啊……有人来了！”他不仅不躲，反而兴奋得浑身发抖，对着终端发去语音，“%RANDOM_NAME%，看你的长官有多下贱……差点就被别人看到我喷水的样子了……”` 
+    },
+    { 
+        minAff: 120, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 医疗室-深度扩张记录 ]</span>
+        <br><br>他用医用扩阴器把前穴撑到了极限，甚至能直接看到最深处那张翕张的宫口。他把一管温热的医用润滑液全部挤进了子宫里，假装那是你的精液。
+        <br><br>“好涨……肚子被%FIRST_NAME%射满了……”他抚摸着自己微微凸起的小腹，眼神已经彻底涣散，“我已经准备好被你彻底弄坏了……永远插在里面不要拔出来好不好？”` 
+    },
+    { 
+        minAff: 120, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术终端-全息投影模式 ]</span>
+        <br><br>他像狗一样趴在地上，朝着镜头的方向爬过来。他的穴口大张着，随着爬行的动作，淫水滴滴答答地在地板上拖出一条水痕。
+        <br><br>“汪……%RANK%，你的母狗在求你……”他吐出舌头，毫无尊严地摇晃着屁股，“我不想当上尉了……把我拴在你的床腿上，每天只给我喂你的精液好不好？”` 
+    },
+    { 
+        minAff: 120, 
+        text: `<span style="color: var(--text-muted); font-size: 11px;">[ 宿舍-深度发情期记录 ]</span>
+        <br><br>他已经彻底失去了理智。双眼翻白，舌头无力地吐在外面，双手死死掰开自己的肉穴，像个坏掉的复读机一样，一遍又一遍地念着你的名字。
+        <br><br>“%CALLSIGN%……%CALLSIGN%……给我……操烂我……”他一边疯狂喷水一边尖叫，“填满我……让我怀孕……我是你的肉壶……啊啊啊！”` 
     }
+
 ],
 
     // 2. 受种族影响的差分文本（使用对象嵌套数组的形式）
@@ -3328,8 +4071,189 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
         "基准人类": [
             { 
                 minAff: 0, 
-                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 隔离舱-B3 // 种族认证：基准人类 ]</span><br>作为基准人类，你缺乏那些混血种天然的感知器官，但在这种幽闭环境下，皮肤对温度和触觉的反馈反而变得敏锐。<br>“交给我，%FIRST_NAME%。”他的掌心包裹上来，动作并不算温柔，却带着让人不容拒绝的控制力，“闭上眼睛，%NICKNAME_SWEET%。”` 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 办公室-门禁锁定 // 种族认证：基准人类 ]</span>
+                <br><br>咔哒一声，办公室的门被反锁。麦克塔维什走到你面前，粗糙的手指直接拽开了你的战术裤拉链。
+                <br><br>“你最近的专注度在下降，%RANK%。”他握住你半硬的器官，常年握枪的茧子刮擦着敏感的皮肤，“基准人类的抗压能力有极限。站直了，别出声，我来帮你清空一下多余的压力。”` 
             },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 军械库-死角 // 种族认证：基准人类 ]</span>
+                <br><br>空气里弥漫着枪油的味道。他把你推到冰冷的金属柜上，手掌毫不犹豫地探入你的腿间。
+                <br><br>“武器需要定期保养，士兵也一样。”他上下套弄的动作精准而机械，带着不容拒绝的强硬，“把脑子放空，%LAST_NAME%，这只是战术性的生理疏解。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 医疗舱-生理监测 // 种族认证：基准人类 ]</span>
+                <br><br>“心率过高，肾上腺素褪去后的典型焦躁症。”他看着监测仪，随后摘下战术手套，温热的掌心直接覆上了你的要害。
+                <br><br>“作为基准人类，你的躯体承受能力不如那些混血种。交给我，%FIRST_NAME%。”他的动作并不温柔，却带着绝对的掌控力，强迫你把欲望释放在他手里。` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术指挥室-全息沙盘 // 种族认证：基准人类 ]</span>
+                <br><br>他的视线甚至没有离开眼前的全息地图，一只手却已经探到了桌下，隔着布料重重揉捏着你的前端，随后拉开拉链握住了实体。
+                <br><br>“看着沙盘，%CALLSIGN%。”他手上的动作逐渐加快，语气却依旧公事公办，“在射出来之前，把这套战术动作给我背熟。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 更衣室-换班间隙 // 种族认证：基准人类 ]</span>
+                <br><br>刚结束高强度训练，你的肌肉还在紧绷。他走过来，带着薄汗的手掌直接包裹住你，拇指用力碾压着顶端，逼出你的一声闷哼。
+                <br><br>“太僵硬了，到了战场上你会因为反应迟钝送命的。”他冷酷地看着你因为快感而发抖的身体，“放松，%RANK%，把这当成一次肌肉松弛训练。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 哨塔-夜间潜伏 // 种族认证：基准人类 ]</span>
+                <br><br>寒冷的夜风中，他温热的手掌成了唯一的温度来源。他从身后贴近，手顺着你的腰带滑了进去。
+                <br><br>“别动。基准人类在低温下容易失去感知。”他压低声音，手上的动作却粗暴而直接，带来强烈的摩擦感，“咬紧牙关，%LAST_NAME%，别让巡逻队听到你的喘气声。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 撤离直升机-后舱 // 种族认证：基准人类 ]</span>
+                <br><br>引擎的轰鸣声震耳欲聋。在昏暗的红光下，他解开了你的武装带，粗糙的指腹擦过你最脆弱的软肉。
+                <br><br>“实战后的应激反应，我懂。”他凑近你的耳边，手上的套弄频率与直升机的震动重合，“闭上眼睛，%FIRST_NAME%，射出来就没事了。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 隔离舱-B3 // 种族认证：基准人类 ]</span>
+                <br><br>没有任何多余的寒暄，他将你抵在墙上，手掌熟练地掌握了你的弱点。作为基准人类，你无法抵抗这种纯粹的物理刺激，呼吸很快变得急促。
+                <br><br>“呼吸频率乱了，%CALLSIGN%。”他冷酷地指出你的失态，手上的动作却越发用力，“记住这种感觉，学会控制你的身体。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 简报室-会议结束后 // 种族认证：基准人类 ]</span>
+                <br><br>所有人离开后，他把你留了下来。他坐在桌子上，拉过你的胯部，手掌直接覆了上去，用指甲轻轻刮过敏感的冠状沟。
+                <br><br>“你的眼神太涣散了，%RANK%。”他看着你瞬间绷紧的身体，语气严厉，“我需要我的队员保持绝对的清醒。现在，把多余的精力都射在我手里。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 淋浴间-冷水冲刷 // 种族认证：基准人类 ]</span>
+                <br><br>冰冷的水流打在你们身上，他却用温热的手掌死死攥住了你勃起的器官。
+                <br><br>“冷水能让你冷静，但显然还不够。”他在水流的掩护下快速抽插，常年训练的粗糙手掌带来强烈的摩擦感，“快点解决，%LAST_NAME%，我们还有下一个任务。”` 
+            },
+
+            // minAff: 30 (信任与熟络：私下挑逗、技巧性抚慰与隐秘的动情)
+            { 
+                minAff: 30, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 办公室-深夜加班 // 种族认证：基准人类 ]</span>
+                <br><br>他把你拉到办公桌后，拉开你的拉链。这次他没有直接干蹭，而是低头在掌心吐了一口唾沫，湿润的手掌紧紧包裹住你充血的器官。
+                <br><br>“憋了一整天了吧，%FIRST_NAME%？”他轻笑着，拇指故意碾过你最敏感的冠状沟，听着你瞬间粗重的呼吸，“基准人类的身体就是诚实……稍微给点甜头，就硬得发烫了。”` 
+            },
+            { 
+                minAff: 30, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 更衣室-长椅 // 种族认证：基准人类 ]</span>
+                <br><br>他挨着你坐下，大腿紧紧贴着你的大腿。他的手探进你的内裤，熟练地上下套弄，而他自己的呼吸也肉眼可见地变得急促起来。
+                <br><br>“你的脉搏跳得很快，%RANK%。”他凑近你的耳边，温热的吐息打在你的颈窝，“别忍着……让我看看你能射出多少东西来。”` 
+            },
+            { 
+                minAff: 30, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 安全屋-沙发 // 种族认证：基准人类 ]</span>
+                <br><br>他让你靠在沙发背上，自己则半跪在你腿间。他用带着薄茧的手指慢条斯理地梳理着你的阴毛，随后一把攥住挺立的柱身。
+                <br><br>“今天表现不错，这是你应得的奖励。”他抬起眼看着你，蓝眼睛里闪烁着毫不掩饰的情欲，“放松点，%NICKNAME_SWEET%，长官会让你舒服的。”` 
+            },
+            { 
+                minAff: 30, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 医疗室-隔帘后 // 种族认证：基准人类 ]</span>
+                <br><br>隔着一层薄薄的帘子，外面还有军医在走动。他却把你抵在墙上，手掌在你的腿间快速抽插，带出黏腻的水声。
+                <br><br>“嘘……小声点。”他恶劣地勾起嘴角，故意加快了手上的速度，“要是被外面的人听到，他们会怎么想他们平时一本正经的%RANK%？”` 
+            },
+            { 
+                minAff: 30, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 运输车厢-夜间行军 // 种族认证：基准人类 ]</span>
+                <br><br>车厢里一片漆黑，只有战友们轻微的鼾声。他借着黑暗的掩护，手掌顺着你的大腿内侧一路向上，精准地握住了你的要害。
+                <br><br>“人类在黑暗中，触觉会变得特别敏锐，对吧？”他压低声音，指甲轻轻刮过脆弱的囊袋，“感受到了吗，%CALLSIGN%？我的手心现在有多热……”` 
+            },
+            { 
+                minAff: 30, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 淋浴间-温水冲刷 // 种族认证：基准人类 ]</span>
+                <br><br>他从背后贴上来，胸膛紧紧贴着你的后背。他的一只手环过你的腰，握住你在温水中半勃的器官，配合着水流的节奏温柔地套弄。
+                <br><br>“水温刚好，不是吗？”他低喘着，下半身有意无意地蹭过你的臀肉，你能感觉到他那里似乎也起了某种湿润的反应，“交给我，%FIRST_NAME%……闭上眼睛享受就好。”` 
+            },
+            { 
+                minAff: 30, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 简报室-桌下盲区 // 种族认证：基准人类 ]</span>
+                <br><br>他表面上还在看着战术板，桌子底下的手却已经解开了你的皮带。他用两根手指夹住柱身，上下滑动的动作隐秘而色情。
+                <br><br>“专心点，%LAST_NAME%。”他用只有你们俩能听到的声音低语，手指突然重重按压了一下顶端，“如果你现在射在裤子里，我可不会帮你洗。”` 
+            },
+            { 
+                minAff: 30, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 长官宿舍-私人邀请 // 种族认证：基准人类 ]</span>
+                <br><br>他把你叫进房间，直接把你按坐在床沿。他站在你双腿之间，双手交替着为你服务，动作里少了几分粗暴，多了几分讨好。
+                <br><br>“你最近看我的眼神越来越放肆了，%RANK%。”他低头看着在你腿间忙碌的双手，喉结滚动了一下，“不过……我不讨厌。射给我看。”` 
+            },
+            { 
+                minAff: 30, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 靶场-闭馆后 // 种族认证：基准人类 ]</span>
+                <br><br>他靠在射击台上，把你拉到身前。他用平时教你握枪的姿势，双手握住你的性器，拇指不断摩挲着马眼，直到那里渗出透明的前列腺液。
+                <br><br>“你的肌肉太紧绷了，%CALLSIGN%。”他用指腹抹去那滴液体，眼神变得深邃，“让我帮你彻底松弛下来……全部交给我。”` 
+            },
+            { 
+                minAff: 30, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 瞭望塔-夜风 // 种族认证：基准人类 ]</span>
+                <br><br>高塔上的夜风很冷，但他握住你的手却烫得惊人。他用掌心包裹住你，快速的摩擦带来一阵阵战栗的快感。
+                <br><br>“别感冒了，%NICKNAME_SWEET%。”他一边套弄一边轻声说，双腿不自觉地夹紧了一些，“我会快点让你射出来的……其实，我也有些热得难受了。”` 
+            },
+
+            // minAff: 60 (理智崩塌：淫水润滑、公开乞求与极度发情)
+            { 
+                minAff: 60, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 办公室-反锁 // 种族认证：基准人类 ]</span>
+                <br><br>他跪在你的办公椅前，连作训裤都没穿。他把手探进自己泥泞不堪的腿间，挖出一大把黏稠的淫水，直接涂抹在你滚烫的器官上。
+                <br><br>“用我的水……哈啊……用长官的骚水润滑……”他双手握住你快速套弄，眼角挂着生理性的泪水，“基准人类的温度好烫……快点射出来，%FIRST_NAME%，射满我的手，然后来操我的烂逼……”` 
+            },
+            { 
+                minAff: 60, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 更衣室-长椅 // 种族认证：基准人类 ]</span>
+                <br><br>他跨坐在你腿上，双手死死攥住你的柱身套弄，而他自己那张湿透了的前穴，正隔着内裤疯狂地在你大腿上摩擦。
+                <br><br>“呜呜……好痒……里面好痒……”他一边为你手淫一边崩溃地哭泣，“光是用手根本不够……%RANK%，求求你，把这根大鸡巴塞进我前面的嘴里好不好？”` 
+            },
+            { 
+                minAff: 60, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术指挥室-死角 // 种族认证：基准人类 ]</span>
+                <br><br>他的一只手在为你快速撸动，另一只手却已经深深插进了自己的肉穴里。他当着你的面，一边服侍你，一边疯狂地抠挖着自己的宫颈口。
+                <br><br>“看我……%CALLSIGN%，看你的长官有多下贱……”他失神地尖叫着，大股的清液顺着大腿流下，“我一边摸着你的肉刃，一边把自己抠高潮了……啊！”` 
+            },
+            { 
+                minAff: 60, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 医疗室-病床 // 种族认证：基准人类 ]</span>
+                <br><br>随着你的一声低吼，滚烫的浓精全部射在了他的掌心。他没有拿纸巾，而是浑身颤抖着，直接把沾满你精液的手指捅进了自己饥渴的雌穴里。
+                <br><br>“啊！是%LAST_NAME%的精液……好烫……”他仰起头，像个疯子一样在自己体内搅弄着你的白浊，“吃进去了……长官的骚穴把你的精液全都吃进去了……”` 
+            },
+            { 
+                minAff: 60, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 军械库-弹药箱后 // 种族认证：基准人类 ]</span>
+                <br><br>他用拇指抹下你顶端溢出的透明前列腺液，然后急不可耐地按在自己肿胀的阴蒂上疯狂揉捻。纯正的人类雄性气味让他彻底丧失了理智。
+                <br><br>“好浓的味道……%NICKNAME_SWEET%，我快被你的味道逼疯了……”他双手加快了套弄的速度，身体剧烈地痉挛着，“快点给我……把所有的浓精都给我……”` 
+            },
+            { 
+                minAff: 60, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 隔离舱-B3 // 种族认证：基准人类 ]</span>
+                <br><br>“基准人类的持久力……为什么这么可怕……”他脱力地靠在你身上，双手机械地上下滑动，他自己的大腿根已经完全被淫水打湿了。
+                <br><br>“我快握不住了……手好酸……”他抬起满是泪痕的脸，像只发情的母兽一样哀求，“别让我用手了，%RANK%……直接插进来操我好不好？把我操晕过去……”` 
+            },
+            { 
+                minAff: 60, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 安全屋-地毯 // 种族认证：基准人类 ]</span>
+                <br><br>他像狗一样跪趴在你身前，双手捧着你的性器。他不仅用手，还伸出舌头贪婪地舔舐着你柱身上的青筋，眼神里满是病态的痴迷。
+                <br><br>“让你的妻子好好服侍你，%RANDOM_NAME%……”他含糊不清地嘟囔着，手上的动作又重又急，“只要能让你舒服，让我这口烂逼流多少水我都愿意……”` 
+            },
+            { 
+                minAff: 60, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 淋浴间-隔间 // 种族认证：基准人类 ]</span>
+                <br><br>水流冲刷着你们，他把你抵在瓷砖上，双手疯狂地撸动着你。他自己的身体却因为极度的空虚而不断往下滑，几乎要跪在你脚边。
+                <br><br>“站不住了……前面好空，腿好软……”他哭着抱住你的大腿，手却依然死死握着你的要害不放，“%FIRST_NAME%，救救我……用你的大鸡巴救救我……”` 
+            },
+            { 
+                minAff: 60, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 走廊-监控死角 // 种族认证：基准人类 ]</span>
+                <br><br>随时可能有人经过的恐惧感，反而成了最强效的春药。他把你按在墙上，手在你的裤裆里疯狂抽插，他自己的呼吸已经乱成了一团。
+                <br><br>“有人来了……哈啊……不管了……”他不仅没有停手，反而更加用力地握紧了你，“射出来，%CALLSIGN%！就在这里射给我！然后把我拖进厕所里强暴我！”` 
+            },
+            { 
+                minAff: 60, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 宿舍-私人权限 // 种族认证：基准人类 ]</span>
+                <br><br>他把你推倒在床上，自己跨坐在你腰间。他没有坐下去，而是用双手握着你的性器，在自己泥泞的穴口疯狂摩擦，却死活不肯插进去。
+                <br><br>“呜呜……好想吃进去……但是没有%RANK%的命令，我不敢……”他一边用你的龟头碾压着自己的阴蒂，一边崩溃地大哭，“下命令吧……求你命令我坐下去……”` 
+            },
+        
             { 
                 minAff: 50, 
                 text: `<span style="color: var(--text-muted); font-size: 11px;">[ 隔离舱-B3 // 权限覆写 ]</span><br>剥离了战术装备的阻碍，肌肤相贴的触感变得清晰。他的指腹擦过敏感的软肉，惹来你一阵轻颤。<br>“别躲，%FIRST_NAME%。”他低声哄着，动作放缓了许多，带有明显的安抚意味，目光紧紧锁定你的表情，“看着我。”` 
@@ -3386,15 +4310,427 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
         "鸟混血种": [ { minAff: 0, text: `……` } ],
         "鱼混血种": [ { minAff: 0, text: `……` } ],
         "狐混血种": [ { minAff: 0, text: `……` } ],
-        "龙混血种": [ { minAff: 0, text: `……` } ]
+        "龙混血种": [ { minAff: 0, text: `……` } ],
+        "章鱼混血": [
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术终端-奖励协议执行 // 种族认证：章鱼混血 ]</span>
+                <br><br>麦克塔维什半跪在你面前，看着你腿间探出的粗壮触手。表面分泌的透明黏液滴落在地板上。
+                <br><br>他没有丝毫犹豫，直接张嘴含住了触手的前端。“黏液分泌量远超基准人类。天然的润滑剂，省去了准备时间。”他含糊地评价着，舌头熟练地卷住那些不安分的吸盘，“享受你的奖励，%NICKNAME_RACE%。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 医疗室-生理监测 // 种族认证：章鱼混血 ]</span>
+                <br><br>触手上的吸盘本能地吸附在他口腔的内壁和舌头上，发出细微的“啵啵”声。他微微皱眉，但并没有退缩，反而用牙齿轻轻刮擦过吸盘的边缘。
+                <br><br>“吸盘造成的微小负压能促进局部血液循环。”他松开嘴喘了口气，嘴角拉出一条黏稠的银丝，“这种物理刺激对你来说应该很有效。继续，%RANK%。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 军械库-死角监控 // 种族认证：章鱼混血 ]</span>
+                <br><br>你的触手因为快感而在他嘴里不受控制地蠕动、膨胀，甚至试图向他的喉管深处钻去。
+                <br><br>“灵活的无骨骼肌肉组织……”他仰起头，任由触手深入，喉结艰难地滚动着，“克服呕吐反射是特种兵的基础训练。你可以再深入一点，%CALLSIGN%，我控制得住气道。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 办公室-私人频段 // 种族认证：章鱼混血 ]</span>
+                <br><br>章鱼混血种偏低的体温与他口腔里滚烫的温度形成了鲜明对比。他用双手捧着触手的根部，温热的口腔紧紧包裹着冰冷的软体组织。
+                <br><br>“明显的温差能更高效地激活你的神经末梢。”他抬起眼，蓝眼睛冷静地注视着你，“你的心率在加快，%FIRST_NAME%。看来我的口腔温度刚好符合你的释放阈值。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 训练室-悬吊区 // 种族认证：章鱼混血 ]</span>
+                <br><br>除了被他含在嘴里的主触手，你其他的副触手因为亢奋而本能地缠上了他的脖颈和手臂。
+                <br><br>“触手的缠绕本能？”他被勒得呼吸微沉，但语气依然公事公办，“控制好你的肢体，%LAST_NAME%，别干扰我的呼吸道。我需要足够的氧气来完成这次口腔服务。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 内部网络-单向视频传输 // 种族认证：章鱼混血 ]</span>
+                <br><br>他发现用舌尖去挑逗吸盘中心的软肉时，你的触手会产生剧烈的痉挛。于是他像找到了某种战术弱点一样，开始集中攻击那个区域。
+                <br><br>“吸盘中心的神经分布最密集，对吧？”他含着触手，发出含混不清的轻笑，“找到了弱点，解决起来就快多了。准备好释放，%NICKNAME_RACE%。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术平板-实时画面 // 种族认证：章鱼混血 ]</span>
+                <br><br>大量的海生黏液弄脏了他的下巴和战术背心，但他毫不在意，甚至主动把那些黏液吞咽了下去，以保持口腔内部的顺滑。
+                <br><br>“高蛋白成分，带有轻微的海水腥味。”他客观地分析着黏液的口感，仿佛在评估某种单兵口粮，“润滑效果极佳。专心享受，%RANK%，别浪费了你的分泌物。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 监控通道-04 覆写 // 种族认证：章鱼混血 ]</span>
+                <br><br>触手在他嘴里不断变换着形状，时而粗壮，时而细长。他不得不随时调整下颌的开合角度来适应这种非人类的器官。
+                <br><br>“形态变化很丰富。”他揉了揉有些发酸的下巴，再次将触手吞入，“针对章鱼混血种的口腔服务确实需要更高的技巧。不过作为长官，我适应得很快。继续。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 基地安保网络-独立频道 // 种族认证：章鱼混血 ]</span>
+                <br><br>随着你的一声低吼，浓稠的、带着微光的半透明精液（或者墨汁）大量喷射在他的口腔和脸上。
+                <br><br>他没有躲闪，平静地承受了这一切，甚至伸出舌头舔掉了唇边的浊液。“黏稠度远超人类，排量也很大。”他客观地记录着数据，“看来你积攒了不少压力，%CALLSIGN%。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 终极权限-奖励结算 // 种族认证：章鱼混血 ]</span>
+                <br><br>他站起身，用手背随意擦去脸上残留的黏液和白浊。他的嘴唇因为吸盘的长时间吸附而显得有些红肿。
+                <br><br>“跨物种的生理疏解测试完毕。效率令人满意。”他整理了一下衣领，眼神恢复了绝对的清明，“奖励发放结束。现在，把你的触手收好，回到终端前去，%FIRST_NAME%。”` 
+            }
+        ]
+    },
+
+    "乳交": {
+        "基准人类":[
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术终端-奖励协议执行 ]</span>
+            <br><br>麦克塔维什解开战术背心，扯开底下的黑色T恤，露出饱满宽阔的胸肌。他用双手将两团软肉向中间挤压，形成一道深邃的沟壑。
+            <br><br>“过来，%RANK%。”他语气平稳，仿佛只是在分配装备，“我的胸部脂肪和肌肉比例刚好，足够柔软。把你的东西放进来，这是你专注的奖励。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 军械库-死角监控 ]</span>
+            <br><br>“干蹭会擦伤皮肤。”他客观地陈述着，低头在掌心吐了口唾沫，均匀地涂抹在自己硕大柔软的胸肌内侧。
+            <br><br>他将你的性器夹在两团软肉之间，双手控制着力道上下滑动。“触感还可以吗？这种柔软度应该能有效缓解你的压力。继续保持你的效率，%CALLSIGN%。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 办公室-私人频段 ]</span>
+            <br><br>随着你的抽插，他胸前那两团饱满的软肉被撞击得不断变形、摇晃。他低头看着你埋在他胸口的器官，眼神清明。
+            <br><br>“尺寸不错。我的胸肌足够厚实，能完全包裹住你。”他甚至主动挺起胸膛迎合你的动作，“不用收着力气，%FIRST_NAME%，这点摩擦力我完全承受得住。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 训练室-体能测试后 ]</span>
+            <br><br>刚结束力量训练，他的胸肌因为充血而显得比平时更大、更软。汗水成了天然的润滑剂，让你的进出变得异常顺滑。
+            <br><br>“趁着肌肉还没完全放松，现在的夹紧力度是最好的。”他双手托着自己的胸肉为你服务，语气理智而专业，“享受你的特权，%LAST_NAME%，然后把这种状态带到下一个任务里。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 医疗室-生理监测 ]</span>
+            <br><br>他靠在办公桌边缘，任由你挺动腰肢，用他胸前那两团异常柔软的肉块摩擦你的敏感点。他甚至好心地调整了一下挤压的角度。
+            <br><br>“左边一点？了解。”他像是在调整狙击镜的参数一样自然，“只要能让你快速释放，我不介意配合你的习惯。专心感受，%NICKNAME_RACE%。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术平板-实时画面 ]</span>
+            <br><br>你的顶端擦过他胸肌上挺立的乳首，惹得他发出了一声极轻的闷哼。但他很快恢复了平静，连眉头都没有皱一下。
+            <br><br>“乳头周围的神经末梢比较丰富，正常的生理反射而已。”他淡淡地解释，双手依然稳稳地挤压着胸肉，“不用停，%RANK%，继续你的动作，这不影响奖励的发放。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 监控通道-04 覆写 ]</span>
+            <br><br>他双手捧着自己硕大的胸肌，像对待某种精密的战术仪器一样，控制着夹紧你的力度。
+            <br><br>“你的心率在加快。”他感受着胸口传来的滚烫温度，客观地评价道，“看来这种柔软的触感很符合你的喜好。快点解决，%CALLSIGN%，我们还有下一个节点要推进。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 个人终端-奖励确认 ]</span>
+            <br><br>随着他平稳的呼吸，那两块宽大柔软的胸肌有节奏地起伏，为你带来了额外的摩擦快感。
+            <br><br>“把你的抽插频率和我的呼吸同步。”他冷静地指导着，仿佛在进行一场战术演练，“这能最大化刺激你的神经，提高释放的效率。专心点，%FIRST_NAME%。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 基地安保网络-独立频道 ]</span>
+            <br><br>他的胸肌实在太大了，当你深深挺进那道肉沟时，甚至能感觉到顶端被柔软的肉块完全吞没。
+            <br><br>“深度足够了。”他低头观察着结合处，语气里带着一丝满意的肯定，“这种物理挤压确实很有效。射出来吧，%LAST_NAME%，把多余的精力都排空。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 终极权限-奖励结算 ]</span>
+            <br><br>滚烫的浓精喷洒在他饱满的胸肌和锁骨上。他没有露出任何嫌恶的表情，只是抽了张纸巾，平静地擦拭着胸前沾满白浊的软肉。
+            <br><br>“排空了？很好。”他把纸巾扔进垃圾桶，慢条斯理地拉好衣服的拉链，“奖励结算完毕。现在，回到你的终端前去，%RANK%，别让我催你。”` 
+        }
+        ]
+    },
+
+    "舔阴": {
+        "基准人类": [ { minAff: 0, text: `人类舔阴文本……` } ],
+        "豹混血种": [ { minAff: 0, text: `豹混血舔阴文本……` } ],
+        "犬混血种": [ { minAff: 0, text: `……` } ],
+        "狼混血种": [ { minAff: 0, text: `……` } ],
+        "蛇混血种": [ { minAff: 0, text: `……` } ],
+        "鸟混血种": [ { minAff: 0, text: `……` } ],
+        "鱼混血种": [ { minAff: 0, text: `……` } ],
+        "狐混血种": [ { minAff: 0, text: `……` } ],
+        "龙混血种": [ { minAff: 0, text: `……` } ],
+        "章鱼混血": [
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术终端-奖励协议执行 // 种族认证：章鱼混血 ]</span>
+                <br><br>麦克塔维什靠在办公椅上，双腿大张，任由你冰冷的触手探入他温热的腿间。触手尖端灵活地拨开泥泞的阴唇，直接舔舐在那颗充血的肉核上。
+                <br><br>“冷血动物的体温……”他微微倒吸了一口凉气，但眼神依然清明，“明显的温差能极大地刺激神经末梢。很高效的唤醒方式，继续，%RANK%。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 医疗室-生理监测 // 种族认证：章鱼混血 ]</span>
+                <br><br>你用触手上的微小吸盘覆上了他最敏感的节点，轻轻施加负压。他大腿的肌肉瞬间绷紧，溢出了一大股清液。
+                <br><br>“吸盘造成的微型真空环境……”他低头看着你忙碌的触手，客观地评价道，“比人类的口腔吮吸效率高出至少三倍。干得不错，%CALLSIGN%，保持这个负压值。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 军械库-死角监控 // 种族认证：章鱼混血 ]</span>
+                <br><br>章鱼混血种特有的黏液与他前穴分泌的淫水混合在一起，拉出长长的、晶莹的丝线。触手在穴口滑动的声音变得异常泥泞。
+                <br><br>“你的分泌物和我的体液融合得很好。”他用手指沾了一点混合后的液体，在指尖捻了捻，“天然的润滑剂，完全避免了黏膜擦伤。这是你们种族的战术优势，%FIRST_NAME%。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 办公室-私人频段 // 种族认证：章鱼混血 ]</span>
+                <br><br>你不仅用主触手舔舐着他的穴口，还分出几根细小的副触手，顺着大腿根部的缝隙游走，按摩着周围紧绷的肌肉。
+                <br><br>“多线程操作能力。”他靠在椅背上，喉结因为快感而滚动，“一边刺激核心节点，一边放松周围的肌肉群。这种全方位的生理疏解，确实只有章鱼混血种能做到。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 训练室-悬吊区 // 种族认证：章鱼混血 ]</span>
+                <br><br>一根极其柔软、没有骨骼阻碍的触手尖端，顺着他湿滑的甬道直接探入了最深处，轻轻扫过敏感的宫颈口。
+                <br><br>“唔……！”他发出一声短促的闷哼，双手抓紧了座椅边缘，“无骨骼肌肉组织的延展性……居然能探到这么深的位置。深度足够了，%LAST_NAME%，就在那里打转。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 内部网络-单向视频传输 // 种族认证：章鱼混血 ]</span>
+                <br><br>触手不知疲倦地高频舔弄着他的阴蒂，这种机械般的持久力让他的身体开始不受控制地发抖，但他依然努力维持着平稳的呼吸。
+                <br><br>“触手不会像人类的下颌那样产生肌肉疲劳……”他喘息着，蓝眼睛里透着理智的光芒，“这种持续的高频刺激，是对我神经耐受力的绝佳测试。别停，%NICKNAME_RACE%。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术平板-实时画面 // 种族认证：章鱼混血 ]</span>
+                <br><br>你用触手将他外翻的媚肉彻底舔开，贪婪地吸食着里面涌出的汁水。他看着你进食般的动作，表情平静得仿佛在看一份后勤消耗报告。
+                <br><br>“你抽取了大量的体液。”他感受着下半身的空虚感，淡淡地说道，“这会导致我轻微脱水。不过作为你完成专注任务的奖励，这点生理损耗在可接受范围内。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 监控通道-04 覆写 // 种族认证：章鱼混血 ]</span>
+                <br><br>吸盘的拉扯和触手的搅弄让他逼近了高潮的边缘。他没有压抑自己的反应，而是坦然地挺起腰肢，将那张泥泞的小嘴更深地送到你的触手前。
+                <br><br>“刺激量即将达到阈值。”他冷静地预告着自己的高潮，仿佛在倒数炸弹的引爆时间，“准备好接收，%RANK%，我要释放了。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 基地安保网络-独立频道 // 种族认证：章鱼混血 ]</span>
+                <br><br>随着一阵剧烈的痉挛，大股清透的淫水从穴口喷涌而出，浇透了你缠绕在那里的触手。他脱力地喘息着，大腿内侧全是水光。
+                <br><br>“呼……排空了。”他看着被他的体液彻底打湿的触手，语气里带着一丝满意的肯定，“你的服务效率很高，%CALLSIGN%。把剩下的清理干净。”` 
+            },
+            { 
+                minAff: 0, 
+                text: `<span style="color: var(--text-muted); font-size: 11px;">[ 终极权限-奖励结算 // 种族认证：章鱼混血 ]</span>
+                <br><br>你的触手像最高效的清洁工具一样，将他腿间和穴口残留的汁水舔舐得干干净净，甚至连大腿根的黏液都卷走吞下。
+                <br><br>“自带清理功能，省去了洗浴的时间。”他利落地拉上作训裤的拉链，眼神恢复了绝对的清明，“奖励结算完毕。现在，把你的触手收回去，继续推进下一个节点，%FIRST_NAME%。”` 
+            }
+        ]
     },
 
     "按摩棒": {
         "基准人类": [ { minAff: 0, text: `……` } ],
         "豹混血种": [ { minAff: 0, text: `……` } ]
         // 依此类推
+    },
+
+    "三角木马": {
+        "基准人类":[
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术终端-奖励协议执行 ]</span>
+            <br><br>画面接通时，麦克塔维什正单手撑着那具木马的边缘，长腿一跨，自然地坐了上去。尖锐的木脊瞬间陷入了他毫无防备的腿间。
+            <br><br>他只是微微皱了下眉，调整了一个能让软肉被顶得更深的坐姿。“你的专注时长达标了，%RANK%。”他拿起一旁的战术平板，语气平稳得仿佛只是坐在办公椅上，“这是你应得的视觉奖励。看吧，然后向我汇报下一个节点。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 审讯室-B区监控直连 ]</span>
+            <br><br>他上半身依然穿着整齐的战术背心，下半身却完全赤裸地骑在三角木马上。随着他自身的重量下沉，木马的顶端深深挤压着他的会阴。
+            <br><br>“这个角度的设计很精准。”他客观地评价着，喉结因为快感而上下滚动了一下，但眼神依然清明，“物理摩擦能有效缓解高强度任务后的肌肉紧绷。别愣着，%CALLSIGN%，继续你的工作。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 办公室-私人频段 ]</span>
+            <br><br>他正坐在木马上前后摇晃。木材与湿润的软肉摩擦，发出细微的黏腻声。他的呼吸比平时沉重了一些，额头上也渗出了薄汗。
+            <br><br>“呼……效率不错。”他停下动作，用手背随意地擦去下巴上的汗水，直视着镜头，“我指的是你的任务进度。作为长官，我很高兴看到你没有因为这点画面就分心。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 内部网络-单向视频传输 ]</span>
+            <br><br>镜头里的约翰正低头看着手里的文件，身体却随着木马的轻微震动而小幅度起伏。透明的清液顺着木马的边缘缓缓滑落。
+            <br><br>“生理反应而已，不需要大惊小怪。”注意到你的视线，他平静地翻过一页报告，“既然是奖励，我自然会配合。你只需要享受你的特权，%FIRST_NAME%。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 医疗室-设备测试记录 ]</span>
+            <br><br>他双手抓着木马前端的把手，腰部发力，主动让自己在尖锐的木脊上重重碾压了一下。一声低沉的闷哼从他鼻腔里溢出。
+            <br><br>“刺激感很强烈，确实能让人保持清醒。”他很快平复了呼吸，蓝眼睛看向屏幕，“如果你在接下来的任务里也能保持这种专注度，我不介意多坐一会儿。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术平板-实时画面 ]</span>
+            <br><br>他的大腿肌肉因为长时间的悬空和摩擦而微微发抖，但他依然坐得笔直。他甚至腾出一只手，端起旁边的马克杯喝了一口水。
+            <br><br>“怎么，觉得我会受不了？”他放下杯子，嘴角勾起一个毫无破绽的弧度，“特遣队的抗压训练比这严苛得多。这点程度的快感，还在我的控制范围内。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 监控通道-04 覆写 ]</span>
+            <br><br>木马的棱角已经完全被他腿间溢出的体液打湿，变得异常滑腻。他不得不夹紧双腿来维持平衡，这让那个隐秘的部位被顶得更深。
+            <br><br>“摩擦力减小了。”他陈述着事实，语气里没有丝毫羞耻，仿佛在汇报枪械的磨损情况，“不过作为视觉奖励，现在的画面应该足够满足你的需求了，%RANK%。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 个人终端-奖励确认 ]</span>
+            <br><br>他正闭着眼睛，任由身体的重量完全压在木马上。你能清晰地看到他腹肌的收缩和放松，他在享受这种粗暴的填补感。
+            <br><br>听到通讯接通的声音，他睁开眼：“你准时完成了节点，%CALLSIGN%。我也在履行我的承诺。看够了就去开启下一个周期，别浪费时间。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 基地安保网络-独立频道 ]</span>
+            <br><br>他一边在木马上缓慢地前后滑动，一边用终端查阅着什么。木脊精准地刮擦着他的前列腺，让他敲击屏幕的手指偶尔会停顿半秒。
+            <br><br>“你的上一份报告有个错别字。”他深吸了一口气，压下喉咙里的喘息，将报告打回给你，“重新修改。我会在上面坐到你提交正确版本为止。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 终极权限-奖励结算 ]</span>
+            <br><br>“时间到了。”他看了一眼墙上的时钟，双手撑着把手，利落地从木马上跨了下来。
+            <br><br>大腿内侧满是水光，但他毫不在意地扯过一条毛巾随意擦拭了一下，便重新套上了作训裤。“奖励发放完毕。现在，把注意力收回到你的战术板上，%FIRST_NAME%。”` 
+        }
+        ]
+    },
+
+    "性爱秋千": {
+        "基准人类":[
+        // 模式一：上尉悬空，玩家在后方拉绳借力
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术终端-奖励协议执行 ]</span>
+            <br><br>麦克塔维什坐在特制的秋千上，双腿自然分开。你站在他身后，握住承重绳，借着秋千回荡的惯性，穿过座椅底部的开孔，深深挺进他悬空的身体里。
+            <br><br>他闷哼了一声，双手抓紧了前方的绑带，语气依然平稳：“利用钟摆效应能最大化节省你的体力，%RANK%。保持这个频率，这是你应得的奖励。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 训练室-悬吊区监控 ]</span>
+            <br><br>随着你拉拽绳索的动作，秋千带着他向后重重撞入你的怀里。这种悬空姿态剥夺了他的借力点，让他只能完全承受你的贯穿。
+            <br><br>“深度不错。”他低头看了一眼结合处，客观地评价道，喉结因为快感而微微滚动，“很高效的生理刺激手段。继续拉绳子，%CALLSIGN%，不用担心承重问题。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 办公室-私人频段 ]</span>
+            <br><br>你每拉动一次秋千，他就会被顶得发出一声低沉的喘息。但他手里依然拿着那份战术简报，目光在屏幕上快速扫视。
+            <br><br>“呼……第三小队的巡逻路线需要微调。”他在被重重顶弄的间隙，平稳地下达着指令，“别停，%FIRST_NAME%。我的大脑和身体可以同时处理不同的任务，这不冲突。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 内部网络-单向视频传输 ]</span>
+            <br><br>“把左边的绳索再收紧两寸，进入的角度会更好。”他悬在半空中，冷静地指导你调整秋千的姿态，仿佛在校准狙击步枪。
+            <br><br>当你按照他的指示再次挺进时，他满意地仰起头，发出一声舒服的叹息：“就是这里。干得好，%LAST_NAME%。作为长官，我总是乐于看到队员掌握正确的发力技巧。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术平板-实时画面 ]</span>
+            <br><br>秋千在半空中规律地摇晃，肉体拍打的清脆声在房间里回荡。他闭上眼睛，跟随着撞击的节奏调整着呼吸，就像在进行一场高强度的有氧训练。
+            <br><br>“心率在正常范围内上升。”他睁开眼，蓝眼睛里透着理智的光芒，“这种程度的快感很适合用来放松神经。你做得很好，%RANK%。”` 
+        },
+
+        // 模式二：玩家坐秋千，上尉骑乘
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 休息室-设备测试记录 ]</span>
+            <br><br>这次换你坐在了秋千上。麦克塔维什跨坐在你腿上，双手抓着上方的吊环，利用核心力量控制着起落的节奏，将你整根吞没。
+            <br><br>“这个姿势能让你在享受奖励的同时，保留体力应对接下来的任务。”他居高临下地看着你，腰部平稳地发力，“放松点，%CALLSIGN%，现在由我来主导。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 监控通道-04 覆写 ]</span>
+            <br><br>他坐在你身上，借着秋千轻微的摇晃，每一次都坐得极深。汗水顺着他坚实的胸肌滑落，滴在你的战术服上。
+            <br><br>“你的专注度换来了这段休息时间。”他一边起伏，一边用公事公办的语气说道，“所以好好享受。我的核心力量足够支撑到你满意为止，%FIRST_NAME%。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 个人终端-奖励确认 ]</span>
+            <br><br>秋千的绳索因为他的动作发出轻微的嘎吱声。他将全部重量压在你身上，内壁紧紧绞着你的性器，脸上却是一副正在进行常规体能测试的平静表情。
+            <br><br>“内壁的收缩是正常的生理反射。”他感觉到你的惊讶，淡淡地解释道，“不用在意，%LAST_NAME%。这只是证明你的尺寸确实达到了刺激阈值。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 基地安保网络-独立频道 ]</span>
+            <br><br>他一边在你身上起伏，一边腾出一只手，在旁边的终端上划掉了一个已完成的任务节点。
+            <br><br>“清单上的任务又少了一项。”他喘了口气，腰部的动作却没有丝毫减慢，“保持这种效率，%RANK%。只要你能按时完成目标，我不介意每天都陪你坐一会儿这个秋千。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 终极权限-奖励结算 ]</span>
+            <br><br>随着最后一次深顶，他发出一声低沉的叹息，随后利落地从你身上跨了下来。他大腿内侧沾满了你们的体液，但他只是平静地整理了一下装备。
+            <br><br>“奖励时间结束。”他拿起毛巾擦了擦手，眼神恢复了绝对的清明，“希望这段时间的生理疏解能让你接下来的专注度更高。回到你的岗位去，%CALLSIGN%。”` 
+        }
+    ]
+    },
+
+    "全自动炮机": {
+        "基准人类":[
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术终端-奖励协议执行 ]</span>
+            <br><br>画面接通时，麦克塔维什已经把自己固定在了炮机的支架上。冰冷的机械臂正以一种非人的频率，将粗大的硅胶假根狠狠砸进他泥泞的前穴里。
+            <br><br>“啊！……呼……”他仰起头，喉结剧烈滚动，发出了一声毫无掩饰的浪叫，“这东西的频率……哈啊……比人类快多了。干得好，%RANK%，这是你应得的视觉奖励……”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 审讯室-B区监控直连 ]</span>
+            <br><br>他上半身穿着整齐的战术背心，下半身却大张着双腿。炮机每一次无情的抽插，都会带出大股黏稠的清液，把机械底座弄得一塌糊涂。
+            <br><br>“呜……太深了……啊！”他死死抓着扶手，大腿肌肉因为快感而疯狂打颤，但他依然直视着镜头，“我的身体……哈啊……对这种机械刺激的反应有点大。看清楚了吗，%CALLSIGN%？”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 办公室-私人频段 ]</span>
+            <br><br>他手里拿着遥控器，当着你的面把炮机的档位推到了最高。机械活塞瞬间化作一道残影，疯狂捣弄着那张红肿的小嘴。
+            <br><br>“既然是奖励……啊啊！……就该测试一下最大功率……”他被操得连句完整的话都说不出，口水顺着嘴角流下，“操……前面的软肉要被捣烂了……哈啊……继续保持你的专注，%FIRST_NAME%……”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 内部网络-单向视频传输 ]</span>
+            <br><br>他试图在炮机的轰鸣声中阅读一份战术简报，但机械毫无规律的变速抽插让他根本无法集中注意力。
+            <br><br>“后勤部的报告……啊！等、等一下……哈啊！”他被突然加深的撞击逼出了一声高亢的尖叫，眼角泛起生理性的红晕，“这台机器……根本不知道什么叫循序渐进。不过……确实很爽，%LAST_NAME%。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 医疗室-设备测试记录 ]</span>
+            <br><br>硅胶假根每次拔出时，都会把内壁的媚肉往外翻扯出一小截，然后再粗暴地顶回去。这种视觉冲击力极强的画面，伴随着他毫不压抑的呻吟。
+            <br><br>“啊……肉被扯出来了……哈啊……”他低头看着自己泥泞不堪的结合处，坦然地向你展示着自己的淫荡，“我的前穴分泌了太多润滑液……弄得到处都是。你喜欢看这个，对吧，%RANK%？”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 战术平板-实时画面 ]</span>
+            <br><br>他完全放弃了抵抗，任由炮机主导着他的身体。他靠在椅背上，双腿无力地敞开，随着机械的撞击，发出规律而色情的浪叫。
+            <br><br>“啊……啊……啊……”他大口喘息着，蓝眼睛里蒙上了一层水雾，却依然保持着理智的交流，“机械的效率确实令人惊叹……哈啊……我连动都不用动，它就能把我操得流水。干得漂亮，%CALLSIGN%。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 监控通道-04 覆写 ]</span>
+            <br><br>炮机的角度被调整得微微向上，每一次都精准地碾压过他体内最敏感的那个点。他被操得浑身痉挛，脚趾死死蜷缩起来。
+            <br><br>“顶到了……啊！就是那里……哈啊！”他大声叫了出来，毫不掩饰自己正在享受的事实，“这东西的准度比新兵的枪法好多了……呜……看够了就去开启下一个周期，%FIRST_NAME%。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 个人终端-奖励确认 ]</span>
+            <br><br>他被炮机操得连视线都无法聚焦，大腿根部全是被机械拍打出的红痕。但他依然努力维持着长官的威严，尽管声音已经哑得不成样子。
+            <br><br>“你坐在终端前一个小时……哈啊……换我在这里被这台机器操烂……”他喘息着笑了一声，淫水顺着大腿滴落在地，“很公平的交易……啊！……我接受这个结果，%NICKNAME_RACE%。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 基地安保网络-独立频道 ]</span>
+            <br><br>机械的运作声和肉体拍打的啪啪声在房间里回荡。他双手死死抓着自己的头发，仰着头承受着一波又一波的快感，前穴的汁水甚至飞溅到了炮机的外壳上。
+            <br><br>“太快了……哈啊……机器根本不知道累……”他大声呻吟着，眼角挂着生理性的泪水，“不过没关系……啊！……作为长官，这点耐力测试我还是能撑过去的。继续看，%RANK%。”` 
+        },
+        { 
+            minAff: 0, 
+            text: `<span style="color: var(--text-muted); font-size: 11px;">[ 终极权限-奖励结算 ]</span>
+            <br><br>随着你按下停止键，炮机终于停止了运作。他像一滩烂泥一样瘫在支架上，胸口剧烈起伏，前穴还在因为惯性而空虚地翕张着，吐出一口口清液。
+            <br><br>“呼……哈啊……协议结束。”他脱力地抹了一把脸上的汗水，大腿还在不受控制地发抖，“很强烈的刺激……我的腿都麻了。现在，回到你的岗位上去，%CALLSIGN%。”` 
+        }
+    ]
     }
 };
+
+        // ================= 自动轮换开关事件 =================
+        document.getElementById('auto-flow-toggle').addEventListener('change', function() {
+            gameState.timerState.autoFlow = this.checked;
+            gameState.lastActiveTime = Date.now();
+            saveData();
+            
+            if (this.checked) {
+                addCommunicationMessage('SYS', `[ 协议更新 ] 自动轮换已开启。当前阶段结束后将自动推进。`);
+            } else {
+                addCommunicationMessage('SYS', `[ 协议更新 ] 自动轮换已关闭。切换为手动确认模式。`);
+            }
+        });
 
         // UI 临时状态区（关闭面板会重置）
         let sessionAvailable = {}; 
@@ -3402,23 +4738,15 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
 
         // 渲染整个面板
         function renderRewardUI() {
-            let totalAvailable = Object.values(sessionAvailable).reduce((a, b) => a + b, 0);
+            // 🌟 删除了原本拦截 0 点数的报错代码，让面板随时可见
             
-            // 如果既没有可用点数，也没有选中任何东西
-            if (totalAvailable === 0 && sessionSelected.length === 0) {
-                rewardContent.innerHTML = "<div style='color: #ef4444; font-size: 13px; text-align: center; padding: 20px 0;'>[ERR] 无可用兑换点数。请先完成新的专注任务。</div>";
-                rewardConfirmBtn.style.display = 'none';
-                return;
-            }
-
             let html = "";
             ['tier0', 'tier1', 'tier2', 'tier3'].forEach(tierId => {
                 const tierData = rewardCategories[tierId];
                 const availCount = sessionAvailable[tierId] || 0;
                 
-                // 判断该层级是否有被选中的项目
                 const hasSelectedInTier = sessionSelected.some(s => s.tier === tierId);
-                // 只有当有余额，或者已经选中了里面的项目时，该层级标题才亮起
+                // 如果当前层级有点数，或者已经选了东西，标题就会高亮；否则标题变暗
                 const isTierUnlocked = availCount > 0 || hasSelectedInTier; 
                 const tierStatusClass = isTierUnlocked ? "" : "locked";
 
@@ -3429,22 +4757,54 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
                     </div>
                     <div class="reward-grid">`;
                 
-                tierData.items.forEach(item => {
-                    const isSelected = sessionSelected.some(s => s.item === item);
-                    // 没被选中，且当前层级也没点数了，该词条锁定
-                    const itemLocked = !isSelected && availCount <= 0;
+                tierData.items.forEach(itemObj => {
+                    const itemName = itemObj.name;
+                    const unlock = itemObj.unlock;
+                    
+                    let isConditionMet = false;
+                    let displayTitle = "";
+                    let displayName = itemName;
+                    let isHidden = false;
+
+                    // 🌟 核心：判断解锁条件
+                    if (unlock.type === 'affection') {
+                        isConditionMet = gameState.affection >= unlock.val;
+                        if (!isConditionMet) displayTitle = `[ 锁定 ] 好感度达到 ${unlock.val} 解锁`;
+                    } else if (unlock.type === 'story') {
+                        isConditionMet = gameState.currentStoryChapter >= unlock.val;
+                        if (!isConditionMet) {
+                            displayName = "???";
+                            displayTitle = `[ 锁定 ] ${unlock.hint}`;
+                        }
+                    } else if (unlock.type === 'hidden') {
+                        const currentCount = gameState.counters[unlock.counter] || 0;
+                        isConditionMet = currentCount >= unlock.val;
+                        if (!isConditionMet) isHidden = true; // 条件未满足时，彻底隐藏
+                    }
+
+                    // 如果是隐藏奖励且未解锁，直接跳过渲染
+                    if (isHidden) return; 
+
+                    const isSelected = sessionSelected.some(s => s.item === itemName);
+                    // 资金锁定：条件满足了，但没点数了
+                    const isFundsLocked = isConditionMet && !isSelected && availCount <= 0;
                     
                     let itemClasses = "reward-item";
                     if (isSelected) itemClasses += " selected";
-                    else if (itemLocked) itemClasses += " locked";
+                    else if (!isConditionMet || isFundsLocked) itemClasses += " locked";
                     
-                    html += `<div class="${itemClasses}" data-tier="${tierId}" data-item="${item}">${item}</div>`;
+                    if (isConditionMet) {
+                        displayTitle = isFundsLocked ? "[ 锁定 ] 兑换点数不足" : "点击兑换";
+                    }
+
+                    // 加上 title 属性，鼠标悬停时会显示原生提示框
+                    html += `<div class="${itemClasses}" data-tier="${tierId}" data-item="${itemName}" title="${displayTitle}">${displayName}</div>`;
                 });
                 html += `</div></div>`;
             });
 
             rewardContent.innerHTML = html;
-            // 如果选了东西，显示确认按钮
+            // 只有当玩家真的勾选了要执行的奖励时，确认按钮才会出现
             rewardConfirmBtn.style.display = sessionSelected.length > 0 ? 'inline-block' : 'none';
         }
 
@@ -3468,6 +4828,9 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
             const target = e.target;
             
             if (target.classList.contains('reward-item')) {
+                // 🌟 新增：如果这个选项是锁定的，直接拦截，不执行后面的代码
+                if (target.classList.contains('locked')) return; 
+                
                 const tierId = target.getAttribute('data-tier');
                 const itemName = target.getAttribute('data-item');
                 
@@ -3500,6 +4863,14 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
             sessionSelected.forEach(s => {
                 gameState.availableRewards[s.tier]--;
                 gameState.rewardCounts[s.tier] = (gameState.rewardCounts[s.tier] || 0) + 1;
+                
+                // 🌟 新增：触发隐藏计数器
+                const tierData = rewardCategories[s.tier];
+                const itemObj = tierData.items.find(i => i.name === s.item);
+                if (itemObj && itemObj.effect) {
+                    const counterKey = itemObj.effect.counter;
+                    gameState.counters[counterKey] = (gameState.counters[counterKey] || 0) + itemObj.effect.add;
+                }
             });
             gameState.lastActiveTime = Date.now();
             saveData();
@@ -3514,7 +4885,22 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
             // 🎬 2. 剧情文本生成
             let fullStoryText = `<div style="margin-bottom: 8px; color: var(--accent);">当前操作员 [${gameState.player.callsign}] 兑换：<b>${itemNames.join('、')}</b>。</div>`;
 
-            sessionSelected.forEach(s => {
+            // 🌟 核心优化 1：自动按 Tier 排序（从轻度到重度），让逻辑自然递进
+            const tierOrder = { 'tier0': 0, 'tier1': 1, 'tier2': 2, 'tier3': 3 };
+            sessionSelected.sort((a, b) => tierOrder[a.tier] - tierOrder[b.tier]);
+
+            // 🌟 核心优化 2：战术衔接句库（完美契合上尉的公事公办人设）
+            const transitionPool = [
+                "他看了一眼终端上的兑换清单，平静地调整了战术姿态，准备执行下一项协议。",
+                "“清单上还有一项。”他喘了口气，没有做任何多余的休息，直接进入了下一个环节。",
+                "前一项奖励的余韵还未散去，他已经像个不知疲倦的机器一样，切换到了下一个动作。",
+                "“效率不错，我们继续。”他用手背随意擦去身上的体液，目光清明地看向下一个目标。",
+                "没有任何温存的停顿。对他来说，这只是一份需要被逐项打勾的战术执行表。",
+                "“下一个是这个吗？了解。”他看了一眼屏幕，毫不犹豫地改变了姿势，配合着你的新指令。",
+                "空气中弥漫着浓重的荷尔蒙气味，而他只是像更换弹匣一样，利落地衔接上了下一个奖励项目。"
+            ];
+
+            sessionSelected.forEach((s, index) => {
                 const itemName = s.item;
                 const scriptData = storyScripts[itemName];
                 let pool = [];
@@ -3529,14 +4915,39 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
                     }
                 }
                 
+                // 🌟 核心优化 3：如果不是第一个奖励，就在前面插入一段“战术衔接句”
+                if (index > 0) {
+                    const randomTransition = transitionPool[Math.floor(Math.random() * transitionPool.length)];
+                    fullStoryText += `
+                        <div style="margin: 16px 0; padding: 8px; border-left: 2px solid var(--line-color); background: rgba(0,0,0,0.2); color: var(--text-muted); font-size: 11px; letter-spacing: 1px;">
+                            [ SYS.PROTOCOL_SWITCH ] // ${randomTransition}
+                        </div>
+                    `;
+                }
+                
                 if (pool && pool.length > 0) {
                     const validScripts = pool.filter(scriptObj => gameState.affection >= scriptObj.minAff);
                     if (validScripts.length > 0) {
                         const maxAff = Math.max(...validScripts.map(s => s.minAff));
                         const highestScripts = validScripts.filter(s => s.minAff === maxAff);
-                        const randomIndex = Math.floor(Math.random() * highestScripts.length);
-                        const rawScript = highestScripts[randomIndex].text; 
+
+                        // 洗牌算法 (Shuffle Bag) 抽卡袋逻辑
+                        if (!gameState.rewardBags) gameState.rewardBags = {};
+                        const bagId = `${itemName}_${playerRace}_${maxAff}`; 
+
+                        if (!gameState.rewardBags[bagId] || gameState.rewardBags[bagId].length === 0) {
+                            gameState.rewardBags[bagId] = highestScripts.map((_, idx) => idx);
+                            for (let i = gameState.rewardBags[bagId].length - 1; i > 0; i--) {
+                                const j = Math.floor(Math.random() * (i + 1));
+                                [gameState.rewardBags[bagId][i], gameState.rewardBags[bagId][j]] = [gameState.rewardBags[bagId][j], gameState.rewardBags[bagId][i]];
+                            }
+                        }
+
+                        const selectedIndex = gameState.rewardBags[bagId].pop();
+                        const rawScript = highestScripts[selectedIndex].text;
                         
+                        saveData();
+
                         const selectedScript = processStoryText(rawScript);
                         fullStoryText += `<div style="margin-top: 8px;">${selectedScript}</div>`;
                     } else {
@@ -3547,7 +4958,7 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
                 }
             });
 
-            // 延迟 800ms 推送剧情，模拟系统加载档案的时间
+            // 延迟 800ms 推送剧情
             setTimeout(() => {
                 pushStory(fullStoryText);
             }, 800);
@@ -3560,6 +4971,31 @@ document.getElementById('long-rest-interval').addEventListener('change', updateC
 
         // 执行缓存数据加载
         loadData();
+
+        // ================= 页面可见性监听 (切后台检测) =================
+        document.addEventListener("visibilitychange", function() {
+     if (document.visibilityState === 'visible') {
+        // 当用户切回这个标签页时
+        const now = Date.now();
+        const msAway = now - gameState.lastActiveTime;
+        const hoursAway = Math.floor(msAway / (1000 * 60 * 60));
+        
+        // 如果切去后台超过 2 个小时再切回来，强行触发一次检测
+        if (hoursAway >= 2) {
+            console.log("[SYS] 检测到从后台唤醒，离线时间超过2小时，重新执行登录校验...");
+            // 重新走一遍 loadData 里的离线判定逻辑
+            loadData(); 
+        } else {
+            // 如果只是切出去几分钟，就只静默更新一下活跃时间
+            gameState.lastActiveTime = Date.now();
+            saveData();
+        }
+    } else {
+        // 当用户切到其他标签页或最小化时，记录最后的活跃时间
+        gameState.lastActiveTime = Date.now();
+        saveData();
+    }
+});
 
         // ================= 恢复计时器现场的函数 (已彻底修复离线结算Bug) =================
 function restoreTimerState() {
