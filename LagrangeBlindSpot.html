@@ -1289,6 +1289,12 @@
             margin: 0 auto;
         }
 
+        /* 💥 新增：战术等候室 (queueView) 独立控制，限制和填写卡一样的舒适宽度 */
+        #queueView .archive-container {
+            max-width: 800px; 
+            margin: 0 auto;
+        }
+
         /* 3. 群友人设库 (logView) 独立控制 */
         #logView .archive-container {
             max-width: 1200px; /* 3D 数据隧道和干员列表需要大一点的空间，设为 1200px */
@@ -2684,23 +2690,202 @@
             });
         }
 
-        // 💥 显示审核详情与管理员操作面板
+        // 💥 新增：管理员批注状态管线
+        window.currentAdminAnnotations = {};
+
+        window.addAnnotation = async function(key, label) {
+            const currentNote = window.currentAdminAnnotations[key] ? window.currentAdminAnnotations[key].text : '';
+            const note = await SysModal.prompt(`请输入对【${label}】的修改意见：`, currentNote, "ADD ANNOTATION // 添加批注");
+            
+            if (note !== null) {
+                if (note.trim() === '') {
+                    delete window.currentAdminAnnotations[key]; // 为空则删除该批注
+                } else {
+                    window.currentAdminAnnotations[key] = { label, text: note.trim() };
+                }
+                refreshAnnotationList();
+            }
+        };
+
+        window.refreshAnnotationList = function() {
+            const listDiv = document.getElementById('annotation-list');
+            if (!listDiv) return;
+            const keys = Object.keys(window.currentAdminAnnotations);
+            
+            if (keys.length === 0) {
+                listDiv.innerHTML = '<div style="opacity:0.5;">(点击各属性旁边的 [+] 进行针对性批注)</div>';
+                return;
+            }
+            
+            let html = '';
+            keys.forEach(k => {
+                const item = window.currentAdminAnnotations[k];
+                html += `<div style="margin-bottom: 6px; padding: 6px; border-left: 2px solid #f44336; background: rgba(244,67,54,0.1); display: flex; justify-content: space-between;">
+                    <span><strong style="color:#f44336;">[${item.label}]</strong> - ${item.text}</span>
+                    <span style="color:#f44336; cursor:pointer; font-size:12px; font-weight:bold; padding-left: 10px;" onclick="removeAnnotation('${k}')">[删]</span>
+                </div>`;
+            });
+            listDiv.innerHTML = html;
+        };
+
+        window.removeAnnotation = function(key) {
+            delete window.currentAdminAnnotations[key];
+            refreshAnnotationList();
+        };
+
+        // 💥 新增：管理员批注状态管线 (行内无缝展开版)
+        window.currentAdminAnnotations = {};
+
+        // 切换行内批注框的显示/隐藏
+        window.toggleInlineAnnotation = function(key) {
+            const box = document.getElementById('anno-box-' + key);
+            const input = document.getElementById('anno-input-' + key);
+            
+            if (box.style.display === 'none') {
+                box.style.display = 'block';
+                input.focus();
+                // 自动适应初始高度
+                input.style.height = 'auto';
+                input.style.height = input.scrollHeight + 'px';
+            } else {
+                // 如果里面没写字，再点一次 [+] 就直接收起隐藏
+                if (input.value.trim() === '') {
+                    box.style.display = 'none';
+                } else {
+                    input.focus();
+                }
+            }
+        };
+
+        // 输入时实时调整高度，并同步到总控制台
+        window.updateInlineAnnotation = function(key, label, el) {
+            // 魔法：高度自适应撑开
+            el.style.height = 'auto';
+            el.style.height = el.scrollHeight + 'px';
+            
+            const text = el.value.trim();
+            if (text === '') {
+                delete window.currentAdminAnnotations[key]; // 为空自动删除该条批注
+            } else {
+                window.currentAdminAnnotations[key] = { label, text };
+            }
+            refreshAnnotationList(); // 实时刷新底部汇总表
+        };
+
+        // 刷新底部工作台的汇总列表
+        window.refreshAnnotationList = function() {
+            const listDiv = document.getElementById('annotation-list');
+            if (!listDiv) return;
+            const keys = Object.keys(window.currentAdminAnnotations);
+            
+            if (keys.length === 0) {
+                listDiv.innerHTML = '<div style="opacity:0.5;">(点击各属性旁边的 [+] 即可在其下方展开批注框)</div>';
+                return;
+            }
+            
+            let html = '';
+            keys.forEach(k => {
+                const item = window.currentAdminAnnotations[k];
+                html += `<div style="margin-bottom: 6px; padding: 6px; border-left: 2px solid #f44336; background: rgba(244,67,54,0.1); display: flex; justify-content: space-between;">
+                    <span><strong style="color:#f44336;">[${item.label}]</strong> - ${item.text}</span>
+                    <span style="color:#f44336; cursor:pointer; font-size:12px; font-weight:bold; padding-left: 10px;" onclick="removeAnnotation('${k}')">[删]</span>
+                </div>`;
+            });
+            listDiv.innerHTML = html;
+        };
+
+        // 在底部工作台点击 [删] 时，同步清空并折叠上面的行内输入框
+        window.removeAnnotation = function(key) {
+            delete window.currentAdminAnnotations[key];
+            refreshAnnotationList();
+            
+            const input = document.getElementById('anno-input-' + key);
+            const box = document.getElementById('anno-box-' + key);
+            if (input && box) {
+                input.value = '';
+                box.style.display = 'none';
+                input.style.height = 'auto'; // 恢复默认高度
+            }
+        };
+
+        // 💥 显示审核详情与管理员操作面板 (行内批注版)
         window.showQueueDetail = function(char) {
             const detail = document.getElementById('queue-detail');
             detail.style.display = 'block';
 
-            // 如果是管理员，显示批准/驳回按钮
+            // 每次打开档案清空上一次的批注暂存
+            window.currentAdminAnnotations = {};
+
+            // 核心构建器：用来生成带【行内批注框】或【批注展示】的字段HTML
+            const renderField = (key, label, value, isBlock = false) => {
+                let btnHtml = '';
+                let inlineAnnoHtml = '';
+                
+                // 如果是管理员审批模式
+                if (currentUser.role === 'admin' && char.status !== 'approved') {
+                    btnHtml = `<span style="color:#f44336; cursor:pointer; font-weight:bold; margin-left:5px; background:rgba(244,67,54,0.1); padding:0 4px; border-radius:2px;" onclick="toggleInlineAnnotation('${key}')" title="批注此项">[+]</span>`;
+                    
+                    // 隐藏的行内输入框
+                    inlineAnnoHtml = `
+                        <div id="anno-box-${key}" style="display: none; margin-top: 8px; width: 100%;">
+                            <textarea id="anno-input-${key}" 
+                                rows="1"
+                                placeholder="在此输入对【${label}】的批注..."
+                                style="width: 100%; box-sizing: border-box; background: rgba(244,67,54,0.1); border: 1px dashed #f44336; color: #ffb4a9; padding: 6px; font-family: 'PingFang SC', monospace; resize: none; font-size: 13px; overflow: hidden; outline: none;"
+                                oninput="updateInlineAnnotation('${key}', '${label}', this)"
+                            ></textarea>
+                        </div>
+                    `;
+                } 
+                // 如果是被打回的用户查看模式，且这一项有批注记录
+                else if (char.status === 'rejected' && char.review_comments && char.review_comments.fields && char.review_comments.fields[key]) {
+                    inlineAnnoHtml = `
+                        <div style="margin-top: 8px; width: 100%; box-sizing: border-box; background: rgba(244,67,54,0.1); border-left: 2px solid #f44336; color: #ffb4a9; padding: 6px 10px; font-size: 13px; line-height: 1.5;">
+                            <strong style="color:#f44336;">[ 指挥部批示 ]</strong> ${char.review_comments.fields[key].text}
+                        </div>
+                    `;
+                }
+
+                // 结构组装
+                if (isBlock) {
+                    return `
+                        <div class="detail-text-block" style="display: flex; flex-direction: column;">
+                            <div><span class="detail-lbl">${label}: ${btnHtml}</span><br>${value}</div>
+                            ${inlineAnnoHtml}
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="detail-item" style="display: flex; flex-direction: column; align-items: flex-start; justify-content: center;">
+                            <div style="width: 100%;"><span class="detail-lbl">${label}: ${btnHtml}</span> ${value}</div>
+                            ${inlineAnnoHtml}
+                        </div>
+                    `;
+                }
+            };
+
+            // 管理员：底部的审核批注工作台
             let adminControls = '';
             if (currentUser.role === 'admin') {
                 adminControls = `
-                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px dashed #ffeb3b; display: flex; gap: 10px;">
-                        <button class="submit-btn" style="color:#4caf50; border-color:#4caf50; flex: 1;" onclick="approveChar('${char.id}')">[ ✔️ APPROVE // 批准入库 ]</button>
-                        <button class="submit-btn" style="color:#f44336; border-color:#f44336; flex: 1;" onclick="rejectChar('${char.id}')">[ ❌ REJECT // 驳回修改 ]</button>
+                    <div style="margin-top: 20px; border: 1px solid rgba(244, 67, 54, 0.5); padding: 15px; background: rgba(244, 67, 54, 0.05); border-radius: 4px;">
+                        <div style="color: #f44336; font-family: monospace; font-weight: bold; margin-bottom: 10px;">》REVIEW_WORKBENCH [ 审核批注汇总 ]</div>
+                        
+                        <div id="annotation-list" style="margin-bottom: 10px; font-size: 13px; color: #ffb4a9;">
+                            <div style="opacity:0.5;">(点击各属性旁边的 [+] 即可在其下方展开批注框)</div>
+                        </div>
+                        
+                        <textarea id="admin-summary-input" rows="2" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.5); border: 1px solid rgba(244,67,54,0.4); color: #fff; padding: 8px; font-family: 'PingFang SC', sans-serif; resize: vertical; outline: none;" placeholder="在此输入总体驳回意见或修改总结 (选填)..."></textarea>
+                        
+                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                            <button class="submit-btn" style="color:#4caf50; border-color:#4caf50; flex: 1;" onclick="approveChar('${char.id}')">[ ✔️ APPROVE // 批准入库 ]</button>
+                            <button class="submit-btn" style="color:#f44336; border-color:#f44336; flex: 1;" onclick="rejectChar('${char.id}')">[ ❌ REJECT // 提交批注并驳回 ]</button>
+                        </div>
                     </div>
                 `;
             }
 
-            // 💥 新增：如果是号主本人，给他一个“撤回/删除”按钮！
+            // 号主本人的撤回/修改控制区
             let userControls = '';
             if (char.owner_id === currentUser.id) {
                 userControls = `
@@ -2711,31 +2896,75 @@
                 `;
             }
 
-            // 如果被打回了，显示指挥部批示
+            // 用户视角：顶部的全局总结框 (不再列出所有具体字段细节，因为它们会显示在各自对应的位置)
             let feedbackHtml = '';
-            if (char.status === 'rejected' && char.review_comments && char.review_comments.general) {
-                feedbackHtml = `<div class="system-notice" style="border-color:#f44336; color:#f44336; background: rgba(244,67,54,0.1);">[ 指挥部批示 ]: ${char.review_comments.general}</div>`;
+            if (char.status === 'rejected' && char.review_comments) {
+                let summaryText = typeof char.review_comments.general === 'string' ? char.review_comments.general : (typeof char.review_comments === 'string' ? char.review_comments : '');
+                
+                feedbackHtml = `
+                    <div class="system-notice" style="border-color:#f44336; background: rgba(244,67,54,0.1);">
+                        <div style="color: #f44336; font-weight: bold; margin-bottom: ${summaryText ? '8px' : '0'}; font-family: monospace;">[ ⚠️ REVISION REQUIRED // 指挥部要求修改 ]</div>
+                        ${summaryText ? `<div style="color:#fff;"><strong>总指挥部总结：</strong>${summaryText}</div>` : ''}
+                        <div style="margin-top: 5px; font-size: 12px; color: #ffb4a9;">请查看下方档案中各字段的详细红框批示。</div>
+                    </div>
+                `;
             }
 
-             detail.innerHTML = `
-                <div class="detail-header">
-                    <h3 style="color: #ffeb3b;">${char.callsign} // ${char.name}</h3>
-                    <button class="close-btn" onclick="document.getElementById('queue-detail').style.display='none'">[X] CLOSE</button>
+            // 处理特别的头部 (姓名/代号)
+            let headerAnnoBtn = '';
+            let headerAnnoBox = '';
+            if (currentUser.role === 'admin' && char.status !== 'approved') {
+                headerAnnoBtn = `<span style="color:#f44336; cursor:pointer; font-weight:bold; margin-left:10px; font-size:16px; background:rgba(244,67,54,0.1); padding:0 4px; border-radius:2px;" onclick="toggleInlineAnnotation('name')" title="批注姓名/代号">[+]</span>`;
+                headerAnnoBox = `
+                    <div id="anno-box-name" style="display: none; margin-top: 10px; width: 100%;">
+                        <textarea id="anno-input-name" rows="1" placeholder="在此输入对【姓名/代号】的批注..." style="width: 100%; box-sizing: border-box; background: rgba(244,67,54,0.1); border: 1px dashed #f44336; color: #ffb4a9; padding: 6px; font-family: 'PingFang SC', monospace; resize: none; font-size: 13px; overflow: hidden; outline: none;" oninput="updateInlineAnnotation('name', '姓名/代号', this)"></textarea>
+                    </div>
+                `;
+            } else if (char.status === 'rejected' && char.review_comments && char.review_comments.fields && char.review_comments.fields['name']) {
+                headerAnnoBox = `
+                    <div style="margin-top: 10px; width: 100%; box-sizing: border-box; background: rgba(244,67,54,0.1); border-left: 2px solid #f44336; color: #ffb4a9; padding: 6px 10px; font-size: 13px;">
+                        <strong style="color:#f44336;">[ 指挥部批示 ]</strong> ${char.review_comments.fields['name'].text}
+                    </div>
+                `;
+            }
+
+            // 通过构建器渲染各大模块
+            const factionField = renderField('faction', '阵营', char.faction || 'UNKNOWN');
+            const orgField = renderField('organization', '组织', char.organization || 'UNKNOWN');
+            const genderField = renderField('gender', '性别', char.gender);
+            const ageField = renderField('age', '年龄', char.age);
+            const heightField = renderField('height', '身高', char.height);
+            const appearanceField = renderField('appearance', '外貌', char.appearance, true);
+            const personalityField = renderField('personality', '性格', char.personality, true);
+            const notesField = renderField('notes', '备注', char.notes || 'N/A', true);
+
+            // 最终装配输出
+            detail.innerHTML = `
+                <div class="detail-header" style="flex-wrap: wrap; align-items: flex-start; padding-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; width: 100%;">
+                        <h3 style="color: #ffeb3b; margin:0;">${char.callsign} // ${char.name} ${headerAnnoBtn}</h3>
+                        <button class="close-btn" onclick="document.getElementById('queue-detail').style.display='none'">[X] CLOSE</button>
+                    </div>
+                    ${headerAnnoBox}
                 </div>
+                
                 ${feedbackHtml}
-                <div class="form-grid" style="margin-bottom: 10px; border-bottom: 1px dashed #ffeb3b; padding-bottom: 10px;">
-                    <div class="detail-item"><span class="detail-lbl">阵营 FACTION:</span> ${char.faction || 'UNKNOWN'}</div>
-                    <div class="detail-item"><span class="detail-lbl">组织 ORG:</span> ${char.organization || 'UNKNOWN'}</div>
+                
+                <div class="form-grid" style="margin-bottom: 10px; border-bottom: 1px dashed rgba(255,235,59,0.3); padding-bottom: 10px;">
+                    ${factionField}
+                    ${orgField}
                 </div>
                 <div class="form-grid-3" style="margin-bottom: 15px;">
-                    <div class="detail-item"><span class="detail-lbl">性别:</span> ${char.gender}</div>
-                    <div class="detail-item"><span class="detail-lbl">年龄:</span> ${char.age}</div>
-                    <div class="detail-item"><span class="detail-lbl">身高:</span> ${char.height}</div>
+                    ${genderField}
+                    ${ageField}
+                    ${heightField}
                 </div>
-                <div class="detail-text-block"><span class="detail-lbl">外貌 APPEARANCE:</span><br>${char.appearance}</div>
-                <div class="detail-text-block"><span class="detail-lbl">性格 PERSONALITY:</span><br>${char.personality}</div>
+                ${appearanceField}
+                ${personalityField}
+                ${notesField}
+                
                 ${adminControls}
-                ${userControls}  <!-- 💥 放在最下面 -->
+                ${userControls}
             `;
         }
 
@@ -2777,21 +3006,42 @@
             }
         }
 
-        // 💥 管理员操作：驳回
+        // 💥 管理员操作：提交带有多条批注的驳回
         window.rejectChar = async function(id) {
-            const reason = await SysModal.prompt("请输入驳回原因 (指挥部批示)：", "", "REJECT // 驳回审核");
-            if (reason === null) return; // 取消了
-            
+            const summaryInput = document.getElementById('admin-summary-input');
+            const generalText = summaryInput ? summaryInput.value.trim() : '';
+            const hasFields = Object.keys(window.currentAdminAnnotations).length > 0;
+
+            // 拦截误触：至少写点什么才能驳回
+            if (!hasFields && !generalText) {
+                await SysModal.alert("驳回操作需至少填写一项 [+] 针对性批注 或 总结意见。", "⚠️ EMPTY FEEDBACK // 空批示警告");
+                return;
+            }
+
             const btn = event.target;
+            const originalText = btn.innerText;
             btn.innerText = "[ 📡 PROCESSING... ]";
-            await supabaseClient.from('characters').update({ 
-                status: 'rejected',
-                review_comments: { general: reason }
-            }).eq('id', id);
             
-            await SysModal.alert("档案已驳回，申请人将收到通知！", "ACTION COMPLETED // 执行完毕");
-            document.getElementById('queue-detail').style.display='none';
-            fetchCloudData(); // 刷新数据
+            // 将全部意见打包成一个 JSON 对象存进云端
+            const reviewData = {
+                general: generalText,
+                fields: window.currentAdminAnnotations
+            };
+
+            try {
+                await supabaseClient.from('characters').update({ 
+                    status: 'rejected',
+                    review_comments: reviewData
+                }).eq('id', id);
+                
+                await SysModal.alert("档案已驳回，申请人将收到详细的修改批示列表！", "ACTION COMPLETED // 执行完毕");
+                document.getElementById('queue-detail').style.display='none';
+                fetchCloudData(); // 刷新数据
+            } catch (error) {
+                console.error("驳回失败:", error);
+                await SysModal.alert("操作失败，请检查网络连接。", "❌ ERROR");
+                btn.innerText = originalText;
+            }
         }
 
         // 💥 新增：群友自己撤回排队中/被打回的档案
@@ -3230,7 +3480,7 @@
             tunnelRAF = requestAnimationFrame(raf);
         }
 
-        // 💥 渲染下方的小按钮列表 (修复连续点击逻辑)
+        // 💥 渲染下方的小按钮列表 (修复连续点击逻辑，并增加手机端适配)
         function renderRoster() {
             const grid = document.getElementById('roster-grid');
             grid.innerHTML = '';
@@ -3243,6 +3493,13 @@
                 btn.className = 'roster-btn';
                 btn.innerHTML = `[${char.id}] ${char.callsign}`;
                 btn.onclick = () => {
+                    // 💥 新增判断：如果是手机端（屏幕宽度 <= 768px），则在下方展开静态详情面板
+                    if (window.innerWidth <= 768) {
+                        window.showMobileDetail(index);
+                        return;
+                    }
+
+                    // ====== 以下是原有的 PC 端 3D 飞行逻辑 ======
                     document.getElementById('viewport').scrollIntoView({behavior: 'smooth', block: 'center'});
                     
                     const executeFly = () => {
@@ -3254,11 +3511,10 @@
                         }
                     };
 
-                    // 💥 修复2：处理连续点击不同干员的动画逻辑
                     if (window.isOverlayOpen) {
-                        if (window.currentOpenCharIndex === index) return; // 点击当前已打开的干员，无视
+                        if (window.currentOpenCharIndex === index) return; 
                         window.closeDetailOverlay();
-                        setTimeout(executeFly, 350); // 等待 350ms 收回动画播完，再起飞向下一个！
+                        setTimeout(executeFly, 350); 
                     } else {
                         executeFly();
                     }
@@ -3266,6 +3522,51 @@
                 grid.appendChild(btn);
             });
         }
+
+        // 💥 新增：手机端专属的静态详情面板展开逻辑
+        window.showMobileDetail = function(index) {
+            const char = characterDB[index];
+            if(!char) return;
+
+            const detailContainer = document.getElementById('roster-detail');
+            detailContainer.style.display = 'block'; // 显示面板
+
+            // 同样提供修改按钮（如果是本人的档案）
+            let editActionHtml = '';
+            if (char.owner_id === currentUser.id) {
+                editActionHtml = `<button class="sys-modal-btn confirm" style="margin-top: 15px;" onclick="editQueueChar('${char.id}')">[ CREATE_REVISION // 提交修改申请 ]</button>`;
+            }
+
+            // 将数据填入面板
+            detailContainer.innerHTML = `
+                <div class="detail-header">
+                    <h3 style="color: #e0f2fe; text-shadow: 0 0 8px rgba(18, 168, 255, 0.6);">${char.callsign} // ${char.name}</h3>
+                    <button class="close-btn" onclick="document.getElementById('roster-detail').style.display='none'">[X] CLOSE</button>
+                </div>
+                <div class="form-grid" style="margin-bottom: 10px; border-bottom: 1px dashed rgba(18,168,255,0.4); padding-bottom: 10px;">
+                    <div class="detail-item"><span class="detail-lbl">阵营:</span> ${char.faction || 'CLASSIFIED'}</div>
+                    <div class="detail-item"><span class="detail-lbl">组织:</span> ${char.organization || 'CLASSIFIED'}</div>
+                </div>
+                <div class="form-grid-3" style="margin-bottom: 15px;">
+                    <div class="detail-item"><span class="detail-lbl">性别:</span> ${char.gender}</div>
+                    <div class="detail-item"><span class="detail-lbl">年龄:</span> ${char.age}</div>
+                    <div class="detail-item"><span class="detail-lbl">身高:</span> ${char.height}</div>
+                    <div class="detail-item"><span class="detail-lbl">体重:</span> ${char.weight}</div>
+                    <div class="detail-item"><span class="detail-lbl">血型:</span> ${char.blood}</div>
+                </div>
+                <div class="detail-text-block"><span class="detail-lbl">外貌 APPEARANCE:</span><br>${char.appearance}</div>
+                <div class="detail-text-block"><span class="detail-lbl">性格 PERSONALITY:</span><br>${char.personality}</div>
+                <div class="detail-text-block"><span class="detail-lbl">备注 NOTES:</span><br>${char.notes}</div>
+                <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
+                    ${editActionHtml}
+                </div>
+            `;
+
+            // 自动平滑滚动到详情面板，方便手机用户直接阅读
+            setTimeout(() => {
+                detailContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        };
 
         // 💥 展开详情面板
         window.showDetailOverlay = function(index) {
