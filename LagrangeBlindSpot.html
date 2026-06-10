@@ -68,44 +68,122 @@
             color: #12a8ff; 
         }
 
+        /* =========================================
+           战术搜索终端 (Cyber-Brutalism Search Bar)
+           ========================================= */
         .search-group {
+            display: flex;
+            align-items: stretch; /* 让内部元素等高 */
+            background: rgba(0, 5, 10, 0.8);
+            border: 2px solid #12a8ff;
+            /* 粗野主义硬边阴影 */
+            box-shadow: 4px 4px 0 rgba(18, 168, 255, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            margin-top: 5px;
+        }
+
+        /* 当输入框被点击聚焦时，整个搜索框产生物理按压/浮起感 */
+        .search-group:focus-within {
+            box-shadow: 6px 6px 0 rgba(18, 168, 255, 0.6);
+            transform: translate(-2px, -2px);
+            border-color: #e0f2fe;
+        }
+
+        /* 终端命令行前缀 */
+        .search-prefix {
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            background: rgba(18, 168, 255, 0.1);
+            color: #12a8ff;
+            font-family: "Impact", monospace;
+            font-size: 14px;
+            letter-spacing: 1px;
+            border-right: 2px solid #12a8ff;
+            user-select: none;
+        }
+
+        /* 闪烁的光标特效 */
+        .blink-cursor {
+            animation: blink 1s step-end infinite;
+            margin-left: 4px;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* 输入框本体 */
+        .search-input {
+            background: transparent;
+            border: none;
+            color: #e0f2fe;
+            width: 120px; /* 默认宽度 */
+            padding: 8px 12px;
+            font-family: monospace;
+            font-size: 14px;
+            outline: none;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .search-input::placeholder {
+            color: rgba(18, 168, 255, 0.4);
+        }
+
+        /* 核心交互：聚焦时输入框自动伸长，展现出“准备录入”的战术感 */
+        .search-input:focus {
+            width: 220px; 
+        }
+
+        /* 搜索按钮 */
+        .search-btn {
+            background: transparent;
+            border: none;
+            border-left: 2px solid #12a8ff;
+            color: #12a8ff;
             display: flex;
             align-items: center;
             gap: 6px;
-        }
-
-        .search-input {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid #12a8ff;
-            color: #12a8ff;
-            width: 80px;
-            height: 20px;
-            outline: none;
-            padding: 0 4px;
-            font-family: monospace;
-        }
-
-        .search-btn {
-            width: 24px;
-            height: 24px;
-            border: 1px solid #12a8ff;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            padding: 0 15px;
             cursor: pointer;
-            transition: 0.2s;
-        }
-        .search-btn:hover {
-            background-color: rgba(18,168,255,0.3);
-            box-shadow: 0 0 8px rgba(18,168,255,0.5);
+            font-family: "Impact", sans-serif;
+            font-size: 14px;
+            letter-spacing: 1px;
+            transition: all 0.2s;
         }
 
         .search-btn svg {
-            width: 14px;
-            height: 14px;
+            width: 16px;
+            height: 16px;
             fill: #12a8ff;
+            transition: transform 0.3s;
         }
+
+        /* 悬浮时强烈的反色效果 */
+        .search-btn:hover {
+            background: #12a8ff;
+            color: #060b14;
+        }
+
+        .search-btn:hover svg {
+            fill: #060b14;
+            transform: scale(1.1) rotate(90deg); /* 图标微动效 */
+        }
+
+        /* ─── 搜索报错时的红光警报状态 ─── */
+        .search-error {
+            border-color: #f44336 !important;
+            box-shadow: 4px 4px 0 rgba(244, 67, 54, 0.5) !important;
+            animation: shake 0.4s ease-in-out;
+        }
+        .search-error .search-prefix {
+            background: rgba(244, 67, 54, 0.1);
+            color: #f44336;
+            border-right-color: #f44336;
+        }
+        .search-error .search-btn {
+            border-left-color: #f44336;
+            color: #f44336;
+        }
+        .search-error .search-btn svg { fill: #f44336; }
 
         .sub-header {
             display: flex;
@@ -121,6 +199,77 @@
             text-shadow: 0 0 10px rgba(18,168,255,0.8);
         }
 
+        /* ─── 战术下拉检索菜单 ─── */
+        .search-dropdown {
+            position: absolute;
+            top: calc(100% + 10px); /* 位于搜索框正下方 */
+            right: 0; /* 右对齐 */
+            width: 320px;
+            background: rgba(0, 5, 10, 0.95);
+            border: 2px solid #12a8ff;
+            box-shadow: 6px 6px 0 rgba(18, 168, 255, 0.3);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: none; /* 默认隐藏 */
+            flex-direction: column;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        /* 激活时显示并带有下拉动画 */
+        .search-dropdown.active {
+            display: flex;
+            animation: slideDown 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 下拉菜单项 */
+        .dropdown-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(18, 168, 255, 0.2);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        /* 悬停时的战术锁定动效 */
+        .dropdown-item:hover {
+            background: rgba(18, 168, 255, 0.15);
+            padding-left: 25px; /* 向右缩进 */
+            border-left: 4px solid #12a8ff;
+        }
+
+        .dropdown-title {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            font-size: 15px;
+            font-weight: bold;
+            color: #e0f2fe;
+            text-shadow: 0 0 5px rgba(18,168,255,0.3);
+        }
+
+        .dropdown-tag {
+            font-family: monospace;
+            font-size: 12px;
+            color: #12a8ff;
+        }
+
+        /* 自定义下拉框滚动条 */
+        .search-dropdown::-webkit-scrollbar { width: 6px; }
+        .search-dropdown::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); }
+        .search-dropdown::-webkit-scrollbar-thumb { background: #12a8ff; }
+
         /* --- 核心控制：界面的显示与隐藏 --- */
         .view-panel {
             display: none; 
@@ -132,13 +281,10 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+       /* 统一所有视图面板的布局，防止内部元素（如3D隧道）被挤压 */
         .view-panel.active {
-            display: flex; 
-            flex-direction: column;
-            align-items: center;
-        }
-        #mainView.active {
-            justify-content: center;
+            display: block; 
+            width: 100%;
         }
 
         /* 主界面文字 */
@@ -258,53 +404,375 @@
             display: block;
         }
 
-        /* --- 主界面文章资讯板块 (战术情报流) --- */
+        /* =========================================
+           新版主界面 (赛博粗野主义风格参考 CLAY CLUB)
+           ========================================= */
         #mainView.active {
-            justify-content: flex-start; /* 改为靠上对齐 */
+            display: block; /* 覆盖原本的 flex */
             width: 100%;
+            padding: 0;
         }
 
-        .archive-container {
-            width: 100%;
-            max-width: 1000px; /* 限制最大宽度，让网页看起来更规整 */
+        /* ─── 1. HERO SECTION 英雄区 ─── */
+        .hero-section {
+            position: relative;
+            min-height: 70vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 4rem 2rem;
+            border-bottom: 2px solid #12a8ff;
+            overflow: hidden;
+        }
+
+        .ghost-bg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: "Impact", sans-serif;
+            font-size: clamp(8rem, 25vw, 25rem);
+            font-weight: 900;
+            color: rgba(18, 168, 255, 0.03);
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 3;
+            max-width: 1000px;
             margin: 0 auto;
-            padding-bottom: 40px;
+            width: 100%;
         }
 
-        .archive-header {
-            margin-bottom: 30px;
-            border-bottom: 1px solid rgba(18, 168, 255, 0.3);
-            padding-bottom: 15px;
-        }
-
-        .archive-header p {
-            color: #8bb9d6;
-            margin: 5px 0 0 0;
+        .hero-chip {
+            display: inline-block;
+            border: 2px solid #12a8ff;
+            padding: 4px 12px;
+            font-size: 0.75rem;
             font-family: monospace;
+            font-weight: bold;
+            letter-spacing: 0.15em;
+            background: rgba(18, 168, 255, 0.1);
+            color: #12a8ff;
+            margin-bottom: 1.5rem;
+            box-shadow: 3px 3px 0 rgba(18, 168, 255, 0.3);
+        }
+
+        .hero-title {
+            font-family: "Impact", "Arial Black", sans-serif;
+            font-size: clamp(3.5rem, 8vw, 7rem);
+            line-height: 0.95;
+            letter-spacing: 2px;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .hero-title .fill {
+            display: block;
+            color: #e0f2fe;
+            text-shadow: 0 0 20px rgba(18, 168, 255, 0.6);
+        }
+
+        .hero-title .stroke {
+            display: block;
+            -webkit-text-stroke: 2px #12a8ff;
+            color: transparent;
+            text-shadow: none;
+        }
+
+        .hero-title .cyber-fill {
+            display: block;
+            color: #12a8ff;
+            text-shadow: 0 0 10px #12a8ff;
+        }
+
+        .hero-sub {
+            margin-top: 2rem;
+            font-size: 1rem;
+            max-width: 600px;
+            line-height: 1.8;
+            color: #8bb9d6;
+            border-left: 3px solid #12a8ff;
+            padding-left: 15px;
+            background: linear-gradient(90deg, rgba(18,168,255,0.05), transparent);
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* 赛博粗野主义按钮 */
+        .btn-primary, .btn-ghost {
+            padding: 1rem 2rem;
+            font-family: "Impact", sans-serif;
+            font-size: 1rem;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+            text-transform: uppercase;
+        }
+
+        .btn-primary {
+            background: rgba(18, 168, 255, 0.2);
+            color: #fff;
+            border: 2px solid #12a8ff;
+            /* 重点：硬边阴影取代模糊阴影 */
+            box-shadow: 6px 6px 0 rgba(18, 168, 255, 0.5);
+            text-shadow: 0 0 5px #12a8ff;
+        }
+
+        .btn-primary:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 9px 9px 0 rgba(18, 168, 255, 0.8);
+            background: rgba(18, 168, 255, 0.4);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: #12a8ff;
+            border: 2px solid #12a8ff;
+            box-shadow: 6px 6px 0 rgba(18, 168, 255, 0.2);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(18, 168, 255, 0.1);
+            transform: translate(-3px, -3px);
+            box-shadow: 9px 9px 0 rgba(18, 168, 255, 0.5);
+        }
+
+        /* ─── 2. 无缝滚动横幅 TICKER ─── */
+        .ticker {
+            background: rgba(18, 168, 255, 0.1);
+            color: #12a8ff;
+            border-bottom: 2px solid #12a8ff;
+            padding: 0.8rem 0;
+            overflow: hidden;
+            white-space: nowrap;
+            position: relative;
+            box-shadow: inset 0 0 15px rgba(18,168,255,0.2);
+        }
+
+        .ticker-inner {
+            display: inline-flex;
+            gap: 3rem;
+            animation: ticker-scroll 20s linear infinite;
+        }
+
+        .ticker-item {
+            font-family: monospace;
+            font-size: 0.85rem;
+            font-weight: bold;
+            letter-spacing: 0.15em;
+        }
+
+        .ticker-sep { opacity: 0.5; }
+
+        @keyframes ticker-scroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        /* ─── 3. 情报网格区 INTEL GRID ─── */
+        .intel-section {
+            padding: 4rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header { margin-bottom: 3rem; }
+        
+        .section-label {
+            font-size: 0.8rem;
+            font-family: monospace;
+            color: #12a8ff;
+            letter-spacing: 0.15em;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-title {
+            font-family: "Impact", sans-serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            margin: 0;
+            color: #e0f2fe;
+            letter-spacing: 2px;
+        }
+
+        .section-title .accent {
+            color: #12a8ff;
+            text-shadow: 0 0 15px rgba(18,168,255,0.6);
+        }
+
+        .intel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px; /* 粗野主义可以减小 gap 甚至变成 -1px，但这里保持间距更符合科幻感 */
+        }
+
+        /* 赛博粗野主义卡片 */
+        .intel-card {
+            background: rgba(0, 5, 10, 0.8);
+            border: 2px solid #12a8ff;
+            padding: 2rem;
+            position: relative;
+            cursor: crosshair;
+            transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+        }
+
+        .intel-card:hover {
+            transform: translate(-5px, -5px);
+            /* 硬边阴影 */
+            box-shadow: 8px 8px 0 rgba(18, 168, 255, 0.4);
+            background: rgba(18, 168, 255, 0.05);
+            z-index: 1;
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: block;
+            filter: drop-shadow(0 0 5px #12a8ff);
+        }
+
+        .card-level {
+            font-size: 0.7rem;
+            font-family: monospace;
+            color: #12a8ff;
+            border: 1px solid #12a8ff;
+            padding: 2px 8px;
+            display: inline-block;
+            margin-bottom: 1rem;
+            background: rgba(18,168,255,0.1);
+        }
+
+        .card-name {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            font-size: 1.3rem;
+            color: #fff;
+            margin: 0 0 1rem 0;
+            text-shadow: 0 0 5px rgba(18,168,255,0.5);
+        }
+
+        .card-desc {
+            font-size: 0.85rem;
+            line-height: 1.7;
+            color: #8bb9d6;
+            margin-bottom: 2rem;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px dashed rgba(18,168,255,0.3);
+            padding-top: 1rem;
+        }
+
+        .card-price {
+            font-family: "Impact", sans-serif;
+            font-size: 1.1rem;
+            color: #e0f2fe;
             letter-spacing: 1px;
         }
 
-        /* 响应式网格：大屏幕一行3个，小屏幕自动变2个或1个 */
-        .article-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
+        .card-duration {
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: #12a8ff;
         }
 
-        /* 单个文章卡片 */
+        /* ─── 4. 横向拖拽画廊区 GALLERY STRIP ─── */
+        .gallery-strip {
+            position: relative;
+            background: rgba(0,0,0,0.5);
+            border-top: 2px solid #12a8ff;
+            border-bottom: 2px solid #12a8ff;
+            overflow: hidden;
+            margin-top: 2rem;
+        }
+
+        .gallery-caption {
+            position: absolute;
+            bottom: 1rem;
+            right: 2rem;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #12a8ff;
+            z-index: 5;
+            background: rgba(0,0,0,0.8);
+            padding: 5px 10px;
+            border: 1px solid #12a8ff;
+        }
+
+        .gallery-item {
+            flex: 0 0 350px;
+            height: 220px;
+            border: 2px solid rgba(18, 168, 255, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: monospace;
+            color: rgba(18,168,255,0.6);
+            user-select: none;
+            transition: border-color 0.3s;
+        }
+        
+        .gallery-item:hover {
+            border-color: #12a8ff;
+            box-shadow: inset 0 0 20px rgba(18,168,255,0.2);
+        }
+
+        /* ─── 横向拖拽情报流 (GALLERY DRAG SCROLL) ─── */
+        .gallery-wrapper {
+            width: 100%;
+            overflow: hidden; /* 隐藏原生滚动条 */
+            position: relative;
+        }
+
+        .article-grid {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding-bottom: 20px;
+            cursor: grab; /* 提示可拖拽 */
+            /* 隐藏滚动条但保留滚动功能 */
+            scrollbar-width: none; 
+            -ms-overflow-style: none; 
+        }
+        .article-grid::-webkit-scrollbar { display: none; }
+        
+        .article-grid.active {
+            cursor: grabbing; /* 拖拽时的鼠标样式 */
+        }
+
         .article-card {
+            flex: 0 0 320px; /* 固定卡片宽度，不随屏幕挤压 */
             background: rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(18, 168, 255, 0.2);
             border-radius: 6px;
             overflow: hidden;
-            transition: 0.3s ease;
+            transition: filter 0.3s ease, border-color 0.3s ease;
             backdrop-filter: blur(4px);
+            user-select: none; /* 防止拖拽时选中文本 */
         }
 
-        .article-card:hover {
-            border-color: #12a8ff;
-            box-shadow: 0 0 15px rgba(18, 168, 255, 0.2);
-            transform: translateY(-5px); /* 鼠标悬停时微微上浮 */
+        /* 搜索框报错闪烁动画 */
+        .search-error {
+            border-color: #f44336 !important;
+            background: rgba(244, 67, 54, 0.1) !important;
+            color: #f44336 !important;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
 
         /* 文章卡片的头图（带扫描线特效） */
@@ -636,20 +1104,48 @@
         }
 
         /* =========================================
-           3D 数据隧道系统样式
+           3D 数据隧道系统样式 (Cyber-Brutalism 升级版)
            ========================================= */
+        /* 1. 恢复 3D 屏幕撑满它的父容器 */
         .viewport-container {
             position: relative;
-            width: 100%;
-            height: 400px; /* 控制视窗的高度 */
+            width: 100%;           /* 恢复为 100% */
+            height: 450px;         /* 保持你修改的高度 */
             background: #03060a;
             overflow: hidden;
-            border: 1px solid rgba(18, 168, 255, 0.4);
-            border-radius: 8px;
+            border: 2px solid #12a8ff;
+            box-shadow: 8px 8px 0 rgba(18, 168, 255, 0.3), inset 0 0 50px rgba(0,0,0,0.8);
             margin-bottom: 40px;
             perspective: 800px;
             cursor: crosshair;
-            box-shadow: inset 0 0 50px rgba(0,0,0,0.8), 0 0 20px rgba(18, 168, 255, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .viewport-container:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 10px 10px 0 rgba(18, 168, 255, 0.5), inset 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        /* =========================================
+           各视图独立布局控制 (主界面 mainView 保持原生 100% 全宽)
+           ========================================= */
+
+        /* 1. 世界观设定 (worldView) 独立控制 */
+        #worldView {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* 2. 人设填写卡 (createView) 独立控制 */
+        #createView .archive-container {
+            max-width: 800px; /* 表单太宽会很难看，800px 聚拢感更好 */
+            margin: 0 auto;
+        }
+
+        /* 3. 群友人设库 (logView) 独立控制 */
+        #logView .archive-container {
+            max-width: 1200px; /* 3D 数据隧道和干员列表需要大一点的空间，设为 1200px */
+            margin: 0 auto;
         }
 
         .tunnel-hud {
@@ -679,7 +1175,7 @@
             top: 0; left: 0;
         }
 
-        /* 巨大的赛博文字 */
+        /* 巨大的赛博文字 (确保它不会阻挡鼠标点击) */
         .tunnel-text {
             font-size: 6rem;
             font-weight: 900;
@@ -688,6 +1184,7 @@
             -webkit-text-stroke: 2px rgba(18,168,255,0.3);
             transform: translate(-50%, -50%);
             letter-spacing: 5px;
+            pointer-events: none; /* 💥 重点：防止背景文字挡住卡片的点击 */
         }
 
         /* 浮动的档案卡片 */
@@ -701,23 +1198,18 @@
             transform: translate(-50%, -50%);
             color: #8bb9d6;
             font-family: monospace;
+            cursor: crosshair;
+            /* 💥 新增：平滑的过渡动画 */
+            transition: all 0.3s cubic-bezier(0.2, 1, 0.3, 1); 
         }
 
-        .tunnel-card-header {
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid rgba(18,168,255,0.3);
-            padding-bottom: 5px;
-            margin-bottom: 10px;
-            color: #12a8ff;
-            font-weight: bold;
-        }
-
-        .tunnel-card h2 {
-            margin: 0 0 10px 0;
-            color: #e0f2fe;
-            font-size: 20px;
-            text-shadow: 0 0 5px rgba(18,168,255,0.6);
+        /* 💥 新增：鼠标悬停时的高亮与放大特效 💥 */
+        .tunnel-card:hover {
+            border-color: #fff;
+            box-shadow: 0 0 30px rgba(18,168,255,0.8), inset 0 0 20px rgba(18,168,255,0.4);
+            transform: translate(-50%, -50%) scale(1.08); /* 微微放大 */
+            background: rgba(4, 22, 34, 0.95);
+            z-index: 10;
         }
 
         .tunnel-star {
@@ -725,6 +1217,50 @@
             background: #12a8ff;
             border-radius: 50%;
             box-shadow: 0 0 8px #12a8ff;
+        }
+
+        /* 💥 3D 空间内的详情展开面板样式 💥 */
+        .tunnel-detail-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 5, 10, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 20;
+            display: none; /* 默认隐藏 */
+            flex-direction: column;
+            padding: 40px;
+            box-sizing: border-box;
+            border: 2px solid #12a8ff;
+            box-shadow: inset 0 0 80px rgba(18,168,255,0.3);
+            color: #fff;
+            /* 赛博展开动画 */
+            animation: cyber-expand 0.4s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+            overflow-y: auto;
+        }
+
+        /* 💥 详情面板专属的赛博滚动条 💥 */
+        .tunnel-detail-overlay::-webkit-scrollbar { 
+            width: 6px; 
+        }
+        .tunnel-detail-overlay::-webkit-scrollbar-track { 
+            background: rgba(0, 5, 10, 0.8); 
+            border-left: 1px solid rgba(18,168,255,0.2); 
+        }
+        .tunnel-detail-overlay::-webkit-scrollbar-thumb { 
+            background: #12a8ff; 
+            box-shadow: 0 0 10px #12a8ff; 
+        }
+
+        /* 展开动画：从中心点向四周切开 */
+        @keyframes cyber-expand {
+            0% { clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%); opacity: 0; transform: scale(0.8); }
+            100% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); opacity: 1; transform: scale(1); }
+        }
+
+        /* 收起动画 */
+        @keyframes cyber-collapse {
+            0% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); opacity: 1; transform: scale(1); }
+            100% { clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%); opacity: 0; transform: scale(1.1); }
         }
 
         /* =========================================
@@ -818,6 +1354,117 @@
             border-radius: 4px;
         }
         .delete-btn:hover { background: rgba(244, 67, 54, 0.3); }
+
+        /* ─── 独立文章阅读弹窗 (Modal) ─── */
+        .article-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 5, 10, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 9999;
+            display: none; /* 默认隐藏 */
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* ─── 全屏文章阅读视图 (Cyber-Brutalism Article Page) ─── */
+        .article-page-container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 0 5rem 0;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .article-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            border-bottom: 2px solid rgba(18, 168, 255, 0.3);
+            padding-bottom: 1rem;
+        }
+
+        .article-sys-status {
+            font-family: monospace;
+            color: #12a8ff;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .article-page-header {
+            margin-bottom: 3rem;
+        }
+
+        .article-page-meta {
+            display: inline-block;
+            background: #12a8ff;
+            color: #060b14;
+            font-family: "Impact", monospace;
+            font-size: 1rem;
+            padding: 5px 15px;
+            letter-spacing: 2px;
+            margin-bottom: 1.5rem;
+            box-shadow: 4px 4px 0 rgba(18, 168, 255, 0.3);
+        }
+
+        .article-page-title {
+            font-family: "Impact", "Arial Black", sans-serif;
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            color: #e0f2fe;
+            margin: 0;
+            line-height: 1.1;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 0 15px rgba(18, 168, 255, 0.4);
+        }
+
+        .article-divider {
+            height: 4px;
+            background: repeating-linear-gradient(
+                45deg,
+                #12a8ff,
+                #12a8ff 10px,
+                transparent 10px,
+                transparent 20px
+            );
+            margin-top: 2rem;
+            opacity: 0.5;
+        }
+
+        .article-page-content {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            font-size: 1.15rem;
+            line-height: 2;
+            color: #8bb9d6;
+            white-space: pre-wrap; /* 保留换行符 */
+            background: rgba(0, 5, 10, 0.6);
+            border: 2px solid rgba(18, 168, 255, 0.2);
+            padding: 3rem;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+        }
+
+        /* 给文章正文里的段落加点科幻感 */
+        .article-page-content::first-letter {
+            font-size: 3rem;
+            color: #12a8ff;
+            float: left;
+            line-height: 1;
+            margin-right: 10px;
+            font-family: "Impact", sans-serif;
+        }
+
+        .article-page-footer {
+            margin-top: 3rem;
+            text-align: center;
+            font-family: monospace;
+            color: rgba(18, 168, 255, 0.5);
+            letter-spacing: 3px;
+            border-top: 1px dashed rgba(18, 168, 255, 0.3);
+            padding-top: 2rem;
+        }
 
         /* =========================================
            移动端战术雷达扫描仪样式
@@ -919,6 +1566,8 @@
             <li><button class="wiki-item-btn" data-target="mainView">SYS // 返回主界面</button></li>
             <li><button class="wiki-item-btn" data-target="worldView">DOC // 世界观设定</button></li>
             <li><button class="wiki-item-btn" data-target="createView">TOOL // 人设填写卡</button></li>
+            <!-- 💥 新增：战术等候室入口 -->
+            <li><button class="wiki-item-btn" data-target="queueView" style="color: #ffeb3b; border-color: rgba(255,235,59,0.4);">WAIT // 战术等候室</button></li>
             <li><button class="wiki-item-btn" data-target="logView">ARCH // 群友人设库</button></li>
         </ul>
     </div>
@@ -928,10 +1577,21 @@
             <div class="group-name">TASK FORCE 141</div>
             <div class="header-right">
                 <div class="lang-text">EN / SECURE</div>
-                <div class="search-group">
-                    <input type="text" class="search-input" placeholder="QUERY...">
-                    <div class="search-btn">
+                <div class="search-group" id="searchGroup">
+                    <!-- 战术终端前缀 -->
+                    <div class="search-prefix">SYS_QUERY <span class="blink-cursor">_</span></div>
+                    
+                    <input type="text" class="search-input" id="searchInput" placeholder="ENTER KEYWORD...">
+                    
+                    <!-- 带有文字和图标的扫描按钮 -->
+                    <button class="search-btn" id="searchBtn" title="Initiate Scan">
                         <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                        <span>SCAN</span>
+                    </button>
+
+                    <!-- 💥 新增：下拉检索结果菜单 💥 -->
+                    <div class="search-dropdown" id="searchDropdown">
+                        <!-- JS 会在这里动态生成检索结果 -->
                     </div>
                 </div>
             </div>
@@ -942,47 +1602,139 @@
         </div>
 
         <!-- 主界面 -->
+        <!-- 主界面 -->
         <div class="view-panel active" id="mainView">
-            <div class="archive-container">
+            
+            <!-- 1. 英雄视觉区 (Hero Section) -->
+            <section class="hero-section">
+                <!-- 背景幽灵文字 -->
+                <div class="ghost-bg">141</div>
                 
-                <!-- 头部 Banner 标题 -->
-                <div class="archive-header">
-                    <h2 class="neon-title" style="font-size: 28px; text-align: left;">DATABASE // INTEL</h2>
-                    <p>141特遣队 - 核心机密档案库与战术简报</p>
-                </div>
-
-                <!-- 下方保留原本的文章卡片网格 -->
-                <div class="article-grid">
-                    <div class="article-card">
-                        <div class="card-img placeholder-a"><span>[IMG_DECRYPTING]</span></div>
-                        <div class="card-content">
-                            <span class="card-tag">LORE // 背景</span>
-                            <h3 class="card-title">141特遣队成立始末</h3>
-                            <p class="card-desc">普莱斯上尉主导下的多国联合特种部队建立档案，代号：Kingfish...</p>
-                            <button class="card-btn">ACCESS DATA >></button>
-                        </div>
-                    </div>
-                    <div class="article-card">
-                        <div class="card-img placeholder-b"><span>[MAP_DATA]</span></div>
-                        <div class="card-content">
-                            <span class="card-tag">REPORT // 战报</span>
-                            <h3 class="card-title">乌兹克斯坦：暗夜行动</h3>
-                            <p class="card-desc">针对恐怖势力的夜间突袭总结。包含目标建筑结构图及行动录像切片...</p>
-                            <button class="card-btn">ACCESS DATA >></button>
-                        </div>
-                    </div>
-                    <div class="article-card">
-                        <div class="card-img placeholder-c"><span>[PERSONNEL]</span></div>
-                        <div class="card-content">
-                            <span class="card-tag">ROSTER // 编制</span>
-                            <h3 class="card-title">现役干员名录 (2026更新)</h3>
-                            <p class="card-desc">最新解密级别的干员代号与专长一览表。部分数据需高权限访问...</p>
-                            <button class="card-btn">ACCESS DATA >></button>
-                        </div>
+                <div class="hero-content">
+                    <div class="hero-chip">✦ SECURE UPLINK ESTABLISHED</div>
+                    <h1 class="hero-title">
+                        <span class="fill">TASK FORCE</span>
+                        <span class="stroke">ONE FOUR ONE</span>
+                        <span class="cyber-fill">DATABASE.</span>
+                    </h1>
+                    <p class="hero-sub">
+                        全球行动 / 否认资产 / 黑色行动。这是由普莱斯上尉直接授权的中央情报终端。<br>
+                        查阅战术简报、检索干员档案、录入最新情报。保持警惕，猎户座。
+                    </p>
+                    <div class="hero-actions">
+                        <button class="btn-primary" onclick="document.querySelector('[data-target=\'logView\']').click()">ACCESS ROSTER ↓</button>
+                        <button class="btn-ghost" onclick="document.getElementById('intel-grid').scrollIntoView({behavior:'smooth'})">BROWSE INTEL →</button>
                     </div>
                 </div>
+            </section>
 
+            <!-- 2. 无缝滚动情报带 (Marquee Ticker) -->
+            <div class="ticker">
+                <div class="ticker-inner">
+                    <span class="ticker-item">★ RESTRICTED ACCESS</span>
+                    <span class="ticker-sep">◆</span>
+                    <span class="ticker-item">LEVEL 4 CLEARANCE REQUIRED</span>
+                    <span class="ticker-sep">◆</span>
+                    <span class="ticker-item">OP: KINGFISH</span>
+                    <span class="ticker-sep">◆</span>
+                    <span class="ticker-item">BRAVO SIX GOING DARK</span>
+                    <span class="ticker-sep">◆</span>
+                    <span class="ticker-item">URZIKSTAN INTEL UPDATED</span>
+                    <span class="ticker-sep">◆</span>
+                    <span class="ticker-item">★ RESTRICTED ACCESS</span>
+                    <span class="ticker-sep">◆</span>
+                    <span class="ticker-item">LEVEL 4 CLEARANCE REQUIRED</span>
+                    <span class="ticker-sep">◆</span>
+                    <span class="ticker-item">OP: KINGFISH</span>
+                    <span class="ticker-sep">◆</span>
+                    <span class="ticker-item">BRAVO SIX GOING DARK</span>
+                    <span class="ticker-sep">◆</span>
+                    <span class="ticker-item">URZIKSTAN INTEL UPDATED</span>
+                    <span class="ticker-sep">◆</span>
+                </div>
             </div>
+
+            <!-- 3. 情报网格区 (类似参考站的 Classes Grid) -->
+            <section class="intel-section" id="intel-grid">
+                <div class="section-header">
+                    <div>
+                        <p class="section-label">✦ CLASSIFIED FILES</p>
+                        <h2 class="section-title">CORE <span class="accent">INTEL</span></h2>
+                    </div>
+                </div>
+
+                <!-- 搜索无结果时的提示 -->
+                <div id="no-result-msg" style="display: none; color: #f44336; font-family: monospace; padding: 20px 0; font-size: 1.2rem;">
+                    [ ❌ ERROR: NO INTEL FOUND // 未检索到相关机密档案 ]
+                </div>
+
+                <div class="intel-grid">
+                    <!-- 卡片1：加入了 data-content 存放完整文章 -->
+                    <div class="intel-card article-card" data-keywords="141特遣队 背景 lore kingfish 普莱斯" 
+                         data-content="141特遣队（Task Force 141）是一支由英国特种空勤团（SAS）军官约翰·普莱斯上尉提议，并由谢菲尔德将军直接授权成立的多国联合特种部队。&#10;&#10;该部队的初衷是为了在全球范围内执行黑色行动，打击极端民族主义分子及跨国恐怖组织。代号：Kingfish。&#10;&#10;建队初期，普莱斯上尉亲自挑选了全球最顶尖的特战干员，他们不受传统交战法则的绝对限制，拥有极高的战术自由度与先发制人的打击权限。">
+                        <span class="card-icon">📁</span>
+                        <span class="card-level">✦ LORE // 背景</span>
+                        <h3 class="card-name">141特遣队成立始末</h3>
+                        <p class="card-desc">普莱斯上尉主导下的多国联合特种部队建立档案，代号：Kingfish。详细记录了初创成员与最高指挥部的授权协议。</p>
+                        <div class="card-meta">
+                            <span class="card-price">[DECRYPTED]</span>
+                            <span class="card-duration">// READ TIME: 3 MIN</span>
+                        </div>
+                    </div>
+
+                    <!-- 卡片2 -->
+                    <div class="intel-card article-card" data-keywords="战报 report 乌兹克斯坦 暗夜行动 ghost soap gaz"
+                         data-content="行动代号：暗夜 (Operation Dark Water)&#10;地点：乌兹克斯坦&#10;参与人员：Ghost, Soap, Gaz&#10;&#10;任务目标：突袭并瘫痪阿库塔拉（Al-Qatala）的地下军火库。&#10;&#10;行动简报：小队于凌晨0200时通过高跳低开（HALO）空降至目标区域外围，利用夜视仪和消音武器清除了外围哨兵。在深入建筑内部后，遭遇重装火力抵抗。Soap 利用 C4 成功爆破承重墙，为小队开辟撤退路线。任务最终成功，无人员伤亡。">
+                        <span class="card-icon">🎯</span>
+                        <span class="card-level">◉ REPORT // 战报</span>
+                        <h3 class="card-name">乌兹克斯坦：暗夜</h3>
+                        <p class="card-desc">针对恐怖势力的夜间突袭总结。参与人员：Ghost, Soap, Gaz。包含目标建筑结构图及行动录像切片。</p>
+                        <div class="card-meta">
+                            <span class="card-price">[CLASSIFIED]</span>
+                            <span class="card-duration">// LEVEL 3 REQUIRED</span>
+                        </div>
+                    </div>
+
+                    <!-- 卡片3 -->
+                    <div class="intel-card article-card" data-keywords="编制 roster 名录 干员 2026"
+                         data-content="[ 数据解密中... ]&#10;&#10;现役核心干员名录：&#10;1. John 'Price' (呼号: Bravo Six) - 指挥官&#10;2. Simon 'Ghost' Riley - 副指挥 / 渗透专家&#10;3. John 'Soap' MacTavish - 爆破与突击专家&#10;4. Kyle 'Gaz' Garrick - 战术侦察与CQB专家&#10;&#10;注意：部分黑色行动干员（如影子部队借调人员）数据已被最高指挥部加密，需 Beta 级以上权限方可访问。">
+                        <span class="card-icon">👥</span>
+                        <span class="card-level">★ ROSTER // 编制</span>
+                        <h3 class="card-name">现役干员名录</h3>
+                        <p class="card-desc">最新解密级别的干员代号与专长一览表。注意：部分黑色行动干员数据需 Beta 级以上权限方可访问。</p>
+                        <div class="card-meta">
+                            <span class="card-price">[LIVE DATA]</span>
+                            <span class="card-duration">// UPDATED: 2026</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 卡片4 -->
+                    <div class="intel-card article-card" data-keywords="武器 装备 军械库"
+                         data-content="141特遣队军械库标准配置清单：&#10;&#10;> 突击步枪：定制版 M4A1（配备全息瞄准镜、消音器、垂直握把）&#10;> 战术装备：GPNVG-18 全景夜视仪 (四眼)&#10;> 爆破物：C4 塑胶炸药、破片手榴弹、闪光震撼弹&#10;> 侧武器：X12 战术手枪&#10;&#10;系统警告：所有装备需在每次行动后进行严格的维护与登记，遗失战术装备将面临军事法庭审查。">
+                        <span class="card-icon">🔫</span>
+                        <span class="card-level">⬡ ARMORY // 军械库</span>
+                        <h3 class="card-name">战术装备清单</h3>
+                        <p class="card-desc">包含定制版 M4、夜视仪(NVG)、各类爆破物及干员个人标志性武器的详细参数与维护日志。</p>
+                        <div class="card-meta">
+                            <span class="card-price">[INVENTORY]</span>
+                            <span class="card-duration">// SUPPLY LOGS</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. 横向拖拽画廊 (保留你原有的功能，但更新了样式) -->
+            <div class="gallery-strip">
+                <div class="gallery-caption">✦ SATELLITE IMAGERY // 卫星扫描图传</div>
+                <div class="article-grid" id="galleryStrip" style="padding: 2rem; gap: 30px;">
+                    <!-- 这里的卡片仅作为展示图片的画廊 -->
+                    <div class="gallery-item placeholder-a"><span>[MAP_GRID_01]</span></div>
+                    <div class="gallery-item placeholder-b"><span>[TARGET_BUILDING]</span></div>
+                    <div class="gallery-item placeholder-c"><span>[DRONE_FOOTAGE]</span></div>
+                    <div class="gallery-item placeholder-a"><span>[EXTRACTION_POINT]</span></div>
+                </div>
+            </div>
+
         </div>
 
         <div class="view-panel" id="worldView">
@@ -1076,6 +1828,30 @@
     </div>
 </div>
 
+
+        <!-- 💥 新增：战术等候室 (审核大厅) -->
+        <div class="view-panel" id="queueView">
+            <div class="archive-container">
+                <div class="archive-header">
+                    <h2 class="neon-title" style="font-size: 28px; text-align: left; color: #ffeb3b; text-shadow: 0 0 10px #ffeb3b;">WAITING_ROOM // 战术等候室</h2>
+                    <p>141特遣队 - 档案审核与权限分配中心</p>
+                </div>
+
+                <!-- 状态看板 -->
+                <div id="queue-status-board" style="margin-bottom: 20px;"></div>
+
+                <div class="form-section-title" style="border-color: #ffeb3b; color: #ffeb3b;">》PENDING_QUEUE [ 待审核队列 ]</div>
+                
+                <!-- 排队列表 -->
+                <div id="queue-grid" class="roster-grid"></div>
+
+                <!-- 审核详情面板 -->
+                <div id="queue-detail" class="roster-detail" style="display: none; border-color: #ffeb3b; box-shadow: inset 0 0 20px rgba(255,235,59,0.1);">
+                    <!-- JS 动态填充 -->
+                </div>
+            </div>
+        </div>
+
         <!-- 群友人设库 -->
         <div class="view-panel" id="logView">
             <div class="archive-container">
@@ -1090,9 +1866,14 @@
                         <span>VELOCITY: <span id="vel-readout">0.00</span></span>
                         <span>FPS: <span id="fps">60</span></span>
                         <span>COORD_Z: <span id="coord">0</span></span>
-                        <span style="color:#ffffff;">[滚轮操作 // SCROLL TO NAVIGATE]</span>
+                        <span style="color:#ffffff;">[滚轮/点击卡片 // NAVIGATE & SELECT]</span>
                     </div>
                     <div id="world"></div>
+                    
+                    <!-- 💥 新增：悬浮在 3D 空间上的详情展开面板 💥 -->
+                    <div id="tunnel-detail-overlay" class="tunnel-detail-overlay">
+                        <!-- JS 动态填充 -->
+                    </div>
                 </div>
 
                 <!-- 💥 新增：移动端战术雷达视窗 (手机端显示) 💥 -->
@@ -1123,7 +1904,43 @@
             </div>
         </div>
 
-    </div>
+
+     <!-- 💥 新增：全屏文章阅读视图 (Article View) 💥 -->
+        <div class="view-panel" id="articleView">
+            <div class="article-page-container">
+                
+                <!-- 顶部操作栏 -->
+                <div class="article-top-bar">
+                    <button class="btn-ghost" id="backToMainBtn">
+                        &lt; RETURN TO DATABASE
+                    </button>
+                    <div class="article-sys-status">
+                        <span class="blink-cursor">_</span> CONNECTION SECURE
+                    </div>
+                </div>
+
+                <!-- 文章头部 -->
+                <div class="article-page-header">
+                    <div class="article-page-meta" id="pageMeta">LEVEL // TAG</div>
+                    <h1 class="article-page-title" id="pageTitle">ARTICLE TITLE</h1>
+                    <div class="article-divider"></div>
+                </div>
+
+                <!-- 文章正文 -->
+                <div class="article-page-content" id="pageContent">
+                    Loading decrypted content...
+                </div>
+                
+                <!-- 文章底部 -->
+                <div class="article-page-footer">
+                    [ END OF FILE // 档案结束 ]
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 💥 引入 Supabase 官方引擎 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
         /* =========================================================
@@ -1144,6 +1961,19 @@
         wikiButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const targetId = button.getAttribute('data-target');
+
+                // 💥 核心：群友人设库的权限锁
+                if (targetId === 'logView') {
+                    const isAdmin = currentUser && currentUser.role === 'admin';
+                    // 检查正式库里有没有当前用户的档案
+                    const hasApprovedProfile = characterDB.some(c => c.owner_id === currentUser.id);
+
+                    if (!isAdmin && !hasApprovedProfile) {
+                        alert("[ ⚠️ ACCESS DENIED // 权限拒绝 ]\n您的档案尚未通过最高指挥部审核，无法访问正式机密库！\n请前往「WAIT // 战术等候室」查看审核进度。");
+                        return; // 拦截点击，不让进！
+                    }
+                }
+
                 viewPanels.forEach(panel => { panel.classList.remove('active'); });
                 const targetPanel = document.getElementById(targetId);
                 if (targetPanel) { targetPanel.classList.add('active'); }
@@ -1190,150 +2020,324 @@
         createParticleField();
 
         /* =========================================================
-           3. 💥 云端数据库联网逻辑 (JSONBin.io) 💥
+           5. 战术终端搜索与全屏文章阅读系统
+           ========================================================= */
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const searchDropdown = document.getElementById('searchDropdown');
+        const searchGroup = document.getElementById('searchGroup');
+        const articles = document.querySelectorAll('.article-card');
+
+        // 文章阅读页相关元素
+        const articleView = document.getElementById('articleView');
+        const pageTitle = document.getElementById('pageTitle');
+        const pageMeta = document.getElementById('pageMeta');
+        const pageContent = document.getElementById('pageContent');
+        const backToMainBtn = document.getElementById('backToMainBtn');
+
+        // 1. 提取所有文章卡片的数据
+        const searchIndex = Array.from(articles).map((card) => {
+            return {
+                title: card.querySelector('.card-name').innerText,
+                tag: card.querySelector('.card-level').innerText,
+                keywords: card.getAttribute('data-keywords').toLowerCase(),
+                content: card.getAttribute('data-content') || "NO DATA FOUND.",
+                element: card
+            };
+        });
+
+        // 2. 打开全屏文章的函数
+        function openArticle(item) {
+            // 填充数据
+            pageTitle.innerText = item.title;
+            pageMeta.innerText = item.tag;
+            pageContent.innerText = item.content;
+            
+            // 隐藏所有视图，显示文章视图
+            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+            articleView.classList.add('active');
+            
+            // 滚动到页面顶部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // 关闭搜索下拉框并清空输入
+            searchDropdown.classList.remove('active');
+            searchInput.value = '';
+        }
+
+        // 3. 返回主界面按钮逻辑
+        backToMainBtn.addEventListener('click', () => {
+            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById('mainView').classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // 4. 给主界面的每个卡片绑定点击事件
+        searchIndex.forEach(item => {
+            item.element.addEventListener('click', () => openArticle(item));
+        });
+
+        // 5. 核心检索函数
+        function handleSearch() {
+            const query = searchInput.value.trim().toLowerCase();
+            
+            if (!query) {
+                searchDropdown.classList.remove('active');
+                return;
+            }
+
+            const results = searchIndex.filter(item => 
+                item.keywords.includes(query) || item.title.toLowerCase().includes(query)
+            );
+
+            searchDropdown.innerHTML = '';
+
+            if (results.length === 0) {
+                searchDropdown.innerHTML = `
+                    <div class="dropdown-item" style="pointer-events: none; border-left: 4px solid #f44336;">
+                        <span class="dropdown-title" style="color: #f44336;">[ ❌ NO MATCH ]</span>
+                        <span class="dropdown-tag" style="color: #f44336;">未检索到相关机密档案</span>
+                    </div>
+                `;
+            } else {
+                results.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'dropdown-item';
+                    div.innerHTML = `
+                        <span class="dropdown-title">${item.title}</span>
+                        <span class="dropdown-tag">${item.tag}</span>
+                    `;
+                    
+                    // 点击下拉项直接打开全屏文章
+                    div.onclick = () => openArticle(item);
+                    
+                    searchDropdown.appendChild(div);
+                });
+            }
+            
+            searchDropdown.classList.add('active');
+        }
+
+        searchInput.addEventListener('input', handleSearch);
+
+        searchBtn.addEventListener('click', () => {
+            if (!searchInput.value.trim()) {
+                searchGroup.classList.add('search-error');
+                setTimeout(() => searchGroup.classList.remove('search-error'), 400);
+            } else {
+                handleSearch();
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!searchGroup.contains(e.target)) {
+                searchDropdown.classList.remove('active');
+            }
+        });
+
+        /* =========================================================
+           3. 💥 云端数据库联网逻辑 (Supabase 升级版) 💥
            ========================================================= */
         
-        // ！！！在这里填入你刚才获取的 BIN ID 和 API KEY ！！！
-        const BIN_ID = '6a2845ceda38895dfea190ca'; 
-        const API_KEY = '$2a$10$84fCh0LyMqWXCbL6AHoxbeyn4zljMIP4mOXM22K.SXXkqCIGsPtXq'; 
+        // 1. 初始化 Supabase 客户端
+        const { createClient } = supabase;
+        const _supabaseUrl = 'https://bhfbtnylovoettdgvuzj.supabase.co';
+        const _supabaseKey = 'sb_publishable_afZtwvnLJunR_uFDVxQvjg_t_ZqCkoO';
+        const supabaseClient = createClient(_supabaseUrl, _supabaseKey);
 
         let characterDB = [];
+        let currentUser = null; // 记录当前登录的群友身份
 
-        // 从云端拉取数据
+        // 2. 💥 终端身份认证系统 (免密码)
+        async function initIdentity() {
+            let deviceId = localStorage.getItem('tf141_device_id');
+            
+            if (!deviceId) {
+                // 第一次来，生成唯一 ID 并要求输入代号
+                let nickname = prompt("[ 系统提示 ]\n初次连接特遣队终端，请输入您的代号 (Nickname)：", "Unknown_Operator");
+                if (!nickname) nickname = "Unknown_Operator";
+                
+                deviceId = 'OP-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+                localStorage.setItem('tf141_device_id', deviceId);
+
+                // 存入 users 表
+                const { data } = await supabaseClient
+                    .from('users')
+                    .insert([{ id: deviceId, nickname: nickname, role: 'user' }])
+                    .select();
+                if(data) currentUser = data[0];
+            } else {
+                // 老群友，直接从数据库读取身份
+                const { data } = await supabaseClient
+                    .from('users')
+                    .select('*')
+                    .eq('id', deviceId)
+                    .single();
+                
+                if (data) {
+                    currentUser = data;
+                } else {
+                    // 如果数据库里找不到（可能被管理员删了），重新注册
+                    localStorage.removeItem('tf141_device_id');
+                    return initIdentity();
+                }
+            }
+            
+            // 把右上角的语言提示改成群友的代号！
+            document.querySelector('.lang-text').innerText = `OP: ${currentUser.nickname} / SECURE`;
+            
+            // 身份确认完毕后，拉取档案数据
+            fetchCloudData();
+        }
+
+        let pendingDB = []; // 专门存待审核的档案
+
+        // 3. 从云端拉取数据 (分类处理)
         async function fetchCloudData() {
             const grid = document.getElementById('roster-grid');
             grid.innerHTML = '<div style="color:#12a8ff; font-family:monospace;">[ 📡 UPLINKING... 正在连接加密卫星获取档案 ]</div>';
             
             try {
-                const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-                    headers: { 'X-Master-Key': API_KEY }
-                });
-                const data = await response.json();
-                characterDB = data.record || [];
-                renderRoster();
-                init3DTunnel();
+                // 一次性把所有档案拉下来
+                const { data, error } = await supabaseClient.from('characters').select('*');
+                if (error) throw error;
+                
+                // 💥 分流：正式库 vs 待审核库
+                characterDB = data.filter(c => c.status === 'approved');
+                pendingDB = data.filter(c => c.status === 'pending' || c.status === 'rejected');
+                
+                renderRoster(); // 渲染正式库
+                init3DTunnel(); // 渲染 3D 隧道
                 renderRadar();
+                
+                renderQueue();  // 💥 渲染战术等候室
             } catch (error) {
                 console.error("卫星连接失败:", error);
                 grid.innerHTML = '<div style="color:#f44336;">[ ❌ ERROR: 无法连接到情报服务器 ]</div>';
             }
         }
 
-        // 将数据同步到云端
-        async function saveCloudData() {
-            try {
-                await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': API_KEY
-                    },
-                    body: JSON.stringify(characterDB)
-                });
-            } catch (error) {
-                console.error("数据上传失败:", error);
-                alert("系统提示：档案上传云端失败，请检查网络连接。");
-            }
-        }
-
-        // 渲染小按钮列表
-        function renderRoster() {
-            const grid = document.getElementById('roster-grid');
+        // 💥 渲染战术等候室
+        function renderQueue() {
+            const board = document.getElementById('queue-status-board');
+            const grid = document.getElementById('queue-grid');
             grid.innerHTML = '';
-            if(characterDB.length === 0) {
-                grid.innerHTML = '<div style="color:#8bb9d6; font-size:12px;">[ 暂无干员档案，请前往录入终端添加 ]</div>';
-                return;
+
+            const myPending = pendingDB.filter(c => c.owner_id === currentUser.id);
+
+            // 看板提示语
+            if (currentUser.role === 'admin') {
+                board.innerHTML = `<div class="system-notice" style="border-color:#ffeb3b; color:#ffeb3b;">[ 指挥官模式 ] 当前有 ${pendingDB.length} 份档案等待您的批示。</div>`;
+            } else {
+                if (myPending.length > 0) {
+                    const statusText = myPending[0].status === 'rejected' ? '❌ 已打回，请按批示修改' : '⏳ 审核中';
+                    board.innerHTML = `<div class="system-notice" style="border-color:#ffeb3b;">您的档案状态：${statusText}。当前排队总人数：${pendingDB.length}</div>`;
+                } else {
+                    board.innerHTML = `<div class="system-notice">您当前没有排队中的档案。当前排队总人数：${pendingDB.length}</div>`;
+                }
             }
-            characterDB.forEach((char, index) => {
+
+            // 渲染排队按钮
+            pendingDB.forEach((char) => {
                 const btn = document.createElement('button');
                 btn.className = 'roster-btn';
-                btn.innerHTML = `[${char.id}] ${char.callsign}`;
-                btn.onclick = () => showDetail(index);
+                
+                if (currentUser.role === 'admin' || char.owner_id === currentUser.id) {
+                    // 管理员或本人：可以高亮并点击查看
+                    btn.style.borderColor = char.status === 'rejected' ? '#f44336' : '#ffeb3b';
+                    btn.style.color = char.status === 'rejected' ? '#f44336' : '#ffeb3b';
+                    btn.innerHTML = `[${char.status.toUpperCase()}] ${char.callsign}`;
+                    btn.onclick = () => showQueueDetail(char);
+                } else {
+                    // 其他群友：只能看到加密的占位符，不能点开
+                    btn.style.opacity = '0.4';
+                    btn.style.borderColor = '#666';
+                    btn.style.color = '#888';
+                    btn.innerHTML = `[ENCRYPTED] ${char.callsign}`;
+                    btn.onclick = () => alert("[ ⚠️ 权限拒绝 ] 加密档案，仅指挥部与提交者本人可查看。");
+                }
                 grid.appendChild(btn);
             });
         }
 
-        // 渲染手机端雷达光点
-        function renderRadar() {
-            const blipsContainer = document.getElementById('radar-blips');
-            if (!blipsContainer) return;
-            blipsContainer.innerHTML = '';
-            
-            // 为每个干员生成一个雷达光点
-            characterDB.forEach(() => {
-                const blip = document.createElement('div');
-                blip.className = 'radar-blip';
-                
-                // 随机分布在雷达圆盘内 (半径 90px，留点边距设为 80)
-                const angle = Math.random() * Math.PI * 2;
-                const radius = Math.random() * 80; 
-                const x = 90 + Math.cos(angle) * radius - 2; // 90是中心，-2是光点一半大小
-                const y = 90 + Math.sin(angle) * radius - 2;
-                
-                blip.style.left = `${x}px`;
-                blip.style.top = `${y}px`;
-                // 随机闪烁延迟，让光点不要同时闪
-                blip.style.animationDelay = `${Math.random() * 2}s`;
-                
-                blipsContainer.appendChild(blip);
-            });
-        }
-
-        // 展开显示详细档案
-        function showDetail(index) {
-            const char = characterDB[index];
-            const detail = document.getElementById('roster-detail');
+        // 💥 显示审核详情与管理员操作面板
+        window.showQueueDetail = function(char) {
+            const detail = document.getElementById('queue-detail');
             detail.style.display = 'block';
+
+            // 如果是管理员，显示批准/驳回按钮
+            let adminControls = '';
+            if (currentUser.role === 'admin') {
+                adminControls = `
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px dashed #ffeb3b; display: flex; gap: 10px;">
+                        <button class="submit-btn" style="color:#4caf50; border-color:#4caf50; flex: 1;" onclick="approveChar('${char.id}')">[ ✔️ APPROVE // 批准入库 ]</button>
+                        <button class="submit-btn" style="color:#f44336; border-color:#f44336; flex: 1;" onclick="rejectChar('${char.id}')">[ ❌ REJECT // 驳回修改 ]</button>
+                    </div>
+                `;
+            }
+
+            // 如果被打回了，显示指挥部批示
+            let feedbackHtml = '';
+            if (char.status === 'rejected' && char.review_comments && char.review_comments.general) {
+                feedbackHtml = `<div class="system-notice" style="border-color:#f44336; color:#f44336; background: rgba(244,67,54,0.1);">[ 指挥部批示 ]: ${char.review_comments.general}</div>`;
+            }
+
             detail.innerHTML = `
                 <div class="detail-header">
-                    <h3>${char.callsign} // ${char.name}</h3>
-                    <button class="close-btn" onclick="document.getElementById('roster-detail').style.display='none'">[X] CLOSE</button>
+                    <h3 style="color: #ffeb3b;">${char.callsign} // ${char.name}</h3>
+                    <button class="close-btn" onclick="document.getElementById('queue-detail').style.display='none'">[X] CLOSE</button>
                 </div>
+                ${feedbackHtml}
                 <div class="form-grid-3" style="margin-bottom: 15px;">
                     <div class="detail-item"><span class="detail-lbl">性别:</span> ${char.gender}</div>
                     <div class="detail-item"><span class="detail-lbl">年龄:</span> ${char.age}</div>
-                    <div class="detail-item"><span class="detail-lbl">生日:</span> ${char.dob}</div>
                     <div class="detail-item"><span class="detail-lbl">身高:</span> ${char.height}</div>
-                    <div class="detail-item"><span class="detail-lbl">体重:</span> ${char.weight}</div>
-                    <div class="detail-item"><span class="detail-lbl">血型:</span> ${char.blood}</div>
                 </div>
                 <div class="detail-text-block"><span class="detail-lbl">外貌 APPEARANCE:</span><br>${char.appearance}</div>
                 <div class="detail-text-block"><span class="detail-lbl">性格 PERSONALITY:</span><br>${char.personality}</div>
-                <div class="detail-text-block"><span class="detail-lbl">备注 NOTES:</span><br>${char.notes}</div>
-                <button class="delete-btn" onclick="deleteChar(${index})">[ DELETE_RECORD // 删除档案 ]</button>
+                ${adminControls}
             `;
         }
 
-        // 删除档案 (同步到云端)
-        window.deleteChar = async function(index) {
-            if(confirm('警告：确认永久删除该干员档案？此操作将同步至云端。')) {
-                const btn = document.querySelector('.delete-btn');
-                btn.innerText = "[ 📡 DELETING... ]";
-                
-                characterDB.splice(index, 1);
-                await saveCloudData(); // 等待云端保存完毕
-                
-                document.getElementById('roster-detail').style.display = 'none';
-                renderRoster();
-                init3DTunnel(); 
-                renderRadar();
-            }
+        // 💥 管理员操作：批准
+        window.approveChar = async function(id) {
+            const btn = event.target;
+            btn.innerText = "[ 📡 PROCESSING... ]";
+            await supabaseClient.from('characters').update({ status: 'approved' }).eq('id', id);
+            alert("系统提示：档案已批准，正式归档入库！");
+            document.getElementById('queue-detail').style.display='none';
+            fetchCloudData(); // 刷新数据
         }
 
-        // 提交表单录入数据 (同步到云端)
+        // 💥 管理员操作：驳回
+        window.rejectChar = async function(id) {
+            const reason = prompt("请输入驳回原因 (指挥部批示)：");
+            if (reason === null) return; // 取消了
+            
+            const btn = event.target;
+            btn.innerText = "[ 📡 PROCESSING... ]";
+            await supabaseClient.from('characters').update({ 
+                status: 'rejected',
+                review_comments: { general: reason }
+            }).eq('id', id);
+            
+            alert("系统提示：档案已驳回！");
+            document.getElementById('queue-detail').style.display='none';
+            fetchCloudData(); // 刷新数据
+        }
+
+        // 4. 提交表单录入数据 (保持不变，但加上刷新队列)
         document.getElementById('btn-submit-char').addEventListener('click', async () => {
             const callsign = document.getElementById('f-callsign').value.trim();
-            if(!callsign) {
-                alert('系统提示：必须填写呼号 (CALLSIGN)！');
-                return;
-            }
+            if(!callsign) { alert('系统提示：必须填写呼号 (CALLSIGN)！'); return; }
             
             const submitBtn = document.getElementById('btn-submit-char');
             const originalText = submitBtn.innerText;
             submitBtn.innerText = "[ 📡 UPLOADING TO SERVER... ]";
             submitBtn.disabled = true;
 
-            const char = {
+            const newChar = {
+                owner_id: currentUser.id,
                 name: document.getElementById('f-name').value || 'UNKNOWN',
                 callsign: callsign,
                 gender: document.getElementById('f-gender').value || 'N/A',
@@ -1345,25 +2349,52 @@
                 appearance: document.getElementById('f-appearance').value || 'N/A',
                 personality: document.getElementById('f-personality').value || 'N/A',
                 notes: document.getElementById('f-notes').value || 'N/A',
-                id: 'OP-' + Math.floor(Math.random() * 9999).toString().padStart(4, '0')
+                status: 'pending'
             };
             
-            characterDB.push(char);
-            await saveCloudData(); // 等待云端保存完毕
-            
-            alert('系统提示：档案已成功加密并上传至中央服务器！');
-            document.getElementById('character-form').reset(); 
-            submitBtn.innerText = originalText;
-            submitBtn.disabled = false;
-            
-            renderRoster();
-            init3DTunnel(); 
-            renderRadar();
+            try {
+                const { error } = await supabaseClient.from('characters').insert([newChar]);
+                if (error) throw error;
+                alert('系统提示：档案已成功加密并上传至中央服务器！请前往「战术等候室」查看审核进度。');
+                document.getElementById('character-form').reset(); 
+                fetchCloudData(); // 💥 提交完立刻刷新数据，让它出现在等候室里
+            } catch (error) {
+                console.error("上传失败:", error);
+                alert("系统提示：档案上传失败，请检查网络连接。");
+            } finally {
+                submitBtn.innerText = originalText;
+                submitBtn.disabled = false;
+            }
         });
 
         /* =========================================================
-           4. 3D 数据隧道引擎 (动态读取数据库)
+           4. 💥 升级版 3D 赛博空间漫游引擎 (精准锁定修复版) 💥
            ========================================================= */
+
+        // 💥 渲染手机端雷达光点 (修复丢失的代码)
+        function renderRadar() {
+            const blipsContainer = document.getElementById('radar-blips');
+            if (!blipsContainer) return;
+            blipsContainer.innerHTML = '';
+            
+            // 为每个正式干员生成一个雷达光点
+            characterDB.forEach(() => {
+                const blip = document.createElement('div');
+                blip.className = 'radar-blip';
+                
+                const angle = Math.random() * Math.PI * 2;
+                const radius = Math.random() * 80; 
+                const x = 90 + Math.cos(angle) * radius - 2; 
+                const y = 90 + Math.sin(angle) * radius - 2;
+                
+                blip.style.left = `${x}px`;
+                blip.style.top = `${y}px`;
+                blip.style.animationDelay = `${Math.random() * 2}s`;
+                
+                blipsContainer.appendChild(blip);
+            });
+        }
+
         let tunnelRAF; 
         function init3DTunnel() {
             if(tunnelRAF) cancelAnimationFrame(tunnelRAF);
@@ -1372,14 +2403,14 @@
             CONFIG.loopSize = CONFIG.itemCount * CONFIG.zGap;
 
             let TEXTS = characterDB.map(c => c.callsign);
-            if (TEXTS.length === 0) {
-                TEXTS = ["NO_DATA", "EMPTY", "AWAITING_INPUT"];
-            }
-            while(TEXTS.length < 10) {
-                TEXTS = TEXTS.concat(TEXTS);
-            }
+            if (TEXTS.length === 0) TEXTS = ["NO_DATA", "EMPTY", "AWAITING_INPUT"];
+            while(TEXTS.length < 10) TEXTS = TEXTS.concat(TEXTS);
 
-            const state = { scroll: 0, velocity: 0, mouseX: 0, mouseY: 0 };
+            const state = { 
+                scroll: 0, velocity: 0, mouseX: 0, mouseY: 0,
+                camX: 0, camY: 0, 
+                isFlying: false, targetCamX: 0, targetCamY: 0, flyingToChar: -1
+            };
             let targetScroll = 0;
 
             const viewport = document.getElementById('viewport');
@@ -1387,16 +2418,20 @@
             if(!viewport || !world) return;
             
             world.innerHTML = ''; 
-            const items = [];
+            window.tunnelItems = []; 
 
-            const containerWidth = Math.min(window.innerWidth, 1000); 
-            const containerHeight = 400; 
+            const containerWidth = viewport.clientWidth; 
+            const containerHeight = viewport.clientHeight;
 
             for (let i = 0; i < CONFIG.itemCount; i++) {
                 const el = document.createElement('div');
                 el.className = 'tunnel-item';
                 
-                const charData = characterDB.length > 0 ? characterDB[i % characterDB.length] : { id: 'OP-XXXX', callsign: TEXTS[i % TEXTS.length] };
+                const charIndex = i % (characterDB.length || 1);
+                const charData = characterDB.length > 0 ? characterDB[charIndex] : { id: 'OP-XXXX', callsign: TEXTS[i % TEXTS.length] };
+                
+                // 💥 核心修复：给每一个生成的 3D 元素分配一个独一无二的物理索引
+                const uniqueItemIndex = window.tunnelItems.length; 
 
                 const isHeading = i % 4 === 0;
                 if (isHeading) {
@@ -1404,7 +2439,7 @@
                     txt.className = 'tunnel-text';
                     txt.innerText = charData.callsign;
                     el.appendChild(txt);
-                    items.push({ el, type: 'text', x: 0, y: 0, rot: 0, baseZ: -i * CONFIG.zGap });
+                    window.tunnelItems.push({ el, type: 'text', x: 0, y: 0, rot: 0, currentRot: 0, baseZ: -i * CONFIG.zGap, charIndex, uniqueItemIndex });
                 } else {
                     const card = document.createElement('div');
                     card.className = 'tunnel-card';
@@ -1418,16 +2453,21 @@
                             <span>STATUS: ACTIVE</span>
                             <span>CLASS: ASSAULT</span>
                         </div>
-                        <div style="position:absolute; bottom:10px; right:15px; font-size:3rem; opacity:0.1; font-weight:900;">0${i}</div>
                     `;
                     el.appendChild(card);
+
+                    // 💥 核心修复：点击时传递的是这张卡片在空间里的“物理索引”，而不是干员数据的索引
+                    card.onclick = (e) => {
+                        e.stopPropagation();
+                        if(window.triggerTunnelFly) window.triggerTunnelFly(uniqueItemIndex);
+                    };
 
                     const angle = (i / CONFIG.itemCount) * Math.PI * 6;
                     const x = Math.cos(angle) * (containerWidth * 0.4);
                     const y = Math.sin(angle) * (containerHeight * 0.4);
                     const rot = (Math.random() - 0.5) * 30;
 
-                    items.push({ el, type: 'card', x, y, rot, baseZ: -i * CONFIG.zGap });
+                    window.tunnelItems.push({ el, type: 'card', x, y, rot, currentRot: rot, baseZ: -i * CONFIG.zGap, charIndex, uniqueItemIndex });
                 }
                 world.appendChild(el);
             }
@@ -1436,17 +2476,54 @@
                 const el = document.createElement('div');
                 el.className = 'tunnel-star';
                 world.appendChild(el);
-                items.push({ el, type: 'star', x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, baseZ: -Math.random() * CONFIG.loopSize });
+                window.tunnelItems.push({ el, type: 'star', x: (Math.random() - 0.5) * 2000, y: (Math.random() - 0.5) * 2000, baseZ: -Math.random() * CONFIG.loopSize });
             }
 
+            // 💥 接收物理索引，精准飞向你点击的那张卡
+            window.triggerTunnelFly = function(targetUniqueIndex) {
+                if (state.isFlying) return;
+
+                const target = window.tunnelItems[targetUniqueIndex];
+                if (!target) return;
+
+                window.tunnelItems.forEach(i => {
+                    if(i.type === 'card') {
+                        i.el.querySelector('.tunnel-card').style.borderColor = 'rgba(18,168,255,0.2)';
+                        i.el.querySelector('.tunnel-card').style.boxShadow = 'none';
+                    }
+                });
+                const targetCard = target.el.querySelector('.tunnel-card');
+                targetCard.style.borderColor = '#fff';
+                targetCard.style.boxShadow = '0 0 40px #12a8ff, inset 0 0 20px #12a8ff';
+
+                state.isFlying = true;
+                state.flyingToChar = target.charIndex; // 记录干员数据索引，用于最后展开面板
+
+                let currentRelZ = target.baseZ + state.scroll * CONFIG.camSpeed;
+                let currentVizZ = ((currentRelZ % CONFIG.loopSize) + CONFIG.loopSize) % CONFIG.loopSize;
+                if (currentVizZ > 500) currentVizZ -= CONFIG.loopSize;
+
+                let zDiff = 180 - currentVizZ;
+                targetScroll = state.scroll + (zDiff / CONFIG.camSpeed);
+
+                state.targetCamX = target.x;
+                state.targetCamY = target.y;
+            };
+
             viewport.addEventListener('mousemove', (e) => {
+                if(state.isFlying) return; 
                 const rect = viewport.getBoundingClientRect();
                 state.mouseX = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
                 state.mouseY = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
             });
 
+            // 💥 新增全局状态，记录面板是否打开
+            window.isOverlayOpen = false; 
+
             viewport.addEventListener('wheel', (e) => {
+                if (window.isOverlayOpen) return; // 💥 修复1：如果面板打开了，释放滚轮控制权，允许上下滑动！
                 e.preventDefault(); 
+                if(state.isFlying) return; 
                 targetScroll += e.deltaY * 2.5; 
             }, { passive: false });
 
@@ -1460,6 +2537,24 @@
                 lastTime = time;
                 if (time % 10 < 1 && delta > 0) feedbackFPS.innerText = Math.round(1000 / delta);
 
+                let tiltX = 0, tiltY = 0;
+
+                if (state.isFlying) {
+                    state.camX += (state.targetCamX - state.camX) * 0.08;
+                    state.camY += (state.targetCamY - state.camY) * 0.08;
+                    tiltX = 0; tiltY = 0; 
+
+                    if (Math.abs(targetScroll - state.scroll) < 2 && Math.abs(state.targetCamX - state.camX) < 2) {
+                        state.isFlying = false;
+                        window.showDetailOverlay(state.flyingToChar); 
+                    }
+                } else {
+                    state.camX += (0 - state.camX) * 0.1;
+                    state.camY += (0 - state.camY) * 0.1;
+                    tiltX = state.mouseY * 10 - state.velocity * 0.2;
+                    tiltY = state.mouseX * 10;
+                }
+
                 const prevScroll = state.scroll;
                 state.scroll += (targetScroll - state.scroll) * 0.08; 
                 const currentVel = (state.scroll - prevScroll);
@@ -1468,9 +2563,7 @@
                 feedbackVel.innerText = Math.abs(state.velocity).toFixed(2);
                 feedbackCoord.innerText = `${state.scroll.toFixed(0)}`;
 
-                const tiltX = state.mouseY * 10 - state.velocity * 0.2;
-                const tiltY = state.mouseX * 10;
-                world.style.transform = `rotateX(${tiltX}deg) rotateY(${tiltY}deg)`;
+                world.style.transform = `translate3d(${-state.camX}px, ${-state.camY}px, 0) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`;
 
                 const baseFov = 800;
                 const fov = Math.max(300, baseFov - Math.abs(state.velocity) * 5);
@@ -1479,7 +2572,7 @@
                 const cameraZ = state.scroll * CONFIG.camSpeed;
                 const modC = CONFIG.loopSize;
 
-                items.forEach(item => {
+                window.tunnelItems.forEach(item => {
                     let relZ = item.baseZ + cameraZ;
                     let vizZ = ((relZ % modC) + modC) % modC;
                     if (vizZ > 500) vizZ -= modC; 
@@ -1487,10 +2580,15 @@
                     let alpha = 1;
                     if (vizZ < -3000) alpha = 0;
                     else if (vizZ < -2000) alpha = (vizZ + 3000) / 1000;
-                    if (vizZ > 100 && item.type !== 'star') alpha = 1 - ((vizZ - 100) / 400);
+                    if (vizZ > 220 && item.type !== 'star') alpha = 1 - ((vizZ - 220) / 280);
                     if (alpha < 0) alpha = 0;
                     
                     item.el.style.opacity = alpha;
+
+                    // 💥 核心修复：如果卡片透明度太低（快消失了），直接禁用它的点击事件，防止“幽灵遮挡”
+                    if (item.type === 'card') {
+                        item.el.style.pointerEvents = alpha > 0.2 ? 'auto' : 'none';
+                    }
 
                     if (alpha > 0) {
                         let trans = `translate3d(${item.x}px, ${item.y}px, ${vizZ}px)`;
@@ -1500,6 +2598,8 @@
                             trans += ` scale3d(1, 1, ${stretch})`;
                         } else if (item.type === 'text') {
                             trans += ` rotateZ(${item.rot}deg)`;
+                            
+                            // 💥 恢复：根据滚动速度产生红蓝双色故障色差特效 💥
                             if (Math.abs(state.velocity) > 2) {
                                 const offset = state.velocity * 0.8;
                                 item.el.style.textShadow = `${offset}px 0 rgba(255,0,60,0.8), ${-offset}px 0 rgba(0,243,255,0.8)`;
@@ -1508,8 +2608,16 @@
                             }
                         } else {
                             const t = time * 0.001;
-                            const float = Math.sin(t + item.x) * 5;
-                            trans += ` rotateZ(${item.rot}deg) rotateY(${float}deg)`;
+                            let currentFloat = Math.sin(t + item.x) * 5;
+
+                            if (state.isFlying && state.flyingToChar === item.charIndex) {
+                                item.currentRot += (0 - item.currentRot) * 0.1;
+                                currentFloat *= 0.1;
+                            } else {
+                                item.currentRot += (item.rot - item.currentRot) * 0.1;
+                            }
+
+                            trans += ` rotateZ(${item.currentRot}deg) rotateY(${currentFloat}deg)`;
                         }
                         item.el.style.transform = trans;
                     }
@@ -1519,8 +2627,97 @@
             tunnelRAF = requestAnimationFrame(raf);
         }
 
-        // 页面加载时，先从云端拉取数据，再初始化3D隧道
-        fetchCloudData();
+        // 💥 渲染下方的小按钮列表 (修复连续点击逻辑)
+        function renderRoster() {
+            const grid = document.getElementById('roster-grid');
+            grid.innerHTML = '';
+            if(characterDB.length === 0) {
+                grid.innerHTML = '<div style="color:#8bb9d6; font-size:12px;">[ 暂无干员档案，请前往录入终端添加 ]</div>';
+                return;
+            }
+            characterDB.forEach((char, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'roster-btn';
+                btn.innerHTML = `[${char.id}] ${char.callsign}`;
+                btn.onclick = () => {
+                    document.getElementById('viewport').scrollIntoView({behavior: 'smooth', block: 'center'});
+                    
+                    const executeFly = () => {
+                        const targetItems = window.tunnelItems.filter(item => item.type === 'card' && item.charIndex === index);
+                        if(targetItems.length > 0 && window.triggerTunnelFly) {
+                            window.triggerTunnelFly(targetItems[0].uniqueItemIndex);
+                        } else {
+                            window.showDetailOverlay(index);
+                        }
+                    };
+
+                    // 💥 修复2：处理连续点击不同干员的动画逻辑
+                    if (window.isOverlayOpen) {
+                        if (window.currentOpenCharIndex === index) return; // 点击当前已打开的干员，无视
+                        window.closeDetailOverlay();
+                        setTimeout(executeFly, 350); // 等待 350ms 收回动画播完，再起飞向下一个！
+                    } else {
+                        executeFly();
+                    }
+                };
+                grid.appendChild(btn);
+            });
+        }
+
+        // 💥 展开详情面板
+        window.showDetailOverlay = function(index) {
+            window.isOverlayOpen = true; // 记录状态：已打开
+            window.currentOpenCharIndex = index; // 记录当前打开的是谁
+
+            const char = characterDB[index];
+            if(!char) return;
+            const overlay = document.getElementById('tunnel-detail-overlay');
+            overlay.style.display = 'flex';
+            overlay.innerHTML = `
+                <div class="detail-header">
+                    <h3 style="font-size: 26px; margin: 0; text-shadow: 0 0 15px #12a8ff; letter-spacing: 2px;">
+                        <span style="color:#fff;">${char.callsign}</span> // ${char.name}
+                    </h3>
+                    <button class="close-btn" onclick="closeDetailOverlay()" style="font-size: 16px; padding: 5px 10px; border: 1px solid #f44336;">[X] CLOSE</button>
+                </div>
+                <div class="form-grid-3" style="margin-bottom: 20px; background: rgba(18,168,255,0.05); padding: 20px; border: 1px solid rgba(18,168,255,0.3); box-shadow: inset 0 0 20px rgba(18,168,255,0.1);">
+                    <div class="detail-item"><span class="detail-lbl">性别:</span> ${char.gender}</div>
+                    <div class="detail-item"><span class="detail-lbl">年龄:</span> ${char.age}</div>
+                    <div class="detail-item"><span class="detail-lbl">生日:</span> ${char.dob}</div>
+                    <div class="detail-item"><span class="detail-lbl">身高:</span> ${char.height}</div>
+                    <div class="detail-item"><span class="detail-lbl">体重:</span> ${char.weight}</div>
+                    <div class="detail-item"><span class="detail-lbl">血型:</span> ${char.blood}</div>
+                </div>
+                <div class="detail-text-block" style="font-size: 15px;"><span class="detail-lbl">外貌 APPEARANCE:</span><br>${char.appearance}</div>
+                <div class="detail-text-block" style="font-size: 15px;"><span class="detail-lbl">性格 PERSONALITY:</span><br>${char.personality}</div>
+                <div class="detail-text-block" style="font-size: 15px;"><span class="detail-lbl">备注 NOTES:</span><br>${char.notes}</div>
+                <button class="delete-btn" style="margin-top: 20px; align-self: flex-start;" onclick="deleteChar(${index})">[ DELETE_RECORD // 删除档案 ]</button>
+            `;
+        };
+
+        // 💥 关闭详情面板
+        window.closeDetailOverlay = function() {
+            window.isOverlayOpen = false; // 记录状态：已关闭
+
+            const overlay = document.getElementById('tunnel-detail-overlay');
+            overlay.style.animation = 'cyber-collapse 0.3s forwards';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                overlay.style.animation = 'cyber-expand 0.4s cubic-bezier(0.2, 1, 0.3, 1) forwards'; 
+                
+                if(window.tunnelItems) {
+                    window.tunnelItems.forEach(i => {
+                        if(i.type === 'card') {
+                            i.el.querySelector('.tunnel-card').style.borderColor = 'rgba(18,168,255,0.4)';
+                            i.el.querySelector('.tunnel-card').style.boxShadow = '0 0 15px rgba(18,168,255,0.2)';
+                        }
+                    });
+                }
+            }, 300);
+        };
+
+        // 页面加载时，先核实身份，再拉取数据
+        initIdentity();
         
         // （如果你后续需要为人设表单增加“保存”、“导出图片”等高级功能，代码可以继续写在这里）
     </script>
