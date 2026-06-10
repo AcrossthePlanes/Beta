@@ -35,14 +35,14 @@
             box-sizing: border-box;
         }
 
-        /* 顶部导航栏区域 */
+        /* 💥 2. 修改：原本的 header */
         .header {
             display: flex;
             justify-content: space-between; 
             align-items: flex-end; 
-            border-bottom: 2px solid rgba(18, 168, 255, 0.5); 
+            border-bottom: 2px solid rgba(18, 168, 255, 0.5); /* 保留这条发光的线 */
             padding-bottom: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 0; /* 💥 重点：改为 0，去掉多余的空白，让毛玻璃精准截断 */
         }
 
         .group-name {
@@ -61,11 +61,54 @@
             gap: 5px;
         }
 
+        /* 💥 修改：右上角身份状态栏 (拆分文本与按钮) */
         .lang-text {
             font-size: 14px;
             line-height: 1;
             padding-right: 2px;
             color: #12a8ff; 
+            font-family: monospace;
+            display: flex;
+            align-items: center;
+            gap: 10px; /* 文字和按钮之间的间距 */
+        }
+
+        /* 身份文本：允许选中，且点一下自动全选！ */
+        .op-key-text {
+            cursor: text;
+            user-select: all; /* 💥 黑科技：鼠标点一下，整段文字自动高亮选中，直接 Ctrl+C 即可 */
+            -webkit-user-select: all;
+        }
+
+        /* 专属注销按钮 */
+        .logout-btn {
+            cursor: pointer;
+            color: #12a8ff;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        /* 悬停时变红发光 */
+        .logout-btn:hover {
+            color: #f44336;
+            text-shadow: 0 0 8px rgba(244, 67, 54, 0.6);
+        }
+
+        /* 💥 1. 修改：顶部导航栏包装盒 (提升通透感) */
+        .top-nav-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 85;
+            
+            /* 💥 重点：把透明度从 0.85 降到了 0.4，颜色稍微带一点点极暗的蓝 */
+            background: rgba(6, 11, 20, 0.4); 
+            
+            /* 模糊度稍微加大到 15px，保证背景变透明后，透上来的文字会被完美糊掉，不影响标题阅读 */
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            
+            margin: -20px -20px 20px -20px; 
+            padding: 20px 20px 0 20px; 
         }
 
         /* =========================================
@@ -185,18 +228,44 @@
         }
         .search-error .search-btn svg { fill: #f44336; }
 
-        .sub-header {
+        /* 💥 3. 修改：方形悬浮菜单按钮 */
+        .floating-menu-btn {
+            position: absolute;
+            top: calc(100% + 15px); /* 悬浮在毛玻璃下方 15px 处 */
+            right: 20px; /* 和搜索框完美右对齐 */
+            width: 42px;
+            height: 42px;
+            background: rgba(0, 5, 10, 0.85);
+            border: 2px solid #12a8ff;
+            color: #12a8ff;
+            font-size: 20px;
             display: flex;
-            justify-content: flex-end; 
-            margin-bottom: 20px;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            /* 粗野主义硬边阴影，和上面的搜索框保持统一风格！ */
+            box-shadow: 4px 4px 0 rgba(18, 168, 255, 0.2);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .menu-icon {
-            font-size: 28px;
-            cursor: pointer;
-            line-height: 1;
-            color: #12a8ff;
-            text-shadow: 0 0 10px rgba(18,168,255,0.8);
+        /* 悬停时的物理按压感 */
+        .floating-menu-btn:hover {
+            background: #12a8ff;
+            color: #060b14;
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 rgba(18, 168, 255, 0.6);
+        }
+
+        /* 手机端适配：稍微变小一点，靠边一点 */
+        @media (max-width: 768px) {
+            .floating-menu-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 48px;
+                height: 48px;
+                font-size: 24px;
+            }
         }
 
         /* ─── 战术下拉检索菜单 ─── */
@@ -988,26 +1057,45 @@
             user-select: none;
         }
 
-        .tactical-form input {
-            background: transparent;
-            border: none;
+        /* =========================================
+           表单输入控件核心样式 (修复白底问题)
+           ========================================= */
+        .tactical-form input,
+        .tactical-form textarea,
+        .tactical-form select {
+            background: transparent; /* 强制背景透明 */
+            border: none;            /* 去掉默认边框 */
             color: #ffffff;
             width: 100%;
             padding: 10px;
             font-family: "PingFang SC", monospace;
             font-size: 14px;
             outline: none;
+            box-sizing: border-box;
         }
 
-        .tactical-form textarea {
-            background: transparent;
-            border: none;
-            color: #ffffff;
-            width: 100%;
-            padding: 10px;
+        /* 针对下拉菜单的专属设定 */
+        .tactical-form select {
+            cursor: pointer;
+            appearance: none;         /* 隐藏掉原生的丑陋黑箭头 */
+            -webkit-appearance: none;
+        }
+
+        /* 修复下拉框弹出的选项白底黑字问题 */
+        .tactical-form select option {
+            background: #060b14;      /* 深色底 */
+            color: #12a8ff;           /* 赛博蓝字 */
             font-family: "PingFang SC", sans-serif;
-            font-size: 14px;
-            outline: none;
+        }
+
+        .tactical-form select:disabled {
+            color: rgba(139, 185, 214, 0.4);
+            cursor: not-allowed;
+        }
+
+        /* 针对多行文本框的专属设定 */
+        .tactical-form textarea {
+            font-family: "PingFang SC", sans-serif;
             resize: vertical;
             line-height: 1.5;
         }
@@ -1015,6 +1103,22 @@
         .tactical-form input::placeholder,
         .tactical-form textarea::placeholder {
             color: rgba(139, 185, 214, 0.4);
+        }
+
+        /* 下拉菜单右侧的科幻小蓝三角 */
+        .select-wrapper {
+            position: relative;
+            flex-grow: 1;
+        }
+        .select-wrapper::after {
+            content: "▼";
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #12a8ff;
+            font-size: 12px;
+            pointer-events: none; /* 让鼠标穿透，点击三角也能展开菜单 */
         }
 
         .submit-btn {
@@ -1037,6 +1141,49 @@
             color: #ffffff;
             box-shadow: 0 0 15px rgba(18, 168, 255, 0.5);
             text-shadow: 0 0 5px #ffffff;
+        }
+
+        /* 💥 新增：下拉菜单的基础样式 */
+        .tactical-form select {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            width: 100%;
+            padding: 10px;
+            font-family: "PingFang SC", monospace;
+            font-size: 14px;
+            outline: none;
+            cursor: pointer;
+            appearance: none; /* 隐藏原生箭头，后面我们用更科幻的代替 */
+            -webkit-appearance: none;
+        }
+
+        /* 修复下拉选项在系统默认下的白底黑字，强制改为深色模式 */
+        .tactical-form select option {
+            background: #060b14;
+            color: #12a8ff;
+            font-family: "PingFang SC", sans-serif;
+        }
+
+        .tactical-form select:disabled {
+            color: rgba(139, 185, 214, 0.4);
+            cursor: not-allowed;
+        }
+
+        /* 给下拉菜单右侧加个科幻小箭头 */
+        .select-wrapper {
+            position: relative;
+            flex-grow: 1;
+        }
+        .select-wrapper::after {
+            content: "▼";
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #12a8ff;
+            font-size: 12px;
+            pointer-events: none; /* 让鼠标穿透，不影响点击 */
         }
 
         /* =========================================
@@ -1554,9 +1701,147 @@
             }
         }
 
+        /* =========================================
+           定制版系统终端弹窗 (SysModal)
+           ========================================= */
+        .sys-modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 5, 10, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 100000; /* 极高的层级，确保盖住所有东西 */
+            display: none; 
+            justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.2s ease;
+        }
+        
+        .sys-modal-overlay.active {
+            display: flex; opacity: 1;
+        }
+
+        .sys-modal-box {
+            background: rgba(6, 11, 20, 0.95);
+            border: 2px solid #12a8ff;
+            box-shadow: 0 0 30px rgba(18, 168, 255, 0.3), inset 0 0 20px rgba(18, 168, 255, 0.1);
+            width: 90%; max-width: 450px;
+            padding: 25px;
+            transform: translateY(20px); 
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sys-modal-overlay.active .sys-modal-box {
+            transform: translateY(0);
+        }
+
+        .sys-modal-header {
+            font-family: "Impact", monospace;
+            color: #12a8ff;
+            font-size: 18px;
+            letter-spacing: 2px;
+            border-bottom: 1px dashed rgba(18, 168, 255, 0.4);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 8px rgba(18, 168, 255, 0.5);
+        }
+
+        .sys-modal-body {
+            font-family: "PingFang SC", sans-serif;
+            color: #e0f2fe;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .sys-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .sys-modal-btn {
+            background: transparent;
+            border: 1px solid #12a8ff;
+            font-family: monospace;
+            font-size: 14px;
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sys-modal-btn.confirm {
+            background: rgba(18, 168, 255, 0.15);
+            color: #12a8ff;
+        }
+        .sys-modal-btn.confirm:hover {
+            background: #12a8ff; color: #060b14;
+            box-shadow: 0 0 15px #12a8ff;
+        }
+
+        .sys-modal-btn.cancel {
+            border-color: #f44336; color: #f44336;
+        }
+        .sys-modal-btn.cancel:hover {
+            background: rgba(244, 67, 54, 0.15);
+            box-shadow: 0 0 15px rgba(244, 67, 54, 0.5);
+        }
+
+        /* 💥 修复弹窗内部输入框的白底问题 */
+        .sys-modal-box .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(18, 168, 255, 0.3);
+            border-radius: 4px;
+            transition: 0.3s;
+            margin-top: 15px;
+        }
+
+        .sys-modal-box .input-wrapper:focus-within {
+            border-color: #12a8ff;
+            box-shadow: 0 0 10px rgba(18, 168, 255, 0.3), inset 0 0 10px rgba(18, 168, 255, 0.1);
+        }
+
+        .sys-modal-box .prefix {
+            color: #12a8ff;
+            font-family: monospace;
+            padding: 10px 0 10px 10px;
+            user-select: none;
+        }
+
+        .sys-modal-box input {
+            background: transparent !important; /* 强制背景透明 */
+            border: none !important;            /* 强制去掉黑色边框 */
+            color: #ffffff;                     /* 字体变成白色 */
+            width: 100%;
+            padding: 10px;
+            font-family: "PingFang SC", monospace;
+            font-size: 14px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
     </style>
 </head>
 <body>
+
+    <!-- 💥 独家定制的科幻终端弹窗 -->
+    <div class="sys-modal-overlay" id="sysModalOverlay">
+        <div class="sys-modal-box">
+            <div class="sys-modal-header" id="sysModalTitle">[ SYSTEM MESSAGE ]</div>
+            <div class="sys-modal-body" id="sysModalMsg"></div>
+            
+            <!-- 仅在需要输入的 prompt 时显示 -->
+            <div class="input-wrapper" id="sysModalInputWrapper" style="display: none; margin-top: 15px;">
+                <span class="prefix">&gt;</span>
+                <input type="text" id="sysModalInput" autocomplete="off">
+            </div>
+
+            <div class="sys-modal-actions">
+                <button class="sys-modal-btn cancel" id="sysModalCancelBtn">[ CANCEL // 取消 ]</button>
+                <button class="sys-modal-btn confirm" id="sysModalConfirmBtn">[ ACKNOWLEDGE // 确认 ]</button>
+            </div>
+        </div>
+    </div>
 
     <div class="overlay" id="overlay"></div>
 
@@ -1573,32 +1858,30 @@
     </div>
 
     <div class="page-container">
-        <div class="header">
-            <div class="group-name">TASK FORCE 141</div>
-            <div class="header-right">
-                <div class="lang-text">EN / SECURE</div>
-                <div class="search-group" id="searchGroup">
-                    <!-- 战术终端前缀 -->
-                    <div class="search-prefix">SYS_QUERY <span class="blink-cursor">_</span></div>
-                    
-                    <input type="text" class="search-input" id="searchInput" placeholder="ENTER KEYWORD...">
-                    
-                    <!-- 带有文字和图标的扫描按钮 -->
-                    <button class="search-btn" id="searchBtn" title="Initiate Scan">
-                        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                        <span>SCAN</span>
-                    </button>
-
-                    <!-- 💥 新增：下拉检索结果菜单 💥 -->
-                    <div class="search-dropdown" id="searchDropdown">
-                        <!-- JS 会在这里动态生成检索结果 -->
+        
+        <!-- 顶部导航栏包装盒 -->
+        <div class="top-nav-wrapper">
+            
+            <div class="header">
+                <div class="group-name">TASK FORCE 141</div>
+                <div class="header-right">
+                    <div class="lang-text">EN / SECURE</div>
+                    <div class="search-group" id="searchGroup">
+                        <!-- 搜索框内容保持不变 -->
+                        <div class="search-prefix">SYS_QUERY <span class="blink-cursor">_</span></div>
+                        <input type="text" class="search-input" id="searchInput" placeholder="ENTER KEYWORD...">
+                        <button class="search-btn" id="searchBtn">
+                            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                            <span>SCAN</span>
+                        </button>
+                        <div class="search-dropdown" id="searchDropdown"></div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="sub-header">
-            <div class="menu-icon" id="menuBtn">☰</div>
+            <!-- 💥 移到这里：悬浮在搜索栏下方的方形菜单按钮 -->
+            <div class="floating-menu-btn" id="menuBtn" title="OPEN TERMINAL">☰</div>
+
         </div>
 
         <!-- 主界面 -->
@@ -1759,7 +2042,7 @@
             人设的作用是让需要对戏的朋友扫一眼你的大概特征，所以不用太详细，出生年月身高体重血型之类的是为了避免自己忘了。
         </div>
 
-        <!-- 人设录入表单 -->
+        <!-- 💥 就是这里！找回丢失的 form 标签 💥 -->
         <form class="tactical-form" id="character-form">
             <div class="form-section-title">》BASIC_INFO [ 基础检索数据 ]</div>
             <div class="form-grid">
@@ -1771,10 +2054,36 @@
                     </div>
                 </div>
                 <div class="input-group">
-                    <label>昵称·呼号 / CALLSIGN</label>
+                    <label>代号·呼号 / CALLSIGN</label>
                     <div class="input-wrapper">
                         <span class="prefix">&gt;</span>
-                        <input type="text" id="f-callsign" placeholder="如: Ghost, Soap..." required>
+                        <input type="text" id="f-callsign" placeholder="常用的行动代号" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 阵营与组织选择区 -->
+            <div class="form-section-title">》ALLEGIANCE [ 阵营与组织归属 ]</div>
+            <div class="form-grid">
+                <div class="input-group">
+                    <label>所属阵营 / FACTION</label>
+                    <div class="input-wrapper select-wrapper">
+                        <span class="prefix">&gt;</span>
+                        <select id="f-faction" required>
+                            <option value="" disabled selected>-- 接入星际网络选择阵营 --</option>
+                            <option value="泛星联盟 (PSC)">泛星联盟 (PSC)</option>
+                            <option value="边缘星环联盟 (The Frontier)">边缘星环联盟 (The Frontier)</option>
+                            <option value="独立防务承包商 (PMCs)">独立防务承包商 (PMCs)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>下属组织 / ORGANIZATION</label>
+                    <div class="input-wrapper select-wrapper">
+                        <span class="prefix">&gt;</span>
+                        <select id="f-org" required disabled>
+                            <option value="" disabled selected>-- 请先确认主阵营 --</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -1943,6 +2252,69 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
+           /* =========================================================
+           0. 终端全局弹窗引擎 (SysModal)
+           ========================================================= */
+        const SysModal = {
+            init() {
+                this.overlay = document.getElementById('sysModalOverlay');
+                this.title = document.getElementById('sysModalTitle');
+                this.msg = document.getElementById('sysModalMsg');
+                this.inputWrapper = document.getElementById('sysModalInputWrapper');
+                this.input = document.getElementById('sysModalInput');
+                this.btnConfirm = document.getElementById('sysModalConfirmBtn');
+                this.btnCancel = document.getElementById('sysModalCancelBtn');
+            },
+            show(opts) {
+                return new Promise(resolve => {
+                    if (!this.overlay) this.init();
+                    
+                    this.title.innerHTML = opts.title || '[ SYSTEM MESSAGE ]';
+                    this.msg.innerHTML = (opts.msg || '').replace(/\n/g, '<br>'); // 把换行符转为网页换行
+                    
+                    if (opts.type === 'prompt') {
+                        this.inputWrapper.style.display = 'flex';
+                        this.input.value = opts.defaultText || '';
+                        setTimeout(() => this.input.focus(), 100);
+                    } else {
+                        this.inputWrapper.style.display = 'none';
+                    }
+
+                    if (opts.type === 'alert') {
+                        this.btnCancel.style.display = 'none';
+                    } else {
+                        this.btnCancel.style.display = 'block';
+                    }
+
+                    // 绑定事件
+                    this.btnConfirm.onclick = () => {
+                        this.close();
+                        if (opts.type === 'prompt') resolve(this.input.value.trim());
+                        else if (opts.type === 'confirm') resolve(true);
+                        else resolve();
+                    };
+
+                    this.btnCancel.onclick = () => {
+                        this.close();
+                        if (opts.type === 'prompt') resolve(null);
+                        else if (opts.type === 'confirm') resolve(false);
+                    };
+
+                    // 支持回车快捷提交
+                    this.input.onkeydown = (e) => {
+                        if (e.key === 'Enter') this.btnConfirm.click();
+                    };
+
+                    this.overlay.classList.add('active');
+                });
+            },
+            close() { this.overlay.classList.remove('active'); },
+            alert(msg, title) { return this.show({ type: 'alert', msg, title }); },
+            confirm(msg, title) { return this.show({ type: 'confirm', msg, title }); },
+            prompt(msg, defaultText, title) { return this.show({ type: 'prompt', msg, defaultText, title }); }
+        };
+
+
         /* =========================================================
            1. 网页交互逻辑（导航、侧边栏切换等）
            ========================================================= */
@@ -1959,18 +2331,15 @@
         overlay.addEventListener('click', closeSidebar);
 
         wikiButtons.forEach(button => {
-            button.addEventListener('click', () => {
+            button.addEventListener('click', async () => { // 💥 这里加了 async
                 const targetId = button.getAttribute('data-target');
-
-                // 💥 核心：群友人设库的权限锁
                 if (targetId === 'logView') {
                     const isAdmin = currentUser && currentUser.role === 'admin';
-                    // 检查正式库里有没有当前用户的档案
                     const hasApprovedProfile = characterDB.some(c => c.owner_id === currentUser.id);
 
                     if (!isAdmin && !hasApprovedProfile) {
-                        alert("[ ⚠️ ACCESS DENIED // 权限拒绝 ]\n您的档案尚未通过最高指挥部审核，无法访问正式机密库！\n请前往「WAIT // 战术等候室」查看审核进度。");
-                        return; // 拦截点击，不让进！
+                        await SysModal.alert("您的档案尚未通过最高指挥部审核，无法访问正式机密库！\n请前往「WAIT // 战术等候室」查看审核进度。", "⚠️ ACCESS DENIED // 权限拒绝");
+                        return; 
                     }
                 }
 
@@ -2148,26 +2517,56 @@
         let characterDB = [];
         let currentUser = null; // 记录当前登录的群友身份
 
-        // 2. 💥 终端身份认证系统 (免密码)
+        // 2. 💥 终端身份认证系统 (支持密钥恢复身份)
         async function initIdentity() {
             let deviceId = localStorage.getItem('tf141_device_id');
             
             if (!deviceId) {
-                // 第一次来，生成唯一 ID 并要求输入代号
-                let nickname = prompt("[ 系统提示 ]\n初次连接特遣队终端，请输入您的代号 (Nickname)：", "Unknown_Operator");
-                if (!nickname) nickname = "Unknown_Operator";
+                // 第一次来，弹窗询问
+                let input = await SysModal.prompt("初次连接星际网络终端。\n\n▶ 新干员：请输入您的代号 (Nickname)\n▶ 老干员：请输入您的终端密钥 (如 OP-XXXX 恢复身份)", "", "SYSTEM PROMPT // 身份认证");
                 
-                deviceId = 'OP-' + Math.random().toString(36).substr(2, 9).toUpperCase();
-                localStorage.setItem('tf141_device_id', deviceId);
+                if (input === null) input = "Unknown_Operator"; // 防止用户点取消导致报错
+                input = input.trim();
+                
 
-                // 存入 users 表
-                const { data } = await supabaseClient
-                    .from('users')
-                    .insert([{ id: deviceId, nickname: nickname, role: 'user' }])
-                    .select();
-                if(data) currentUser = data[0];
+                // 💥 判断：如果输入的是 OP- 开头的密钥，执行身份恢复逻辑
+                if (input.toUpperCase().startsWith('OP-')) {
+                    const { data, error } = await supabaseClient
+                        .from('users')
+                        .select('*')
+                        .eq('id', input.toUpperCase())
+                        .single();
+                    
+                    if (data) {
+                        // 密钥正确，恢复身份！
+                        deviceId = data.id;
+                        localStorage.setItem('tf141_device_id', deviceId);
+                        currentUser = data;
+                        await SysModal.alert(`欢迎回来，${currentUser.nickname}。权限级别已恢复。`, "IDENTITY CONFIRMED // 身份确认");
+                    } else {
+                        // 密钥错误
+                        await SysModal.alert("数据库中未找到该终端密钥，系统将重新初始化。", "❌ INVALID KEY // 密钥无效");
+                        localStorage.removeItem('tf141_device_id');
+                        return initIdentity(); // 重新弹窗
+                    }
+                } else {
+                    // 💥 输入的是普通代号，执行新用户注册逻辑
+                    deviceId = 'OP-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+                    localStorage.setItem('tf141_device_id', deviceId);
+
+                    const { data } = await supabaseClient
+                        .from('users')
+                        .insert([{ id: deviceId, nickname: input, role: 'user' }])
+                        .select();
+                    
+                    if(data) {
+                        currentUser = data[0];
+                        // ⚠️ 极其重要：告诉新用户他的密钥！
+                        await SysModal.alert(`欢迎接入泛星网络，${input}。\n\n⚠️ 请务必截图或牢记您的专属终端密钥：\n【 ${deviceId} 】\n\n在其他设备上输入此密钥即可恢复您的身份与档案！`, "REGISTRATION SUCCESS // 注册成功");
+                    }
+                }
             } else {
-                // 老群友，直接从数据库读取身份
+                // 设备里已经有密钥了，直接登录
                 const { data } = await supabaseClient
                     .from('users')
                     .select('*')
@@ -2177,20 +2576,40 @@
                 if (data) {
                     currentUser = data;
                 } else {
-                    // 如果数据库里找不到（可能被管理员删了），重新注册
                     localStorage.removeItem('tf141_device_id');
                     return initIdentity();
                 }
             }
             
-            // 把右上角的语言提示改成群友的代号！
-            document.querySelector('.lang-text').innerText = `OP: ${currentUser.nickname} / SECURE`;
+            // 💥 把右上角的提示改一下，方便群友随时查看自己的密钥
+            document.querySelector('.lang-text').innerText = `OP: ${currentUser.nickname} [${currentUser.id}]`;
             
-            // 身份确认完毕后，拉取档案数据
+            // 把右上角的提示改一下，加上电源小图标
+            const statusBtn = document.querySelector('.lang-text');
+            statusBtn.innerText = `OP: ${currentUser.nickname} [${currentUser.id}] ⏻`;
+            
+            // 💥 把右上角的提示拆分成“可复制的文本”和“注销按钮”
+            const statusContainer = document.querySelector('.lang-text');
+            statusContainer.innerHTML = `
+                <span class="op-key-text" title="点击即可全选复制">OP: ${currentUser.nickname} [${currentUser.id}]</span>
+                <span class="logout-btn" title="断开终端连接">⏻ DISCONNECT</span>
+            `;
+            
+            // 💥 注销点击事件现在只绑定到专属按钮上！
+            document.querySelector('.logout-btn').onclick = async function() {
+                const msg = `即将断开当前干员的终端连接。\n请确保您已妥善保管当前密钥：【 ${currentUser.id} 】\n\n确认断开并切换身份吗？`;
+                const isSure = await SysModal.confirm(msg, "⚠️ TERMINAL DISCONNECT // 断开连接");
+                if (isSure) {
+                    localStorage.removeItem('tf141_device_id');
+                    location.reload(); 
+                }
+            };
+
             fetchCloudData();
-        }
+        } // <-- 这是 initIdentity 函数原本的结尾大括号
 
         let pendingDB = []; // 专门存待审核的档案
+        let editingCharId = null; // 💥 新增：记录当前正在修改的档案 ID
 
         // 3. 从云端拉取数据 (分类处理)
         async function fetchCloudData() {
@@ -2246,7 +2665,12 @@
                     // 管理员或本人：可以高亮并点击查看
                     btn.style.borderColor = char.status === 'rejected' ? '#f44336' : '#ffeb3b';
                     btn.style.color = char.status === 'rejected' ? '#f44336' : '#ffeb3b';
-                    btn.innerHTML = `[${char.status.toUpperCase()}] ${char.callsign}`;
+                    let prefixTag = char.status.toUpperCase();
+                if (char.target_edit_id) {
+                    prefixTag = "UPDATE_REQ"; // 告诉指挥部，这是一份更新申请！
+                    btn.style.boxShadow = "inset 0 0 10px rgba(18, 168, 255, 0.4)"; // 加个蓝色内发光区分一下
+                }
+                btn.innerHTML = `[${prefixTag}] ${char.callsign}`;
                     btn.onclick = () => showQueueDetail(char);
                 } else {
                     // 其他群友：只能看到加密的占位符，不能点开
@@ -2254,7 +2678,7 @@
                     btn.style.borderColor = '#666';
                     btn.style.color = '#888';
                     btn.innerHTML = `[ENCRYPTED] ${char.callsign}`;
-                    btn.onclick = () => alert("[ ⚠️ 权限拒绝 ] 加密档案，仅指挥部与提交者本人可查看。");
+                    btn.onclick = () => SysModal.alert("机密档案，已被终端加密协议锁定。仅指挥部与提交者本人可查看。", "⚠️ ACCESS DENIED // 访问拒绝");
                 }
                 grid.appendChild(btn);
             });
@@ -2276,18 +2700,33 @@
                 `;
             }
 
+            // 💥 新增：如果是号主本人，给他一个“撤回/删除”按钮！
+            let userControls = '';
+            if (char.owner_id === currentUser.id) {
+                userControls = `
+                    <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
+                        <button class="sys-modal-btn confirm" onclick="editQueueChar('${char.id}')">[ EDIT // 调取修改 ]</button>
+                        <button class="sys-modal-btn cancel" onclick="deleteQueueChar('${char.id}')">[ DELETE // 彻底销毁 ]</button>
+                    </div>
+                `;
+            }
+
             // 如果被打回了，显示指挥部批示
             let feedbackHtml = '';
             if (char.status === 'rejected' && char.review_comments && char.review_comments.general) {
                 feedbackHtml = `<div class="system-notice" style="border-color:#f44336; color:#f44336; background: rgba(244,67,54,0.1);">[ 指挥部批示 ]: ${char.review_comments.general}</div>`;
             }
 
-            detail.innerHTML = `
+             detail.innerHTML = `
                 <div class="detail-header">
                     <h3 style="color: #ffeb3b;">${char.callsign} // ${char.name}</h3>
                     <button class="close-btn" onclick="document.getElementById('queue-detail').style.display='none'">[X] CLOSE</button>
                 </div>
                 ${feedbackHtml}
+                <div class="form-grid" style="margin-bottom: 10px; border-bottom: 1px dashed #ffeb3b; padding-bottom: 10px;">
+                    <div class="detail-item"><span class="detail-lbl">阵营 FACTION:</span> ${char.faction || 'UNKNOWN'}</div>
+                    <div class="detail-item"><span class="detail-lbl">组织 ORG:</span> ${char.organization || 'UNKNOWN'}</div>
+                </div>
                 <div class="form-grid-3" style="margin-bottom: 15px;">
                     <div class="detail-item"><span class="detail-lbl">性别:</span> ${char.gender}</div>
                     <div class="detail-item"><span class="detail-lbl">年龄:</span> ${char.age}</div>
@@ -2296,22 +2735,51 @@
                 <div class="detail-text-block"><span class="detail-lbl">外貌 APPEARANCE:</span><br>${char.appearance}</div>
                 <div class="detail-text-block"><span class="detail-lbl">性格 PERSONALITY:</span><br>${char.personality}</div>
                 ${adminControls}
+                ${userControls}  <!-- 💥 放在最下面 -->
             `;
         }
 
-        // 💥 管理员操作：批准
+        // 💥 管理员操作：批准（自动执行版本合并）
         window.approveChar = async function(id) {
             const btn = event.target;
-            btn.innerText = "[ 📡 PROCESSING... ]";
-            await supabaseClient.from('characters').update({ status: 'approved' }).eq('id', id);
-            alert("系统提示：档案已批准，正式归档入库！");
-            document.getElementById('queue-detail').style.display='none';
-            fetchCloudData(); // 刷新数据
+            btn.innerText = "[ 📡 MERGING... ]";
+            
+            const charDraft = pendingDB.find(c => String(c.id) === String(id));
+            if (!charDraft) return;
+
+            try {
+                if (charDraft.target_edit_id) {
+                    // 💥 如果这是一份【更新草稿】，把草稿数据覆盖到正式卡上！
+                    const updateData = {
+                        name: charDraft.name, callsign: charDraft.callsign, faction: charDraft.faction, organization: charDraft.organization,
+                        gender: charDraft.gender, age: charDraft.age, dob: charDraft.dob, height: charDraft.height, weight: charDraft.weight,
+                        blood: charDraft.blood, appearance: charDraft.appearance, personality: charDraft.personality, notes: charDraft.notes,
+                        status: 'approved', review_comments: null // 清除可能残留的批示
+                    };
+                    // 1. 覆盖正式卡
+                    await supabaseClient.from('characters').update(updateData).eq('id', charDraft.target_edit_id);
+                    // 2. 销毁这份完成使命的草稿
+                    await supabaseClient.from('characters').delete().eq('id', charDraft.id);
+                    
+                    await SysModal.alert("新数据已覆盖正式档案，合并完成！", "MERGE COMPLETED");
+                } else {
+                    // 这是普通的萌新档案，直接发通行证
+                    await supabaseClient.from('characters').update({ status: 'approved', review_comments: null }).eq('id', id);
+                    await SysModal.alert("新干员档案已批准，正式归档入库！", "APPROVED");
+                }
+                
+                document.getElementById('queue-detail').style.display='none';
+                fetchCloudData(); // 刷新数据
+            } catch (error) {
+                console.error("批准失败:", error);
+                await SysModal.alert("合并数据失败，请重试。", "ERROR");
+                btn.innerText = "[ ✔️ APPROVE // 批准入库 ]";
+            }
         }
 
         // 💥 管理员操作：驳回
         window.rejectChar = async function(id) {
-            const reason = prompt("请输入驳回原因 (指挥部批示)：");
+            const reason = await SysModal.prompt("请输入驳回原因 (指挥部批示)：", "", "REJECT // 驳回审核");
             if (reason === null) return; // 取消了
             
             const btn = event.target;
@@ -2321,48 +2789,183 @@
                 review_comments: { general: reason }
             }).eq('id', id);
             
-            alert("系统提示：档案已驳回！");
+            await SysModal.alert("档案已驳回，申请人将收到通知！", "ACTION COMPLETED // 执行完毕");
             document.getElementById('queue-detail').style.display='none';
             fetchCloudData(); // 刷新数据
         }
 
-        // 4. 提交表单录入数据 (保持不变，但加上刷新队列)
+        // 💥 新增：群友自己撤回排队中/被打回的档案
+        window.deleteQueueChar = async function(id) {
+            const isSure = await SysModal.confirm("确认要撤回并销毁这份档案记录吗？\n此操作不可逆！销毁后您可以重新录入一份新档案。", "⚠️ DELETE RECORD // 销毁档案");
+            if (!isSure) return; // 用户点取消就退出
+
+            // 告诉 Supabase 删掉这条数据
+            await supabaseClient.from('characters').delete().eq('id', id);
+            
+            await SysModal.alert("旧档案已彻底销毁，您可以前往终端录入新档案了。", "DELETED // 已销毁");
+            document.getElementById('queue-detail').style.display = 'none';
+            fetchCloudData(); // 刷新数据，清理掉界面上的卡片
+        }
+
+        // 💥 新增：一键调取被驳回/排队中的档案到填写卡
+        window.editQueueChar = async function(id) {
+            // 💥 修复：强制转换为文本进行对比，防止数字和文本严格相等判断失败
+            const char = pendingDB.find(c => String(c.id) === String(id)) || 
+                         characterDB.find(c => String(c.id) === String(id));
+            
+            if (!char) {
+                await SysModal.alert("无法从数据库中提取该档案的数据。可能已被销毁。", "❌ ERROR // 提取失败");
+                return;
+            }
+
+            // 1. 设置系统进入“编辑模式”
+            editingCharId = char.id;
+
+            // 2. 将数据塞回表单里
+            document.getElementById('f-name').value = char.name || '';
+            document.getElementById('f-callsign').value = char.callsign || '';
+            document.getElementById('f-gender').value = char.gender || '';
+            document.getElementById('f-age').value = char.age || '';
+            document.getElementById('f-dob').value = char.dob || '';
+            document.getElementById('f-height').value = char.height || '';
+            document.getElementById('f-weight').value = char.weight || '';
+            document.getElementById('f-blood').value = char.blood || '';
+            document.getElementById('f-appearance').value = char.appearance || '';
+            document.getElementById('f-personality').value = char.personality || '';
+            document.getElementById('f-notes').value = char.notes || '';
+
+            // 💥 处理二级联动的阵营和组织下拉框
+            const factionSelect = document.getElementById('f-faction');
+            const orgSelect = document.getElementById('f-org');
+            
+            factionSelect.value = char.faction || '';
+            // 手动触发一次 change 事件，让程序把下属组织列表刷出来
+            factionSelect.dispatchEvent(new Event('change'));
+            orgSelect.value = char.organization || '';
+
+            // 3. 修改提交按钮的文字，提示用户现在是“更新”操作
+            document.getElementById('btn-submit-char').innerText = "[ UPDATE_PROFILE // 更新并覆盖旧档案 ]";
+
+            // 4. 关闭等候室弹窗，自动跳转到“人设填写卡”界面
+            document.getElementById('queue-detail').style.display = 'none';
+            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById('createView').classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            await SysModal.alert("旧档案数据已成功载入终端，请直接在表单上进行修改。", "SYSTEM NOTE // 调取成功");
+        }
+
+        // 💥 新增：星际阵营与下属组织的映射数据
+        const factionData = {
+            "泛星联盟 (PSC)": [
+                "“夜鸮”内务情报局 (DIO)",
+                "泰坦星脉财团 (Titan Vein Consortium)",
+                "第一舰队“黄金狮子” (1st Fleet)"
+            ],
+            "边缘星环联盟 (The Frontier)": [
+                "“黑火”解放战线 (Blackfire Front)",
+                "深空打捞者工会 (Salvage Union)",
+                "“霓虹暗房” (Neon Darkroom)"
+            ],
+            "独立防务承包商 (PMCs)": [
+                "“深渊行者”国际安保 (Abysswalker Int.)",
+                "“锈血”佣兵团 (Rustblood Company)",
+                "无归属 / 独狼行动者 (Freelancer)" // 预留一个自由人选项
+            ]
+        };
+
+        // 💥 新增：监听阵营选择，动态生成下属组织
+        const factionSelect = document.getElementById('f-faction');
+        const orgSelect = document.getElementById('f-org');
+
+        factionSelect.addEventListener('change', function() {
+            const selectedFaction = this.value;
+            const orgs = factionData[selectedFaction] || [];
+            
+            // 清空并启用组织下拉框
+            orgSelect.innerHTML = '<option value="" disabled selected>-- 选择所属分支机构 --</option>';
+            orgSelect.disabled = false;
+            
+            orgs.forEach(org => {
+                const option = document.createElement('option');
+                option.value = org;
+                option.textContent = org;
+                orgSelect.appendChild(option);
+            });
+        });
+
+        // 4. 提交表单录入数据 (支持新增、修改被驳回的草稿、针对正式版提交新草稿)
         document.getElementById('btn-submit-char').addEventListener('click', async () => {
             const callsign = document.getElementById('f-callsign').value.trim();
-            if(!callsign) { alert('系统提示：必须填写呼号 (CALLSIGN)！'); return; }
+            const faction = document.getElementById('f-faction').value; 
+            const org = document.getElementById('f-org').value;         
             
+            if(!callsign) { await SysModal.alert('必须填写代号 (CALLSIGN)！', 'SYSTEM NOTE'); return; }
+            if(!faction || !org) { await SysModal.alert('请选择您的星际阵营与所属组织！', 'SYSTEM NOTE'); return; }
+
+            const myPending = pendingDB.find(c => c.owner_id === currentUser.id);
+            const myApproved = characterDB.find(c => c.owner_id === currentUser.id);
+
+            // 1. 复杂权限判定
+            if (currentUser.role !== 'admin') {
+                if (!editingCharId && (myApproved || myPending)) {
+                    await SysModal.alert("检测到您的终端已绑定一份记录。\n如需修改已有档案，请前往「人设库」或「等候室」点击修改按钮！", "⚠️ ACTION DENIED");
+                    return; 
+                }
+                
+                // 重点：如果他在修改正式库，但他已经在排队了，拦截！
+                const originalChar = editingCharId ? (characterDB.find(c => String(c.id) === String(editingCharId)) || pendingDB.find(c => String(c.id) === String(editingCharId))) : null;
+                if (originalChar && originalChar.status === 'approved' && myPending) {
+                    await SysModal.alert("您已经有一份【修改申请】正在排队中，请前往「战术等候室」处理，不要重复发起！", "⚠️ DUPLICATE REQUEST");
+                    return;
+                }
+            }
+
             const submitBtn = document.getElementById('btn-submit-char');
-            const originalText = submitBtn.innerText;
             submitBtn.innerText = "[ 📡 UPLOADING TO SERVER... ]";
             submitBtn.disabled = true;
 
             const newChar = {
-                owner_id: currentUser.id,
-                name: document.getElementById('f-name').value || 'UNKNOWN',
-                callsign: callsign,
-                gender: document.getElementById('f-gender').value || 'N/A',
-                age: document.getElementById('f-age').value || 'N/A',
-                dob: document.getElementById('f-dob').value || 'N/A',
-                height: document.getElementById('f-height').value || 'N/A',
-                weight: document.getElementById('f-weight').value || 'N/A',
-                blood: document.getElementById('f-blood').value || 'N/A',
-                appearance: document.getElementById('f-appearance').value || 'N/A',
-                personality: document.getElementById('f-personality').value || 'N/A',
-                notes: document.getElementById('f-notes').value || 'N/A',
-                status: 'pending'
+                owner_id: currentUser.id, name: document.getElementById('f-name').value || 'UNKNOWN',
+                callsign: callsign, faction: faction, organization: org,
+                gender: document.getElementById('f-gender').value || 'N/A', age: document.getElementById('f-age').value || 'N/A',
+                dob: document.getElementById('f-dob').value || 'N/A', height: document.getElementById('f-height').value || 'N/A',
+                weight: document.getElementById('f-weight').value || 'N/A', blood: document.getElementById('f-blood').value || 'N/A',
+                appearance: document.getElementById('f-appearance').value || 'N/A', personality: document.getElementById('f-personality').value || 'N/A',
+                notes: document.getElementById('f-notes').value || 'N/A', status: 'pending'
             };
             
             try {
-                const { error } = await supabaseClient.from('characters').insert([newChar]);
-                if (error) throw error;
-                alert('系统提示：档案已成功加密并上传至中央服务器！请前往「战术等候室」查看审核进度。');
+                const originalChar = editingCharId ? (characterDB.find(c => String(c.id) === String(editingCharId)) || pendingDB.find(c => String(c.id) === String(editingCharId))) : null;
+
+                if (originalChar && originalChar.status === 'approved') {
+                    // 💥 模式 A：针对正式库的干员，生成一份独立的【更新草稿】
+                    newChar.target_edit_id = originalChar.id; // 锁定覆盖目标！
+                    const { error } = await supabaseClient.from('characters').insert([newChar]);
+                    if (error) throw error;
+                    await SysModal.alert('档案修改申请已提交至审核队列！\n\n在此期间，您的原档案将继续在正式库保持生效。', 'REVISION SUBMITTED');
+                } else if (editingCharId) {
+                    // 💥 模式 B：更新一份已被驳回/在排队中的【草稿】
+                    const { error } = await supabaseClient.from('characters').update(newChar).eq('id', editingCharId);
+                    if (error) throw error;
+                    await SysModal.alert('草稿数据已更新！等待最高指挥部再次审核。', 'DRAFT UPDATED');
+                } else {
+                    // 💥 模式 C：萌新第一次全新提交
+                    const { error } = await supabaseClient.from('characters').insert([newChar]);
+                    if (error) throw error;
+                    await SysModal.alert('新档案已成功上传！请前往「战术等候室」查看进度。', 'UPLINK SUCCESS');
+                }
+                
                 document.getElementById('character-form').reset(); 
-                fetchCloudData(); // 💥 提交完立刻刷新数据，让它出现在等候室里
+                document.getElementById('f-org').innerHTML = '<option value="" disabled selected>-- 请先确认主阵营 --</option>';
+                document.getElementById('f-org').disabled = true;
+                editingCharId = null; submitBtn.innerText = "[ INIT_PROFILE // 提交并生成档案 ]";
+                fetchCloudData();
             } catch (error) {
                 console.error("上传失败:", error);
-                alert("系统提示：档案上传失败，请检查网络连接。");
+                await SysModal.alert("档案操作失败，请检查星际网络连接。", "❌ CONNECTION ERROR");
+                submitBtn.innerText = editingCharId ? "[ UPDATE_PROFILE // 更新档案 ]" : "[ INIT_PROFILE // 提交并生成档案 ]";
             } finally {
-                submitBtn.innerText = originalText;
                 submitBtn.disabled = false;
             }
         });
@@ -2666,20 +3269,35 @@
 
         // 💥 展开详情面板
         window.showDetailOverlay = function(index) {
-            window.isOverlayOpen = true; // 记录状态：已打开
-            window.currentOpenCharIndex = index; // 记录当前打开的是谁
+            window.isOverlayOpen = true; 
+            window.currentOpenCharIndex = index; 
 
             const char = characterDB[index];
             if(!char) return;
             const overlay = document.getElementById('tunnel-detail-overlay');
             overlay.style.display = 'flex';
+
+            // 💥 新增：判断如果这个档案是当前用户自己的，给他一个编辑按钮
+            let editActionHtml = '';
+            if (char.owner_id === currentUser.id) {
+                editActionHtml = `<button class="sys-modal-btn confirm" style="margin-top: 20px; margin-right: 15px;" onclick="editQueueChar('${char.id}')">[ CREATE_REVISION // 提交修改申请 ]</button>`;
+            }
+
             overlay.innerHTML = `
                 <div class="detail-header">
+                     <!-- 标题等保持不变 -->
                     <h3 style="font-size: 26px; margin: 0; text-shadow: 0 0 15px #12a8ff; letter-spacing: 2px;">
                         <span style="color:#fff;">${char.callsign}</span> // ${char.name}
                     </h3>
                     <button class="close-btn" onclick="closeDetailOverlay()" style="font-size: 16px; padding: 5px 10px; border: 1px solid #f44336;">[X] CLOSE</button>
                 </div>
+                
+                <!-- 中间的阵营、生理指标等所有内容全部保持你原来的代码 -->
+                <div class="form-grid" style="margin-bottom: 10px; background: rgba(18,168,255,0.1); padding: 10px 20px; border-left: 3px solid #12a8ff;">
+                    <div class="detail-item" style="margin:0;"><span class="detail-lbl">阵营:</span> ${char.faction || 'CLASSIFIED'}</div>
+                    <div class="detail-item" style="margin:0;"><span class="detail-lbl">组织:</span> ${char.organization || 'CLASSIFIED'}</div>
+                </div>
+
                 <div class="form-grid-3" style="margin-bottom: 20px; background: rgba(18,168,255,0.05); padding: 20px; border: 1px solid rgba(18,168,255,0.3); box-shadow: inset 0 0 20px rgba(18,168,255,0.1);">
                     <div class="detail-item"><span class="detail-lbl">性别:</span> ${char.gender}</div>
                     <div class="detail-item"><span class="detail-lbl">年龄:</span> ${char.age}</div>
@@ -2691,7 +3309,12 @@
                 <div class="detail-text-block" style="font-size: 15px;"><span class="detail-lbl">外貌 APPEARANCE:</span><br>${char.appearance}</div>
                 <div class="detail-text-block" style="font-size: 15px;"><span class="detail-lbl">性格 PERSONALITY:</span><br>${char.personality}</div>
                 <div class="detail-text-block" style="font-size: 15px;"><span class="detail-lbl">备注 NOTES:</span><br>${char.notes}</div>
-                <button class="delete-btn" style="margin-top: 20px; align-self: flex-start;" onclick="deleteChar(${index})">[ DELETE_RECORD // 删除档案 ]</button>
+                
+                <!-- 💥 在底部的删除按钮旁边插入修改按钮 -->
+                <div style="display: flex; justify-content: flex-start; align-items: center; margin-top: 20px;">
+                    ${editActionHtml}
+                    <!-- 删掉原来的 onclick="deleteChar" 避免普通群友直接删正式库 -->
+                </div>
             `;
         };
 
