@@ -1063,8 +1063,8 @@
         .tactical-form input,
         .tactical-form textarea,
         .tactical-form select {
-            background: transparent; /* 强制背景透明 */
-            border: none;            /* 去掉默认边框 */
+            background: transparent !important; /* 强制背景透明 */
+            border: none !important;            /* 去掉默认边框 */
             color: #ffffff;
             width: 100%;
             padding: 10px;
@@ -1093,11 +1093,14 @@
             cursor: not-allowed;
         }
 
-        /* 针对多行文本框的专属设定 */
+        /* 针对多行文本框的专属设定 (自动撑开版) */
         .tactical-form textarea {
             font-family: "PingFang SC", sans-serif;
-            resize: vertical;
+            resize: none; /* 禁止右下角手动拉伸 */
+            overflow: hidden; /* 隐藏原生滚动条，配合 JS 自动撑开 */
             line-height: 1.5;
+            min-height: 41px; /* 保持单行时的基础高度 */
+            word-break: break-all; /* 防止长串英文不换行 */
         }
 
         .tactical-form input::placeholder,
@@ -1826,6 +1829,359 @@
             box-sizing: border-box;
         }
 
+        /* =========================================
+           个人终端 (Profile View) 专属样式
+           ========================================= */
+        #profileView .archive-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .profile-card {
+            display: flex;
+            gap: 30px;
+            background: rgba(0, 5, 10, 0.8);
+            border: 2px solid #12a8ff;
+            padding: 30px;
+            box-shadow: inset 0 0 30px rgba(18, 168, 255, 0.1), 0 0 15px rgba(18, 168, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* 手机端改为上下排列 */
+        @media (max-width: 768px) {
+            .profile-card { flex-direction: column; padding: 20px; }
+        }
+
+        .profile-avatar-section {
+            flex: 0 0 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* 赛博字符头像占位图 */
+        .avatar-placeholder {
+            width: 180px;
+            height: 180px;
+            border: 2px dashed #12a8ff;
+            background: repeating-linear-gradient(45deg, rgba(18,168,255,0.05), rgba(18,168,255,0.05) 10px, transparent 10px, transparent 20px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 72px;
+            color: rgba(18,168,255,0.8);
+            font-family: "Impact", sans-serif;
+            box-shadow: 0 0 20px rgba(18,168,255,0.2);
+            position: relative;
+            text-shadow: 0 0 15px rgba(18,168,255,0.8);
+        }
+
+        /* 头像扫描线特效 */
+        .avatar-placeholder::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to bottom, transparent 50%, rgba(18,168,255,0.2) 51%);
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+
+        .profile-status-badge {
+            padding: 8px 15px;
+            font-family: monospace;
+            font-weight: bold;
+            letter-spacing: 1px;
+            border: 1px solid;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        /* 三种状态的颜色定义 */
+        .status-approved { color: #4caf50; border-color: #4caf50; background: rgba(76, 175, 80, 0.1); box-shadow: 0 0 10px rgba(76, 175, 80, 0.3); }
+        .status-pending { color: #ffeb3b; border-color: #ffeb3b; background: rgba(255, 235, 59, 0.1); box-shadow: 0 0 10px rgba(255, 235, 59, 0.3); }
+        .status-rejected { color: #f44336; border-color: #f44336; background: rgba(244, 67, 54, 0.1); box-shadow: 0 0 10px rgba(244, 67, 54, 0.3); }
+
+        .profile-details-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* =========================================
+           世界观资料库 (Cyber-Notion Style)
+           ========================================= */
+        .world-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 20px 5rem 20px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .world-header { margin-bottom: 3rem; }
+        
+        .world-meta { 
+            font-family: monospace; 
+            color: #12a8ff; 
+            letter-spacing: 2px; 
+            margin-bottom: 10px; 
+            font-weight: bold;
+        }
+        
+        .world-title { 
+            font-family: "Impact", "Microsoft YaHei", sans-serif; 
+            font-size: clamp(2.5rem, 5vw, 4rem); 
+            color: #e0f2fe; 
+            margin: 0; 
+            text-shadow: 0 0 15px rgba(18,168,255,0.4); 
+            letter-spacing: 2px; 
+        }
+
+        /* Notion 风格的引用块 (Callout) */
+        .world-quote { 
+            border-left: 4px solid #12a8ff; 
+            background: rgba(18, 168, 255, 0.05); 
+            padding: 20px 25px; 
+            font-size: 1.2rem; 
+            color: #8bb9d6; 
+            font-style: italic; 
+            margin-bottom: 3rem; 
+            line-height: 1.8; 
+            box-shadow: inset 20px 0 30px -20px rgba(18, 168, 255, 0.1);
+        }
+
+        .world-section { margin-bottom: 4rem; }
+        
+        .world-section-title { 
+            font-size: 1.8rem; 
+            color: #fff; 
+            border-bottom: 1px dashed rgba(18,168,255,0.3); 
+            padding-bottom: 10px; 
+            margin-bottom: 20px; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            text-shadow: 0 0 8px rgba(18,168,255,0.5);
+        }
+
+        .world-text { 
+            font-size: 1.1rem; 
+            line-height: 1.9; 
+            color: #a0c4d8; 
+            margin-bottom: 1.5rem; 
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+
+        .world-highlight { 
+            color: #12a8ff; 
+            font-weight: bold; 
+            text-shadow: 0 0 8px rgba(18,168,255,0.4); 
+        }
+
+        /* 警告框样式 */
+        .world-warning-box { 
+            border: 1px solid #f44336; 
+            background: rgba(244, 67, 54, 0.05); 
+            padding: 20px; 
+            border-radius: 4px; 
+            color: #ffb4a9; 
+            line-height: 1.8; 
+            position: relative; 
+            overflow: hidden; 
+            margin-top: 20px;
+        }
+        .world-warning-box::before { 
+            content: ''; 
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 4px; height: 100%; 
+            background: #f44336; 
+            box-shadow: 0 0 10px #f44336; 
+        }
+
+        /* 阵营卡片网格 */
+        .faction-grid { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 30px; 
+        }
+        
+        .faction-card { 
+            background: rgba(0, 5, 10, 0.6); 
+            border: 1px solid rgba(18, 168, 255, 0.2); 
+            padding: 30px; 
+            border-radius: 8px; 
+            transition: all 0.3s; 
+            backdrop-filter: blur(4px);
+        }
+        .faction-card:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* 三大阵营专属主题色 */
+        .faction-card.psc { border-top: 4px solid #12a8ff; }
+        .faction-card.psc:hover { border-color: #12a8ff; box-shadow: 0 0 20px rgba(18, 168, 255, 0.1); }
+        
+        .faction-card.frontier { border-top: 4px solid #f44336; }
+        .faction-card.frontier:hover { border-color: #f44336; box-shadow: 0 0 20px rgba(244, 67, 54, 0.1); }
+        
+        .faction-card.pmc { border-top: 4px solid #4caf50; }
+        .faction-card.pmc:hover { border-color: #4caf50; box-shadow: 0 0 20px rgba(76, 175, 80, 0.1); }
+        
+        .faction-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 15px; 
+            flex-wrap: wrap; 
+            gap: 10px; 
+        }
+        .faction-header h3 { margin: 0; font-size: 1.5rem; color: #fff; }
+        
+        .faction-tag { 
+            font-family: monospace; 
+            font-size: 0.85rem; 
+            padding: 4px 10px; 
+            border-radius: 4px; 
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .faction-card.psc .faction-tag { color: #12a8ff; background: rgba(18,168,255,0.1); border: 1px solid rgba(18,168,255,0.3); }
+        .faction-card.frontier .faction-tag { color: #f44336; background: rgba(244,67,54,0.1); border: 1px solid rgba(244,67,54,0.3); }
+        .faction-card.pmc .faction-tag { color: #4caf50; background: rgba(76,175,80,0.1); border: 1px solid rgba(76,175,80,0.3); }
+        
+        .faction-desc { color: #8bb9d6; line-height: 1.8; margin-bottom: 25px; font-size: 1.05rem; }
+        
+        /* 下属组织列表 (Notion Toggle 风格) */
+        .sub-org-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 15px; }
+        .sub-org-list li { 
+            background: rgba(255,255,255,0.03); 
+            padding: 15px 20px; 
+            border-radius: 4px; 
+            border-left: 2px solid rgba(255,255,255,0.2); 
+            line-height: 1.6; 
+            color: #a0c4d8; 
+            font-size: 0.95rem;
+        }
+        .sub-org-list li strong { color: #fff; font-size: 1.1rem; display: block; margin-bottom: 5px; }
+        
+        /* 入职指南列表 */
+        .cyber-list { padding-left: 20px; color: #a0c4d8; line-height: 2.2; font-size: 1.1rem; margin-bottom: 30px; }
+        .cyber-list li::marker { color: #12a8ff; font-family: monospace; font-weight: bold; }
+        
+        .glitch-text { 
+            margin-top: 40px; 
+            font-family: "Impact", sans-serif; 
+            font-size: 2.5rem; 
+            color: #fff; 
+            text-transform: uppercase; 
+            letter-spacing: 4px; 
+            text-shadow: 3px 0 rgba(18,168,255,0.8), -3px 0 rgba(244,67,54,0.8); 
+            text-align: center;
+        }
+
+        /* =========================================
+           新增：世界观左侧导航栏样式
+           ========================================= */
+        /* 父容器改用 Flexbox 左右布局 */
+        .world-layout {
+            display: flex;
+            max-width: 1200px; /* 拓宽一点，给左侧目录留出空间 */
+            margin: 0 auto;
+            gap: 40px;
+            padding: 2rem 20px 5rem 20px;
+            align-items: flex-start; /* 关键：让侧边栏停靠在顶部而不是拉伸到底 */
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        /* 覆盖原有的 world-container，取消原本的居中和边距 */
+        .world-layout .world-container {
+            flex: 1; /* 占据右侧剩余所有空间 */
+            max-width: 900px;
+            padding: 0;
+            margin: 0;
+            animation: none; /* 取消自带的动画，交由父级控制 */
+        }
+
+        /* 左侧导航栏本体 (Sticky 吸顶) */
+        .world-toc {
+            position: sticky;
+            top: 100px; /* 悬浮在距离顶部 100px 的位置（避开顶部毛玻璃） */
+            width: 220px;
+            flex-shrink: 0;
+            background: rgba(0, 5, 10, 0.85);
+            border: 1px solid rgba(18, 168, 255, 0.3);
+            border-left: 4px solid #12a8ff;
+            padding: 20px;
+            backdrop-filter: blur(8px);
+            box-shadow: 4px 4px 0 rgba(18, 168, 255, 0.1), inset 0 0 15px rgba(18, 168, 255, 0.05);
+            z-index: 50;
+        }
+
+        .toc-title {
+            font-family: "Impact", monospace;
+            color: #12a8ff;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            border-bottom: 1px dashed rgba(18, 168, 255, 0.4);
+            padding-bottom: 10px;
+            text-shadow: 0 0 8px rgba(18, 168, 255, 0.5);
+        }
+
+        .toc-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toc-btn {
+            background: transparent;
+            border: none;
+            color: #8bb9d6;
+            text-align: left;
+            padding: 8px 10px;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 2px solid transparent;
+            position: relative;
+        }
+
+        /* 悬停与激活（当前阅读位置）的高亮状态 */
+        .toc-btn:hover, .toc-btn.active {
+            color: #e0f2fe;
+            background: rgba(18, 168, 255, 0.1);
+            border-left: 2px solid #12a8ff;
+            text-shadow: 0 0 5px rgba(18, 168, 255, 0.5);
+            transform: translateX(5px);
+        }
+
+        /* 移动端适配：屏幕变窄时将目录置于顶部，或者隐藏 */
+        @media (max-width: 900px) {
+            .world-layout {
+                flex-direction: column;
+                padding-top: 1rem;
+            }
+            .world-toc {
+                position: relative;
+                top: 0;
+                width: 100%;
+                margin-bottom: 20px;
+                box-sizing: border-box;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -1860,6 +2216,7 @@
             <!-- 💥 新增：战术等候室入口 -->
             <li><button class="wiki-item-btn" data-target="queueView" style="color: #ffeb3b; border-color: rgba(255,235,59,0.4);">WAIT // 战术等候室</button></li>
             <li><button class="wiki-item-btn" data-target="logView">ARCH // 群友人设库</button></li>
+            <li><button class="wiki-item-btn" data-target="profileView" style="color: #00e5ff; border-color: rgba(0,229,255,0.4);">USER // 个人终端</button></li>
         </ul>
     </div>
 
@@ -2027,9 +2384,116 @@
         </div>
 
         <div class="view-panel" id="worldView">
-            <div class="placeholder-text">
-                <h3>📖 世界观资料库</h3>
-                <p>141特遣队内部加密档案及战术简报区...</p>
+            <div class="world-layout">
+                
+                <aside class="world-toc">
+                    <div class="toc-title">INDEX // 目录</div>
+                    <ul class="toc-list">
+                        <li><button class="toc-btn active" data-scroll="sec-intro">00. 档案导言</button></li>
+                        <li><button class="toc-btn" data-scroll="sec-conflict">01. 核心冲突</button></li>
+                        <li><button class="toc-btn" data-scroll="sec-factions">02. 势力分布</button></li>
+                        <li><button class="toc-btn" data-scroll="sec-onboard">03. 入职指南</button></li>
+                    </ul>
+                </aside>
+
+                <div class="world-container">
+                    
+                    <div id="sec-intro">
+                        <div class="world-header">
+                            <div class="world-meta">DATABASE // LORE</div>
+                            <h1 class="world-title">深空边缘：纪元 2240</h1>
+                            <div class="article-divider"></div>
+                        </div>
+        
+                        <div class="world-quote">
+                            “母星的摇篮已经枯竭，我们在群星间寻找生机，却只带去了贪婪与战火。”
+                        </div>
+                    </div>
+
+                    <section class="world-section" id="sec-conflict">
+                        <h2 class="world-section-title"><span style="font-size: 1.5rem;">🩸</span> 核心冲突：C-62 矿石（“黑血”）</h2>
+                        <div class="world-text">
+                            <p>人类的狂飙突进在半个世纪前戛然而止——直到在太阳系外环的小行星带深处，发现了一种高能同位素矿物：<span class="world-highlight">C-62</span>。</p>
+                            <p>外环矿工叫它“黑血”。它能提供超乎想象的清洁聚变能源，指甲盖大小的一块就足以驱动一艘重型星舰航行一个月。如今，内环行星的繁华都市、最高议会的生命维持系统、各大舰队的重火力引擎，全部依赖“黑血”续命。</p>
+                            
+                            <div class="world-warning-box">
+                                <strong style="color: #f44336; font-family: monospace; display: block; margin-bottom: 5px;">[ SYSTEM WARNING // 医疗警告 ]</strong>
+                                开采是有代价的。原矿带有极强的神经毒性辐射，长期接触的底层矿工会患上不可逆的“星尘病”（器官纤维化与幻觉）。为了争夺这种沾满鲜血的能源，整个星系被撕裂成了三大阵营。
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="world-section" id="sec-factions">
+                        <h2 class="world-section-title"><span style="font-size: 1.5rem;">🌌</span> 势力分布 // FACTIONS</h2>
+                        
+                        <div class="faction-grid">
+                            <div class="faction-card psc">
+                                <div class="faction-header">
+                                    <h3>🏛️ 泛星联盟 (P.S.C)</h3>
+                                    <span class="faction-tag">秩序 / 霸权 / 腐朽</span>
+                                </div>
+                                <p class="faction-desc">联盟占据着地球及内环富庶星域，拥有最强大的舰队和资本。他们自诩为人类文明的灯塔，但在外环人眼里，他们只是吸血的暴君。</p>
+                                <ul class="sub-org-list">
+                                    <li><strong>“夜鸮”内务情报局 (DIO)</strong>联盟的秘密警察。穿着深色风衣的冷酷猎犬，负责清洗高层叛徒与暗杀外环反抗军头目。</li>
+                                    <li><strong>泰坦星脉财团</strong>垄断“黑血”开采的资本巨鳄。为了利润可以轻易抹除一整个外环空间站，赛博朋克与冰冷商业逻辑的结合体。</li>
+                                    <li><strong>第一舰队“黄金狮子”</strong>驻守首府的最精锐太空军。出身名门，驾驶着最昂贵的机甲，充满傲慢与精英主义的铁血军人。</li>
+                                </ul>
+                            </div>
+
+                            <div class="faction-card frontier">
+                                <div class="faction-header">
+                                    <h3>⚙️ 边缘星环联盟 (The Frontier)</h3>
+                                    <span class="faction-tag">混沌 / 生存 / 反抗</span>
+                                </div>
+                                <p class="faction-desc">生活在微重力矿区和外环空间站的底层人。他们受够了联盟的压榨，虽然装备破旧，但为了生存可以爆发出惊人的野性。</p>
+                                <ul class="sub-org-list">
+                                    <li><strong>“黑火”解放战线</strong>激进的暴动分子。带着战损义体和改装火器，用自杀式袭击和劫掠向联盟高层复仇。</li>
+                                    <li><strong>深空打捞者工会</strong>游走在灰暗地带的走私犯。表面上是收破烂的机械师和货船长，背地里掌控着星系最大的黑市和武器流通渠道。</li>
+                                    <li><strong>“霓虹暗房”</strong>隐匿在深空网络中的极客与情报贩子。没有实体基地，靠骇入联盟防火墙窃取机密为生，赛博空间里的神。</li>
+                                </ul>
+                            </div>
+
+                            <div class="faction-card pmc">
+                                <div class="faction-header">
+                                    <h3>🗡️ 独立防务承包商 (PMCs)</h3>
+                                    <span class="faction-tag">金钱 / 契约 / 硝烟</span>
+                                </div>
+                                <p class="faction-desc">不参与政治站队的私人武装。游走在联邦与反抗军的夹缝中，只要信用点给够，他们可以为你打赢任何一场局部战争。</p>
+                                <ul class="sub-org-list">
+                                    <li><strong>“深渊行者”国际安保</strong>极其昂贵的高端战术小队。由退役特种兵组成，装备顶尖，纪律严明，只接诸如“护送财阀高管”或“夺回机密星舰”的顶级委托。</li>
+                                    <li><strong>“锈血”佣兵团</strong>毫无底线的亡命之徒。由罪犯、狂人和流浪者组成，喜欢重火力，认钱不认人，前一天还在帮反抗军，第二天就能为了赏金出卖雇主。</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="world-section" id="sec-onboard">
+                        <h2 class="world-section-title"><span style="font-size: 1.5rem;">📝</span> 入职指南 // ONBOARDING</h2>
+                        <div class="world-text">
+                            <p>在这里，你可以是冷酷的联盟特工、满身机油味的黑市医生、或者是只认钱的战术小队爆破手。</p>
+                            <ol class="cyber-list">
+                                <li>点击左侧菜单进入 <span class="world-highlight">【TOOL // 人设填写卡】</span>。</li>
+                                <li>选择你的 <strong>阵营</strong> 与 <strong>所属组织</strong>。</li>
+                                <li>填写你的背景档案，生成属于你的深空身份卡。</li>
+                            </ol>
+                            <div class="glitch-text">星海浩瀚，祝你好运。</div>
+                        </div>
+                    </section>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- 💥 新增：个人终端 (Profile) -->
+        <div class="view-panel" id="profileView">
+            <div class="archive-container">
+                <div class="archive-header">
+                    <h2 class="neon-title" style="font-size: 28px; text-align: left; color: #00e5ff; text-shadow: 0 0 10px #00e5ff;">PERSONAL_TERMINAL // 个人终端</h2>
+                    <p>141特遣队 - 干员专属数据面板与状态追踪</p>
+                </div>
+                
+                <!-- 动态生成的个人卡片会放在这里 -->
+                <div id="profile-content"></div>
             </div>
         </div>
 
@@ -2056,19 +2520,19 @@
                     <label>姓名 / NAME</label>
                     <div class="input-wrapper">
                         <span class="prefix">&gt;</span>
-                        <input type="text" id="f-name" placeholder="干员真实姓名" required>
+                        <textarea id="f-name" rows="1" placeholder="干员真实姓名" required></textarea>
                     </div>
                 </div>
                 <div class="input-group">
                     <label>代号·呼号 / CALLSIGN</label>
                     <div class="input-wrapper">
                         <span class="prefix">&gt;</span>
-                        <input type="text" id="f-callsign" placeholder="常用的行动代号" required>
+                        <textarea id="f-callsign" rows="1" placeholder="常用的行动代号" required></textarea>
                     </div>
                 </div>
             </div>
 
-            <!-- 阵营与组织选择区 -->
+            <!-- 阵营与组织选择区保持原样... -->
             <div class="form-section-title">》ALLEGIANCE [ 阵营与组织归属 ]</div>
             <div class="form-grid">
                 <div class="input-group">
@@ -2098,27 +2562,31 @@
             <div class="form-grid-3">
                 <div class="input-group">
                     <label>性别 / GENDER</label>
-                    <div class="input-wrapper"><span class="prefix">&gt;</span><input type="text" id="f-gender" placeholder="M / F / OTHERS"></div>
+                    <div class="input-wrapper"><span class="prefix">&gt;</span><textarea id="f-gender" rows="1" placeholder="M / F / OTHERS"></textarea></div>
+                </div>
+                <div class="input-group">
+                    <label>性别备注 / GENDER_NOTES</label>
+                    <div class="input-wrapper"><span class="prefix">&gt;</span><textarea id="f-gender-notes" rows="1" placeholder="生理/心理/认同等补充(选填)"></textarea></div>
                 </div>
                 <div class="input-group">
                     <label>年龄 / AGE</label>
-                    <div class="input-wrapper"><span class="prefix">&gt;</span><input type="text" id="f-age" placeholder="当前年龄"></div>
+                    <div class="input-wrapper"><span class="prefix">&gt;</span><textarea id="f-age" rows="1" placeholder="当前年龄"></textarea></div>
                 </div>
                 <div class="input-group">
                     <label>出生日期 / D.O.B</label>
-                    <div class="input-wrapper"><span class="prefix">&gt;</span><input type="text" id="f-dob" placeholder="年 / 月 / 日"></div>
+                    <div class="input-wrapper"><span class="prefix">&gt;</span><textarea id="f-dob" rows="1" placeholder="年 / 月 / 日"></textarea></div>
                 </div>
                 <div class="input-group">
                     <label>身高 / HEIGHT</label>
-                    <div class="input-wrapper"><span class="prefix">&gt;</span><input type="text" id="f-height" placeholder="cm"></div>
+                    <div class="input-wrapper"><span class="prefix">&gt;</span><textarea id="f-height" rows="1" placeholder="cm"></textarea></div>
                 </div>
                 <div class="input-group">
                     <label>体重 / WEIGHT</label>
-                    <div class="input-wrapper"><span class="prefix">&gt;</span><input type="text" id="f-weight" placeholder="kg"></div>
+                    <div class="input-wrapper"><span class="prefix">&gt;</span><textarea id="f-weight" rows="1" placeholder="kg"></textarea></div>
                 </div>
                 <div class="input-group">
                     <label>血型 / BLOOD_T</label>
-                    <div class="input-wrapper"><span class="prefix">&gt;</span><input type="text" id="f-blood" placeholder="A/B/O/AB..."></div>
+                    <div class="input-wrapper"><span class="prefix">&gt;</span><textarea id="f-blood" rows="1" placeholder="A/B/O/AB..."></textarea></div>
                 </div>
             </div>
 
@@ -2324,6 +2792,22 @@
         /* =========================================================
            1. 网页交互逻辑（导航、侧边栏切换等）
            ========================================================= */
+        // 💥 全局监听：让所有 textarea 自动撑开高度
+        document.addEventListener('input', function(e) {
+            if (e.target.tagName.toLowerCase() === 'textarea') {
+                e.target.style.height = 'auto';
+                e.target.style.height = e.target.scrollHeight + 'px';
+            }
+        });
+
+        // 💥 自动撑开所有填入数据的文本框
+            setTimeout(() => {
+                document.querySelectorAll('.tactical-form textarea').forEach(el => {
+                    el.style.height = 'auto';
+                    el.style.height = el.scrollHeight + 'px';
+                });
+            }, 50);
+
         const menuBtn = document.getElementById('menuBtn');
         const closeBtn = document.getElementById('closeBtn');
         const sidebar = document.getElementById('sidebar');
@@ -2337,7 +2821,7 @@
         overlay.addEventListener('click', closeSidebar);
 
         wikiButtons.forEach(button => {
-            button.addEventListener('click', async () => { // 💥 这里加了 async
+            button.addEventListener('click', async () => { 
                 const targetId = button.getAttribute('data-target');
                 if (targetId === 'logView') {
                     const isAdmin = currentUser && currentUser.role === 'admin';
@@ -2351,7 +2835,11 @@
 
                 viewPanels.forEach(panel => { panel.classList.remove('active'); });
                 const targetPanel = document.getElementById(targetId);
-                if (targetPanel) { targetPanel.classList.add('active'); }
+                if (targetPanel) { 
+                    targetPanel.classList.add('active'); 
+                    // 💥 核心：把当前界面的 ID 存入浏览器会话记忆中
+                    sessionStorage.setItem('tf141_current_view', targetId);
+                }
                 closeSidebar();
             });
         });
@@ -2410,6 +2898,9 @@
         const pageContent = document.getElementById('pageContent');
         const backToMainBtn = document.getElementById('backToMainBtn');
 
+        // 💥 新增：用于记忆打开文章前所在的视图 ID
+        let previousViewId = 'mainView';
+
         // 1. 提取所有文章卡片的数据
         const searchIndex = Array.from(articles).map((card) => {
             return {
@@ -2421,12 +2912,19 @@
             };
         });
 
-        // 2. 打开全屏文章的函数
+        // 2. 打开全屏文章的函数 (升级版：带记忆功能)
         function openArticle(item) {
             // 填充数据
             pageTitle.innerText = item.title;
             pageMeta.innerText = item.tag;
             pageContent.innerText = item.content;
+            
+            // 💥 核心逻辑：在切换视图前，记录当前处于 active 状态的视图
+            const currentActivePanel = document.querySelector('.view-panel.active');
+            // 如果当前已经在文章页里（比如在文章页里又搜了另一篇文章），就不覆盖之前的记忆
+            if (currentActivePanel && currentActivePanel.id !== 'articleView') {
+                previousViewId = currentActivePanel.id;
+            }
             
             // 隐藏所有视图，显示文章视图
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
@@ -2440,10 +2938,17 @@
             searchInput.value = '';
         }
 
-        // 3. 返回主界面按钮逻辑
+        // 3. 返回按钮逻辑 (升级版：返回记忆的视图)
         backToMainBtn.addEventListener('click', () => {
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
-            document.getElementById('mainView').classList.add('active');
+            
+            // 恢复到之前记录的视图（如果找不到，兜底返回主界面）
+            const targetPanel = document.getElementById(previousViewId) || document.getElementById('mainView');
+            targetPanel.classList.add('active');
+            
+            // 💥 核心：从文章返回时，也要把退回的界面存入记忆中
+            sessionStorage.setItem('tf141_current_view', targetPanel.id);
+            
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
 
@@ -2508,6 +3013,55 @@
             if (!searchGroup.contains(e.target)) {
                 searchDropdown.classList.remove('active');
             }
+        });
+
+        /* =========================================================
+           💥 新增：世界观左侧导航栏滚动与监听引擎
+           ========================================================= */
+        const tocBtns = document.querySelectorAll('.toc-btn');
+        
+        // 1. 点击平滑滚动逻辑
+        tocBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-scroll');
+                const targetEl = document.getElementById(targetId);
+                if (targetEl) {
+                    // 计算目标元素距离页面顶部的高度，减去 80px 偏移量防止被顶部毛玻璃遮挡
+                    const yOffset = -80; 
+                    const y = targetEl.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                    window.scrollTo({ top: y, behavior: 'smooth' });
+                }
+            });
+        });
+
+        // 2. 战术雷达扫描：自动监听当前阅读位置并高亮左侧目录
+        const observerOptions = {
+            root: null,
+            // 触发线：当一个模块进入视口顶部 100px 到 屏幕中间 范围内时触发
+            rootMargin: '-100px 0px -50% 0px', 
+            threshold: 0
+        };
+
+        const sectionObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.getAttribute('id');
+                    
+                    // 移除所有按钮的高亮状态
+                    tocBtns.forEach(btn => btn.classList.remove('active'));
+                    
+                    // 找到对应当前区块的按钮，为其加上高亮状态
+                    const activeBtn = document.querySelector(`.toc-btn[data-scroll="${id}"]`);
+                    if (activeBtn) {
+                        activeBtn.classList.add('active');
+                    }
+                }
+            });
+        }, observerOptions);
+
+        // 将所有需要被雷达监控的区块加入观察列表
+        document.querySelectorAll('#sec-intro, #sec-conflict, #sec-factions, #sec-onboard').forEach(section => {
+            if (section) sectionObserver.observe(section);
         });
 
         /* =========================================================
@@ -2627,15 +3181,16 @@
                 const { data, error } = await supabaseClient.from('characters').select('*');
                 if (error) throw error;
                 
-                // 💥 分流：正式库 vs 待审核库
+                // 分流：正式库 vs 待审核库
                 characterDB = data.filter(c => c.status === 'approved');
                 pendingDB = data.filter(c => c.status === 'pending' || c.status === 'rejected');
                 
-                renderRoster(); // 渲染正式库
-                init3DTunnel(); // 渲染 3D 隧道
+                renderRoster();  // ✅ 改回正确的拼写
+                init3DTunnel();  // 渲染 3D 隧道
                 renderRadar();
                 
-                renderQueue();  // 💥 渲染战术等候室
+                renderQueue();   // 渲染战术等候室
+                renderProfile(); // 渲染个人终端主页
             } catch (error) {
                 console.error("卫星连接失败:", error);
                 grid.innerHTML = '<div style="color:#f44336;">[ ❌ ERROR: 无法连接到情报服务器 ]</div>';
@@ -2688,6 +3243,142 @@
                 }
                 grid.appendChild(btn);
             });
+        }
+
+        // 💥 渲染个人终端主页
+        function renderProfile() {
+            const container = document.getElementById('profile-content');
+            if (!container) return;
+
+            // 寻找当前用户的档案（先找正式库，再找待审核库）
+            let myChar = characterDB.find(c => c.owner_id === currentUser.id);
+            if (!myChar) {
+                myChar = pendingDB.find(c => c.owner_id === currentUser.id);
+            }
+
+            // 如果完全没有档案
+            if (!myChar) {
+                container.innerHTML = `
+                    <div class="profile-card" style="justify-content: center; align-items: center; text-align: center; min-height: 300px; border-color: #666;">
+                        <div>
+                            <div style="font-size: 48px; margin-bottom: 20px; filter: grayscale(1);">👤</div>
+                            <h3 style="color: #8bb9d6; font-family: monospace; letter-spacing: 2px;">[ NO PROFILE FOUND // 暂无档案 ]</h3>
+                            <p style="color: #666; margin-bottom: 20px;">您尚未在终端录入任何干员数据。</p>
+                            <button class="submit-btn" onclick="document.querySelector('[data-target=\\'createView\\']').click()">[ GO TO CREATE // 前往录入 ]</button>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // 判断状态与主题色
+            let statusClass = 'status-approved';
+            let statusText = 'APPROVED // 审核通过';
+            let themeColor = '#12a8ff'; // 默认赛博蓝
+            let rgbColor = '18, 168, 255';
+
+            if (myChar.status === 'pending') {
+                statusClass = 'status-pending';
+                statusText = 'PENDING // 审核中';
+                themeColor = '#ffeb3b';
+                rgbColor = '255, 235, 59';
+            } else if (myChar.status === 'rejected') {
+                statusClass = 'status-rejected';
+                statusText = 'REJECTED // 已驳回';
+                themeColor = '#f44336';
+                rgbColor = '244, 67, 54';
+            }
+
+            // 提取代号的首字母作为头像
+            const avatarLetter = myChar.callsign ? myChar.callsign.charAt(0).toUpperCase() : '?';
+
+            // 针对不同状态的反馈提示区
+            let feedbackHtml = '';
+            if (myChar.status === 'rejected' && myChar.review_comments) {
+                let listHtml = '';
+                if (myChar.review_comments.fields) {
+                    for (const key in myChar.review_comments.fields) {
+                        listHtml += `<li style="margin-bottom: 4px;"><strong style="color:#f44336;">[${myChar.review_comments.fields[key].label}]</strong>: ${myChar.review_comments.fields[key].text}</li>`;
+                    }
+                }
+                let summaryText = typeof myChar.review_comments.general === 'string' ? myChar.review_comments.general : '';
+                
+                feedbackHtml = `
+                    <div class="system-notice" style="border-color:#f44336; background: rgba(244,67,54,0.1); margin-top: 15px;">
+                        <div style="color: #f44336; font-weight: bold; margin-bottom: 8px; font-family: monospace;">[ ⚠️ REVISION REQUIRED // 指挥部批示 ]</div>
+                        ${listHtml ? `<ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #ffb4a9;">${listHtml}</ul>` : ''}
+                        ${summaryText ? `<div style="margin-top:8px; border-top:1px dashed rgba(244,67,54,0.4); padding-top:8px; color:#fff;"><strong>总结：</strong>${summaryText}</div>` : ''}
+                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                            <button class="sys-modal-btn confirm" onclick="editQueueChar('${myChar.id}')">[ EDIT PROFILE // 调取修改 ]</button>
+                            <button class="sys-modal-btn cancel" onclick="deleteQueueChar('${myChar.id}')">[ DELETE // 销毁档案 ]</button>
+                        </div>
+                    </div>
+                `;
+            } else if (myChar.status === 'pending') {
+                feedbackHtml = `
+                    <div class="system-notice" style="border-color:#ffeb3b; background: rgba(255,235,59,0.05); margin-top: 15px;">
+                        <div style="color: #ffeb3b; font-weight: bold; font-family: monospace;">[ ⏳ AWAITING COMMAND APPROVAL // 等待指挥部审核 ]</div>
+                        <p style="color: #ccc; font-size: 13px; margin-top: 5px;">您的档案已提交，请耐心等待最高指挥部批示。在此期间您可以撤回修改。</p>
+                        <button class="sys-modal-btn confirm" style="margin-top: 10px;" onclick="editQueueChar('${myChar.id}')">[ EDIT PROFILE // 撤回修改 ]</button>
+                    </div>
+                `;
+            }
+
+            // 组装完整的 ID 卡片
+            container.innerHTML = `
+                <div class="profile-card" style="border-color: ${themeColor}; box-shadow: inset 0 0 30px rgba(${rgbColor}, 0.1);">
+                    
+                    <!-- 左侧头像与状态 -->
+                    <div class="profile-avatar-section">
+                        <div class="avatar-placeholder" style="border-color: ${themeColor}; color: ${themeColor}; text-shadow: 0 0 15px ${themeColor};">
+                            ${avatarLetter}
+                        </div>
+                        <div class="profile-status-badge ${statusClass}">${statusText}</div>
+                        <div style="font-family: monospace; font-size: 12px; color: #8bb9d6; text-align: center; line-height: 1.5;">
+                            ID: ${myChar.id}<br>
+                            UPLINK: SECURE
+                        </div>
+                    </div>
+                    
+                    <!-- 右侧详细数据 -->
+                    <div class="profile-details-section">
+                        <div style="border-bottom: 2px solid ${themeColor}; padding-bottom: 10px; margin-bottom: 10px;">
+                            <h1 style="margin: 0; font-family: 'Impact', sans-serif; font-size: 36px; color: #fff; letter-spacing: 2px; text-shadow: 0 0 10px ${themeColor};">
+                                ${myChar.callsign}
+                            </h1>
+                            <div style="font-family: monospace; color: ${themeColor}; font-size: 14px; letter-spacing: 1px;">REAL NAME: ${myChar.name}</div>
+                        </div>
+                        
+                        <div class="form-grid" style="gap: 10px;">
+                            <div class="detail-item"><span class="detail-lbl">FACTION:</span> ${myChar.faction || 'N/A'}</div>
+                            <div class="detail-item"><span class="detail-lbl">ORG:</span> ${myChar.organization || 'N/A'}</div>
+                        </div>
+                        
+                        <div class="form-grid-3" style="gap: 10px; margin-top: 10px; background: rgba(0,0,0,0.4); padding: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                            <div class="detail-item"><span class="detail-lbl">GENDER:</span> ${myChar.gender}</div>
+                            <div class="detail-item"><span class="detail-lbl">G_NOTES:</span> ${myChar.gender_notes || 'N/A'}</div>
+                            <div class="detail-item"><span class="detail-lbl">AGE:</span> ${myChar.age}</div>
+                            <div class="detail-item"><span class="detail-lbl">BLOOD:</span> ${myChar.blood}</div>
+                            <div class="detail-item"><span class="detail-lbl">HEIGHT:</span> ${myChar.height}</div>
+                            <div class="detail-item"><span class="detail-lbl">WEIGHT:</span> ${myChar.weight}</div>
+                            <div class="detail-item"><span class="detail-lbl">D.O.B:</span> ${myChar.dob}</div>
+                        </div>
+                        
+                        ${feedbackHtml}
+                        
+                        <!-- 如果审核通过了，才展示完整的外貌性格等长文本 -->
+                        ${myChar.status === 'approved' ? `
+                            <div class="detail-text-block" style="margin-top: 15px;"><span class="detail-lbl">APPEARANCE:</span><br>${myChar.appearance}</div>
+                            <div class="detail-text-block"><span class="detail-lbl">PERSONALITY:</span><br>${myChar.personality}</div>
+                            <div class="detail-text-block"><span class="detail-lbl">NOTES:</span><br>${myChar.notes}</div>
+                            
+                            <div style="margin-top: 20px; text-align: right; border-top: 1px dashed rgba(18,168,255,0.3); padding-top: 15px;">
+                                <button class="sys-modal-btn confirm" onclick="editQueueChar('${myChar.id}')">[ UPDATE PROFILE // 申请更新档案 ]</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
         }
 
         // 💥 新增：管理员批注状态管线
@@ -2808,45 +3499,55 @@
             }
         };
 
-        // 💥 显示审核详情与管理员操作面板 (行内批注版)
+        // 💥 显示审核详情与管理员操作面板 (行内批注终极修复版)
         window.showQueueDetail = function(char) {
             const detail = document.getElementById('queue-detail');
             detail.style.display = 'block';
 
-            // 每次打开档案清空上一次的批注暂存
+            // 1. 初始化批注暂存区 (如果是已驳回状态，自动载入历史批注！)
             window.currentAdminAnnotations = {};
+            if (char.status === 'rejected' && char.review_comments && char.review_comments.fields) {
+                // 深拷贝历史批注，防止污染原数据
+                window.currentAdminAnnotations = JSON.parse(JSON.stringify(char.review_comments.fields));
+            }
+
+            // 辅助函数：获取某个字段的历史批注文本
+            const getExistingAnno = (key) => {
+                return window.currentAdminAnnotations[key] ? window.currentAdminAnnotations[key].text : '';
+            };
 
             // 核心构建器：用来生成带【行内批注框】或【批注展示】的字段HTML
             const renderField = (key, label, value, isBlock = false) => {
                 let btnHtml = '';
                 let inlineAnnoHtml = '';
+                const existingText = getExistingAnno(key);
                 
                 // 如果是管理员审批模式
                 if (currentUser.role === 'admin' && char.status !== 'approved') {
                     btnHtml = `<span style="color:#f44336; cursor:pointer; font-weight:bold; margin-left:5px; background:rgba(244,67,54,0.1); padding:0 4px; border-radius:2px;" onclick="toggleInlineAnnotation('${key}')" title="批注此项">[+]</span>`;
                     
-                    // 隐藏的行内输入框
+                    // 隐藏的行内输入框 (如果有历史记录则默认展开)
                     inlineAnnoHtml = `
-                        <div id="anno-box-${key}" style="display: none; margin-top: 8px; width: 100%;">
+                        <div id="anno-box-${key}" style="display: ${existingText ? 'block' : 'none'}; margin-top: 8px; width: 100%;">
                             <textarea id="anno-input-${key}" 
                                 rows="1"
                                 placeholder="在此输入对【${label}】的批注..."
                                 style="width: 100%; box-sizing: border-box; background: rgba(244,67,54,0.1); border: 1px dashed #f44336; color: #ffb4a9; padding: 6px; font-family: 'PingFang SC', monospace; resize: none; font-size: 13px; overflow: hidden; outline: none;"
                                 oninput="updateInlineAnnotation('${key}', '${label}', this)"
-                            ></textarea>
+                            >${existingText}</textarea>
                         </div>
                     `;
                 } 
                 // 如果是被打回的用户查看模式，且这一项有批注记录
-                else if (char.status === 'rejected' && char.review_comments && char.review_comments.fields && char.review_comments.fields[key]) {
+                else if (existingText) {
                     inlineAnnoHtml = `
                         <div style="margin-top: 8px; width: 100%; box-sizing: border-box; background: rgba(244,67,54,0.1); border-left: 2px solid #f44336; color: #ffb4a9; padding: 6px 10px; font-size: 13px; line-height: 1.5;">
-                            <strong style="color:#f44336;">[ 指挥部批示 ]</strong> ${char.review_comments.fields[key].text}
+                            <strong style="color:#f44336;">[ 指挥部批示 ]</strong> ${existingText}
                         </div>
                     `;
                 }
 
-                // 结构组装
+                // 结构组装 (强制 width: 100% 防止被挤压)
                 if (isBlock) {
                     return `
                         <div class="detail-text-block" style="display: flex; flex-direction: column;">
@@ -2856,13 +3557,19 @@
                     `;
                 } else {
                     return `
-                        <div class="detail-item" style="display: flex; flex-direction: column; align-items: flex-start; justify-content: center;">
+                        <div class="detail-item" style="display: flex; flex-direction: column; align-items: flex-start; justify-content: center; width: 100%;">
                             <div style="width: 100%;"><span class="detail-lbl">${label}: ${btnHtml}</span> ${value}</div>
                             ${inlineAnnoHtml}
                         </div>
                     `;
                 }
             };
+
+            // 提取全局总结文本
+            let summaryText = '';
+            if (char.status === 'rejected' && char.review_comments) {
+                summaryText = typeof char.review_comments.general === 'string' ? char.review_comments.general : (typeof char.review_comments === 'string' ? char.review_comments : '');
+            }
 
             // 管理员：底部的审核批注工作台
             let adminControls = '';
@@ -2875,7 +3582,7 @@
                             <div style="opacity:0.5;">(点击各属性旁边的 [+] 即可在其下方展开批注框)</div>
                         </div>
                         
-                        <textarea id="admin-summary-input" rows="2" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.5); border: 1px solid rgba(244,67,54,0.4); color: #fff; padding: 8px; font-family: 'PingFang SC', sans-serif; resize: vertical; outline: none;" placeholder="在此输入总体驳回意见或修改总结 (选填)..."></textarea>
+                        <textarea id="admin-summary-input" rows="2" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.5); border: 1px solid rgba(244,67,54,0.4); color: #fff; padding: 8px; font-family: 'PingFang SC', sans-serif; resize: vertical; outline: none;" placeholder="在此输入总体驳回意见或修改总结 (选填)...">${summaryText}</textarea>
                         
                         <div style="margin-top: 15px; display: flex; gap: 10px;">
                             <button class="submit-btn" style="color:#4caf50; border-color:#4caf50; flex: 1;" onclick="approveChar('${char.id}')">[ ✔️ APPROVE // 批准入库 ]</button>
@@ -2896,11 +3603,9 @@
                 `;
             }
 
-            // 用户视角：顶部的全局总结框 (不再列出所有具体字段细节，因为它们会显示在各自对应的位置)
+            // 用户视角：顶部的全局总结框
             let feedbackHtml = '';
             if (char.status === 'rejected' && char.review_comments) {
-                let summaryText = typeof char.review_comments.general === 'string' ? char.review_comments.general : (typeof char.review_comments === 'string' ? char.review_comments : '');
-                
                 feedbackHtml = `
                     <div class="system-notice" style="border-color:#f44336; background: rgba(244,67,54,0.1);">
                         <div style="color: #f44336; font-weight: bold; margin-bottom: ${summaryText ? '8px' : '0'}; font-family: monospace;">[ ⚠️ REVISION REQUIRED // 指挥部要求修改 ]</div>
@@ -2910,20 +3615,22 @@
                 `;
             }
 
-            // 处理特别的头部 (姓名/代号)
+            // 💥 修复：处理特别的头部 (姓名/代号)
             let headerAnnoBtn = '';
             let headerAnnoBox = '';
+            const existingNameText = getExistingAnno('name');
+
             if (currentUser.role === 'admin' && char.status !== 'approved') {
                 headerAnnoBtn = `<span style="color:#f44336; cursor:pointer; font-weight:bold; margin-left:10px; font-size:16px; background:rgba(244,67,54,0.1); padding:0 4px; border-radius:2px;" onclick="toggleInlineAnnotation('name')" title="批注姓名/代号">[+]</span>`;
                 headerAnnoBox = `
-                    <div id="anno-box-name" style="display: none; margin-top: 10px; width: 100%;">
-                        <textarea id="anno-input-name" rows="1" placeholder="在此输入对【姓名/代号】的批注..." style="width: 100%; box-sizing: border-box; background: rgba(244,67,54,0.1); border: 1px dashed #f44336; color: #ffb4a9; padding: 6px; font-family: 'PingFang SC', monospace; resize: none; font-size: 13px; overflow: hidden; outline: none;" oninput="updateInlineAnnotation('name', '姓名/代号', this)"></textarea>
+                    <div id="anno-box-name" style="display: ${existingNameText ? 'block' : 'none'}; margin-top: 10px; width: 100%;">
+                        <textarea id="anno-input-name" rows="1" placeholder="在此输入对【姓名/代号】的批注..." style="width: 100%; box-sizing: border-box; background: rgba(244,67,54,0.1); border: 1px dashed #f44336; color: #ffb4a9; padding: 6px; font-family: 'PingFang SC', monospace; resize: none; font-size: 13px; overflow: hidden; outline: none;" oninput="updateInlineAnnotation('name', '姓名/代号', this)">${existingNameText}</textarea>
                     </div>
                 `;
-            } else if (char.status === 'rejected' && char.review_comments && char.review_comments.fields && char.review_comments.fields['name']) {
+            } else if (existingNameText) {
                 headerAnnoBox = `
                     <div style="margin-top: 10px; width: 100%; box-sizing: border-box; background: rgba(244,67,54,0.1); border-left: 2px solid #f44336; color: #ffb4a9; padding: 6px 10px; font-size: 13px;">
-                        <strong style="color:#f44336;">[ 指挥部批示 ]</strong> ${char.review_comments.fields['name'].text}
+                        <strong style="color:#f44336;">[ 指挥部批示 ]</strong> ${existingNameText}
                     </div>
                 `;
             }
@@ -2932,17 +3639,20 @@
             const factionField = renderField('faction', '阵营', char.faction || 'UNKNOWN');
             const orgField = renderField('organization', '组织', char.organization || 'UNKNOWN');
             const genderField = renderField('gender', '性别', char.gender);
+            const genderNotesField = renderField('gender_notes', '性别备注', char.gender_notes || '无');
             const ageField = renderField('age', '年龄', char.age);
             const heightField = renderField('height', '身高', char.height);
             const appearanceField = renderField('appearance', '外貌', char.appearance, true);
             const personalityField = renderField('personality', '性格', char.personality, true);
             const notesField = renderField('notes', '备注', char.notes || 'N/A', true);
 
-            // 最终装配输出
+            // 最终装配输出 (💥 修复了头部的 flex 布局，强制纵向排列，确保批注框 100% 宽度展示)
             detail.innerHTML = `
-                <div class="detail-header" style="flex-wrap: wrap; align-items: flex-start; padding-bottom: 15px;">
-                    <div style="display: flex; justify-content: space-between; width: 100%;">
-                        <h3 style="color: #ffeb3b; margin:0;">${char.callsign} // ${char.name} ${headerAnnoBtn}</h3>
+                <div class="detail-header" style="display: flex; flex-direction: column; align-items: flex-start; padding-bottom: 15px; border-bottom: 1px dashed rgba(18, 168, 255, 0.4); margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                        <h3 style="color: #ffeb3b; margin:0; display: flex; align-items: center; flex-wrap: wrap;">
+                            ${char.callsign} // ${char.name} ${headerAnnoBtn}
+                        </h3>
                         <button class="close-btn" onclick="document.getElementById('queue-detail').style.display='none'">[X] CLOSE</button>
                     </div>
                     ${headerAnnoBox}
@@ -2956,6 +3666,7 @@
                 </div>
                 <div class="form-grid-3" style="margin-bottom: 15px;">
                     ${genderField}
+                    ${genderNotesField} <!-- 💥 塞在这里 -->
                     ${ageField}
                     ${heightField}
                 </div>
@@ -2966,6 +3677,19 @@
                 ${adminControls}
                 ${userControls}
             `;
+
+            // 渲染完毕后，立刻刷新底部的汇总列表，并撑开所有带有历史记录的输入框
+            setTimeout(() => {
+                refreshAnnotationList();
+                if (currentUser.role === 'admin') {
+                    document.querySelectorAll('textarea[id^="anno-input-"]').forEach(el => {
+                        if (el.value.trim() !== '') {
+                            el.style.height = 'auto';
+                            el.style.height = el.scrollHeight + 'px';
+                        }
+                    });
+                }
+            }, 50);
         }
 
         // 💥 管理员操作：批准（自动执行版本合并）
@@ -3075,6 +3799,8 @@
             document.getElementById('f-name').value = char.name || '';
             document.getElementById('f-callsign').value = char.callsign || '';
             document.getElementById('f-gender').value = char.gender || '';
+            // 💥 新增：载入性别备注
+            document.getElementById('f-gender-notes').value = char.gender_notes || '';
             document.getElementById('f-age').value = char.age || '';
             document.getElementById('f-dob').value = char.dob || '';
             document.getElementById('f-height').value = char.height || '';
@@ -3178,7 +3904,10 @@
             const newChar = {
                 owner_id: currentUser.id, name: document.getElementById('f-name').value || 'UNKNOWN',
                 callsign: callsign, faction: faction, organization: org,
-                gender: document.getElementById('f-gender').value || 'N/A', age: document.getElementById('f-age').value || 'N/A',
+                gender: document.getElementById('f-gender').value || 'N/A', 
+                // 💥 新增：打包性别备注
+                gender_notes: document.getElementById('f-gender-notes').value || '', 
+                age: document.getElementById('f-age').value || 'N/A',
                 dob: document.getElementById('f-dob').value || 'N/A', height: document.getElementById('f-height').value || 'N/A',
                 weight: document.getElementById('f-weight').value || 'N/A', blood: document.getElementById('f-blood').value || 'N/A',
                 appearance: document.getElementById('f-appearance').value || 'N/A', personality: document.getElementById('f-personality').value || 'N/A',
@@ -3549,6 +4278,7 @@
                 </div>
                 <div class="form-grid-3" style="margin-bottom: 15px;">
                     <div class="detail-item"><span class="detail-lbl">性别:</span> ${char.gender}</div>
+                    <div class="detail-item"><span class="detail-lbl">性别备注:</span> ${char.gender_notes || '无'}</div>
                     <div class="detail-item"><span class="detail-lbl">年龄:</span> ${char.age}</div>
                     <div class="detail-item"><span class="detail-lbl">身高:</span> ${char.height}</div>
                     <div class="detail-item"><span class="detail-lbl">体重:</span> ${char.weight}</div>
@@ -3601,6 +4331,7 @@
 
                 <div class="form-grid-3" style="margin-bottom: 20px; background: rgba(18,168,255,0.05); padding: 20px; border: 1px solid rgba(18,168,255,0.3); box-shadow: inset 0 0 20px rgba(18,168,255,0.1);">
                     <div class="detail-item"><span class="detail-lbl">性别:</span> ${char.gender}</div>
+                    <div class="detail-item"><span class="detail-lbl">性别备注:</span> ${char.gender_notes || '无'}</div>
                     <div class="detail-item"><span class="detail-lbl">年龄:</span> ${char.age}</div>
                     <div class="detail-item"><span class="detail-lbl">生日:</span> ${char.dob}</div>
                     <div class="detail-item"><span class="detail-lbl">身高:</span> ${char.height}</div>
@@ -3639,6 +4370,14 @@
                 }
             }, 300);
         };
+
+        // 💥 页面加载时，恢复刷新前的视图
+        const savedView = sessionStorage.getItem('tf141_current_view');
+        // 如果有记忆，且不是文章页（文章页刷新会丢失动态数据，所以避开），就自动切换过去
+        if (savedView && document.getElementById(savedView) && savedView !== 'articleView') {
+            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById(savedView).classList.add('active');
+        }
 
         // 页面加载时，先核实身份，再拉取数据
         initIdentity();
