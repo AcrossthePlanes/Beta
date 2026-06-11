@@ -2341,6 +2341,104 @@
             }
         }
 
+        /* 2. 纯手机端细节调整 (<= 768px) */
+        @media (max-width: 768px) {
+            /* 英雄视觉区 (Hero Section) */
+            .hero-section {
+                padding: 2rem 15px;
+                min-height: auto; 
+            }
+            .hero-title {
+                font-size: clamp(2.2rem, 10vw, 3rem); /* 💥 进一步缩小大标题 */
+            }
+            .hero-sub {
+                font-size: 0.85rem; /* 💥 缩小副标题 */
+                margin-top: 1.5rem;
+            }
+            .hero-actions {
+                flex-direction: column; 
+                gap: 15px;
+            }
+            /* 💥 修复：只让主界面英雄区的按钮占满全宽，不要误伤文章页的返回按钮 */
+            .hero-actions .btn-primary, .hero-actions .btn-ghost {
+                width: 100%; 
+                text-align: center;
+                box-sizing: border-box;
+            }
+
+            /* 情报网格区 (Intel Grid) */
+            .intel-section {
+                padding: 1rem 15px 3rem 15px;
+            }
+            .section-title {
+                font-size: 1.8rem; /* 💥 缩小区块标题 */
+            }
+            .intel-grid {
+                grid-template-columns: 1fr; 
+            }
+
+            /* 横向拖拽画廊 (Gallery Strip) */
+            .gallery-item {
+                flex: 0 0 260px; 
+                height: 180px;
+            }
+            .article-grid {
+                gap: 15px;
+                padding: 1rem 15px;
+            }
+
+            /* 世界观正文排版微调 (整体字号调小) */
+            .world-title {
+                font-size: 1.8rem;
+            }
+            .world-quote {
+                padding: 15px;
+                font-size: 0.95rem;
+            }
+            .world-section-title {
+                font-size: 1.2rem;
+            }
+            /* 💥 缩小世界观所有正文、列表的字号 */
+            .world-text, .faction-desc, .sub-org-list li, .cyber-list {
+                font-size: 0.95rem; 
+                line-height: 1.7;
+            }
+            .faction-card {
+                padding: 20px;
+            }
+            .glitch-text {
+                font-size: 1.5rem;
+            }
+
+            /* 💥 新增：全屏文章阅读页的手机端专属适配 💥 */
+            .article-page-container {
+                padding: 1rem 15px 3rem 15px;
+            }
+            .article-top-bar {
+                margin-bottom: 1.5rem;
+                flex-direction: column; /* 手机端顶部栏改为上下排列 */
+                align-items: flex-start;
+                gap: 15px;
+            }
+            /* 💥 修复：让返回按钮变回小巧精致的尺寸 */
+            .article-top-bar .btn-ghost {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+                width: auto; /* 恢复自适应宽度 */
+            }
+            .article-page-title {
+                font-size: 1.6rem; /* 缩小文章大标题 */
+            }
+            .article-page-content {
+                font-size: 0.95rem; /* 缩小文章正文 */
+                padding: 1.2rem; /* 缩小文章内边距，留出更多阅读空间 */
+            }
+            .article-page-content::first-letter {
+                font-size: 2.2rem; /* 缩小首字母下沉效果 */
+                margin-right: 6px;
+            }
+        }
+
     </style>
 </head>
 <body>
