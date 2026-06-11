@@ -649,10 +649,10 @@
 
         /* ─── 3. 情报网格区 INTEL GRID ─── */
         .intel-section {
-            padding: 4rem 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+    padding: 1rem 2rem 4rem 2rem; /* 上1rem，左右2rem，下4rem */
+    max-width: 1200px;
+    margin: 0 auto;
+}
 
         .section-header { margin-bottom: 3rem; }
         
@@ -1300,7 +1300,7 @@
 
         /* 3. 群友人设库 (logView) 独立控制 */
         #logView .archive-container {
-            max-width: 1200px; /* 3D 数据隧道和干员列表需要大一点的空间，设为 1200px */
+            max-width: 1200px; /* 3D 数据隧道和公民列表需要大一点的空间，设为 1200px */
             margin: 0 auto;
         }
 
@@ -1682,7 +1682,7 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* 雷达上的干员光点 */
+        /* 雷达上的公民光点 */
         .radar-blip {
             position: absolute;
             width: 4px; height: 4px;
@@ -1956,6 +1956,7 @@
         }
 
         .world-section { margin-bottom: 4rem; }
+        .world-section:last-child { margin-bottom: 0; } /* ⬅️ 新增这一行 */
         
         .world-section-title { 
             font-size: 1.8rem; 
@@ -2095,7 +2096,7 @@
             max-width: 1200px; 
             margin: 0 auto;
             gap: 40px;
-            padding: 2rem 20px 5rem 20px;
+            padding: 2rem 20px 5rem 20px; /* ⬅️ 注意这里的 5rem */
             align-items: flex-start; 
             animation: fadeIn 0.4s ease-out;
         }
@@ -2168,35 +2169,6 @@
             transform: none; 
         }
 
-        /* 移动端适配：屏幕变窄时将目录置于顶部 */
-        @media (max-width: 900px) {
-            .world-layout {
-                flex-direction: column;
-                padding-top: 1rem;
-            }
-            .world-toc {
-                position: relative;
-                top: 0;
-                width: 100%;
-                margin-bottom: 20px;
-                box-sizing: border-box;
-            }
-            .toc-list {
-                flex-direction: row; /* 手机端横向排布 */
-                flex-wrap: wrap;
-                gap: 15px;
-            }
-            .toc-btn {
-                padding: 5px 10px;
-                border-left: none;
-                border-bottom: 2px solid transparent;
-            }
-            .toc-btn:hover, .toc-btn.active {
-                padding-left: 10px;
-                border-left: none;
-                border-bottom: 2px solid #12a8ff; /* 手机端改为底部线高亮 */
-            }
-        }
 
         /* =========================================
            移动端专属优化 1：重构顶部导航栏与菜单按钮
@@ -2234,96 +2206,138 @@
         }
 
         /* =========================================
-           移动端专属优化 2：世界观目录变为底部悬浮胶囊
+           💥 全新移动端深度适配 (主界面 & 世界观) 💥
            ========================================= */
+        
+        /* 1. 平板及手机端综合调整 (<= 900px) */
         @media (max-width: 900px) {
             .world-layout {
                 flex-direction: column;
-                padding-top: 1rem;
+                padding: 1rem 15px;
+                gap: 20px;
             }
             
-            /* 目录变成底部居中悬浮的胶囊按钮 */
+            /* 💥 悬浮按钮本体：高级毛玻璃质感 💥 */
             .world-toc {
                 position: fixed;
-                bottom: 25px;
-                left: 50%;
-                transform: translateX(-50%);
-                top: auto;
-                width: 140px;
-                height: 40px;
-                background: rgba(6, 11, 20, 0.95);
-                border: 1px solid #12a8ff;
-                border-radius: 20px;
-                padding: 0;
-                z-index: 999;
-                backdrop-filter: blur(10px);
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6), 0 0 10px rgba(18, 168, 255, 0.3);
-                overflow: hidden;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                bottom: 30px;
+                right: 20px;
+                width: 48px;
+                height: 48px;
+                background: rgba(6, 11, 20, 0.3); /* 极度透明的底色 */
+                backdrop-filter: blur(12px); /* 核心：毛玻璃模糊 */
+                -webkit-backdrop-filter: blur(12px);
+                border: 1px solid rgba(18, 168, 255, 0.4);
+                border-radius: 50%;
+                z-index: 9999;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), inset 0 0 15px rgba(18, 168, 255, 0.2);
                 display: flex;
                 flex-direction: column;
                 align-items: center;
+                justify-content: center;
+                touch-action: none;
+                cursor: grab;
+                transition: background 0.3s, border-color 0.3s;
             }
 
-            /* 纯 CSS 交互：触摸/点击时向上展开面板 */
-            .world-toc:hover, .world-toc:focus-within, .world-toc:active {
-                width: 220px;
-                height: 240px; /* 足够容纳标题和4个按钮 */
-                border-radius: 12px;
-                padding: 15px;
-                align-items: flex-start;
-                background: rgba(0, 5, 10, 0.98);
+            .world-toc:active {
+                cursor: grabbing;
+                background: rgba(18, 168, 255, 0.2);
             }
 
-            /* 胶囊状态下的标题 */
+            /* 按钮点击时的上下轻微弹动动画 */
+            .world-toc.wobble {
+                animation: gentleBounce 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+            }
+
+            @keyframes gentleBounce {
+                0% { transform: translateY(0) scale(1); }
+                30% { transform: translateY(-6px) scale(0.95); } /* 向上轻弹，稍微带一点点按压的缩放感 */
+                60% { transform: translateY(2px) scale(1.02); }  /* 落下时微微回弹 */
+                100% { transform: translateY(0) scale(1); }
+            }
+
             .toc-title {
+                font-size: 11px;
                 margin: 0;
-                width: 100%;
-                height: 40px;
-                line-height: 40px;
-                text-align: center;
-                font-size: 13px;
-                cursor: pointer;
-                flex-shrink: 0;
-                transition: all 0.3s;
-                border: none;
-            }
-            
-            /* 展开状态下的标题 */
-            .world-toc:hover .toc-title, .world-toc:focus-within .toc-title, .world-toc:active .toc-title {
-                height: auto;
-                line-height: normal;
-                text-align: left;
-                margin-bottom: 10px;
-                border-bottom: 1px dashed rgba(18, 168, 255, 0.4);
-                padding-bottom: 10px;
+                color: #12a8ff;
+                text-shadow: 0 0 5px rgba(18, 168, 255, 0.5);
+                pointer-events: none;
+                font-family: monospace;
+                letter-spacing: 1px;
             }
 
-            /* 隐藏列表，展开时才显示 */
+            /* 💥 纯文字菜单容器 💥 */
             .toc-list {
+                position: absolute;
+                display: none;
+                flex-direction: column;
+                gap: 15px;
+                width: max-content;
+                background: transparent; /* 去掉背景框 */
+                border: none;
+                box-shadow: none;
+                backdrop-filter: none;
+                padding: 0;
+            }
+
+            .world-toc.open .toc-list {
+                display: flex;
+            }
+
+            /* 💥 智能定位：由 JS 动态添加类名 💥 */
+            .world-toc.expand-up .toc-list { bottom: 65px; top: auto; }
+            .world-toc.expand-down .toc-list { top: 65px; bottom: auto; }
+            .world-toc.align-left .toc-list { left: 0; right: auto; align-items: flex-start; }
+            .world-toc.align-right .toc-list { right: 0; left: auto; align-items: flex-end; }
+
+            /* 纯文字按钮样式 */
+            .toc-btn {
+                background: transparent !important;
+                border: none !important;
+                padding: 0 !important;
+                color: rgba(224, 242, 254, 0.7);
+                font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+                font-size: 15px;
+                letter-spacing: 1px;
+                /* 强烈的文字阴影，保证在任何背景下都能看清纯文字 */
+                text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.8);
                 opacity: 0;
                 pointer-events: none;
-                transition: opacity 0.2s;
-                width: 100%;
-                flex-direction: column;
-                gap: 10px;
             }
 
-            .world-toc:hover .toc-list, .world-toc:focus-within .toc-list, .world-toc:active .toc-list {
-                opacity: 1;
+            .world-toc.open .toc-btn {
                 pointer-events: auto;
             }
 
-            /* 手机端目录按钮样式微调 */
-            .toc-btn {
-                padding: 8px 10px;
-                width: 100%;
-                box-sizing: border-box;
+            .toc-btn.active {
+                color: #12a8ff;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 12px rgba(18, 168, 255, 0.8);
+                font-weight: bold;
             }
-            .toc-btn:hover, .toc-btn.active {
-                background: rgba(18, 168, 255, 0.1);
-                border-left: 2px solid #12a8ff;
-                padding-left: 15px;
+
+            /* 💥 展开时的波浪依次浮现动画 (向上展开) 💥 */
+            .world-toc.expand-up.open .toc-list li:nth-child(4) .toc-btn { animation: wavePopUp 0.4s forwards 0.00s; }
+            .world-toc.expand-up.open .toc-list li:nth-child(3) .toc-btn { animation: wavePopUp 0.4s forwards 0.08s; }
+            .world-toc.expand-up.open .toc-list li:nth-child(2) .toc-btn { animation: wavePopUp 0.4s forwards 0.16s; }
+            .world-toc.expand-up.open .toc-list li:nth-child(1) .toc-btn { animation: wavePopUp 0.4s forwards 0.24s; }
+
+            /* 💥 展开时的波浪依次浮现动画 (向下展开) 💥 */
+            .world-toc.expand-down.open .toc-list li:nth-child(1) .toc-btn { animation: wavePopDown 0.4s forwards 0.00s; }
+            .world-toc.expand-down.open .toc-list li:nth-child(2) .toc-btn { animation: wavePopDown 0.4s forwards 0.08s; }
+            .world-toc.expand-down.open .toc-list li:nth-child(3) .toc-btn { animation: wavePopDown 0.4s forwards 0.16s; }
+            .world-toc.expand-down.open .toc-list li:nth-child(4) .toc-btn { animation: wavePopDown 0.4s forwards 0.24s; }
+
+            @keyframes wavePopUp {
+                0% { opacity: 0; transform: translateY(15px) scale(0.9); }
+                50% { opacity: 1; transform: translateY(-4px) scale(1.05); }
+                100% { opacity: 1; transform: translateY(0) scale(1); }
+            }
+
+            @keyframes wavePopDown {
+                0% { opacity: 0; transform: translateY(-15px) scale(0.9); }
+                50% { opacity: 1; transform: translateY(4px) scale(1.05); }
+                100% { opacity: 1; transform: translateY(0) scale(1); }
             }
         }
 
@@ -2392,145 +2406,62 @@
         </div>
 
         <!-- 主界面 -->
-        <!-- 主界面 -->
         <div class="view-panel active" id="mainView">
             
             <!-- 1. 英雄视觉区 (Hero Section) -->
             <section class="hero-section">
                 <!-- 背景幽灵文字 -->
-<div class="ghost-bg">C-62</div>
+                <div class="ghost-bg">C-62</div>
 
-<div class="hero-content">
-    <div class="hero-chip">✦ P.S.C SECURE UPLINK ESTABLISHED</div>
-    <h1 class="hero-title">
-        <span class="fill">DEEP SPACE</span>
-        <span class="stroke">EDGE 2240</span>
-        <span class="cyber-fill">TERMINAL.</span>
-    </h1>
-    <p class="hero-sub">
-        公元 2240 年 / 泛星联盟最高议会授权 / 跨星区情报终端。<br>
-        查阅星域简报、检索深空干员档案、录入最新黑市情报。警告：长时间接触原矿可能导致星尘病。
-    </p>
-    <div class="hero-actions">
-        <button class="btn-primary" onclick="document.querySelector('[data-target=\'logView\']').click()">公民档案库 ↓</button>
-        <button class="btn-ghost" onclick="document.getElementById('intel-grid').scrollIntoView({behavior:'smooth'})">浏览情报 →</button>
-    </div>
-</div>
+                <div class="hero-content">
+                    <div class="hero-chip">✦ P.S.C SECURE UPLINK ESTABLISHED</div>
+                    <h1 class="hero-title">
+                        <span class="fill">DEEP SPACE</span>
+                        <span class="stroke">EDGE 2240</span>
+                        <span class="cyber-fill">TERMINAL.</span>
+                    </h1>
+                    <p class="hero-sub">
+                        公元 2240 年 / 泛星联盟最高议会授权 / 跨星区情报终端。<br>
+                        查阅星域简报、检索深空公民档案、录入最新黑市情报。警告：长时间接触原矿可能导致星尘病。
+                    </p>
+                    <div class="hero-actions">
+                        <button class="btn-primary" onclick="document.querySelector('[data-target=\'logView\']').click()">公民档案库 ↓</button>
+                        <button class="btn-ghost" onclick="document.getElementById('intel-grid').scrollIntoView({behavior:'smooth'})">浏览情报 →</button>
+                    </div>
+                </div>
             </section>
 
             <!-- 2. 无缝滚动情报带 (Marquee Ticker) -->
             <div class="ticker">
                 <div class="ticker-inner">
                     <span class="ticker-item">★ RESTRICTED ACCESS</span>
-<span class="ticker-sep">◆</span>
-<span class="ticker-item">C-62 RADIATION WARNING</span>
-<span class="ticker-sep">◆</span>
-<span class="ticker-item">P.S.C FLEET IN TRANSIT</span>
-<span class="ticker-sep">◆</span>
-<span class="ticker-item">FRONTIER REBELLION DETECTED</span>
-<span class="ticker-sep">◆</span>
-<span class="ticker-item">ACHERON FREEPORT OPEN</span>
-<span class="ticker-sep">◆</span>
-<!-- 把上面这五行再复制一遍凑够滚动长度 -->
-<span class="ticker-item">★ RESTRICTED ACCESS</span>
-<span class="ticker-sep">◆</span>
-<span class="ticker-item">C-62 RADIATION WARNING</span>
-<span class="ticker-sep">◆</span>
-<span class="ticker-item">P.S.C FLEET IN TRANSIT</span>
-<span class="ticker-sep">◆</span>
-<span class="ticker-item">FRONTIER REBELLION DETECTED</span>
-<span class="ticker-sep">◆</span>
-<span class="ticker-item">ACHERON FREEPORT OPEN</span>
-<span class="ticker-sep">◆</span>
+                    <span class="ticker-sep">◆</span>
+                    <span class="ticker-item">C-62 RADIATION WARNING</span>
+                    <span class="ticker-sep">◆</span>
+                    <span class="ticker-item">P.S.C FLEET IN TRANSIT</span>
+                    <span class="ticker-sep">◆</span>
+                    <span class="ticker-item">FRONTIER REBELLION DETECTED</span>
+                    <span class="ticker-sep">◆</span>
+                    <span class="ticker-item">ACHERON FREEPORT OPEN</span>
+                    <span class="ticker-sep">◆</span>
+                    <!-- 把上面这五行再复制一遍凑够滚动长度 -->
+                    <span class="ticker-item">★ RESTRICTED ACCESS</span>
+                    <span class="ticker-sep">◆</span>
+                    <span class="ticker-item">C-62 RADIATION WARNING</span>
+                    <span class="ticker-sep">◆</span>
+                    <span class="ticker-item">P.S.C FLEET IN TRANSIT</span>
+                    <span class="ticker-sep">◆</span>
+                    <span class="ticker-item">FRONTIER REBELLION DETECTED</span>
+                    <span class="ticker-sep">◆</span>
+                    <span class="ticker-item">ACHERON FREEPORT OPEN</span>
+                    <span class="ticker-sep">◆</span>
                 </div>
             </div>
 
-            <!-- 3. 情报网格区 (类似参考站的 Classes Grid) -->
-            <section class="intel-section" id="intel-grid">
-                <div class="section-header">
-                    <div>
-                        <p class="section-label">✦ CLASSIFIED FILES</p>
-                        <h2 class="section-title">CORE <span class="accent">INTEL</span></h2>
-                    </div>
-                </div>
-
-                <!-- 搜索无结果时的提示 -->
-                <div id="no-result-msg" style="display: none; color: #f44336; font-family: monospace; padding: 20px 0; font-size: 1.2rem;">
-                    [ ❌ 未检索到相关内容 ]
-                </div>
-
-                <div class="intel-grid">
-                    <!-- 卡片1：C-62 矿石背景 -->
-<div class="intel-card article-card" data-keywords="c-62 黑血 矿石 星尘病 能源" 
-     data-content="【机密档案：C-62 同位素】&#10;&#10;俗称“黑血”，于太阳系外环小行星带深处首次被发现。&#10;&#10;特性：极高能的清洁聚变能源。指甲盖大小的纯净 C-62 足以驱动一艘重型星舰航行一个月。目前内环行星的繁华都市、最高议会的生命维持系统、各大舰队的重火力引擎，全部依赖“黑血”续命。&#10;&#10;医疗警告：原矿带有极强的神经毒性辐射。长期接触的底层矿工会患上不可逆的“星尘病”（器官纤维化与严重幻觉）。">
-    <span class="card-icon">💎</span>
-    <span class="card-level">✦ LORE // 核心物质</span>
-    <h3 class="card-name">C-62“黑血”研究报告</h3>
-    <p class="card-desc">关于高能同位素 C-62 的开采记录、能源转化率以及“星尘病”的临床医学观察报告。</p>
-    <div class="card-meta">
-        <span class="card-price">[DECRYPTED]</span>
-        <span class="card-duration">// READ TIME: 3 MIN</span>
-    </div>
-</div>
-
-<!-- 卡片2：阵营冲突战报 -->
-<div class="intel-card article-card" data-keywords="战报 report 外环 泛星联盟 黑火 冲突"
-     data-content="行动代号：碎星 (Operation Shattered Star)&#10;地点：外环 7号采矿驳船&#10;涉事阵营：泛星联盟第一舰队 vs “黑火”解放战线&#10;&#10;行动简报：星历2240年3月12日，“黑火”武装分子突袭了隶属于泰坦星脉财团的7号驳船，试图劫持当月开采的 C-62 原矿。联盟第一舰队“黄金狮子”下属的快速反应小队于 0400 时进行轨道空降介入。&#10;&#10;结果：驳船动力系统受损，30%原矿泄漏至太空。黑火武装分子撤退，联盟方 4 名特工阵亡。">
-    <span class="card-icon">🎯</span>
-    <span class="card-level">◉ REPORT // 冲突战报</span>
-    <h3 class="card-name">外环 7号驳船袭击事件</h3>
-    <p class="card-desc">泛星联盟与“黑火”解放战线在深空矿区的最新交火记录。包含现场受损评估与轨道空降录像。</p>
-    <div class="card-meta">
-        <span class="card-price">[CLASSIFIED]</span>
-        <span class="card-duration">// LEVEL 3 REQUIRED</span>
-    </div>
-</div>
-
-<!-- 卡片3：深空干员名录 -->
-<div class="intel-card article-card" data-keywords="编制 roster 名录 干员 佣兵 pmc"
-     data-content="[ 数据解密中... ]&#10;&#10;深空边缘活跃干员名录（部分）：&#10;&#10;> 泛星联盟 (P.S.C) 注册特工：拥有最高级别的星门通行权与合法持械许可。&#10;> 外环 (Frontier) 游击队员：多为矿工出身，擅长在零重力与高辐射环境下作战。&#10;> 独立防务承包商 (PMCs)：如“深渊行者”与“锈血”佣兵，只要信用点给够，他们可以为任何人扣动扳机。&#10;&#10;系统警告：部分阿刻戎自由港的黑市干员数据已被加密，需 Beta 级以上权限方可访问。">
-    <span class="card-icon">👥</span>
-    <span class="card-level">★ ROSTER // 编制</span>
-    <h3 class="card-name">深空活跃干员名录</h3>
-    <p class="card-desc">最新解密级别的各阵营干员代号与专长一览表。包含联盟特工、外环反抗军及独立佣兵。</p>
-    <div class="card-meta">
-        <span class="card-price">[LIVE DATA]</span>
-        <span class="card-duration">// UPDATED: 2240</span>
-    </div>
-</div>
-
-<!-- 卡片4：星际军械库 -->
-<div class="intel-card article-card" data-keywords="武器 装备 军械库 星舰 义体"
-     data-content="深空作战标准配置清单：&#10;&#10;> 动能武器：电磁加速步枪（适用于真空环境，无后座力补偿模块需谨慎使用）&#10;> 战术装备：全封闭式 EVA 战斗服（内置防辐射内衬与微型生命维持系统）&#10;> 义体改造：神经突触加速器、机械义肢（多见于外环老兵与 PMC 佣兵）&#10;> 医疗物资：高浓度抗辐射凝胶（用于缓解星尘病早期症状）&#10;&#10;系统警告：所有军用级义体改造需在联盟战略安全局（SSA）进行备案。">
-    <span class="card-icon">🔫</span>
-    <span class="card-level">⬡ ARMORY // 军械库</span>
-    <h3 class="card-name">深空战术装备清单</h3>
-    <p class="card-desc">包含电磁武器、EVA 战斗服、军用级义体改造及抗辐射医疗物资的详细参数与黑市报价。</p>
-    <div class="card-meta">
-        <span class="card-price">[INVENTORY]</span>
-        <span class="card-duration">// SUPPLY LOGS</span>
-    </div>
-</div>
-                </div>
-            </section>
-
-            <!-- 4. 横向拖拽画廊 (保留你原有的功能，但更新了样式) -->
-            <div class="gallery-strip">
-                <div class="gallery-caption">✦ SATELLITE IMAGERY // 卫星扫描图传</div>
-                <div class="article-grid" id="galleryStrip" style="padding: 2rem; gap: 30px;">
-                    <!-- 这里的卡片仅作为展示图片的画廊 -->
-                    <div class="gallery-item placeholder-a"><span>[MAP_GRID_01]</span></div>
-                    <div class="gallery-item placeholder-b"><span>[TARGET_BUILDING]</span></div>
-                    <div class="gallery-item placeholder-c"><span>[DRONE_FOOTAGE]</span></div>
-                    <div class="gallery-item placeholder-a"><span>[EXTRACTION_POINT]</span></div>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="view-panel" id="worldView">
+            <!-- 💥 修复：正确的排版结构，把目录和正文并排包在 world-layout 里 💥 -->
             <div class="world-layout">
                 
+                <!-- 左侧悬浮目录 -->
                 <aside class="world-toc">
                     <div class="toc-title">目录</div>
                     <ul class="toc-list">
@@ -2541,6 +2472,7 @@
                     </ul>
                 </aside>
 
+                <!-- 右侧正文容器 -->
                 <div class="world-container">
                     
                     <div id="sec-intro">
@@ -2649,7 +2581,8 @@
                         <div class="world-text">
                             <p>在这里，你可以是冷酷的联盟特工、满身机油味的黑市医生、或者是只认钱的战术小队爆破手。</p>
                             <ol class="cyber-list">
-                                <li>点击左侧菜单进入 <span class="world-highlight">【人设填写表】</span>。</li>
+                                <!-- 💥 顺便帮你把点击跳转加进去了 💥 -->
+                                <li>点击进入 <span class="world-highlight" style="cursor: pointer; text-decoration: underline; text-underline-offset: 4px; transition: 0.2s;" onclick="document.querySelector('[data-target=\'createView\']').click()" onmouseover="this.style.color='#fff'; this.style.textShadow='0 0 15px #12a8ff'" onmouseout="this.style.color='#12a8ff'; this.style.textShadow='0 0 8px rgba(18,168,255,0.4)'">【人设填写表】</span>。</li>
                                 <li>选择你的 <strong>阵营</strong> 与 <strong>所属组织</strong>。</li>
                                 <li>填写你的背景档案，生成属于你的深空身份卡。</li>
                             </ol>
@@ -2657,9 +2590,104 @@
                         </div>
                     </section>
 
+                </div> <!-- world-container 结束 -->
+            </div> <!-- world-layout 结束 -->
+
+            <!-- 3. 情报网格区 (类似参考站的 Classes Grid) -->
+            <section class="intel-section" id="intel-grid">
+                <div class="section-header">
+                    <div>
+                        <p class="section-label">✦ CLASSIFIED FILES</p>
+                        <h2 class="section-title">CORE <span class="accent">INTEL</span></h2>
+                    </div>
+                </div>
+
+                <!-- 搜索无结果时的提示 -->
+                <div id="no-result-msg" style="display: none; color: #f44336; font-family: monospace; padding: 20px 0; font-size: 1.2rem;">
+                    [ ❌ 未检索到相关内容 ]
+                </div>
+
+                <div class="intel-grid">
+                    <!-- 卡片1：C-62 矿石背景 -->
+                    <div class="intel-card article-card" data-keywords="c-62 黑血 矿石 星尘病 能源" 
+                         data-content="【机密档案：C-62 同位素】&#10;&#10;俗称“黑血”，于太阳系外环小行星带深处首次被发现。&#10;&#10;特性：极高能的清洁聚变能源。指甲盖大小的纯净 C-62 足以驱动一艘重型星舰航行一个月。目前内环行星的繁华都市、最高议会的生命维持系统、各大舰队的重火力引擎，全部依赖“黑血”续命。&#10;&#10;医疗警告：原矿带有极强的神经毒性辐射。长期接触的底层矿工会患上不可逆的“星尘病”（器官纤维化与严重幻觉）。">
+                        <span class="card-icon">💎</span>
+                        <span class="card-level">✦ LORE // 核心物质</span>
+                        <h3 class="card-name">C-62“黑血”研究报告</h3>
+                        <p class="card-desc">关于高能同位素 C-62 的开采记录、能源转化率以及“星尘病”的临床医学观察报告。</p>
+                        <div class="card-meta">
+                            <span class="card-price">[DECRYPTED]</span>
+                            <span class="card-duration">// READ TIME: 3 MIN</span>
+                        </div>
+                    </div>
+
+                    <!-- 卡片2：阵营冲突战报 -->
+                    <div class="intel-card article-card" data-keywords="战报 report 外环 泛星联盟 黑火 冲突"
+                         data-content="行动代号：碎星 (Operation Shattered Star)&#10;地点：外环 7号采矿驳船&#10;涉事阵营：泛星联盟第一舰队 vs “黑火”解放战线&#10;&#10;行动简报：星历2240年3月12日，“黑火”武装分子突袭了隶属于泰坦星脉财团的7号驳船，试图劫持当月开采的 C-62 原矿。联盟第一舰队“黄金狮子”下属的快速反应小队于 0400 时进行轨道空降介入。&#10;&#10;结果：驳船动力系统受损，30%原矿泄漏至太空。黑火武装分子撤退，联盟方 4 名特工阵亡。">
+                        <span class="card-icon">🎯</span>
+                        <span class="card-level">◉ REPORT // 冲突战报</span>
+                        <h3 class="card-name">外环 7号驳船袭击事件</h3>
+                        <p class="card-desc">泛星联盟与“黑火”解放战线在深空矿区的最新交火记录。包含现场受损评估与轨道空降录像。</p>
+                        <div class="card-meta">
+                            <span class="card-price">[CLASSIFIED]</span>
+                            <span class="card-duration">// LEVEL 3 REQUIRED</span>
+                        </div>
+                    </div>
+
+                    <!-- 卡片3：深空公民名录 -->
+                    <div class="intel-card article-card" data-keywords="编制 roster 名录 公民 佣兵 pmc"
+                         data-content="[ 数据解密中... ]&#10;&#10;深空边缘活跃公民名录（部分）：&#10;&#10;> 泛星联盟 (P.S.C) 注册特工：拥有最高级别的星门通行权与合法持械许可。&#10;> 外环 (Frontier) 游击队员：多为矿工出身，擅长在零重力与高辐射环境下作战。&#10;> 独立防务承包商 (PMCs)：如“深渊行者”与“锈血”佣兵，只要信用点给够，他们可以为任何人扣动扳机。&#10;&#10;系统警告：部分阿刻戎自由港的黑市公民数据已被加密，需 Beta 级以上权限方可访问。">
+                        <span class="card-icon">👥</span>
+                        <span class="card-level">★ ROSTER // 编制</span>
+                        <h3 class="card-name">深空活跃公民名录</h3>
+                        <p class="card-desc">最新解密级别的各阵营公民代号与专长一览表。包含联盟特工、外环反抗军及独立佣兵。</p>
+                        <div class="card-meta">
+                            <span class="card-price">[LIVE DATA]</span>
+                            <span class="card-duration">// UPDATED: 2240</span>
+                        </div>
+                    </div>
+
+                    <!-- 卡片4：星际军械库 -->
+                    <div class="intel-card article-card" data-keywords="武器 装备 军械库 星舰 义体"
+                         data-content="深空作战标准配置清单：&#10;&#10;> 动能武器：电磁加速步枪（适用于真空环境，无后座力补偿模块需谨慎使用）&#10;> 战术装备：全封闭式 EVA 战斗服（内置防辐射内衬与微型生命维持系统）&#10;> 义体改造：神经突触加速器、机械义肢（多见于外环老兵与 PMC 佣兵）&#10;> 医疗物资：高浓度抗辐射凝胶（用于缓解星尘病早期症状）&#10;&#10;系统警告：所有军用级义体改造需在联盟战略安全局（SSA）进行备案。">
+                        <span class="card-icon">🔫</span>
+                        <span class="card-level">⬡ ARMORY // 军械库</span>
+                        <h3 class="card-name">深空战术装备清单</h3>
+                        <p class="card-desc">包含电磁武器、EVA 战斗服、军用级义体改造及抗辐射医疗物资的详细参数与黑市报价。</p>
+                        <div class="card-meta">
+                            <span class="card-price">[INVENTORY]</span>
+                            <span class="card-duration">// SUPPLY LOGS</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. 横向拖拽画廊 -->
+            <div class="gallery-strip">
+                <div class="gallery-caption">✦ SATELLITE IMAGERY // 卫星扫描图传</div>
+                <div class="article-grid" id="galleryStrip" style="padding: 2rem; gap: 30px;">
+                    <!-- 这里的卡片仅作为展示图片的画廊 -->
+                    <div class="gallery-item placeholder-a"><span>[MAP_GRID_01]</span></div>
+                    <div class="gallery-item placeholder-b"><span>[TARGET_BUILDING]</span></div>
+                    <div class="gallery-item placeholder-c"><span>[DRONE_FOOTAGE]</span></div>
+                    <div class="gallery-item placeholder-a"><span>[EXTRACTION_POINT]</span></div>
                 </div>
             </div>
+
         </div>
+
+
+        <div class="view-panel" id="worldView">
+            <div class="archive-container" style="text-align: center; padding-top: 15vh;">
+                <div style="font-size: 64px; margin-bottom: 20px; filter: grayscale(1); opacity: 0.5;">🚧</div>
+                <h2 class="neon-title" style="font-size: 32px; color: #8bb9d6; text-shadow: 0 0 15px rgba(139, 185, 214, 0.5);">[ SECTOR PURGED // 扇区已清空 ]</h2>
+                <p style="color: #666; margin-top: 20px; font-family: monospace; letter-spacing: 1px;">
+                    世界观档案已迁移至主界面。<br>
+                    当前界面正在等待施工...
+                </p>
+            </div>
+        </div>
+            
 
         <!-- 💥 新增：个人终端 (Profile) -->
         <div class="view-panel" id="profileView">
@@ -2697,7 +2725,7 @@
                     <label>姓名</label>
                     <div class="input-wrapper">
                         <span class="prefix">&gt;</span>
-                        <textarea id="f-name" rows="1" placeholder="干员真实姓名，请使用中文" required></textarea>
+                        <textarea id="f-name" rows="1" placeholder="公民真实姓名，请使用中文" required></textarea>
                     </div>
                 </div>
                 <div class="input-group">
@@ -2850,7 +2878,7 @@
                     </div>
                 </div>
 
-                <!-- 💥 新增：干员列表与详情面板 💥 -->
+                <!-- 💥 新增：公民列表与详情面板 💥 -->
                 <div class="roster-container">
                     <div class="form-section-title">[ 已登记公民检索列表 ]</div>
                     
@@ -3261,7 +3289,7 @@
             
             if (!deviceId) {
                 // 第一次来，弹窗询问
-                let input = await SysModal.prompt("初次连接星际网络终端。\n\n▶ 新干员：请输入您的代号 (Nickname)\n▶ 老干员：请输入您的终端密钥 (如 OP-XXXX 恢复身份)", "", "SYSTEM PROMPT // 身份认证");
+                let input = await SysModal.prompt("初次连接星际网络终端。\n\n▶ 新公民：请输入您的代号 (Nickname)\n▶ 老公民：请输入您的终端密钥 (如 OP-XXXX 恢复身份)", "", "SYSTEM PROMPT // 身份认证");
                 
                 if (input === null) input = "Unknown_Operator"; // 防止用户点取消导致报错
                 input = input.trim();
@@ -4009,6 +4037,26 @@
             await SysModal.alert("旧档案数据已成功载入，请直接在表单上进行修改。", "调取成功");
         }
 
+        // 💥 新增：管理员专属的正式库删除功能
+        window.deleteChar = async function(id) {
+            const isSure = await SysModal.confirm("警告：您正在删除正式库中的公民档案！\n此操作不可逆，确认删除吗？", "⚠️ 永久删除档案");
+            if (!isSure) return;
+
+            try {
+                await supabaseClient.from('characters').delete().eq('id', id);
+                await SysModal.alert("正式档案已彻底删除。", "删除成功");
+                
+                // 关闭可能打开的面板
+                if (window.isOverlayOpen) window.closeDetailOverlay(); 
+                document.getElementById('roster-detail').style.display = 'none'; 
+                
+                fetchCloudData(); // 刷新数据
+            } catch (error) {
+                console.error("删除失败:", error);
+                await SysModal.alert("删除失败，请检查网络连接。", "❌ ERROR");
+            }
+        };
+
         // 💥 新增：星际阵营与下属组织的映射数据
         const factionData = {
             "泛星联盟": [
@@ -4101,7 +4149,7 @@
                 const originalChar = editingCharId ? (characterDB.find(c => String(c.id) === String(editingCharId)) || pendingDB.find(c => String(c.id) === String(editingCharId))) : null;
 
                 if (originalChar && originalChar.status === 'approved') {
-                    // 💥 模式 A：针对正式库的干员，生成一份独立的【更新草稿】
+                    // 💥 模式 A：针对正式库的公民，生成一份独立的【更新草稿】
                     newChar.target_edit_id = originalChar.id; // 锁定覆盖目标！
                     const { error } = await supabaseClient.from('characters').insert([newChar]);
                     if (error) throw error;
@@ -4142,7 +4190,7 @@
             if (!blipsContainer) return;
             blipsContainer.innerHTML = '';
             
-            // 为每个正式干员生成一个雷达光点
+            // 为每个正式公民生成一个雷达光点
             characterDB.forEach(() => {
                 const blip = document.createElement('div');
                 blip.className = 'radar-blip';
@@ -4221,7 +4269,7 @@
                     `;
                     el.appendChild(card);
 
-                    // 💥 核心修复：点击时传递的是这张卡片在空间里的“物理索引”，而不是干员数据的索引
+                    // 💥 核心修复：点击时传递的是这张卡片在空间里的“物理索引”，而不是公民数据的索引
                     card.onclick = (e) => {
                         e.stopPropagation();
                         if(window.triggerTunnelFly) window.triggerTunnelFly(uniqueItemIndex);
@@ -4262,7 +4310,7 @@
                 targetCard.style.boxShadow = '0 0 40px #12a8ff, inset 0 0 20px #12a8ff';
 
                 state.isFlying = true;
-                state.flyingToChar = target.charIndex; // 记录干员数据索引，用于最后展开面板
+                state.flyingToChar = target.charIndex; // 记录公民数据索引，用于最后展开面板
 
                 let currentRelZ = target.baseZ + state.scroll * CONFIG.camSpeed;
                 let currentVizZ = ((currentRelZ % CONFIG.loopSize) + CONFIG.loopSize) % CONFIG.loopSize;
@@ -4397,7 +4445,7 @@
             const grid = document.getElementById('roster-grid');
             grid.innerHTML = '';
             if(characterDB.length === 0) {
-                grid.innerHTML = '<div style="color:#8bb9d6; font-size:12px;">[ 暂无干员档案，请前往录入终端添加 ]</div>';
+                grid.innerHTML = '<div style="color:#8bb9d6; font-size:12px;">[ 暂无公民档案，请前往录入终端添加 ]</div>';
                 return;
             }
             characterDB.forEach((char, index) => {
@@ -4446,7 +4494,11 @@
             // 同样提供修改按钮（如果是本人的档案）
             let editActionHtml = '';
             if (char.owner_id === currentUser.id) {
-                editActionHtml = `<button class="sys-modal-btn confirm" style="margin-top: 15px;" onclick="editQueueChar('${char.id}')">[ CREATE_REVISION // 提交修改申请 ]</button>`;
+                editActionHtml += `<button class="sys-modal-btn confirm" style="margin-top: 15px; margin-right: 10px;" onclick="editQueueChar('${char.id}')">[ CREATE_REVISION // 提交修改申请 ]</button>`;
+            }
+            // 💥 补回：如果是管理员，额外给他一个强制删除按钮
+            if (currentUser.role === 'admin') {
+                editActionHtml += `<button class="sys-modal-btn cancel" style="margin-top: 15px;" onclick="deleteChar('${char.id}')">[ 删除档案 ]</button>`;
             }
 
             // 将数据填入面板
@@ -4494,7 +4546,11 @@
             // 💥 新增：判断如果这个档案是当前用户自己的，给他一个编辑按钮
             let editActionHtml = '';
             if (char.owner_id === currentUser.id) {
-                editActionHtml = `<button class="sys-modal-btn confirm" style="margin-top: 20px; margin-right: 15px;" onclick="editQueueChar('${char.id}')">[ CREATE_REVISION // 提交修改申请 ]</button>`;
+                editActionHtml += `<button class="sys-modal-btn confirm" style="margin-top: 20px; margin-right: 15px;" onclick="editQueueChar('${char.id}')">[ 提交修改申请 ]</button>`;
+            }
+            // 💥 补回：如果是管理员，额外给他一个强制删除按钮
+            if (currentUser.role === 'admin') {
+                editActionHtml += `<button class="sys-modal-btn cancel" style="margin-top: 20px;" onclick="deleteChar('${char.id}')">[ 档案删除 ]</button>`;
             }
 
             overlay.innerHTML = `
@@ -4553,6 +4609,118 @@
                 }
             }, 300);
         };
+
+        /* =========================================================
+           💥 移动端：悬浮目录小圆球拖拽与智能展开逻辑 💥
+           ========================================================= */
+        const worldToc = document.querySelector('.world-toc');
+        if (worldToc) {
+            let isDragging = false;
+            let hasMoved = false;
+            let startX, startY, initialLeft, initialTop;
+
+            // 1. 手指按下
+            worldToc.addEventListener('touchstart', (e) => {
+                if (window.innerWidth > 900) return;
+                
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+                
+                const rect = worldToc.getBoundingClientRect();
+                initialLeft = rect.left;
+                initialTop = rect.top;
+                
+                isDragging = true;
+                hasMoved = false;
+            }, { passive: false });
+
+            // 2. 手指滑动
+            worldToc.addEventListener('touchmove', (e) => {
+                if (!isDragging || window.innerWidth > 900) return;
+                
+                const touch = e.touches[0];
+                const dx = touch.clientX - startX;
+                const dy = touch.clientY - startY;
+                
+                if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+                    hasMoved = true;
+                    e.preventDefault(); 
+                    // 拖拽时自动收起菜单
+                    worldToc.classList.remove('open');
+                }
+
+                if (hasMoved) {
+                    let newLeft = initialLeft + dx;
+                    let newTop = initialTop + dy;
+                    
+                    const maxLeft = window.innerWidth - worldToc.offsetWidth;
+                    const maxTop = window.innerHeight - worldToc.offsetHeight;
+                    
+                    newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+                    newTop = Math.max(0, Math.min(newTop, maxTop));
+                    
+                    worldToc.style.left = `${newLeft}px`;
+                    worldToc.style.top = `${newTop}px`;
+                    worldToc.style.bottom = 'auto'; 
+                    worldToc.style.right = 'auto';  
+                }
+            }, { passive: false });
+
+            // 3. 手指抬起 (智能边缘检测 + 晃动动画)
+            worldToc.addEventListener('touchend', (e) => {
+                if (window.innerWidth > 900) return;
+                isDragging = false;
+                
+                if (!hasMoved) {
+                    // 💥 核心修复：如果点到的是菜单里的纯文字按钮，直接放行，不要触发圆球的收起逻辑！
+                    if (e.target.closest('.toc-btn')) return;
+
+                    // 触发按钮本体的上下弹动动画
+                    worldToc.classList.remove('wobble');
+                    void worldToc.offsetWidth; // 触发重绘，重置动画
+                    worldToc.classList.add('wobble');
+
+                    // 💥 智能边缘检测逻辑 💥
+                    const rect = worldToc.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+
+                    // 清除旧的定位类
+                    worldToc.classList.remove('expand-up', 'expand-down', 'align-left', 'align-right');
+
+                    // 判断上下：如果在屏幕下半部分，就向上展开；否则向下展开
+                    if (centerY > window.innerHeight / 2) {
+                        worldToc.classList.add('expand-up');
+                    } else {
+                        worldToc.classList.add('expand-down');
+                    }
+
+                    // 判断左右：如果在屏幕右半部分，文字就靠右对齐；否则靠左对齐
+                    if (centerX > window.innerWidth / 2) {
+                        worldToc.classList.add('align-right');
+                    } else {
+                        worldToc.classList.add('align-left');
+                    }
+
+                    // 切换菜单显示状态
+                    worldToc.classList.toggle('open');
+                }
+            });
+
+            // 4. 点击菜单里的按钮后，自动收起菜单并触发晃动
+            const tocBtnsMobile = worldToc.querySelectorAll('.toc-btn');
+            tocBtnsMobile.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (window.innerWidth <= 900) {
+                        worldToc.classList.remove('open');
+                        worldToc.classList.remove('wobble');
+                        void worldToc.offsetWidth;
+                        worldToc.classList.add('wobble');
+                    }
+                });
+            });
+        }
 
         // 💥 页面加载时，恢复刷新前的视图
         const savedView = sessionStorage.getItem('tf141_current_view');
