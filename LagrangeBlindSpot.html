@@ -679,8 +679,16 @@
 
         .intel-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 25px; /* 粗野主义可以减小 gap 甚至变成 -1px，但这里保持间距更符合科幻感 */
+            /* 把最小宽度从 280px 缩小到 240px，让它们更容易挤进同一行 */
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 25px; 
+        }
+
+        /* 💥 新增：在宽屏幕 (PC端) 下，强制它们等宽并排成 4 列！ 💥 */
+        @media (min-width: 1100px) {
+            .intel-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
 
         /* 赛博粗野主义卡片 */
@@ -1055,6 +1063,24 @@
             font-family: monospace;
             padding: 10px 0 10px 10px;
             user-select: none;
+        }
+
+        /* 💥 人设表单旁边的帮助小按钮 💥 */
+        .help-btn {
+            color: #12a8ff;
+            cursor: pointer;
+            margin-left: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            transition: all 0.2s;
+            opacity: 0.7;
+            display: inline-block;
+        }
+        .help-btn:hover {
+            color: #fff;
+            opacity: 1;
+            text-shadow: 0 0 8px #12a8ff;
+            transform: scale(1.1);
         }
 
         /* =========================================
@@ -1711,20 +1737,25 @@
         }
 
         /* =========================================
-           定制版系统终端弹窗 (SysModal)
+           定制版系统终端弹窗 (SysModal) - 赛博升级版
            ========================================= */
         .sys-modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 5, 10, 0.85);
             backdrop-filter: blur(10px);
-            z-index: 100000; /* 极高的层级，确保盖住所有东西 */
+            z-index: 100000; 
             display: none; 
             justify-content: center; align-items: center;
-            opacity: 0; transition: opacity 0.2s ease;
+            opacity: 0; transition: opacity 0.3s ease;
         }
         
         .sys-modal-overlay.active {
             display: flex; opacity: 1;
+        }
+
+        /* 💥 弹窗关闭时的背景渐隐 💥 */
+        .sys-modal-overlay.active.closing {
+            opacity: 0;
         }
 
         .sys-modal-box {
@@ -1733,12 +1764,51 @@
             box-shadow: 0 0 30px rgba(18, 168, 255, 0.3), inset 0 0 20px rgba(18, 168, 255, 0.1);
             width: 90%; max-width: 450px;
             padding: 25px;
-            transform: translateY(20px); 
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden; /* 确保扫描线不跑出去 */
+            /* 移除了原本的 transition，改用 animation */
         }
 
+        /* 💥 弹窗本体的动态扫描线特效 💥 */
+        .sys-modal-box::after {
+            content: "";
+            position: absolute;
+            top: -50%; left: 0; width: 100%; height: 200%;
+            background: linear-gradient(to bottom, transparent 48%, rgba(18, 168, 255, 0.15) 50%, transparent 52%);
+            background-size: 100% 10px;
+            animation: modal-scanline 4s linear infinite;
+            pointer-events: none; /* 确保不阻挡鼠标点击 */
+            z-index: 10;
+        }
+
+        @keyframes modal-scanline {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(50%); }
+        }
+
+        /* 💥 展开时的赛博闪烁 (CRT 开启效果) 💥 */
         .sys-modal-overlay.active .sys-modal-box {
-            transform: translateY(0);
+            animation: cyber-glitch-in 0.4s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+        }
+
+        /* 💥 关闭时的赛博断电 (CRT 关闭效果) 💥 */
+        .sys-modal-overlay.closing .sys-modal-box {
+            animation: cyber-glitch-out 0.3s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cyber-glitch-in {
+            0% { opacity: 0; transform: scale(0.95) translateY(20px); filter: contrast(2) brightness(2); clip-path: inset(50% 0 50% 0); }
+            20% { opacity: 1; transform: scale(1.02) translateY(-5px); filter: contrast(1) brightness(1); clip-path: inset(10% 0 80% 0); }
+            40% { opacity: 0.8; clip-path: inset(80% 0 10% 0); }
+            60% { opacity: 1; transform: scale(0.98) translateY(2px); clip-path: inset(0 0 0 0); }
+            80% { opacity: 0.9; }
+            100% { opacity: 1; transform: scale(1) translateY(0); filter: none; clip-path: inset(0 0 0 0); }
+        }
+
+        @keyframes cyber-glitch-out {
+            0% { opacity: 1; transform: scale(1); clip-path: inset(0 0 0 0); }
+            40% { opacity: 0.8; transform: scale(1.05); filter: contrast(1.5) brightness(1.5); clip-path: inset(40% 0 40% 0); }
+            100% { opacity: 0; transform: scale(0.9) translateY(-20px); clip-path: inset(50% 0 50% 0); }
         }
 
         .sys-modal-header {
@@ -1793,41 +1863,6 @@
             box-shadow: 0 0 15px rgba(244, 67, 54, 0.5);
         }
 
-        /* 💥 修复弹窗内部输入框的白底问题 */
-        .sys-modal-box .input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: flex-start;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(18, 168, 255, 0.3);
-            border-radius: 4px;
-            transition: 0.3s;
-            margin-top: 15px;
-        }
-
-        .sys-modal-box .input-wrapper:focus-within {
-            border-color: #12a8ff;
-            box-shadow: 0 0 10px rgba(18, 168, 255, 0.3), inset 0 0 10px rgba(18, 168, 255, 0.1);
-        }
-
-        .sys-modal-box .prefix {
-            color: #12a8ff;
-            font-family: monospace;
-            padding: 10px 0 10px 10px;
-            user-select: none;
-        }
-
-        .sys-modal-box input {
-            background: transparent !important; /* 强制背景透明 */
-            border: none !important;            /* 强制去掉黑色边框 */
-            color: #ffffff;                     /* 字体变成白色 */
-            width: 100%;
-            padding: 10px;
-            font-family: "PingFang SC", monospace;
-            font-size: 14px;
-            outline: none;
-            box-sizing: border-box;
-        }
 
         /* =========================================
            个人终端 (Profile View) 专属样式
@@ -2061,14 +2096,61 @@
         
         /* 下属组织列表 (Notion Toggle 风格) */
         .sub-org-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 15px; }
-        .sub-org-list li { 
-            background: rgba(255,255,255,0.03); 
+        /* 💥 世界观：组织按钮样式 💥 */
+        .sub-org-list { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            margin-top: 15px;
+        }
+        .sub-org-btn { 
+            background: rgba(18, 168, 255, 0.05); 
+            border: 1px solid rgba(18, 168, 255, 0.2); 
             padding: 15px 20px; 
             border-radius: 4px; 
-            border-left: 2px solid rgba(255,255,255,0.2); 
-            line-height: 1.6; 
+            border-left: 3px solid #12a8ff; 
+            text-align: left; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .sub-org-btn:hover { 
+            background: rgba(18, 168, 255, 0.15); 
+            border-color: #12a8ff; 
+            transform: translateX(5px); 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+        .sub-org-btn strong { 
+            color: #fff; 
+            font-size: 1.1rem; 
+            display: block; 
+            margin-bottom: 5px; 
+            text-shadow: 0 0 5px rgba(18,168,255,0.5);
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+        .sub-org-btn span {
             color: #a0c4d8; 
             font-size: 0.95rem;
+            line-height: 1.6;
+            font-family: "PingFang SC", sans-serif;
+        }
+
+        /* 💥 个人资料/人设库：可点击的阵营与组织标签 💥 */
+        .clickable-tag {
+            color: #12a8ff;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: bold;
+            font-family: monospace;
+        }
+        .clickable-tag:hover {
+            color: #fff;
+            text-shadow: 0 0 10px #12a8ff;
+            background: rgba(18, 168, 255, 0.2);
         }
         .sub-org-list li strong { color: #fff; font-size: 1.1rem; display: block; margin-bottom: 5px; }
         
@@ -2090,15 +2172,45 @@
         /* =========================================
            新增：世界观左侧导航栏样式 (极简无框悬浮版)
            ========================================= */
-        /* 父容器改用 Flexbox 左右布局 */
+        /* 💥 终极修复：打通目录的滑动轨道 💥 */
         .world-layout {
-            display: flex;
-            max-width: 1200px; 
-            margin: 0 auto;
-            gap: 40px;
-            padding: 2rem 20px 5rem 20px; /* ⬅️ 注意这里的 5rem */
-            align-items: flex-start; 
+            display: grid;
+            /* 1fr(左侧留白) | 140px(目录) | 40px(间距) | 980px(正文) | 1fr(右侧留白) */
+            grid-template-columns: 1fr 140px 40px minmax(0, 980px) 1fr;
+            width: 100%;
+            max-width: 100%;
+            padding: 1rem 0;
+            margin: 0;
+            /* 💥 删除了 align-items: start，让轨道自动拉伸填满高度 */
             animation: fadeIn 0.4s ease-out;
+        }
+
+        .world-toc-wrapper {
+            grid-column: 2;
+            grid-row: 1 / 3; /* 💥 核心通行证：允许目录跨越第1行(正文)和第2行(情报)！ */
+            height: 100%; 
+        }
+
+        .world-content-wrapper {
+            grid-column: 4;
+            grid-row: 1; /* 明确指定在第1行 */
+            min-width: 0;
+        }
+
+        .intel-section {
+            grid-column: 4; /* 💥 核心：让情报区和正文完美左对齐，把左边的空间彻底让给目录！ */
+            grid-row: 2; /* 明确指定在第2行 */
+            width: 100%;
+            max-width: 100%;
+            padding: 1rem 0 4rem 0; /* 去掉左右 padding，保持和正文对齐 */
+            box-sizing: border-box;
+            margin: 0;
+        }
+
+        .gallery-strip {
+            grid-column: 1 / -1; /* 跨越所有列，占满全宽 */
+            grid-row: 3; /* 明确指定在第3行 */
+            width: 100%;
         }
 
         .world-layout .world-container {
@@ -2169,6 +2281,264 @@
             transform: none; 
         }
 
+        /* 💥 子目录折叠容器样式 💥 */
+        .sub-toc-list {
+            list-style: none;
+            padding: 0;
+            margin: 8px 0 0 0;
+            display: none; /* 默认隐藏 */
+            flex-direction: column;
+            gap: 8px;
+        }
+        .sub-toc-list.open {
+            display: flex; /* 展开时显示 */
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* 💥 目录下拉箭头旋转动画 💥 */
+        .toc-arrow.open {
+            transform: rotate(-90deg); /* 逆时针旋转90度，从朝左(◀)变成朝下(▼) */
+        }
+
+        /* 💥 子目录专属样式 (缩进与弱化) 💥 */
+        .toc-btn.sub-btn {
+            padding-left: 15px;
+            font-size: 0.85rem;
+            color: rgba(139, 185, 214, 0.6);
+        }
+        .toc-btn.sub-btn:hover, .toc-btn.sub-btn.active {
+            padding-left: 25px;
+            color: #12a8ff;
+        }
+
+        /* =========================================
+           💥 历史时间线 (Timeline) 专属样式 💥
+           ========================================= */
+        .timeline-wrapper {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            background: #060b14;
+        }
+
+        /* 左侧固定导航栏 */
+        .timeline-nav__wrapper {
+            position: fixed;
+            top: 0; left: 0;
+            height: 100vh;
+            padding: 0 30px 0 50px;
+            display: flex;
+            flex-flow: column nowrap;
+            justify-content: center;
+            z-index: 10;
+            pointer-events: none; /* 让空白区域可以穿透点击 */
+        }
+
+        /* 💥 时间线返回按钮专属样式 💥 */
+        .timeline-return-btn {
+            position: absolute;
+            top: 90px; /* 刚好固定在主标题 DEEP SPACE // 2240 的下方 */
+            left: 20px;
+            z-index: 100;
+            padding: 8px 15px;
+            font-size: 12px;
+            background: rgba(6, 11, 20, 0.8);
+            backdrop-filter: blur(5px);
+            pointer-events: auto; /* 确保能被点击 */
+        }
+
+        .timeline-nav {
+            list-style: none;
+            margin: 0; padding: 0;
+            pointer-events: auto; /* 恢复导航区域的点击 */
+        }
+
+        .timeline-nav li {
+            position: relative;
+            transition: all 0.3s ease-out;
+            margin-bottom: 1.5em;
+        }
+
+        /* 赛博折线 (未激活状态) */
+        .timeline-nav li::after {
+            content: '';
+            display: block;
+            border-left: 2px solid rgba(18, 168, 255, 0.2);
+            border-top: 2px solid rgba(18, 168, 255, 0.2);
+            height: 120px;
+            width: 20px;
+            position: absolute;
+            left: -30px;
+            top: 15px;
+            transition: all 0.3s ease-out;
+        }
+        .timeline-nav li:last-child::after {
+            display: none; /* 最后一个节点不需要向下连线 */
+        }
+
+        .timeline-nav a {
+            display: block;
+            padding: 0;
+            color: #8bb9d6;
+            text-decoration: none;
+            transition: all 0.15s ease-out;
+            cursor: pointer;
+        }
+
+        .timeline-nav a:hover {
+            padding-left: 1em;
+            color: #e0f2fe;
+        }
+
+        /* 激活状态 */
+        .timeline-nav li.active {
+            pointer-events: none;
+            padding-left: 1em;
+        }
+
+        /* 赛博折线 (激活发光状态) */
+        .timeline-nav li.active::after {
+            width: 35px;
+            height: 220px;
+            top: 35px;
+            border-color: #12a8ff;
+            filter: drop-shadow(0 0 5px #12a8ff);
+        }
+
+        .timeline-nav__counter {
+            font-size: 24px;
+            font-family: 'Impact', monospace;
+            color: rgba(18, 168, 255, 0.4);
+            transition: all 0.15s ease-out;
+            letter-spacing: 2px;
+        }
+
+        .timeline-nav li.active .timeline-nav__counter {
+            font-size: 48px;
+            color: #12a8ff;
+            text-shadow: 0 0 15px #12a8ff;
+        }
+
+        .timeline-nav__title {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 0 0.25em;
+            width: 300px;
+            height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: height 0.3s ease-out, opacity 0.2s ease-out;
+            color: #e0f2fe;
+            font-family: "PingFang SC", sans-serif;
+        }
+
+        .timeline-nav li.active .timeline-nav__title {
+            height: 35px;
+            opacity: 1;
+            overflow: visible;
+        }
+
+        .timeline-nav__body {
+            font-size: 14px;
+            width: 300px;
+            height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: height 0.3s ease-out, opacity 0.2s ease-out;
+            color: #8bb9d6;
+            line-height: 1.6;
+        }
+
+        .timeline-nav li.active .timeline-nav__body {
+            height: auto;
+            min-height: 80px;
+            opacity: 1;
+            overflow: visible;
+            padding-top: 10px;
+        }
+
+        /* 右侧内容区 */
+        .timeline-content {
+            margin-left: 450px; /* 给左侧固定导航留出空间 */
+            width: calc(100% - 450px);
+        }
+
+        .timeline-section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 50px 50px 50px 0;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        /* 背景巨大的幽灵年份 */
+        .timeline-section h2 {
+            font-size: clamp(6rem, 15vw, 12rem);
+            font-family: 'Impact', sans-serif;
+            color: rgba(18, 168, 255, 0.03);
+            margin: 0;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .timeline-section .content-box {
+            position: relative;
+            z-index: 1;
+            background: rgba(0, 5, 10, 0.8);
+            border: 1px solid #12a8ff;
+            border-left: 4px solid #12a8ff;
+            padding: 40px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.6), inset 0 0 20px rgba(18, 168, 255, 0.1);
+            max-width: 800px;
+            backdrop-filter: blur(5px);
+        }
+
+        /* 手机端适配 */
+        @media (max-width: 900px) {
+            .timeline-wrapper { flex-direction: column; }
+            .timeline-nav__wrapper {
+                position: sticky;
+                top: 60px; /* 悬浮在顶部导航栏下方 */
+                height: auto;
+                padding: 15px;
+                background: rgba(6, 11, 20, 0.95);
+                border-bottom: 1px solid #12a8ff;
+                z-index: 90;
+                pointer-events: auto;
+            }
+            .timeline-nav {
+                display: flex;
+                overflow-x: auto;
+                gap: 20px;
+                scrollbar-width: none;
+            }
+            .timeline-nav::-webkit-scrollbar { display: none; }
+            .timeline-nav li { margin: 0; }
+            .timeline-nav li::after { display: none; /* 手机端隐藏连线 */ }
+            .timeline-nav__title, .timeline-nav__body { display: none !important; /* 手机端隐藏文字，只留年份 */ }
+            .timeline-nav li.active .timeline-nav__counter { font-size: 32px; }
+            
+            .timeline-content { margin-left: 0; width: 100%; }
+            .timeline-section { min-height: auto; padding: 40px 20px; border-bottom: 1px dashed rgba(18,168,255,0.3); }
+            .timeline-section .content-box { padding: 25px; }
+
+            /* 手机端：让返回按钮乖乖待在横向年份的上方 */
+            .timeline-return-btn {
+                position: relative;
+                top: 0;
+                left: 0;
+                margin-bottom: 15px;
+                width: 100%;
+                text-align: center;
+                display: block;
+            }
+        }
+
 
         /* =========================================
            移动端专属优化 1：重构顶部导航栏与菜单按钮
@@ -2212,9 +2582,16 @@
         /* 1. 平板及手机端综合调整 (<= 900px) */
         @media (max-width: 900px) {
             .world-layout {
+                display: flex;
                 flex-direction: column;
-                padding: 1rem 15px;
+                padding: 1rem 0; /* 💥 去掉左右 padding，让画廊能占满全宽 */
                 gap: 20px;
+            }
+            /* 💥 把 padding 转移给内部的正文和情报区 */
+            .world-content-wrapper, .intel-section {
+                padding-left: 15px;
+                padding-right: 15px;
+                box-sizing: border-box;
             }
             
             /* 💥 悬浮按钮本体：高级毛玻璃质感 💥 */
@@ -2274,12 +2651,17 @@
                 flex-direction: column;
                 gap: 15px;
                 width: max-content;
-                background: transparent; /* 去掉背景框 */
+                background: transparent; 
                 border: none;
                 box-shadow: none;
                 backdrop-filter: none;
                 padding: 0;
+                /* 💥 新增：防止目录太长超出手机屏幕 💥 */
+                max-height: 60vh; 
+                overflow-y: auto;
+                scrollbar-width: none; /* 隐藏原生滚动条 */
             }
+            .toc-list::-webkit-scrollbar { display: none; }
 
             .world-toc.open .toc-list {
                 display: flex;
@@ -2306,8 +2688,16 @@
                 pointer-events: none;
             }
 
+            /* 💥 修复手机端按钮隐身：通用浮现动画 💥 */
             .world-toc.open .toc-btn {
                 pointer-events: auto;
+                opacity: 1;
+                animation: simplePop 0.3s ease forwards;
+            }
+
+            @keyframes simplePop {
+                0% { opacity: 0; transform: translateY(10px); }
+                100% { opacity: 1; transform: translateY(0); }
             }
 
             .toc-btn.active {
@@ -2316,29 +2706,6 @@
                 font-weight: bold;
             }
 
-            /* 💥 展开时的波浪依次浮现动画 (向上展开) 💥 */
-            .world-toc.expand-up.open .toc-list li:nth-child(4) .toc-btn { animation: wavePopUp 0.4s forwards 0.00s; }
-            .world-toc.expand-up.open .toc-list li:nth-child(3) .toc-btn { animation: wavePopUp 0.4s forwards 0.08s; }
-            .world-toc.expand-up.open .toc-list li:nth-child(2) .toc-btn { animation: wavePopUp 0.4s forwards 0.16s; }
-            .world-toc.expand-up.open .toc-list li:nth-child(1) .toc-btn { animation: wavePopUp 0.4s forwards 0.24s; }
-
-            /* 💥 展开时的波浪依次浮现动画 (向下展开) 💥 */
-            .world-toc.expand-down.open .toc-list li:nth-child(1) .toc-btn { animation: wavePopDown 0.4s forwards 0.00s; }
-            .world-toc.expand-down.open .toc-list li:nth-child(2) .toc-btn { animation: wavePopDown 0.4s forwards 0.08s; }
-            .world-toc.expand-down.open .toc-list li:nth-child(3) .toc-btn { animation: wavePopDown 0.4s forwards 0.16s; }
-            .world-toc.expand-down.open .toc-list li:nth-child(4) .toc-btn { animation: wavePopDown 0.4s forwards 0.24s; }
-
-            @keyframes wavePopUp {
-                0% { opacity: 0; transform: translateY(15px) scale(0.9); }
-                50% { opacity: 1; transform: translateY(-4px) scale(1.05); }
-                100% { opacity: 1; transform: translateY(0) scale(1); }
-            }
-
-            @keyframes wavePopDown {
-                0% { opacity: 0; transform: translateY(-15px) scale(0.9); }
-                50% { opacity: 1; transform: translateY(4px) scale(1.05); }
-                100% { opacity: 1; transform: translateY(0) scale(1); }
-            }
         }
 
         /* 2. 纯手机端细节调整 (<= 768px) */
@@ -2437,6 +2804,80 @@
                 font-size: 2.2rem; /* 缩小首字母下沉效果 */
                 margin-right: 6px;
             }
+        /* ❌ 删掉原先这里的 '}' 它是导致媒体查询提前关闭的元凶！*/
+
+        /* 💥 修复：手机端系统弹窗 (SysModal) 适配 💥 */
+            .sys-modal-box {
+                width: 85%; /* 稍微收窄一点，留出呼吸感 */
+                padding: 20px; /* 减少内边距 */
+                box-sizing: border-box; /* 💥 核心修复：防止 padding 撑破宽度 */
+            }
+            .sys-modal-header {
+                font-size: 16px; /* 稍微缩小标题 */
+            }
+            .sys-modal-body {
+                font-size: 13px; /* 稍微缩小正文 */
+            }
+            .sys-modal-actions {
+                flex-direction: column; /* 手机端按钮改为上下排列，防止拥挤 */
+                gap: 10px;
+                margin-top: 20px;
+            }
+            .sys-modal-btn {
+                width: 100%; /* 按钮占满全宽，方便单手点击 */
+                text-align: center;
+                box-sizing: border-box;
+            }
+            
+        } /* ✅ 真正的媒体查询结束括号，必须放在最后这里！ */
+
+        /* =========================================
+           💥 终极修复：弹窗内部输入框的白底问题 💥
+           ========================================= */
+        .sys-modal-box .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            background: rgba(0, 0, 0, 0.6) !important;
+            border: 1px solid rgba(18, 168, 255, 0.4) !important;
+            border-radius: 4px;
+            transition: 0.3s;
+            margin-top: 15px;
+            z-index: 20; /* 确保输入框在扫描线之上，能被正常点击 */
+        }
+
+        .sys-modal-box .input-wrapper:focus-within {
+            border-color: #12a8ff !important;
+            box-shadow: 0 0 15px rgba(18, 168, 255, 0.4), inset 0 0 10px rgba(18, 168, 255, 0.2) !important;
+        }
+
+        .sys-modal-box .prefix {
+            color: #12a8ff;
+            font-family: monospace;
+            padding: 10px 0 10px 10px;
+            user-select: none;
+        }
+
+        .sys-modal-box input {
+            background: transparent !important; /* 强制背景透明 */
+            border: none !important;            /* 强制去掉边框 */
+            color: #ffffff !important;          /* 字体变成白色 */
+            width: 100%;
+            padding: 10px;
+            font-family: "PingFang SC", monospace;
+            font-size: 14px;
+            outline: none !important;
+            box-sizing: border-box;
+        }
+        
+        /* 💥 核心杀手锏：干掉浏览器自动填充带来的顽固白底 💥 */
+        .sys-modal-box input:-webkit-autofill,
+        .sys-modal-box input:-webkit-autofill:hover, 
+        .sys-modal-box input:-webkit-autofill:focus, 
+        .sys-modal-box input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px #060b14 inset !important; /* 用深色阴影填满背景 */
+            -webkit-text-fill-color: #ffffff !important; /* 强制文字为白色 */
+            transition: background-color 5000s ease-in-out 0s;
         }
 
     </style>
@@ -2474,6 +2915,12 @@
             <li><button class="wiki-item-btn" data-target="queueView" style="color: #ffeb3b; border-color: rgba(255,235,59,0.4);">审核中心</button></li>
             <li><button class="wiki-item-btn" data-target="logView">人设库</button></li>
             <li><button class="wiki-item-btn" data-target="profileView" style="color: #00e5ff; border-color: rgba(0,229,255,0.4);">个人终端</button></li>
+            <!-- 💥 新增：管理员专属后台入口 (默认隐藏) -->
+            <li id="adminMenuWrapper" style="display: none;">
+                <button class="wiki-item-btn" data-target="adminView" style="color: #f44336; border-color: rgba(244,67,54,0.4); margin-top: 20px;">
+                    [ ⚙️ 管理员控制台 ]
+                </button>
+            </li>
         </ul>
     </div>
 
@@ -2507,7 +2954,7 @@
         <div class="view-panel active" id="mainView">
             
             <!-- 1. 英雄视觉区 (Hero Section) -->
-            <section class="hero-section">
+            <section class="hero-section" id="main-hero">
                 <!-- 背景幽灵文字 -->
                 <div class="ghost-bg">C-62</div>
 
@@ -2556,233 +3003,513 @@
                 </div>
             </div>
 
-            <!-- 💥 修复：正确的排版结构，把目录和正文并排包在 world-layout 里 💥 -->
+            <!-- 💥 终极修复：使用 CSS Grid 重构排版 💥 -->
             <div class="world-layout">
                 
-                <!-- 左侧悬浮目录 -->
-                <aside class="world-toc">
-                    <div class="toc-title">目录</div>
-                    <ul class="toc-list">
-                        <li><button class="toc-btn active" data-scroll="sec-intro">00. 档案导言</button></li>
-                        <li><button class="toc-btn" data-scroll="sec-conflict">01. 快速了解世界观</button></li>
-                        <li><button class="toc-btn" data-scroll="sec-factions">02. 势力分布</button></li>
-                        <li><button class="toc-btn" data-scroll="sec-onboard">03. 入职指南</button></li>
-                    </ul>
-                </aside>
-
-                <!-- 右侧正文容器 -->
-                <div class="world-container">
-                    
-                    <div id="sec-intro">
-                        <div class="world-header">
-                            <div class="world-meta">DATABASE // LORE</div>
-                            <h1 class="world-title">深空边缘：纪元 2240</h1>
-                            <div class="article-divider"></div>
-                        </div>
-        
-                        <div class="world-quote">
-                            “就是因为我们行事过于鲁莽，过于相信大炮和传感器，我们犯了错，正为此付出代价。这是我们的错，也仅仅是我们的错。——［波兰］斯坦尼斯瓦夫·莱姆”
-                        </div>
-                    </div>
-
-                    <section class="world-section" id="sec-conflict">
-                        <h2 class="world-section-title"> 快速了解世界观 </h2>
-                        <div class="world-text">
-                            <p>时间：公元2240年</p>
-                            <p>在人类走出太阳系后的第一个世纪，文明并没有迎来真正的黄金时代。</p>
-                            <p>半个世纪前，一种被称为<span class="world-highlight">C-62</span>（“黑血”） 的高能同位素矿物被发现，它能够提供近乎无限的清洁能源，让人类文明得以飞速发展并继续向外扩张，也让整个星系陷入漫长的资源战争。</p>
-                            <p>然而，长期接触原矿的人会患上无法治愈的职业病——星尘病，患者会受到不可逆且逐步恶化的神经损伤，器官将逐渐纤维化，同时伴随着严重的幻觉，最终在痛苦中死去。</p>
-                            <p>同数个世纪前的放射性元素镭一样，黑血的危害在发现后的数十年间始终被联盟和企业刻意淡化，直到越来越多矿工死于被称为“星尘病”的慢性疾病，官方的消息封锁才逐渐失效。</p>
-                            <p>但此时一切都已无法挽回，整个文明早已深深依赖上这种能源，内环的城市、星际航道、舰队引擎乃至数十亿人的生活，都建立在黑血之上，没有人不清楚得到它的代价，也没有人能承担失去它的后果。</p>
-                            <p>2240年，战争尚未全面爆发，但和平早已不复存在。</p>
-                            <p>联盟、财团、外环居民、佣兵组织和无数独立势力彼此争斗、合作、背叛，在脆弱的平衡中维持着整个文明的运转；暗杀、暴动、海盗袭击、企业战争和情报渗透几乎每天都在发生，却没有任何一方能够真正摧毁自己的敌人。</p>
-                            <p>因为所有人都明白，他们共同生活在一艘正在缓慢渗水的船上。</p>
-                            <p>在这片广袤而混乱的深空之中，没有谁能真正统治谁。</p>
-
-                            <div class="glitch-text">欢迎来到深空边缘。</div>
+                <!-- 1. 左侧悬浮目录 (增加了一个 wrapper 保证滑动生效) -->
+                <div class="world-toc-wrapper">
+                    <aside class="world-toc">
+                        <div class="toc-title">目录</div>
+                        <ul class="toc-list">
+                            <li><button class="toc-btn active" data-scroll="main-hero">00. 终端主控</button></li>
+                            <li><button class="toc-btn" data-scroll="sec-intro">01. 档案导言</button></li>
+                            <li><button class="toc-btn" data-scroll="sec-conflict">02. 快速了解世界观</button></li>
+                            <!-- 💥 势力分布：带有折叠功能的子目录 💥 -->
+                            <li style="display: flex; flex-direction: column;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <button class="toc-btn" data-scroll="sec-factions" style="flex-grow: 1; text-align: left;">03. 势力分布</button>
+                                <span class="toc-arrow" onclick="toggleSubMenu('factions-sub')" style="cursor: pointer; color: #12a8ff; padding: 5px 15px; font-size: 12px; display: inline-block; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);">◀</span>
+                            </div>
+                            <ul class="sub-toc-list" id="factions-sub">
+                                <li><button class="toc-btn sub-btn" data-scroll="faction-psc">└ 泛星联盟</button></li>
+                                <li><button class="toc-btn sub-btn" data-scroll="faction-frontier">└ 外环</button></li>
+                                <li><button class="toc-btn sub-btn" data-scroll="faction-pmc">└ 独立防务承包商</button></li>
+                                <li><button class="toc-btn sub-btn" data-scroll="faction-freeport">└ 自治空间站与自由港</button></li>
+                            </ul>
+                        </li>
+                            <li><button class="toc-btn" data-scroll="sec-onboard">04. 入职指南</button></li>
                             
-                            <div class="world-warning-box">
-                                <strong style="color: #f44336; font-family: monospace; display: block; margin-bottom: 5px;">[ SYSTEM WARNING // 医疗警告 ]</strong>
-                                开采是有代价的。原矿带有极强的神经毒性辐射，长期接触的底层矿工会患上不可逆的“星尘病”（器官纤维化与幻觉）。为了争夺这种沾满鲜血的能源，整个星系被撕裂成了三大阵营。
+                            <li style="display: flex; flex-direction: column;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <button class="toc-btn" data-scroll="intel-grid" style="flex-grow: 1; text-align: left;">05. 核心情报</button>
+                                    <span class="toc-arrow" onclick="toggleSubMenu('intel-sub')" style="cursor: pointer; color: #12a8ff; padding: 5px 15px; font-size: 12px; display: inline-block; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);">◀</span>
+                                </div>
+                                <ul class="sub-toc-list" id="intel-sub">
+                                    <li><button class="toc-btn sub-btn" data-scroll="intel-1">└ C-62 研究报告</button></li>
+                                    <li><button class="toc-btn sub-btn" data-scroll="intel-2">└ 7号驳船袭击</button></li>
+                                    <li><button class="toc-btn sub-btn" data-scroll="intel-3">└ 活跃公民名录</button></li>
+                                    <li><button class="toc-btn sub-btn" data-scroll="intel-4">└ 战术装备清单</button></li>
+                                </ul>
+                            </li>
+                            
+                            <li><button class="toc-btn" data-scroll="gallery-strip">06. 卫星图传</button></li>
+                        </ul>
+                    </aside>
+                </div>
+
+                <!-- 2. 右侧世界观正文 -->
+                <div class="world-content-wrapper">
+                    <div class="world-container">
+                        <div id="sec-intro">
+                            <div class="world-header">
+                                <div class="world-meta">DATABASE // LORE</div>
+                                <h1 class="world-title">深空边缘：纪元 2240</h1>
+                                <div class="article-divider"></div>
+                            </div>
+                            <div class="world-quote">
+                                “就是因为我们行事过于鲁莽，过于相信大炮和传感器，我们犯了错，正为此付出代价。这是我们的错，也仅仅是我们的错。——［波兰］斯坦尼斯瓦夫·莱姆”
                             </div>
                         </div>
-                    </section>
 
-                    <section class="world-section" id="sec-factions">
-                        <h2 class="world-section-title"><span style="font-size: 1.5rem;">🌌</span> 势力分布 // FACTIONS</h2>
-                        
-                        <div class="faction-grid">
-                            <div class="faction-card psc">
-                                <div class="faction-header">
-                                    <h3>泛星联盟 (P.S.C)</h3>
-                                    <span class="faction-tag">秩序 / 霸权 / 腐朽</span>
+                        <section class="world-section" id="sec-conflict">
+                            <h2 class="world-section-title"> 快速了解世界观 </h2>
+                            <div class="world-text">
+                                <p>时间：公元2240年</p>
+                                <p>在人类走出太阳系后的第一个世纪，文明并没有迎来真正的黄金时代。</p>
+                                <p>半个世纪前，一种被称为<span class="world-highlight">C-62</span>（“黑血”） 的高能同位素矿物被发现，它能够提供近乎无限的清洁能源，让人类文明得以飞速发展并继续向外扩张，也让整个星系陷入漫长的资源战争。</p>
+                                <p>然而，长期接触原矿的人会患上无法治愈的职业病——星尘病，患者会受到不可逆且逐步恶化的神经损伤，器官将逐渐纤维化，同时伴随着严重的幻觉，最终在痛苦中死去。</p>
+                                <p>同数个世纪前的放射性元素镭一样，黑血的危害在发现后的数十年间始终被联盟和企业刻意淡化，直到越来越多矿工死于被称为“星尘病”的慢性疾病，官方的消息封锁才逐渐失效。</p>
+                                <p>但此时一切都已无法挽回，整个文明早已深深依赖上这种能源，内环的城市、星际航道、舰队引擎乃至数十亿人的生活，都建立在黑血之上，没有人不清楚得到它的代价，也没有人能承担失去它的后果。</p>
+                                <p>2240年，战争尚未全面爆发，但和平早已不复存在。</p>
+                                <p>联盟、财团、外环居民、佣兵组织和无数独立势力彼此争斗、合作、背叛，在脆弱的平衡中维持着整个文明的运转；暗杀、暴动、海盗袭击、企业战争和情报渗透几乎每天都在发生，却没有任何一方能够真正摧毁自己的敌人。</p>
+                                <p>因为所有人都明白，他们共同生活在一艘正在缓慢渗水的船上。</p>
+                                <p>在这片广袤而混乱的深空之中，没有谁能真正统治谁。</p>
+                                <div class="glitch-text">欢迎来到深空边缘。</div>
+                                <div class="world-warning-box">
+                                    <strong style="color: #f44336; font-family: monospace; display: block; margin-bottom: 5px;">[ SYSTEM WARNING // 医疗警告 ]</strong>
+                                    开采是有代价的。原矿带有极强的神经毒性辐射，长期接触的底层矿工会患上不可逆的“星尘病”（器官纤维化与幻觉）。为了争夺这种沾满鲜血的能源，整个星系被撕裂成了三大阵营。
                                 </div>
-                                <p class="faction-desc">统治地球及内环星域的人类最高政体。
-                                    <br>
-                                    <br>联盟掌握着绝大部分黑血精炼设施、星门航线和军事力量。对内环居民而言，他们是维系文明延续的守护者；而在外环人眼中，他们则是建立在压迫与垄断之上的统治者。
-                                </p>
-                                <ul class="sub-org-list">
-                                    <li><strong>战略安全局（Strategic Security Agency / SSA）</strong>联盟直属情报机关，负责反间谍、反恐行动和内部监察。</li>
-                                    <li><strong>泰坦星脉财团</strong>垄断黑血产业的超级企业，被称为“没有王冠的皇帝”。</li>
-                                    <li><strong>第一舰队“黄金狮子”</strong>联盟最精锐的太空舰队，负责首都圈和主要航道安全。</li>
-                                </ul>
                             </div>
+                        </section>
 
-                            <div class="faction-card frontier">
-                                <div class="faction-header">
-                                    <h3>外环（The Frontier）</h3>
-                                    <span class="faction-tag">生存 / 自由 / 混乱</span>
+                        <section class="world-section" id="sec-factions">
+                            <h2 class="world-section-title"><span style="font-size: 1.5rem;">🌌</span> 势力分布 // FACTIONS</h2>
+                            <div class="faction-grid">
+                                <div class="faction-card psc" id="faction-psc">
+                                    <div class="faction-header">
+                                        <h3 style="cursor: pointer; text-decoration: underline; text-underline-offset: 4px; transition: 0.2s;" onclick="openFactionDetail('泛星联盟')" onmouseover="this.style.color='#12a8ff'" onmouseout="this.style.color='#fff'">泛星联盟 (P.S.C)</h3>
+                                        <span class="faction-tag">秩序 / 霸权 / 腐朽</span>
+                                    </div>
+                                    <p class="faction-desc">统治地球及内环星域的人类最高政体。<br><br>联盟掌握着绝大部分黑血精炼设施、星门航线和军事力量。对内环居民而言，他们是维系文明延续的守护者；而在外环人眼中，他们则是建立在压迫与垄断之上的统治者。</p>
+                                    <div class="sub-org-list">
+                                        <button class="sub-org-btn" onclick="openOrgDetail('战略安全局（SSA）')">
+                                            <strong>战略安全局（SSA）</strong>
+                                            <span>联盟直属情报机关，负责反间谍、反恐行动和内部监察。</span>
+                                        </button>
+                                        <button class="sub-org-btn" onclick="openOrgDetail('泰坦星脉财团')">
+                                            <strong>泰坦星脉财团</strong>
+                                            <span>垄断黑血产业的超级企业，被称为“没有王冠的皇帝”。</span>
+                                        </button>
+                                        <button class="sub-org-btn" onclick="openOrgDetail('第一舰队“黄金狮子”')">
+                                            <strong>第一舰队“黄金狮子”</strong>
+                                            <span>联盟最精锐的太空舰队，负责首都圈和主要航道安全。</span>
+                                        </button>
+                                    </div>
                                 </div>
-                                <p class="faction-desc">在联盟官方星图上，“外环”指代所有位于边缘航道之外的空间站、矿业殖民地和独立聚居区；而对生活在那里的人而言，这更像是一种身份，而非一个国家。
-                                <br>
-                                <br>长期与地球和内环社会隔绝，使外环居民逐渐形成了独特的文化和身份认同，但他们从未真正统一。
-                                <br>
-                                <br>这里既有革命者，也有商人；既有理想主义者，也有只想活下去的普通人。</p>
-                                <ul class="sub-org-list">
-                                    <li><strong>“黑火”解放战线</strong>激进反抗组织，支持者视其为自由战士，联盟则将其定义为恐怖组织。</li>
-                                    <li><strong>深空打捞者工会</strong>由船长、机械师和回收商组成的松散联盟，掌握着庞大的地下贸易网络。</li>
-                                    <li><strong>“霓虹暗房”</strong>隐匿在深空网络中的极客与情报贩子，没有固定据点，也不存在真正意义上的领导者，依靠骇入联盟防火墙窃取机密为生。</li>
-                                </ul>
-                            </div>
-
-                            <div class="faction-card pmc">
-                                <div class="faction-header">
-                                    <h3>独立防务承包商 (PMCs)</h3>
-                                    <span class="faction-tag">金钱 / 契约 / 硝烟</span>
+                                <div class="faction-card frontier" id="faction-frontier">
+                                    <div class="faction-header">
+                                        <h3 style="cursor: pointer; text-decoration: underline; text-underline-offset: 4px; transition: 0.2s;" onclick="openFactionDetail('外环')" onmouseover="this.style.color='#12a8ff'" onmouseout="this.style.color='#fff'">外环（The Frontier）</h3>
+                                        <span class="faction-tag">生存 / 自由 / 混乱</span>
+                                    </div>
+                                    <p class="faction-desc">在联盟官方星图上，“外环”指代所有位于边缘航道之外的空间站、矿业殖民地和独立聚居区；而对生活在那里的人而言，这更像是一种身份，而非一个国家。<br><br>长期与地球和内环社会隔绝，使外环居民逐渐形成了独特的文化和身份认同，但他们从未真正统一。<br><br>这里既有革命者，也有商人；既有理想主义者，也有只想活下去的普通人。</p>
+                                    <div class="sub-org-list">
+                                        <button class="sub-org-btn" onclick="openOrgDetail('“黑火”解放战线')">
+                                            <strong>“黑火”解放战线</strong>
+                                            <span>激进反抗组织，支持者视其为自由战士，联盟则将其定义为恐怖组织。</span>
+                                        </button>
+                                        <button class="sub-org-btn" onclick="openOrgDetail('深空打捞者工会')">
+                                            <strong>深空打捞者工会</strong>
+                                            <span>由船长、机械师和回收商组成的松散联盟，掌握着庞大的地下贸易网络。</span>
+                                        </button>
+                                        <button class="sub-org-btn" onclick="openOrgDetail('“霓虹暗房”')">
+                                            <strong>“霓虹暗房”</strong>
+                                            <span>隐匿在深空网络中的极客与情报贩子，依靠骇入联盟防火墙窃取机密为生。</span>
+                                        </button>
+                                    </div>
                                 </div>
-                                <p class="faction-desc">不参与政治站队的私人武装，游走在联邦与反抗军的夹缝中，他们只服从信用点和合同，并向一切支付报酬的人提供武力。</p>
-                                <ul class="sub-org-list">
-                                    <li><strong>“深渊行者”国际安保</strong>顶级军事承包商，以纪律、专业和昂贵闻名。</li>
-                                    <li><strong>“锈血”佣兵团</strong>臭名昭著的亡命徒集团，多数成员为罪犯和流浪者。</li>
-                                </ul>
-                            </div>
-
-                            <div class="faction-card pmc">
-                                <div class="faction-header">
-                                    <h3>自治空间站与自由港</h3>
-                                    <span class="faction-tag">贸易 / 中立 / 灰色秩序</span>
+                                <div class="faction-card pmc" id="faction-pmc">
+                                    <div class="faction-header">
+                                        <h3 style="cursor: pointer; text-decoration: underline; text-underline-offset: 4px; transition: 0.2s;" onclick="openFactionDetail('独立防务承包商')" onmouseover="this.style.color='#12a8ff'" onmouseout="this.style.color='#fff'">独立防务承包商 (PMCs)</h3>
+                                        <span class="faction-tag">金钱 / 契约 / 硝烟</span>
+                                    </div>
+                                    <p class="faction-desc">不参与政治站队的私人武装，游走在联邦与反抗军的夹缝中，他们只服从信用点和合同，并向一切支付报酬的人提供武力。</p>
+                                    <div class="sub-org-list">
+                                        <button class="sub-org-btn" onclick="openOrgDetail('“深渊行者”国际安保')">
+                                            <strong>“深渊行者”国际安保</strong>
+                                            <span>顶级军事承包商，以纪律、专业和昂贵闻名。</span>
+                                        </button>
+                                        <button class="sub-org-btn" onclick="openOrgDetail('“锈血”佣兵团')">
+                                            <strong>“锈血”佣兵团</strong>
+                                            <span>臭名昭著的亡命徒集团，多数成员为罪犯和流浪者。</span>
+                                        </button>
+                                    </div>
+                                    </div>
+                                <div class="faction-card pmc" id="faction-freeport">
+                                    <div class="faction-header">
+                                        <h3 style="cursor: pointer; text-decoration: underline; text-underline-offset: 4px; transition: 0.2s;" onclick="openFactionDetail('自治空间站与自由港')" onmouseover="this.style.color='#12a8ff'" onmouseout="this.style.color='#fff'">自治空间站与自由港</h3>
+                                        <span class="faction-tag">贸易 / 中立 / 灰色秩序</span>
+                                    </div>
+                                    <p class="faction-desc">遍布深空的独立空间站与自由港。<br><br>它们依靠贸易、维修、医疗和情报生意生存，在战争与政治夹缝中维持脆弱的中立。</p>
+                                    <div class="sub-org-list">
+                                        <button class="sub-org-btn" onclick="openOrgDetail('阿刻戎自由港')">
+                                            <strong>阿刻戎自由港</strong>
+                                            <span>整个星系最大的黑市和中转站。</span>
+                                        </button>
+                                        <button class="sub-org-btn" onclick="openOrgDetail('圣赫利俄斯医疗会')">
+                                            <strong>圣赫利俄斯医疗会</strong>
+                                            <span>专门救治星尘病患者的民间组织。</span>
+                                        </button>
+                                        <button class="sub-org-btn" onclick="openOrgDetail('流浪者教团')">
+                                            <strong>流浪者教团</strong>
+                                            <span>诞生于矿工群体的新兴宗教，将黑血视为神赐之物。</span>
+                                        </button>
+                                    </div>
                                 </div>
-                                <p class="faction-desc">遍布深空的独立空间站与自由港。
-                                <br>
-                                <br>它们依靠贸易、维修、医疗和情报生意生存，在战争与政治夹缝中维持脆弱的中立。</p>
-                                <ul class="sub-org-list">
-                                    <li><strong>阿刻戎自由港</strong>整个星系最大的黑市和中转站。</li>
-                                    <li><strong>圣赫利俄斯医疗会</strong>专门救治星尘病患者的民间组织。</li>
-                                    <li><strong>流浪者教团</strong>诞生于矿工群体的新兴宗教，他们相信星尘病患者的幻觉来自“群星的低语”，并将黑血视为神赐之物。</li>
-                                </ul>
                             </div>
-                        </div>
-                    </section>
+                        </section>
 
-                    <section class="world-section" id="sec-onboard">
-                        <h2 class="world-section-title"><span style="font-size: 1.5rem;">📝</span> 入职指南 // ONBOARDING</h2>
-                        <div class="world-text">
-                            <p>在这里，你可以是冷酷的联盟特工、满身机油味的黑市医生、或者是只认钱的战术小队爆破手。</p>
-                            <ol class="cyber-list">
-                                <!-- 💥 顺便帮你把点击跳转加进去了 💥 -->
-                                <li>点击进入 <span class="world-highlight" style="cursor: pointer; text-decoration: underline; text-underline-offset: 4px; transition: 0.2s;" onclick="document.querySelector('[data-target=\'createView\']').click()" onmouseover="this.style.color='#fff'; this.style.textShadow='0 0 15px #12a8ff'" onmouseout="this.style.color='#12a8ff'; this.style.textShadow='0 0 8px rgba(18,168,255,0.4)'">【人设填写表】</span>。</li>
-                                <li>选择你的 <strong>阵营</strong> 与 <strong>所属组织</strong>。</li>
-                                <li>填写你的背景档案，生成属于你的深空身份卡。</li>
-                            </ol>
-                            <div class="glitch-text">星海浩瀚，祝你好运。</div>
-                        </div>
-                    </section>
-
-                </div> <!-- world-container 结束 -->
-            </div> <!-- world-layout 结束 -->
-
-            <!-- 3. 情报网格区 (类似参考站的 Classes Grid) -->
-            <section class="intel-section" id="intel-grid">
-                <div class="section-header">
-                    <div>
-                        <p class="section-label">✦ CLASSIFIED FILES</p>
-                        <h2 class="section-title">CORE <span class="accent">INTEL</span></h2>
+                        <section class="world-section" id="sec-onboard">
+                            <h2 class="world-section-title"><span style="font-size: 1.5rem;">📝</span> 入职指南 // ONBOARDING</h2>
+                            <div class="world-text">
+                                <p>在这里，你可以是冷酷的联盟特工、满身机油味的黑市医生、或者是只认钱的战术小队爆破手。</p>
+                                <ol class="cyber-list">
+                                    <li>点击进入 <span class="world-highlight" style="cursor: pointer; text-decoration: underline; text-underline-offset: 4px; transition: 0.2s;" onclick="document.querySelector('[data-target=\'createView\']').click()" onmouseover="this.style.color='#fff'; this.style.textShadow='0 0 15px #12a8ff'" onmouseout="this.style.color='#12a8ff'; this.style.textShadow='0 0 8px rgba(18,168,255,0.4)'">【人设填写表】</span>。</li>
+                                    <li>选择你的 <strong>阵营</strong> 与 <strong>所属组织</strong>。</li>
+                                    <li>填写你的背景档案，生成属于你的深空身份卡。</li>
+                                </ol>
+                                <div class="glitch-text">星海浩瀚，祝你好运。</div>
+                            </div>
+                        </section>
                     </div>
                 </div>
 
-                <!-- 搜索无结果时的提示 -->
-                <div id="no-result-msg" style="display: none; color: #f44336; font-family: monospace; padding: 20px 0; font-size: 1.2rem;">
-                    [ ❌ 未检索到相关内容 ]
+                <!-- 3. 情报网格区 (移出 wrapper，成为 layout 的直接子元素) -->
+                <section class="intel-section" id="intel-grid">
+                    <div class="section-header">
+                        <div>
+                            <p class="section-label">✦ CLASSIFIED FILES</p>
+                            <h2 class="section-title">CORE <span class="accent">INTEL</span></h2>
+                        </div>
+                    </div>
+                    <div id="no-result-msg" style="display: none; color: #f44336; font-family: monospace; padding: 20px 0; font-size: 1.2rem;">
+                        [ ❌ 未检索到相关内容 ]
+                    </div>
+                    <div class="intel-grid">
+                        <div class="intel-card article-card" id="intel-1" data-keywords="c-62 黑血 矿石 星尘病 能源" data-content="【机密档案：C-62 同位素】&#10;&#10;俗称“黑血”，于太阳系外环小行星带深处首次被发现。&#10;&#10;特性：极高能的清洁聚变能源。指甲盖大小的纯净 C-62 足以驱动一艘重型星舰航行一个月。目前内环行星的繁华都市、最高议会的生命维持系统、各大舰队的重火力引擎，全部依赖“黑血”续命。&#10;&#10;医疗警告：原矿带有极强的神经毒性辐射。长期接触的底层矿工会患上不可逆的“星尘病”（器官纤维化与严重幻觉）。">
+                            <span class="card-icon">💎</span><span class="card-level">✦ LORE // 核心物质</span>
+                            <h3 class="card-name">C-62“黑血”研究报告</h3>
+                            <p class="card-desc">关于高能同位素 C-62 的开采记录、能源转化率以及“星尘病”的临床医学观察报告。</p>
+                            <div class="card-meta"><span class="card-price">[DECRYPTED]</span><span class="card-duration">// READ TIME: 3 MIN</span></div>
+                        </div>
+                        <div class="intel-card article-card" id="intel-2" data-keywords="战报 report 外环 泛星联盟 黑火 冲突" data-content="行动代号：碎星 (Operation Shattered Star)&#10;地点：外环 7号采矿驳船&#10;涉事阵营：泛星联盟第一舰队 vs “黑火”解放战线&#10;&#10;行动简报：星历2240年3月12日，“黑火”武装分子突袭了隶属于泰坦星脉财团的7号驳船，试图劫持当月开采的 C-62 原矿。联盟第一舰队“黄金狮子”下属的快速反应小队于 0400 时进行轨道空降介入。&#10;&#10;结果：驳船动力系统受损，30%原矿泄漏至太空。黑火武装分子撤退，联盟方 4 名特工阵亡。">
+                            <span class="card-icon">🎯</span><span class="card-level">◉ REPORT // 冲突战报</span>
+                            <h3 class="card-name">外环 7号驳船袭击事件</h3>
+                            <p class="card-desc">泛星联盟与“黑火”解放战线在深空矿区的最新交火记录。包含现场受损评估与轨道空降录像。</p>
+                            <div class="card-meta"><span class="card-price">[CLASSIFIED]</span><span class="card-duration">// LEVEL 3 REQUIRED</span></div>
+                        </div>
+                        <div class="intel-card article-card" id="intel-3" data-keywords="编制 roster 名录 公民 佣兵 pmc" data-content="[ 数据解密中... ]&#10;&#10;深空边缘活跃公民名录（部分）：&#10;&#10;> 泛星联盟 (P.S.C) 注册特工：拥有最高级别的星门通行权与合法持械许可。&#10;> 外环 (Frontier) 游击队员：多为矿工出身，擅长在零重力与高辐射环境下作战。&#10;> 独立防务承包商 (PMCs)：如“深渊行者”与“锈血”佣兵，只要信用点给够，他们可以为任何人扣动扳机。&#10;&#10;系统警告：部分阿刻戎自由港的黑市公民数据已被加密，需 Beta 级以上权限方可访问。">
+                            <span class="card-icon">👥</span><span class="card-level">★ ROSTER // 编制</span>
+                            <h3 class="card-name">深空活跃公民名录</h3>
+                            <p class="card-desc">最新解密级别的各阵营公民代号与专长一览表。包含联盟特工、外环反抗军及独立佣兵。</p>
+                            <div class="card-meta"><span class="card-price">[LIVE DATA]</span><span class="card-duration">// UPDATED: 2240</span></div>
+                        </div>
+                        <div class="intel-card article-card" id="intel-4" data-keywords="武器 装备 军械库 星舰 义体" data-content="深空作战标准配置清单：&#10;&#10;> 动能武器：电磁加速步枪（适用于真空环境，无后座力补偿模块需谨慎使用）&#10;> 战术装备：全封闭式 EVA 战斗服（内置防辐射内衬与微型生命维持系统）&#10;> 义体改造：神经突触加速器、机械义肢（多见于外环老兵与 PMC 佣兵）&#10;> 医疗物资：高浓度抗辐射凝胶（用于缓解星尘病早期症状）&#10;&#10;系统警告：所有军用级义体改造需在联盟战略安全局（SSA）进行备案。">
+                            <span class="card-icon">🔫</span><span class="card-level">⬡ ARMORY // 军械库</span>
+                            <h3 class="card-name">深空战术装备清单</h3>
+                            <p class="card-desc">包含电磁武器、EVA 战斗服、军用级义体改造及抗辐射医疗物资的详细参数与黑市报价。</p>
+                            <div class="card-meta"><span class="card-price">[INVENTORY]</span><span class="card-duration">// SUPPLY LOGS</span></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. 横向拖拽画廊 (移出 wrapper，成为 layout 的直接子元素) -->
+                <div class="gallery-strip" id="gallery-strip">
+                    <div class="gallery-caption">✦ SATELLITE IMAGERY // 卫星扫描图传</div>
+                    <div class="article-grid" id="galleryStrip" style="padding: 2rem; gap: 30px;">
+                        <div class="gallery-item placeholder-a"><span>[MAP_GRID_01]</span></div>
+                        <div class="gallery-item placeholder-b"><span>[TARGET_BUILDING]</span></div>
+                        <div class="gallery-item placeholder-c"><span>[DRONE_FOOTAGE]</span></div>
+                        <div class="gallery-item placeholder-a"><span>[EXTRACTION_POINT]</span></div>
+                    </div>
+                </div>
+
+            </div> <!-- world-layout 结束 -->
+            </div>
+
+
+        <!-- 💥 重建：世界观设定页 (阵营与组织索引库) 💥 -->
+        <style>
+            .index-group { margin-bottom: 30px; background: rgba(0, 5, 10, 0.6); border: 1px solid rgba(18, 168, 255, 0.3); padding: 25px; border-radius: 6px; }
+            .index-faction-btn { background: transparent; border: none; color: #e0f2fe; font-size: 1.8rem; font-family: "Impact", "Microsoft YaHei", sans-serif; cursor: pointer; text-align: left; padding: 0; margin-bottom: 15px; transition: 0.2s; text-shadow: 0 0 8px rgba(18,168,255,0.5); letter-spacing: 2px; }
+            .index-faction-btn:hover { color: #12a8ff; text-shadow: 0 0 15px #12a8ff; transform: translateX(5px); }
+            .index-orgs { display: flex; flex-direction: column; gap: 12px; padding-left: 15px; border-left: 2px solid rgba(18, 168, 255, 0.3); }
+            /* 💥 世界观页：精美的组织链接按钮 💥 */
+        .index-org-btn { 
+            background: transparent; 
+            border: none; 
+            color: #8bb9d6; 
+            font-size: 0.95rem; 
+            font-family: "PingFang SC", sans-serif; 
+            cursor: pointer; 
+            text-align: left; 
+            padding: 6px 10px; 
+            transition: 0.2s; 
+            border-left: 2px solid transparent;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .index-org-btn:hover { 
+            color: #fff; 
+            background: rgba(18, 168, 255, 0.1);
+            border-left: 2px solid #12a8ff;
+            text-shadow: 0 0 8px #12a8ff; 
+            transform: translateX(5px); 
+        }
+        </style>
+
+        <!-- 💥 重建：精美的世界观设定集 (Lore Hub) 💥 -->
+        <div class="view-panel" id="worldView">
+            <div class="archive-container" style="max-width: 1200px; margin: 0 auto; padding-top: 2rem; padding-bottom: 5rem;">
+                
+                <!-- 页面头部 -->
+                <div class="archive-header" style="margin-bottom: 3rem; border-bottom: 2px solid rgba(18, 168, 255, 0.3); padding-bottom: 20px;">
+                    <h2 class="neon-title" style="font-size: 40px; text-align: left; letter-spacing: 4px;">LORE DATABASE</h2>
+                    <p style="color: #12a8ff; font-family: monospace; letter-spacing: 2px; font-size: 16px;">[ 世界观设定与阵营档案库 ]</p>
+                </div>
+
+                <!-- 导言横幅 (Hero Banner) -->
+                <div style="background: rgba(0, 5, 10, 0.6); border: 1px solid #12a8ff; padding: 40px; margin-bottom: 50px; position: relative; overflow: hidden; box-shadow: inset 0 0 30px rgba(18,168,255,0.1);">
+                    <div style="position: absolute; top: -30px; right: -20px; font-size: 180px; opacity: 0.03; font-family: 'Impact', sans-serif; pointer-events: none;">2240</div>
+                    <h3 style="color: #e0f2fe; font-size: 28px; margin-top: 0; margin-bottom: 20px; text-shadow: 0 0 15px rgba(18,168,255,0.6); letter-spacing: 2px;">深空边缘：纪元 2240</h3>
+                    <p style="color: #8bb9d6; line-height: 1.9; font-size: 16px; max-width: 900px; position: relative; z-index: 2;">
+                        在人类走出太阳系后的第一个世纪，文明并没有迎来真正的黄金时代。高能同位素矿物 <strong style="color:#12a8ff;">C-62（黑血）</strong> 的发现，让人类文明得以飞速发展，也让整个星系陷入漫长的资源战争。<br><br>
+                        在这里，联盟、财团、外环居民、佣兵组织和无数独立势力彼此争斗、合作、背叛。没有谁能真正统治谁，所有人都在这片广袤而混乱的深空之中，寻找活下去的筹码。
+                    </p>
+                    <!-- 💥 新增：跳转到时间线的按钮 -->
+                    <!-- 💥 替换为未解锁的占位模块 💥 -->
+                    <button class="btn-primary" style="margin-top: 20px; position: relative; z-index: 2;" onclick="SysModal.alert('该扇区正在编辑中中，敬请期待。', 'SYSTEM NOTE // 模块未解锁')">
+                        全息星图系统 [开发中] →
+                    </button>
+                </div>
+
+                <!-- 💥 新增：历史时间线预览区 💥 -->
+                <div class="section-header" style="margin-bottom: 30px; margin-top: 20px;">
+                    <p class="section-label">✦ CHRONICLES</p>
+                    <h2 class="section-title" style="font-size: 32px;">历史时间线 <span class="accent">TIMELINE</span></h2>
+                </div>
+
+                <div style="background: rgba(0, 5, 10, 0.6); border: 1px solid rgba(18, 168, 255, 0.3); padding: 35px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 30px; margin-bottom: 60px; box-shadow: inset 0 0 30px rgba(18,168,255,0.05); position: relative; overflow: hidden;">
+                    
+                    <!-- 背景装饰线 -->
+                    <div style="position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: repeating-linear-gradient(90deg, rgba(18,168,255,0.2) 0, rgba(18,168,255,0.2) 10px, transparent 10px, transparent 20px); z-index: 0; pointer-events: none;"></div>
+
+                    <div style="flex: 1; min-width: 280px; position: relative; z-index: 1;">
+                        <h3 style="color: #e0f2fe; font-size: 24px; margin-top: 0; margin-bottom: 15px; text-shadow: 0 0 10px rgba(18,168,255,0.5); letter-spacing: 1px;">星历 2190 - 2240</h3>
+                        <p style="color: #8bb9d6; line-height: 1.8; font-size: 15px; margin: 0; max-width: 600px;">
+                            从“远望者-7”首次发现 C-62 黑血，到星尘病爆发、泛星联盟成立，再到外环大罢工与碎星事件。查阅过去半个世纪的重大历史节点，了解深空边缘的动荡始末。
+                        </p>
+                        
+                        <!-- 微缩时间线视觉元素 -->
+                        <div style="display: flex; gap: 15px; color: #12a8ff; font-family: monospace; opacity: 0.6; margin-top: 20px; font-size: 13px; font-weight: bold;">
+                            <span>2190</span> <span>→</span> <span>2205</span> <span>→</span> <span>2218</span> <span>→</span> <span>2230</span> <span>→</span> <span>2240</span>
+                        </div>
+                    </div>
+
+                    <button class="btn-primary" style="padding: 15px 30px; font-size: 16px; white-space: nowrap; position: relative; z-index: 1;" onclick="openTimelineView()">
+                        ACCESS TIMELINE →
+                    </button>
+                </div>
+
+                <!-- 阵营卡片网格区 -->
+                <div class="section-header" style="margin-bottom: 30px;">
+                    <p class="section-label">✦ MAJOR FACTIONS</p>
+                    <h2 class="section-title" style="font-size: 32px;">势力分布 <span class="accent">FACTIONS</span></h2>
                 </div>
 
                 <div class="intel-grid">
-                    <!-- 卡片1：C-62 矿石背景 -->
-                    <div class="intel-card article-card" data-keywords="c-62 黑血 矿石 星尘病 能源" 
-                         data-content="【机密档案：C-62 同位素】&#10;&#10;俗称“黑血”，于太阳系外环小行星带深处首次被发现。&#10;&#10;特性：极高能的清洁聚变能源。指甲盖大小的纯净 C-62 足以驱动一艘重型星舰航行一个月。目前内环行星的繁华都市、最高议会的生命维持系统、各大舰队的重火力引擎，全部依赖“黑血”续命。&#10;&#10;医疗警告：原矿带有极强的神经毒性辐射。长期接触的底层矿工会患上不可逆的“星尘病”（器官纤维化与严重幻觉）。">
-                        <span class="card-icon">💎</span>
-                        <span class="card-level">✦ LORE // 核心物质</span>
-                        <h3 class="card-name">C-62“黑血”研究报告</h3>
-                        <p class="card-desc">关于高能同位素 C-62 的开采记录、能源转化率以及“星尘病”的临床医学观察报告。</p>
-                        <div class="card-meta">
-                            <span class="card-price">[DECRYPTED]</span>
-                            <span class="card-duration">// READ TIME: 3 MIN</span>
+                    
+                    <!-- 阵营卡片 1：泛星联盟 -->
+                    <div class="intel-card" style="cursor: default; display: flex; flex-direction: column;">
+                        <span class="card-icon" style="font-size: 2.5rem;">🏛️</span>
+                        <span class="card-level">✦ P.S.C // 统治阵营</span>
+                        <h3 class="card-name" style="font-size: 1.6rem;">泛星联盟</h3>
+                        <p class="card-desc" style="flex-grow: 1;">统治地球及内环星域的人类最高政体，掌握着绝大部分黑血精炼设施、星门航线和军事力量。</p>
+                        
+                        <button class="btn-ghost" style="width: 100%; padding: 12px; font-size: 14px; margin-bottom: 20px;" onclick="openFactionDetail('泛星联盟')">READ ARCHIVE →</button>
+                        
+                        <div style="border-top: 1px dashed rgba(18,168,255,0.3); padding-top: 15px; display: flex; flex-direction: column; gap: 5px;">
+                            <span style="color: #12a8ff; font-size: 12px; font-family: monospace; margin-bottom: 5px;">[ 下属组织档案 ]</span>
+                            <button class="index-org-btn" onclick="openOrgDetail('战略安全局（SSA）')">└ 战略安全局（SSA）</button>
+                            <button class="index-org-btn" onclick="openOrgDetail('泰坦星脉财团')">└ 泰坦星脉财团</button>
+                            <button class="index-org-btn" onclick="openOrgDetail('第一舰队“黄金狮子”')">└ 第一舰队“黄金狮子”</button>
                         </div>
                     </div>
 
-                    <!-- 卡片2：阵营冲突战报 -->
-                    <div class="intel-card article-card" data-keywords="战报 report 外环 泛星联盟 黑火 冲突"
-                         data-content="行动代号：碎星 (Operation Shattered Star)&#10;地点：外环 7号采矿驳船&#10;涉事阵营：泛星联盟第一舰队 vs “黑火”解放战线&#10;&#10;行动简报：星历2240年3月12日，“黑火”武装分子突袭了隶属于泰坦星脉财团的7号驳船，试图劫持当月开采的 C-62 原矿。联盟第一舰队“黄金狮子”下属的快速反应小队于 0400 时进行轨道空降介入。&#10;&#10;结果：驳船动力系统受损，30%原矿泄漏至太空。黑火武装分子撤退，联盟方 4 名特工阵亡。">
-                        <span class="card-icon">🎯</span>
-                        <span class="card-level">◉ REPORT // 冲突战报</span>
-                        <h3 class="card-name">外环 7号驳船袭击事件</h3>
-                        <p class="card-desc">泛星联盟与“黑火”解放战线在深空矿区的最新交火记录。包含现场受损评估与轨道空降录像。</p>
-                        <div class="card-meta">
-                            <span class="card-price">[CLASSIFIED]</span>
-                            <span class="card-duration">// LEVEL 3 REQUIRED</span>
+                    <!-- 阵营卡片 2：外环 -->
+                    <div class="intel-card" style="cursor: default; display: flex; flex-direction: column;">
+                        <span class="card-icon" style="font-size: 2.5rem;">🏴‍☠️</span>
+                        <span class="card-level">✦ FRONTIER // 边缘星区</span>
+                        <h3 class="card-name" style="font-size: 1.6rem;">外环</h3>
+                        <p class="card-desc" style="flex-grow: 1;">边缘航道之外的空间站与矿业殖民地。这里既有革命者，也有商人；既有理想主义者，也有只想活下去的普通人。</p>
+                        
+                        <button class="btn-ghost" style="width: 100%; padding: 12px; font-size: 14px; margin-bottom: 20px;" onclick="openFactionDetail('外环')">READ ARCHIVE →</button>
+                        
+                        <div style="border-top: 1px dashed rgba(18,168,255,0.3); padding-top: 15px; display: flex; flex-direction: column; gap: 5px;">
+                            <span style="color: #12a8ff; font-size: 12px; font-family: monospace; margin-bottom: 5px;">[ 下属组织档案 ]</span>
+                            <button class="index-org-btn" onclick="openOrgDetail('“黑火”解放战线')">└ “黑火”解放战线</button>
+                            <button class="index-org-btn" onclick="openOrgDetail('深空打捞者工会')">└ 深空打捞者工会</button>
+                            <button class="index-org-btn" onclick="openOrgDetail('“霓虹暗房”')">└ “霓虹暗房”</button>
                         </div>
                     </div>
 
-                    <!-- 卡片3：深空公民名录 -->
-                    <div class="intel-card article-card" data-keywords="编制 roster 名录 公民 佣兵 pmc"
-                         data-content="[ 数据解密中... ]&#10;&#10;深空边缘活跃公民名录（部分）：&#10;&#10;> 泛星联盟 (P.S.C) 注册特工：拥有最高级别的星门通行权与合法持械许可。&#10;> 外环 (Frontier) 游击队员：多为矿工出身，擅长在零重力与高辐射环境下作战。&#10;> 独立防务承包商 (PMCs)：如“深渊行者”与“锈血”佣兵，只要信用点给够，他们可以为任何人扣动扳机。&#10;&#10;系统警告：部分阿刻戎自由港的黑市公民数据已被加密，需 Beta 级以上权限方可访问。">
-                        <span class="card-icon">👥</span>
-                        <span class="card-level">★ ROSTER // 编制</span>
-                        <h3 class="card-name">深空活跃公民名录</h3>
-                        <p class="card-desc">最新解密级别的各阵营公民代号与专长一览表。包含联盟特工、外环反抗军及独立佣兵。</p>
-                        <div class="card-meta">
-                            <span class="card-price">[LIVE DATA]</span>
-                            <span class="card-duration">// UPDATED: 2240</span>
+                    <!-- 阵营卡片 3：独立防务承包商 -->
+                    <div class="intel-card" style="cursor: default; display: flex; flex-direction: column;">
+                        <span class="card-icon" style="font-size: 2.5rem;">⚔️</span>
+                        <span class="card-level">✦ PMCs // 私人武装</span>
+                        <h3 class="card-name" style="font-size: 1.6rem;">独立防务承包商</h3>
+                        <p class="card-desc" style="flex-grow: 1;">不参与政治站队的私人武装，游走在联邦与反抗军的夹缝中，只服从信用点和合同。</p>
+                        
+                        <button class="btn-ghost" style="width: 100%; padding: 12px; font-size: 14px; margin-bottom: 20px;" onclick="openFactionDetail('独立防务承包商')">READ ARCHIVE →</button>
+                        
+                        <div style="border-top: 1px dashed rgba(18,168,255,0.3); padding-top: 15px; display: flex; flex-direction: column; gap: 5px;">
+                            <span style="color: #12a8ff; font-size: 12px; font-family: monospace; margin-bottom: 5px;">[ 下属组织档案 ]</span>
+                            <button class="index-org-btn" onclick="openOrgDetail('“深渊行者”国际安保')">└ “深渊行者”国际安保</button>
+                            <button class="index-org-btn" onclick="openOrgDetail('“锈血”佣兵团')">└ “锈血”佣兵团</button>
                         </div>
                     </div>
 
-                    <!-- 卡片4：星际军械库 -->
-                    <div class="intel-card article-card" data-keywords="武器 装备 军械库 星舰 义体"
-                         data-content="深空作战标准配置清单：&#10;&#10;> 动能武器：电磁加速步枪（适用于真空环境，无后座力补偿模块需谨慎使用）&#10;> 战术装备：全封闭式 EVA 战斗服（内置防辐射内衬与微型生命维持系统）&#10;> 义体改造：神经突触加速器、机械义肢（多见于外环老兵与 PMC 佣兵）&#10;> 医疗物资：高浓度抗辐射凝胶（用于缓解星尘病早期症状）&#10;&#10;系统警告：所有军用级义体改造需在联盟战略安全局（SSA）进行备案。">
-                        <span class="card-icon">🔫</span>
-                        <span class="card-level">⬡ ARMORY // 军械库</span>
-                        <h3 class="card-name">深空战术装备清单</h3>
-                        <p class="card-desc">包含电磁武器、EVA 战斗服、军用级义体改造及抗辐射医疗物资的详细参数与黑市报价。</p>
-                        <div class="card-meta">
-                            <span class="card-price">[INVENTORY]</span>
-                            <span class="card-duration">// SUPPLY LOGS</span>
+                    <!-- 阵营卡片 4：自治空间站与自由港 -->
+                    <div class="intel-card" style="cursor: default; display: flex; flex-direction: column;">
+                        <span class="card-icon" style="font-size: 2.5rem;">⚖️</span>
+                        <span class="card-level">✦ NEUTRAL // 中立地带</span>
+                        <h3 class="card-name" style="font-size: 1.6rem;">自治空间站与自由港</h3>
+                        <p class="card-desc" style="flex-grow: 1;">遍布深空的独立空间站与自由港。依靠贸易、维修、医疗和情报生意生存，维持脆弱的中立。</p>
+                        
+                        <button class="btn-ghost" style="width: 100%; padding: 12px; font-size: 14px; margin-bottom: 20px;" onclick="openFactionDetail('自治空间站与自由港')">READ ARCHIVE →</button>
+                        
+                        <div style="border-top: 1px dashed rgba(18,168,255,0.3); padding-top: 15px; display: flex; flex-direction: column; gap: 5px;">
+                            <span style="color: #12a8ff; font-size: 12px; font-family: monospace; margin-bottom: 5px;">[ 下属组织档案 ]</span>
+                            <button class="index-org-btn" onclick="openOrgDetail('阿刻戎自由港')">└ 阿刻戎自由港</button>
+                            <button class="index-org-btn" onclick="openOrgDetail('圣赫利俄斯医疗会')">└ 圣赫利俄斯医疗会</button>
+                            <button class="index-org-btn" onclick="openOrgDetail('流浪者教团')">└ 流浪者教团</button>
                         </div>
                     </div>
-                </div>
-            </section>
 
-            <!-- 4. 横向拖拽画廊 -->
-            <div class="gallery-strip">
-                <div class="gallery-caption">✦ SATELLITE IMAGERY // 卫星扫描图传</div>
-                <div class="article-grid" id="galleryStrip" style="padding: 2rem; gap: 30px;">
-                    <!-- 这里的卡片仅作为展示图片的画廊 -->
-                    <div class="gallery-item placeholder-a"><span>[MAP_GRID_01]</span></div>
-                    <div class="gallery-item placeholder-b"><span>[TARGET_BUILDING]</span></div>
-                    <div class="gallery-item placeholder-c"><span>[DRONE_FOOTAGE]</span></div>
-                    <div class="gallery-item placeholder-a"><span>[EXTRACTION_POINT]</span></div>
                 </div>
             </div>
-
         </div>
 
+        <!-- 💥 新增：历史时间线 (Timeline View) 💥 -->
+        <div class="view-panel" id="timelineView">
+            <div class="timeline-wrapper">
 
-        <div class="view-panel" id="worldView">
-            <div class="archive-container" style="text-align: center; padding-top: 15vh;">
-                <div style="font-size: 64px; margin-bottom: 20px; filter: grayscale(1); opacity: 0.5;">🚧</div>
-                <h2 class="neon-title" style="font-size: 32px; color: #8bb9d6; text-shadow: 0 0 15px rgba(139, 185, 214, 0.5);">[ SECTOR PURGED // 扇区已清空 ]</h2>
-                <p style="color: #666; margin-top: 20px; font-family: monospace; letter-spacing: 1px;">
-                    世界观档案已迁移至主界面。<br>
-                    当前界面正在等待施工...
-                </p>
+                
+                
+                <!-- 左侧固定导航 -->
+                <nav class="timeline-nav__wrapper">
+                    
+                    <!-- 💥 移到这里的返回按钮：固定在主标题下方 💥 -->
+                    <button class="btn-ghost timeline-return-btn" onclick="backToWorldView()">
+                        &lt; RETURN TO LORE HUB
+                    </button>
+
+                    <ul class="timeline-nav">
+                        <li class="active">
+                            <a data-scroll="tl-sec1">
+                                <span class="timeline-nav__counter">2190</span>
+                                <h3 class="timeline-nav__title">发现黑血</h3>
+                                <p class="timeline-nav__body">深空探测器在小行星带深处首次发现高能同位素 C-62。人类文明的能源危机宣告解除。</p>
+                            </a>
+                        </li>
+                        <li>
+                            <a data-scroll="tl-sec2">
+                                <span class="timeline-nav__counter">2205</span>
+                                <h3 class="timeline-nav__title">星尘病爆发</h3>
+                                <p class="timeline-nav__body">首批外环矿工出现严重的器官纤维化与幻觉症状。官方试图封锁消息，但最终失败。</p>
+                            </a>
+                        </li>
+                        <li>
+                            <a data-scroll="tl-sec3">
+                                <span class="timeline-nav__counter">2218</span>
+                                <h3 class="timeline-nav__title">泛星联盟成立</h3>
+                                <p class="timeline-nav__body">为了统筹黑血资源的分配与镇压外环暴动，内环各大政体与财团联合，成立泛星联盟 (P.S.C)。</p>
+                            </a>
+                        </li>
+                        <li>
+                            <a data-scroll="tl-sec4">
+                                <span class="timeline-nav__counter">2230</span>
+                                <h3 class="timeline-nav__title">外环大罢工</h3>
+                                <p class="timeline-nav__body">不堪压迫的外环矿工发起全星区罢工，遭到联盟第一舰队的血腥镇压。“黑火”解放战线由此诞生。</p>
+                            </a>
+                        </li>
+                        <li>
+                            <a data-scroll="tl-sec5">
+                                <span class="timeline-nav__counter">2240</span>
+                                <h3 class="timeline-nav__title">碎星事件</h3>
+                                <p class="timeline-nav__body">当前纪元。黑火武装劫持 7 号采矿驳船，各大 PMC 卷入冲突，全面战争一触即发。</p>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <!-- 右侧滚动内容区 -->
+                <div class="timeline-content">
+                    
+                    <section class="timeline-section" id="tl-sec1">
+                        <h2>2190</h2>
+                        <div class="content-box">
+                            <h3 style="color: #12a8ff; font-size: 28px; margin-top: 0;">星历 2190 年：潘多拉的魔盒</h3>
+                            <p style="color: #8bb9d6; line-height: 1.8; font-size: 16px;">
+                                探测器“远望者-7”在太阳系外环的柯伊伯带深处，传回了一组异常的辐射读数。随后，第一批勘探队带回了那种散发着幽蓝色微光的黑色矿石——C-62。<br><br>
+                                它的能量转化率是核聚变的数百倍。一夜之间，地球的能源危机迎刃而解，星际航行从昂贵的奢望变成了日常。人类欢呼雀跃，以为自己终于握住了上帝的权杖，却不知道他们打开的是潘多拉的魔盒。
+                            </p>
+                        </div>
+                    </section>
+
+                    <section class="timeline-section" id="tl-sec2">
+                        <h2>2205</h2>
+                        <div class="content-box">
+                            <h3 style="color: #12a8ff; font-size: 28px; margin-top: 0;">星历 2205 年：群星的低语</h3>
+                            <p style="color: #8bb9d6; line-height: 1.8; font-size: 16px;">
+                                随着开采规模的扩大，第一批长期接触原矿的底层矿工开始出现异常。起初只是轻微的咳嗽和皮肤荧光，随后演变为严重的器官纤维化。<br><br>
+                                最可怕的是伴随而来的幻觉——患者声称听到了“群星的低语”。泰坦星脉财团试图用高压手段封锁消息，将死者秘密处理。但纸包不住火，这种被称为“星尘病”的绝症最终在整个外环蔓延开来。
+                            </p>
+                        </div>
+                    </section>
+
+                    <section class="timeline-section" id="tl-sec3">
+                        <h2>2218</h2>
+                        <div class="content-box">
+                            <h3 style="color: #12a8ff; font-size: 28px; margin-top: 0;">星历 2218 年：秩序的铁腕</h3>
+                            <p style="color: #8bb9d6; line-height: 1.8; font-size: 16px;">
+                                面对外环日益严重的抗议和黑血走私问题，内环的旧政体意识到，松散的联合已经无法维持对星系的统治。<br><br>
+                                在泰坦星脉财团的资金支持下，地球及内环各大行星签署了《泛星条约》，正式成立“泛星联盟 (P.S.C)”。联盟迅速组建了第一舰队和战略安全局（SSA），以铁腕手段接管了所有核心星门和精炼设施。
+                            </p>
+                        </div>
+                    </section>
+
+                    <section class="timeline-section" id="tl-sec4">
+                        <h2>2230</h2>
+                        <div class="content-box">
+                            <h3 style="color: #12a8ff; font-size: 28px; margin-top: 0;">星历 2230 年：鲜血与火花</h3>
+                            <p style="color: #8bb9d6; line-height: 1.8; font-size: 16px;">
+                                联盟的压迫终于达到了临界点。外环 12 个主要矿区同时爆发大罢工，要求改善工作环境并提供星尘病的治疗药物。<br><br>
+                                联盟的回答是第一舰队的轨道轰炸。罢工被血腥镇压，数万人死亡。但在废墟之中，幸存的矿工和逃兵们拿起了武器，“黑火”解放战线正式宣告成立，星系进入了漫长的游击战时代。
+                            </p>
+                        </div>
+                    </section>
+
+                    <section class="timeline-section" id="tl-sec5">
+                        <h2>2240</h2>
+                        <div class="content-box">
+                            <h3 style="color: #12a8ff; font-size: 28px; margin-top: 0;">星历 2240 年：深空边缘</h3>
+                            <p style="color: #8bb9d6; line-height: 1.8; font-size: 16px;">
+                                当前纪元。黑火武装成功劫持了联盟的 7 号采矿驳船，造成大量原矿泄漏。这一事件彻底激怒了联盟最高议会。<br><br>
+                                随着正规军的集结，各大独立防务承包商（PMC）也闻风而动，纷纷涌入外环寻找发财的机会。在阿刻戎自由港的阴影下，情报贩子们疯狂交换着筹码。全面战争的倒计时，已经开始。
+                            </p>
+                        </div>
+                    </section>
+                </div>
             </div>
         </div>
             
@@ -2797,6 +3524,86 @@
                 
                 <!-- 动态生成的个人卡片会放在这里 -->
                 <div id="profile-content"></div>
+            </div>
+        </div>
+
+        <!-- 💥 新增：管理员内容发布中心 💥 -->
+        <div class="view-panel" id="adminView">
+            <div class="archive-container" style="max-width: 900px; margin: 0 auto;">
+                <div class="archive-header" style="border-bottom: 2px solid #f44336; padding-bottom: 15px; margin-bottom: 30px;">
+                    <h2 class="neon-title" style="font-size: 32px; color: #f44336; text-shadow: 0 0 15px rgba(244,67,54,0.5);">[ SYSTEM ADMIN // 内容管理中心 ]</h2>
+                    <p style="color: #ffb4a9; font-family: monospace;">最高指挥部数据录入终端。在此发布的内容将实时同步至所有干员的设备。</p>
+                </div>
+
+                <div class="system-notice" style="border-color: #f44336; background: rgba(244,67,54,0.05); color: #ffb4a9;">
+                    <strong>操作指南：</strong> 选择发布类型，填写卡片信息与正文。正文支持直接输入换行，或使用 HTML 标签进行高级排版。
+                </div>
+
+                <form class="tactical-form" id="admin-article-form">
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label style="color: #f44336;">发布类型</label>
+                            <div class="input-wrapper select-wrapper" style="border-color: rgba(244,67,54,0.4);">
+                                <span class="prefix" style="color: #f44336;">&gt;</span>
+                                <select id="a-type" style="color: #fff;">
+                                    <option value="intel">情报卡片 (Intel Grid)</option>
+                                    <option value="faction">阵营档案 (Faction)</option>
+                                    <option value="org">组织档案 (Organization)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label style="color: #f44336;">卡片图标 (Emoji或符号)</label>
+                            <div class="input-wrapper" style="border-color: rgba(244,67,54,0.4);">
+                                <span class="prefix" style="color: #f44336;">&gt;</span>
+                                <input type="text" id="a-icon" placeholder="例如: 💎 或 🎯">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label style="color: #f44336;">标题 (Title)</label>
+                            <div class="input-wrapper" style="border-color: rgba(244,67,54,0.4);">
+                                <span class="prefix" style="color: #f44336;">&gt;</span>
+                                <input type="text" id="a-title" placeholder="例如: C-62“黑血”研究报告">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label style="color: #f44336;">副标题/标签 (Tag)</label>
+                            <div class="input-wrapper" style="border-color: rgba(244,67,54,0.4);">
+                                <span class="prefix" style="color: #f44336;">&gt;</span>
+                                <input type="text" id="a-tag" placeholder="例如: ✦ LORE // 核心物质">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-group full-width">
+                        <label style="color: #f44336;">搜索关键词 (Keywords，用空格隔开)</label>
+                        <div class="input-wrapper" style="border-color: rgba(244,67,54,0.4);">
+                            <span class="prefix" style="color: #f44336;">&gt;</span>
+                            <input type="text" id="a-keywords" placeholder="例如: c-62 黑血 矿石 星尘病">
+                        </div>
+                    </div>
+
+                    <div class="input-group full-width">
+                        <label style="color: #f44336;">卡片简介 (Summary - 显示在外部网格中)</label>
+                        <div class="input-wrapper" style="border-color: rgba(244,67,54,0.4);">
+                            <textarea id="a-summary" rows="2" placeholder="简短的描述..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="input-group full-width">
+                        <label style="color: #f44336;">详细正文 (Content - 点开后全屏显示的内容)</label>
+                        <div class="input-wrapper" style="border-color: rgba(244,67,54,0.4);">
+                            <textarea id="a-content" rows="8" placeholder="在此输入详细档案正文..."></textarea>
+                        </div>
+                    </div>
+
+                    <button type="button" class="submit-btn" id="btn-publish-article" style="color: #f44336; border-color: #f44336; background: rgba(244,67,54,0.1);">
+                        [ UPLOAD TO DATABASE // 发布至数据库 ]
+                    </button>
+                </form>
             </div>
         </div>
 
@@ -2839,7 +3646,7 @@
             <div class="form-section-title">[ 阵营与组织归属 ]</div>
             <div class="form-grid">
                 <div class="input-group">
-                    <label>所属阵营</label>
+                    <label>所属阵营 <span class="help-btn" onclick="showLoreHelp('faction')" title="查看阵营说明">[?]</span></label>
                     <div class="input-wrapper select-wrapper">
                         <span class="prefix">&gt;</span>
                         <select id="f-faction" required>
@@ -2852,12 +3659,19 @@
                     </div>
                 </div>
                 <div class="input-group">
-                    <label>下属组织</label>
+                    <label>下属组织 <span class="help-btn" onclick="showLoreHelp('org')" title="查看组织说明">[?]</span></label>
                     <div class="input-wrapper select-wrapper">
                         <span class="prefix">&gt;</span>
                         <select id="f-org" required disabled>
                             <option value="" disabled selected>-- 请先确认主阵营 --</option>
                         </select>
+                    </div>
+                </div>
+                <div class="input-group full-width">
+                    <label>职位/职业</label>
+                    <div class="input-wrapper">
+                        <span class="prefix">&gt;</span>
+                        <textarea id="f-occupation" rows="1" placeholder="例如：突击手、医疗兵、黑客、走私客..."></textarea>
                     </div>
                 </div>
             </div>
@@ -2892,11 +3706,25 @@
                     <label>血型</label>
                     <div class="input-wrapper"><span class="prefix">&gt;</span><textarea id="f-blood" rows="1" placeholder="A/B/O/AB..."></textarea></div>
                 </div>
+                <div class="input-group">
+                    <label>性取向</label>
+                    <div class="input-wrapper">
+                        <span class="prefix">&gt;</span>
+                        <textarea id="f-orientation" rows="1" placeholder="异性恋/同性恋/双性恋/无性恋..."></textarea>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>属性</label>
+                    <div class="input-wrapper">
+                        <span class="prefix">&gt;</span>
+                        <textarea id="f-role" rows="1" placeholder="Top / Bottom / Switch / N/A"></textarea>
+                    </div>
+                </div>
             </div>
 
             <div class="form-section-title">》DETAILS [ 详细特征侧写 ]</div>
             <div class="input-group full-width">
-                <label>外貌</label>
+                <label>外貌 <span class="help-btn" onclick="showLoreHelp('appearance')" title="查看深空外貌特征参考">[?]</span></label>
                 <div class="input-wrapper"><textarea id="f-appearance" rows="3" placeholder="发色、瞳色、伤疤、纹身等可视特征..."></textarea></div>
             </div>
             <div class="input-group full-width">
@@ -2904,7 +3732,7 @@
                 <div class="input-wrapper"><textarea id="f-personality" rows="3" placeholder="行事作风、习惯动作等..."></textarea></div>
             </div>
             <div class="input-group full-width">
-                <label>备注</label>
+                <label>备注 <span class="help-btn" onclick="showLoreHelp('notes')" title="查看填写建议">[?]</span></label>
                 <div class="input-wrapper"><textarea id="f-notes" rows="2" placeholder="阵营、雷点、背景故事摘要或其他补充说明..."></textarea></div>
             </div>
 
@@ -3031,9 +3859,11 @@
 
     <script>
            /* =========================================================
-           0. 终端全局弹窗引擎 (SysModal)
+           0. 终端全局弹窗引擎 (SysModal) - 赛博动画升级版
            ========================================================= */
         const SysModal = {
+            closeTimeout: null, // 用于记录关闭动画的定时器
+            
             init() {
                 this.overlay = document.getElementById('sysModalOverlay');
                 this.title = document.getElementById('sysModalTitle');
@@ -3047,8 +3877,12 @@
                 return new Promise(resolve => {
                     if (!this.overlay) this.init();
                     
+                    // 💥 如果正在播放关闭动画，立刻打断并恢复显示
+                    if (this.closeTimeout) clearTimeout(this.closeTimeout);
+                    this.overlay.classList.remove('closing');
+                    
                     this.title.innerHTML = opts.title || '[ SYSTEM MESSAGE ]';
-                    this.msg.innerHTML = (opts.msg || '').replace(/\n/g, '<br>'); // 把换行符转为网页换行
+                    this.msg.innerHTML = (opts.msg || '').replace(/\n/g, '<br>'); 
                     
                     if (opts.type === 'prompt') {
                         this.inputWrapper.style.display = 'flex';
@@ -3078,7 +3912,6 @@
                         else if (opts.type === 'confirm') resolve(false);
                     };
 
-                    // 支持回车快捷提交
                     this.input.onkeydown = (e) => {
                         if (e.key === 'Enter') this.btnConfirm.click();
                     };
@@ -3086,12 +3919,19 @@
                     this.overlay.classList.add('active');
                 });
             },
-            close() { this.overlay.classList.remove('active'); },
+            close() { 
+                // 💥 核心：先加上 closing 类触发断电动画
+                this.overlay.classList.add('closing');
+                
+                // 等待 300ms 动画播完后，再真正隐藏弹窗
+                this.closeTimeout = setTimeout(() => {
+                    this.overlay.classList.remove('active', 'closing');
+                }, 300); 
+            },
             alert(msg, title) { return this.show({ type: 'alert', msg, title }); },
             confirm(msg, title) { return this.show({ type: 'confirm', msg, title }); },
             prompt(msg, defaultText, title) { return this.show({ type: 'prompt', msg, defaultText, title }); }
         };
-
 
         /* =========================================================
            1. 网页交互逻辑（导航、侧边栏切换等）
@@ -3127,12 +3967,23 @@
         wikiButtons.forEach(button => {
             button.addEventListener('click', async () => { 
                 const targetId = button.getAttribute('data-target');
+                
+                // 💥 新增：游客权限拦截
+                if (currentUser && currentUser.role === 'guest') {
+                    // 游客不能访问填表、审核、人设库和个人终端
+                    if (['createView', 'queueView', 'profileView', 'logView'].includes(targetId)) {
+                        await SysModal.alert("游客无权访问此模块。\n请点击右上角 [ ⏻登录 ] 获取正式终端身份。", "⚠️ ACCESS DENIED // 权限拒绝");
+                        return;
+                    }
+                }
+
+                // 原本的人设库审核拦截
                 if (targetId === 'logView') {
                     const isAdmin = currentUser && currentUser.role === 'admin';
                     const hasApprovedProfile = characterDB.some(c => c.owner_id === currentUser.id);
 
                     if (!isAdmin && !hasApprovedProfile) {
-                        await SysModal.alert("您的档案尚未通过审核，无法访问公民档案库！\n请前往「审核中心」查看审核进度。", "⚠️ ACCESS DENIED // 权限不足");
+                        await SysModal.alert("您的档案尚未通过最高指挥部审核，无法访问正式机密库！\n请前往「WAIT // 战术等候室」查看审核进度。", "⚠️ ACCESS DENIED // 权限拒绝");
                         return; 
                     }
                 }
@@ -3141,7 +3992,6 @@
                 const targetPanel = document.getElementById(targetId);
                 if (targetPanel) { 
                     targetPanel.classList.add('active'); 
-                    // 💥 核心：把当前界面的 ID 存入浏览器会话记忆中
                     sessionStorage.setItem('tf141_current_view', targetId);
                 }
                 closeSidebar();
@@ -3216,28 +4066,27 @@
             };
         });
 
-        // 2. 打开全屏文章的函数 (升级版：带记忆功能)
+        // 2. 打开全屏文章的函数 (升级版：支持 HTML 与按钮渲染)
         function openArticle(item) {
-            // 填充数据
             pageTitle.innerText = item.title;
             pageMeta.innerText = item.tag;
-            pageContent.innerText = item.content;
             
-            // 💥 核心逻辑：在切换视图前，记录当前处于 active 状态的视图
+            // 💥 核心升级：如果内容包含 HTML 标签，就直接渲染；如果是纯文本，就把换行符转成 <br>
+            if (item.content.includes('<') && item.content.includes('>')) {
+                pageContent.innerHTML = item.content;
+            } else {
+                pageContent.innerHTML = item.content.replace(/\n/g, '<br>');
+            }
+            
             const currentActivePanel = document.querySelector('.view-panel.active');
-            // 如果当前已经在文章页里（比如在文章页里又搜了另一篇文章），就不覆盖之前的记忆
             if (currentActivePanel && currentActivePanel.id !== 'articleView') {
                 previousViewId = currentActivePanel.id;
             }
             
-            // 隐藏所有视图，显示文章视图
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
             articleView.classList.add('active');
-            
-            // 滚动到页面顶部
             window.scrollTo({ top: 0, behavior: 'smooth' });
             
-            // 关闭搜索下拉框并清空输入
             searchDropdown.classList.remove('active');
             searchInput.value = '';
         }
@@ -3338,11 +4187,21 @@
             });
         });
 
+        // 💥 新增：点击展开/收起子目录的函数 (带箭头旋转)
+        window.toggleSubMenu = function(id) {
+            const sub = document.getElementById(id);
+            if(sub) {
+                sub.classList.toggle('open');
+                // 找到对应的箭头并切换旋转状态
+                const arrow = sub.previousElementSibling.querySelector('.toc-arrow');
+                if(arrow) arrow.classList.toggle('open');
+            }
+        };
+
         // 2. 战术雷达扫描：自动监听当前阅读位置并高亮左侧目录
         const observerOptions = {
             root: null,
-            // 触发线：当一个模块进入视口顶部 100px 到 屏幕中间 范围内时触发
-            rootMargin: '-100px 0px -50% 0px', 
+            rootMargin: '-80px 0px -30% 0px', 
             threshold: 0
         };
 
@@ -3352,19 +4211,38 @@
                     const id = entry.target.getAttribute('id');
                     
                     // 移除所有按钮的高亮状态
-                    tocBtns.forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.toc-btn').forEach(btn => btn.classList.remove('active'));
                     
                     // 找到对应当前区块的按钮，为其加上高亮状态
                     const activeBtn = document.querySelector(`.toc-btn[data-scroll="${id}"]`);
                     if (activeBtn) {
                         activeBtn.classList.add('active');
+                        
+                        // 💥 智能逻辑：如果当前滑到的是子目录，自动展开它的父级菜单！
+                        const parentSub = activeBtn.closest('.sub-toc-list');
+                        if (parentSub) {
+                            parentSub.classList.add('open');
+                            // 找到父级按钮并让它也保持高亮
+                            const parentDiv = parentSub.previousElementSibling;
+                            if (parentDiv) {
+                                const parentBtn = parentDiv.querySelector('.toc-btn');
+                                if (parentBtn) parentBtn.classList.add('active');
+                                
+                                // 💥 让箭头也保持旋转展开状态
+                                const arrow = parentDiv.querySelector('.toc-arrow');
+                                if (arrow) arrow.classList.add('open');
+                            }
+                        }
                     }
                 }
             });
         }, observerOptions);
 
-        // 将所有需要被雷达监控的区块加入观察列表
-        document.querySelectorAll('#sec-intro, #sec-conflict, #sec-factions, #sec-onboard').forEach(section => {
+        // 💥 将所有需要被雷达监控的区块加入观察列表 (包含主控、情报卡片、画廊)
+        // 💥 将所有需要被雷达监控的区块加入观察列表 (新增了 4 个阵营的 ID)
+        const observeTargets = '#main-hero, #sec-intro, #sec-conflict, #sec-factions, #faction-psc, #faction-frontier, #faction-pmc, #faction-freeport, #sec-onboard, #intel-grid, #intel-1, #intel-2, #intel-3, #intel-4, #gallery-strip';
+        
+        document.querySelectorAll(observeTargets).forEach(section => {
             if (section) sectionObserver.observe(section);
         });
 
@@ -3381,52 +4259,53 @@
         let characterDB = [];
         let currentUser = null; // 记录当前登录的群友身份
 
-        // 2. 💥 终端身份认证系统 (支持密钥恢复身份)
+        // 2. 💥 终端身份认证系统 (支持密钥恢复与游客模式)
         async function initIdentity() {
             let deviceId = localStorage.getItem('tf141_device_id');
             
             if (!deviceId) {
                 // 第一次来，弹窗询问
-                let input = await SysModal.prompt("初次连接星际网络终端。\n\n▶ 新公民：请输入您的代号 (Nickname)\n▶ 老公民：请输入您的终端密钥 (如 OP-XXXX 恢复身份)", "", "SYSTEM PROMPT // 身份认证");
+                let input = await SysModal.prompt("初次连接星际网络终端。\n\n▶ 新干员：请输入您的代号 (Nickname)\n▶ 老干员：请输入您的终端密钥 (如 OP-XXXX)\n\n※ 点击 [取消] 可作为游客免登录浏览世界观。", "", "SYSTEM PROMPT // 身份认证");
                 
-                if (input === null) input = "Unknown_Operator"; // 防止用户点取消导致报错
-                input = input.trim();
-                
-
-                // 💥 判断：如果输入的是 OP- 开头的密钥，执行身份恢复逻辑
-                if (input.toUpperCase().startsWith('OP-')) {
-                    const { data, error } = await supabaseClient
-                        .from('users')
-                        .select('*')
-                        .eq('id', input.toUpperCase())
-                        .single();
-                    
-                    if (data) {
-                        // 密钥正确，恢复身份！
-                        deviceId = data.id;
-                        localStorage.setItem('tf141_device_id', deviceId);
-                        currentUser = data;
-                        await SysModal.alert(`欢迎回来，${currentUser.nickname}。权限已恢复。`, "身份确认");
-                    } else {
-                        // 密钥错误
-                        await SysModal.alert("数据库中未找到该密钥，系统将重新初始化。", "❌ 密钥无效");
-                        localStorage.removeItem('tf141_device_id');
-                        return initIdentity(); // 重新弹窗
-                    }
+                if (input === null) {
+                    // 💥 用户点击了取消，进入游客模式！
+                    currentUser = { id: 'GUEST', nickname: '游客', role: 'guest' };
                 } else {
-                    // 💥 输入的是普通代号，执行新用户注册逻辑
-                    deviceId = 'OP-' + Math.random().toString(36).substr(2, 9).toUpperCase();
-                    localStorage.setItem('tf141_device_id', deviceId);
-
-                    const { data } = await supabaseClient
-                        .from('users')
-                        .insert([{ id: deviceId, nickname: input, role: 'user' }])
-                        .select();
+                    input = input.trim();
+                    if (!input) input = "Unknown_Operator";
                     
-                    if(data) {
-                        currentUser = data[0];
-                        // ⚠️ 极其重要：告诉新用户他的密钥！
-                        await SysModal.alert(`欢迎接入泛星网络，${input}。\n\n⚠️ 请务必截图或牢记您的专属终端密钥：\n【 ${deviceId} 】\n\n在其他设备上输入此密钥即可恢复您的身份与档案！`, "REGISTRATION SUCCESS // 注册成功");
+                    // 判断：如果输入的是 OP- 开头的密钥，执行身份恢复逻辑
+                    if (input.toUpperCase().startsWith('OP-')) {
+                        const { data, error } = await supabaseClient
+                            .from('users')
+                            .select('*')
+                            .eq('id', input.toUpperCase())
+                            .single();
+                        
+                        if (data) {
+                            deviceId = data.id;
+                            localStorage.setItem('tf141_device_id', deviceId);
+                            currentUser = data;
+                            await SysModal.alert(`欢迎回来，${currentUser.nickname}。权限级别已恢复。`, "IDENTITY CONFIRMED // 身份确认");
+                        } else {
+                            await SysModal.alert("数据库中未找到该终端密钥，系统将重新初始化。", "❌ INVALID KEY // 密钥无效");
+                            localStorage.removeItem('tf141_device_id');
+                            return initIdentity(); 
+                        }
+                    } else {
+                        // 输入的是普通代号，执行新用户注册逻辑
+                        deviceId = 'OP-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+                        localStorage.setItem('tf141_device_id', deviceId);
+
+                        const { data } = await supabaseClient
+                            .from('users')
+                            .insert([{ id: deviceId, nickname: input, role: 'user' }])
+                            .select();
+                        
+                        if(data) {
+                            currentUser = data[0];
+                            await SysModal.alert(`欢迎接入泛星网络，${input}。\n\n⚠️ 请务必截图或牢记您的专属终端密钥：\n【 ${deviceId} 】\n\n在其他设备上输入此密钥即可恢复您的身份与档案！`, "REGISTRATION SUCCESS // 注册成功");
+                        }
                     }
                 }
             } else {
@@ -3445,31 +4324,45 @@
                 }
             }
             
-            // 💥 把右上角的提示改一下，方便群友随时查看自己的密钥
-            document.querySelector('.lang-text').innerText = `OP: ${currentUser.nickname} [${currentUser.id}]`;
-            
-            // 把右上角的提示改一下，加上电源小图标
-            const statusBtn = document.querySelector('.lang-text');
-            statusBtn.innerText = `OP: ${currentUser.nickname} [${currentUser.id}] ⏻`;
-            
-            // 💥 把右上角的提示拆分成“可复制的文本”和“注销按钮”
+            // 💥 更新右上角身份状态栏
             const statusContainer = document.querySelector('.lang-text');
-            statusContainer.innerHTML = `
-                <span class="op-key-text" title="点击即可全选复制">OP: ${currentUser.nickname} [${currentUser.id}]</span>
-                <span class="logout-btn" title="断开终端连接">⏻退出</span>
-            `;
+            if (currentUser.role === 'guest') {
+                // 游客状态：显示未注册，按钮变成“登录”
+                statusContainer.innerHTML = `
+                    <span class="op-key-text" style="color: #8bb9d6;">OP: GUEST [UNREGISTERED]</span>
+                    <span class="logout-btn" title="注册或登录终端">⏻登录</span>
+                `;
+            } else {
+                // 正式干员状态
+                statusContainer.innerHTML = `
+                    <span class="op-key-text" title="点击即可全选复制">OP: ${currentUser.nickname} [${currentUser.id}]</span>
+                    <span class="logout-btn" title="断开终端连接">⏻退出</span>
+                `;
+            }
             
-            // 💥 注销点击事件现在只绑定到专属按钮上！
+            // 💥 绑定右上角按钮的点击事件
             document.querySelector('.logout-btn').onclick = async function() {
-                const msg = `即将断开当前公民的终端连接。\n请确保您已妥善保管当前密钥：【 ${currentUser.id} 】\n\n确认断开并切换身份吗？`;
-                const isSure = await SysModal.confirm(msg, "⚠️断开连接");
-                if (isSure) {
-                    localStorage.removeItem('tf141_device_id');
+                if (currentUser.role === 'guest') {
+                    // 游客点击登录，直接刷新页面重新弹窗
                     location.reload(); 
+                } else {
+                    const msg = `即将断开当前干员的终端连接。\n请确保您已妥善保管当前密钥：【 ${currentUser.id} 】\n\n确认断开并切换身份吗？`;
+                    const isSure = await SysModal.confirm(msg, "⚠️ TERMINAL DISCONNECT // 断开连接");
+                    if (isSure) {
+                        localStorage.removeItem('tf141_device_id');
+                        location.reload(); 
+                    }
                 }
             };
 
             fetchCloudData();
+            fetchArticles(); 
+
+            // 如果是管理员，解锁侧边栏的控制台入口
+            if (currentUser && currentUser.role === 'admin') {
+                const adminMenu = document.getElementById('adminMenuWrapper');
+                if (adminMenu) adminMenu.style.display = 'block';
+            }
         } // <-- 这是 initIdentity 函数原本的结尾大括号
 
         let pendingDB = []; // 专门存待审核的档案
@@ -3549,24 +4442,26 @@
             });
         }
 
-        // 💥 渲染个人终端主页
+        // 💥 渲染个人终端主页 (升级版：加入改名功能)
         function renderProfile() {
             const container = document.getElementById('profile-content');
             if (!container) return;
 
-            // 寻找当前用户的档案（先找正式库，再找待审核库）
             let myChar = characterDB.find(c => c.owner_id === currentUser.id);
             if (!myChar) {
                 myChar = pendingDB.find(c => c.owner_id === currentUser.id);
             }
 
-            // 如果完全没有档案
+            // 💥 状态 1：如果完全没有档案
             if (!myChar) {
                 container.innerHTML = `
                     <div class="profile-card" style="justify-content: center; align-items: center; text-align: center; min-height: 300px; border-color: #666;">
                         <div>
                             <div style="font-size: 48px; margin-bottom: 20px; filter: grayscale(1);">👤</div>
-                            <h3 style="color: #8bb9d6; font-family: monospace; letter-spacing: 2px;">[ 暂无档案 ]</h3>
+                            <h3 style="color: #8bb9d6; font-family: monospace; letter-spacing: 2px; margin-bottom: 10px;">
+                                OP: ${currentUser.nickname} 
+                                <span onclick="changeTerminalName()" style="color: #12a8ff; cursor: pointer; font-size: 14px; margin-left: 10px; text-decoration: underline; text-underline-offset: 3px;">[改名]</span>
+                            </h3>
                             <p style="color: #666; margin-bottom: 20px;">您尚未在终端录入任何个人数据。</p>
                             <button class="submit-btn" onclick="document.querySelector('[data-target=\\'createView\\']').click()">[ 前往填写 ]</button>
                         </div>
@@ -3575,10 +4470,9 @@
                 return;
             }
 
-            // 判断状态与主题色
             let statusClass = 'status-approved';
             let statusText = '审核通过';
-            let themeColor = '#12a8ff'; // 默认赛博蓝
+            let themeColor = '#12a8ff'; 
             let rgbColor = '18, 168, 255';
 
             if (myChar.status === 'pending') {
@@ -3593,10 +4487,8 @@
                 rgbColor = '244, 67, 54';
             }
 
-            // 提取代号的首字母作为头像
             const avatarLetter = myChar.callsign ? myChar.callsign.charAt(0).toUpperCase() : '?';
 
-            // 针对不同状态的反馈提示区
             let feedbackHtml = '';
             if (myChar.status === 'rejected' && myChar.review_comments) {
                 let listHtml = '';
@@ -3628,7 +4520,7 @@
                 `;
             }
 
-            // 组装完整的 ID 卡片
+            // 💥 状态 2：组装完整的 ID 卡片 (加入改名按钮)
             container.innerHTML = `
                 <div class="profile-card" style="border-color: ${themeColor}; box-shadow: inset 0 0 30px rgba(${rgbColor}, 0.1);">
                     
@@ -3638,8 +4530,9 @@
                             ${avatarLetter}
                         </div>
                         <div class="profile-status-badge ${statusClass}">${statusText}</div>
-                        <div style="font-family: monospace; font-size: 12px; color: #8bb9d6; text-align: center; line-height: 1.5;">
-                            ID: ${myChar.id}<br>
+                        <div style="font-family: monospace; font-size: 12px; color: #8bb9d6; text-align: center; line-height: 1.6;">
+                            OP: ${currentUser.nickname} <span onclick="changeTerminalName()" style="color: #12a8ff; cursor: pointer; text-decoration: underline;">[改名]</span><br>
+                            KEY: ${currentUser.id}<br>
                             UPLINK: SECURE
                         </div>
                     </div>
@@ -3654,14 +4547,17 @@
                         </div>
                         
                         <div class="form-grid" style="gap: 10px;">
-                            <div class="detail-item"><span class="detail-lbl">所属阵营:</span> ${myChar.faction || 'N/A'}</div>
-                            <div class="detail-item"><span class="detail-lbl">所属组织:</span> ${myChar.organization || 'N/A'}</div>
+                            <div class="detail-item"><span class="detail-lbl">所属阵营:</span> <span class="clickable-tag" onclick="scrollToFaction('${myChar.faction}')">${myChar.faction || 'N/A'}</span></div>
+                            <div class="detail-item"><span class="detail-lbl">所属组织:</span> <span class="clickable-tag" onclick="openOrgDetail('${myChar.organization}')">${myChar.organization || 'N/A'}</span></div>
+                            <div class="detail-item" style="grid-column: 1 / -1;"><span class="detail-lbl">职位/职业:</span> ${myChar.occupation || 'N/A'}</div>
                         </div>
                         
                         <div class="form-grid-3" style="gap: 10px; margin-top: 10px; background: rgba(0,0,0,0.4); padding: 10px; border: 1px solid rgba(255,255,255,0.1);">
                             <div class="detail-item"><span class="detail-lbl">性别:</span> ${myChar.gender}</div>
                             <div class="detail-item"><span class="detail-lbl">性别备注:</span> ${myChar.gender_notes || 'N/A'}</div>
                             <div class="detail-item"><span class="detail-lbl">年龄:</span> ${myChar.age}</div>
+                            <div class="detail-item"><span class="detail-lbl">性取向:</span> ${myChar.orientation || 'N/A'}</div>
+                            <div class="detail-item"><span class="detail-lbl">属性:</span> ${myChar.role || 'N/A'}</div>
                             <div class="detail-item"><span class="detail-lbl">血型:</span> ${myChar.blood}</div>
                             <div class="detail-item"><span class="detail-lbl">身高:</span> ${myChar.height}</div>
                             <div class="detail-item"><span class="detail-lbl">体重:</span> ${myChar.weight}</div>
@@ -3670,7 +4566,6 @@
                         
                         ${feedbackHtml}
                         
-                        <!-- 如果审核通过了，才展示完整的外貌性格等长文本 -->
                         ${myChar.status === 'approved' ? `
                             <div class="detail-text-block" style="margin-top: 15px;"><span class="detail-lbl">外貌:</span><br>${myChar.appearance}</div>
                             <div class="detail-text-block"><span class="detail-lbl">性格:</span><br>${myChar.personality}</div>
@@ -3940,8 +4835,8 @@
             }
 
             // 通过构建器渲染各大模块
-            const factionField = renderField('faction', '阵营', char.faction || 'UNKNOWN');
-            const orgField = renderField('organization', '组织', char.organization || 'UNKNOWN');
+            const factionField = renderField('faction', '阵营', `<span class="clickable-tag" onclick="scrollToFaction('${char.faction}')">${char.faction || 'UNKNOWN'}</span>`);
+            const orgField = renderField('organization', '组织', `<span class="clickable-tag" onclick="openOrgDetail('${char.organization}')">${char.organization || 'UNKNOWN'}</span>`);
             const genderField = renderField('gender', '性别', char.gender);
             const genderNotesField = renderField('gender_notes', '性别备注', char.gender_notes || '无');
             const ageField = renderField('age', '年龄', char.age);
@@ -3949,6 +4844,9 @@
             const appearanceField = renderField('appearance', '外貌', char.appearance, true);
             const personalityField = renderField('personality', '性格', char.personality, true);
             const notesField = renderField('notes', '备注', char.notes || 'N/A', true);
+            const occupationField = renderField('occupation', '职位/职业', char.occupation || 'N/A', true);
+            const orientationField = renderField('orientation', '性取向', char.orientation || 'N/A');
+            const roleField = renderField('role', '属性', char.role || 'N/A');
 
             // 最终装配输出 (💥 修复了头部的 flex 布局，强制纵向排列，确保批注框 100% 宽度展示)
             detail.innerHTML = `
@@ -3967,11 +4865,14 @@
                 <div class="form-grid" style="margin-bottom: 10px; border-bottom: 1px dashed rgba(255,235,59,0.3); padding-bottom: 10px;">
                     ${factionField}
                     ${orgField}
+                    <div style="grid-column: 1 / -1;">${occupationField}</div>
                 </div>
                 <div class="form-grid-3" style="margin-bottom: 15px;">
                     ${genderField}
-                    ${genderNotesField} <!-- 💥 塞在这里 -->
+                    ${genderNotesField}
                     ${ageField}
+                    ${orientationField}
+                    ${roleField}
                     ${heightField}
                 </div>
                 ${appearanceField}
@@ -3980,6 +4881,8 @@
                 
                 ${adminControls}
                 ${userControls}
+
+                
             `;
 
             // 渲染完毕后，立刻刷新底部的汇总列表，并撑开所有带有历史记录的输入框
@@ -4113,6 +5016,9 @@
             document.getElementById('f-appearance').value = char.appearance || '';
             document.getElementById('f-personality').value = char.personality || '';
             document.getElementById('f-notes').value = char.notes || '';
+            document.getElementById('f-occupation').value = char.occupation || '';
+            document.getElementById('f-orientation').value = char.orientation || '';
+            document.getElementById('f-role').value = char.role || '';
 
             // 💥 处理二级联动的阵营和组织下拉框
             const factionSelect = document.getElementById('f-faction');
@@ -4155,29 +5061,6 @@
             }
         };
 
-        // 💥 新增：星际阵营与下属组织的映射数据
-        const factionData = {
-            "泛星联盟": [
-                "“夜鸮”内务情报局",
-                "泰坦星脉财团",
-                "第一舰队“黄金狮子”"
-            ],
-            "外环": [
-                "“黑火”解放战线",
-                "深空打捞者工会",
-                "“霓虹暗房”"
-            ],
-            "独立防务承包商": [
-                "“深渊行者”国际安保",
-                "“锈血”佣兵团",
-                "无归属 / 独狼" // 预留一个自由人选项
-            ],
-            "自治空间站与自由港": [
-                "阿刻戎自由港",
-                "圣赫利俄斯医疗会",
-                "流浪者教团" 
-            ]
-        };
 
         // 💥 新增：监听阵营选择，动态生成下属组织
         const factionSelect = document.getElementById('f-faction');
@@ -4233,9 +5116,13 @@
             const newChar = {
                 owner_id: currentUser.id, name: document.getElementById('f-name').value || 'UNKNOWN',
                 callsign: callsign, faction: faction, organization: org,
+                // 💥 新增：职位/职业
+                occupation: document.getElementById('f-occupation').value || 'N/A',
                 gender: document.getElementById('f-gender').value || 'N/A', 
-                // 💥 新增：打包性别备注
                 gender_notes: document.getElementById('f-gender-notes').value || '', 
+                // 💥 新增：性取向与属性
+                orientation: document.getElementById('f-orientation').value || 'N/A',
+                role: document.getElementById('f-role').value || 'N/A',
                 age: document.getElementById('f-age').value || 'N/A',
                 dob: document.getElementById('f-dob').value || 'N/A', height: document.getElementById('f-height').value || 'N/A',
                 weight: document.getElementById('f-weight').value || 'N/A', blood: document.getElementById('f-blood').value || 'N/A',
@@ -4606,13 +5493,16 @@
                     <button class="close-btn" onclick="document.getElementById('roster-detail').style.display='none'">[X] CLOSE</button>
                 </div>
                 <div class="form-grid" style="margin-bottom: 10px; border-bottom: 1px dashed rgba(18,168,255,0.4); padding-bottom: 10px;">
-                    <div class="detail-item"><span class="detail-lbl">阵营:</span> ${char.faction || 'CLASSIFIED'}</div>
-                    <div class="detail-item"><span class="detail-lbl">组织:</span> ${char.organization || 'CLASSIFIED'}</div>
+                    <div class="detail-item"><span class="detail-lbl">阵营:</span> <span class="clickable-tag" onclick="scrollToFaction('${char.faction}')">${char.faction || 'CLASSIFIED'}</span></div>
+                    <div class="detail-item"><span class="detail-lbl">组织:</span> <span class="clickable-tag" onclick="openOrgDetail('${char.organization}')">${char.organization || 'CLASSIFIED'}</span></div>
+                    <div class="detail-item" style="grid-column: 1 / -1;"><span class="detail-lbl">职位/职业:</span> ${char.occupation || 'CLASSIFIED'}</div>
                 </div>
                 <div class="form-grid-3" style="margin-bottom: 15px;">
                     <div class="detail-item"><span class="detail-lbl">性别:</span> ${char.gender}</div>
                     <div class="detail-item"><span class="detail-lbl">性别备注:</span> ${char.gender_notes || '无'}</div>
                     <div class="detail-item"><span class="detail-lbl">年龄:</span> ${char.age}</div>
+                    <div class="detail-item"><span class="detail-lbl">性取向:</span> ${char.orientation || 'CLASSIFIED'}</div>
+                    <div class="detail-item"><span class="detail-lbl">属性:</span> ${char.role || 'CLASSIFIED'}</div>
                     <div class="detail-item"><span class="detail-lbl">身高:</span> ${char.height}</div>
                     <div class="detail-item"><span class="detail-lbl">体重:</span> ${char.weight}</div>
                     <div class="detail-item"><span class="detail-lbl">血型:</span> ${char.blood}</div>
@@ -4662,14 +5552,17 @@
                 
                 <!-- 中间的阵营、生理指标等所有内容全部保持你原来的代码 -->
                 <div class="form-grid" style="margin-bottom: 10px; background: rgba(18,168,255,0.1); padding: 10px 20px; border-left: 3px solid #12a8ff;">
-                    <div class="detail-item" style="margin:0;"><span class="detail-lbl">阵营:</span> ${char.faction || 'CLASSIFIED'}</div>
-                    <div class="detail-item" style="margin:0;"><span class="detail-lbl">组织:</span> ${char.organization || 'CLASSIFIED'}</div>
+                    <div class="detail-item" style="margin:0;"><span class="detail-lbl">阵营:</span> <span class="clickable-tag" onclick="scrollToFaction('${char.faction}')">${char.faction || 'CLASSIFIED'}</span></div>
+                    <div class="detail-item" style="margin:0;"><span class="detail-lbl">组织:</span> <span class="clickable-tag" onclick="openOrgDetail('${char.organization}')">${char.organization || 'CLASSIFIED'}</span></div>
+                    <div class="detail-item" style="margin:0; grid-column: 1 / -1;"><span class="detail-lbl">职位/职业:</span> ${char.occupation || 'CLASSIFIED'}</div>
                 </div>
 
                 <div class="form-grid-3" style="margin-bottom: 20px; background: rgba(18,168,255,0.05); padding: 20px; border: 1px solid rgba(18,168,255,0.3); box-shadow: inset 0 0 20px rgba(18,168,255,0.1);">
                     <div class="detail-item"><span class="detail-lbl">性别:</span> ${char.gender}</div>
                     <div class="detail-item"><span class="detail-lbl">性别备注:</span> ${char.gender_notes || '无'}</div>
                     <div class="detail-item"><span class="detail-lbl">年龄:</span> ${char.age}</div>
+                    <div class="detail-item"><span class="detail-lbl">性取向:</span> ${char.orientation || 'CLASSIFIED'}</div>
+                    <div class="detail-item"><span class="detail-lbl">属性:</span> ${char.role || 'CLASSIFIED'}</div>
                     <div class="detail-item"><span class="detail-lbl">生日:</span> ${char.dob}</div>
                     <div class="detail-item"><span class="detail-lbl">身高:</span> ${char.height}</div>
                     <div class="detail-item"><span class="detail-lbl">体重:</span> ${char.weight}</div>
@@ -4706,6 +5599,186 @@
                     });
                 }
             }, 300);
+        };
+
+        /* =========================================================
+           💥 人设填写表：世界观资料查询助手 💥
+           ========================================================= */
+        window.showLoreHelp = function(type) {
+            let title = "";
+            let msg = "";
+            
+            switch(type) {
+                case 'faction':
+                    title = "DATABASE // 阵营说明";
+                    msg = "▶ 泛星联盟 (P.S.C)：\n掌握核心资源与星门，秩序与霸权的代表。适合扮演特工、正规军、财团雇员。\n\n▶ 外环 (Frontier)：\n边缘矿区与反抗者的聚集地，混乱但自由。适合扮演矿工、反抗军、走私客。\n\n▶ 独立防务承包商 (PMCs)：\n拿钱办事的私人武装。适合扮演雇佣兵、赏金猎人。\n\n▶ 自治空间站与自由港：\n中立的黑市与医疗站。适合扮演黑市商人、地下医生、极客。";
+                    break;
+                case 'org':
+                    title = "DATABASE // 组织说明";
+                    msg = "请先选择您的【所属阵营】，系统会自动列出该阵营下的已知组织与分支机构。\n\n如果您是独狼或自由人，可以在承包商或自由港阵营中选择无归属选项。";
+                    break;
+                case 'appearance':
+                    title = "DATABASE // 外貌特征参考";
+                    msg = "在深空环境下，您可以考虑添加以下特征：\n\n1. 义体改造：神经接口、机械义肢、光学义眼等（需注明是否为军用级）。\n2. 星尘病症状：长期接触 C-62 原矿会导致皮肤下出现微弱的荧光血管纹理，或部分器官纤维化。\n3. 辐射疤痕：深空作业或战斗留下的特殊痕迹。";
+                    break;
+                case 'notes':
+                    title = "DATABASE // 备注说明";
+                    msg = "可在此处补充您的：\n\n- 核心背景故事（如：前联盟特工、现外环走私犯）\n- 战斗专长（如：零重力爆破、电子战骇客、重火力压制）\n- 个人雷点或对戏偏好。";
+                    break;
+            }
+            
+            // 调用现成的终端弹窗系统
+            SysModal.alert(msg, title);
+        };
+
+        /* =========================================================
+           💥 阵营与组织跳转引擎 & 组织详细档案库 💥
+           ========================================================= */
+        
+        // 1. 统一更新填表时的下拉菜单数据（确保名字和 HTML 里完全一致）
+        const factionData = {
+            "泛星联盟": ["战略安全局（SSA）", "泰坦星脉财团", "第一舰队“黄金狮子”"],
+            "外环": ["“黑火”解放战线", "深空打捞者工会", "“霓虹暗房”"],
+            "独立防务承包商": ["“深渊行者”国际安保", "“锈血”佣兵团", "无归属 / 独狼"],
+            "自治空间站与自由港": ["阿刻戎自由港", "圣赫利俄斯医疗会", "流浪者教团"]
+        };
+
+        // 2. 组织的详细档案数据（用于全屏文章阅读器）
+        const orgLoreDB = {
+            "战略安全局（SSA）": {
+                title: "战略安全局 (SSA)", tag: "P.S.C // 情报与内务机关",
+                content: "【档案级别：最高机密】\n\n泛星联盟直属情报机关，全称 Strategic Security Agency。\n\n负责反间谍、反恐行动和内部监察。SSA 拥有超越常规警察和军队的执法权，其特工通常配备最先进的军用级隐蔽义体和加密通讯网络。\n\n在深空边缘，SSA 的主要任务是渗透反抗军网络、监控黑血走私，以及“清理”那些对联盟构成威胁的不稳定因素。他们是联盟在黑暗中的利刃。"
+            },
+            "泰坦星脉财团": {
+                title: "泰坦星脉财团", tag: "P.S.C // 超级企业",
+                content: "【档案级别：公开】\n\n垄断黑血产业的超级企业，被称为“没有王冠的皇帝”。\n\n泰坦星脉不仅拥有全星系最大的 C-62 采矿舰队和精炼设施，还掌握着深空航道的定价权。财团内部等级森严，高管们居住在内环的奢华空间站中，而底层的合同工则在外环的高辐射矿区中用生命换取微薄的信用点。\n\n财团拥有自己的私人武装“星脉安保”，其火力甚至不亚于联盟的正规军。"
+            },
+            "第一舰队“黄金狮子”": {
+                title: "第一舰队“黄金狮子”", tag: "P.S.C // 正规军",
+                content: "【档案级别：公开】\n\n联盟最精锐的太空舰队，负责首都圈和主要航道安全。\n\n装备了最先进的重型巡洋舰和电磁轨道炮，是泛星联盟武力的绝对象征。舰队成员多为经过严格基因筛选和军事训练的精英，拥有极高的战术素养和绝对的忠诚。\n\n“当黄金狮子的战舰跃迁至你的星区，意味着谈判已经结束。”"
+            },
+            "“黑火”解放战线": {
+                title: "“黑火”解放战线", tag: "FRONTIER // 激进反抗组织",
+                content: "【档案级别：高危】\n\n外环最著名的激进反抗组织。支持者视其为自由战士，联盟则将其定义为恐怖组织。\n\n黑火的成员多为因星尘病失去亲人的矿工、破产的独立商人以及前联盟逃兵。他们主张通过暴力手段摧毁泰坦星脉财团的垄断，将黑血的控制权还给外环人民。\n\n常用战术包括：自杀式无人机袭击、星门航道劫持、以及针对财团高管的暗杀。"
+            },
+            "深空打捞者工会": {
+                title: "深空打捞者工会", tag: "FRONTIER // 灰色联盟",
+                content: "【档案级别：内部参考】\n\n由船长、机械师和回收商组成的松散联盟，掌握着庞大的地下贸易网络。\n\n表面上，他们只是一群在废弃星舰和战场遗迹中捡破烂的拾荒者；实际上，他们是外环最大的情报贩子和走私客。只要你出得起价钱，打捞者工会能帮你把任何东西（包括违禁武器和通缉犯）运过联盟的封锁线。"
+            },
+            "“霓虹暗房”": {
+                title: "“霓虹暗房”", tag: "FRONTIER // 极客网络",
+                content: "【档案级别：加密】\n\n隐匿在深空网络中的极客与情报贩子，没有固定据点，也不存在真正意义上的领导者。\n\n依靠骇入联盟防火墙窃取机密为生。他们将数据视为比黑血更宝贵的财富。霓虹暗房的成员极少在现实中露面，通常通过全息投影或代理机器人进行交流。\n\n“在暗房里，没有秘密，只有尚未被破解的防火墙。”"
+            },
+            "“深渊行者”国际安保": {
+                title: "“深渊行者”国际安保", tag: "PMC // 顶级军事承包商",
+                content: "【档案级别：公开】\n\n星系内最顶级的军事承包商，以纪律、专业和极其昂贵的报价闻名。\n\n深渊行者的干员多为退役的联盟特种兵或身经百战的老兵。他们不关心政治，只关心合同条款和信用点是否到账。无论是保护财团的采矿驳船，还是协助反抗军攻打空间站，只要合同生效，他们就会战斗到最后一人。"
+            },
+            "“锈血”佣兵团": {
+                title: "“锈血”佣兵团", tag: "PMC // 亡命徒集团",
+                content: "【档案级别：警告】\n\n臭名昭著的亡命徒集团，多数成员为罪犯、流浪者和重度星尘病患者。\n\n与深渊行者的专业不同，锈血佣兵团以残暴和毫无底线著称。他们经常接手那些正规 PMC 不愿触碰的“脏活”，例如屠杀平民、散布生化病毒等。由于成员多患有星尘病，他们在战斗中往往表现出一种疯狂的、不计后果的自毁倾向。"
+            },
+            "无归属 / 独狼": {
+                title: "无归属 / 独狼", tag: "INDEPENDENT // 自由人",
+                content: "【档案级别：未知】\n\n不隶属于任何大型组织的自由干员。\n\n可能是隐姓埋名的前特工、独自流浪的赏金猎人，或是仅仅为了生存而战的普通人。在深空边缘，独狼往往意味着极高的生存能力，但也意味着在遇到危险时，没有任何后援可以指望。"
+            },
+            "阿刻戎自由港": {
+                title: "阿刻戎自由港", tag: "NEUTRAL // 贸易枢纽",
+                content: "【档案级别：公开】\n\n整个星系最大的黑市和中转站，位于联盟管辖区与外环的交界处。\n\n阿刻戎是一个绝对中立的区域，这里有一条不成文的铁律：“港内禁止交火”。无论是联盟军官、黑火叛军还是通缉犯，在这里都只是顾客。自由港由几大黑帮家族共同管理，维持着脆弱但繁荣的灰色秩序。"
+            },
+            "圣赫利俄斯医疗会": {
+                title: "圣赫利俄斯医疗会", tag: "NEUTRAL // 人道组织",
+                content: "【档案级别：公开】\n\n专门救治星尘病患者的民间组织，标志为金色的恒星。\n\n在各大阵营的夹缝中艰难生存，依靠民间捐款和黑市走私的医疗物资运作。医疗会的医生们被外环矿工视为圣人，但联盟却经常指控他们暗中包庇反抗军伤员。他们的医疗船享有不成文的免受攻击特权。"
+            },
+            "流浪者教团": {
+                title: "流浪者教团", tag: "NEUTRAL // 新兴宗教",
+                content: "【档案级别：观察中】\n\n诞生于矿工群体的新兴宗教。他们相信星尘病患者的幻觉并非疾病，而是来自“群星的低语”。\n\n教团将 C-62 黑血视为神赐之物，认为人类必须通过辐射的洗礼才能进化到下一个阶段。虽然目前教团主要以和平传教为主，但其狂热的信仰和不断扩大的规模，已经引起了联盟战略安全局的高度警惕。"
+            }
+        };
+
+        // 3. 点击组织名称，打开全屏文章阅读器
+        window.openOrgDetail = function(orgName) {
+            const orgData = orgLoreDB[orgName];
+            if (!orgData) {
+                SysModal.alert("该组织的详细档案尚未解密或不存在。", "ACCESS DENIED");
+                return;
+            }
+            
+            // 调用现成的全屏文章阅读器
+            openArticle({
+                title: orgData.title,
+                tag: orgData.tag,
+                content: orgData.content
+            });
+        };
+
+        // 4. 点击阵营名称，跳转到主界面的世界观阵营卡片
+        // 💥 阵营详细档案数据 (包含下属组织按钮)
+        const factionLoreDB = {
+            "泛星联盟": {
+                title: "泛星联盟 (P.S.C)", tag: "FACTION // 统治阵营",
+                content: `统治地球及内环星域的人类最高政体。<br><br>联盟掌握着绝大部分黑血精炼设施、星门航线和军事力量。对内环居民而言，他们是维系文明延续的守护者；而在外环人眼中，他们则是建立在压迫与垄断之上的统治者。<br><br>
+                <div style="margin-top: 40px; border-top: 1px dashed #12a8ff; padding-top: 20px;">
+                    <h3 style="color: #12a8ff; margin-bottom: 15px; font-family: monospace;">[ 下属组织档案 ]</h3>
+                    <div class="sub-org-list">
+                        <button class="sub-org-btn" onclick="openOrgDetail('战略安全局（SSA）')"><strong>战略安全局（SSA）</strong><span>点击查阅详细档案</span></button>
+                        <button class="sub-org-btn" onclick="openOrgDetail('泰坦星脉财团')"><strong>泰坦星脉财团</strong><span>点击查阅详细档案</span></button>
+                        <button class="sub-org-btn" onclick="openOrgDetail('第一舰队“黄金狮子”')"><strong>第一舰队“黄金狮子”</strong><span>点击查阅详细档案</span></button>
+                    </div>
+                </div>`
+            },
+            "外环": {
+                title: "外环 (The Frontier)", tag: "FACTION // 边缘星区",
+                content: `在联盟官方星图上，“外环”指代所有位于边缘航道之外的空间站、矿业殖民地和独立聚居区；而对生活在那里的人而言，这更像是一种身份，而非一个国家。<br><br>长期与地球和内环社会隔绝，使外环居民逐渐形成了独特的文化和身份认同，但他们从未真正统一。这里既有革命者，也有商人；既有理想主义者，也有只想活下去的普通人。<br><br>
+                <div style="margin-top: 40px; border-top: 1px dashed #12a8ff; padding-top: 20px;">
+                    <h3 style="color: #12a8ff; margin-bottom: 15px; font-family: monospace;">[ 下属组织档案 ]</h3>
+                    <div class="sub-org-list">
+                        <button class="sub-org-btn" onclick="openOrgDetail('“黑火”解放战线')"><strong>“黑火”解放战线</strong><span>点击查阅详细档案</span></button>
+                        <button class="sub-org-btn" onclick="openOrgDetail('深空打捞者工会')"><strong>深空打捞者工会</strong><span>点击查阅详细档案</span></button>
+                        <button class="sub-org-btn" onclick="openOrgDetail('“霓虹暗房”')"><strong>“霓虹暗房”</strong><span>点击查阅详细档案</span></button>
+                    </div>
+                </div>`
+            },
+            "独立防务承包商": {
+                title: "独立防务承包商 (PMCs)", tag: "FACTION // 私人武装",
+                content: `不参与政治站队的私人武装，游走在联邦与反抗军的夹缝中。<br><br>他们只服从信用点和合同，并向一切支付报酬的人提供武力。在深空边缘，雇佣兵是唯一能在各大势力之间自由穿梭的武装力量。<br><br>
+                <div style="margin-top: 40px; border-top: 1px dashed #12a8ff; padding-top: 20px;">
+                    <h3 style="color: #12a8ff; margin-bottom: 15px; font-family: monospace;">[ 下属组织档案 ]</h3>
+                    <div class="sub-org-list">
+                        <button class="sub-org-btn" onclick="openOrgDetail('“深渊行者”国际安保')"><strong>“深渊行者”国际安保</strong><span>点击查阅详细档案</span></button>
+                        <button class="sub-org-btn" onclick="openOrgDetail('“锈血”佣兵团')"><strong>“锈血”佣兵团</strong><span>点击查阅详细档案</span></button>
+                    </div>
+                </div>`
+            },
+            "自治空间站与自由港": {
+                title: "自治空间站与自由港", tag: "FACTION // 中立地带",
+                content: `遍布深空的独立空间站与自由港。<br><br>它们依靠贸易、维修、医疗和情报生意生存，在战争与政治夹缝中维持脆弱的中立。这里是走私犯、难民和情报贩子的天堂。<br><br>
+                <div style="margin-top: 40px; border-top: 1px dashed #12a8ff; padding-top: 20px;">
+                    <h3 style="color: #12a8ff; margin-bottom: 15px; font-family: monospace;">[ 下属组织档案 ]</h3>
+                    <div class="sub-org-list">
+                        <button class="sub-org-btn" onclick="openOrgDetail('阿刻戎自由港')"><strong>阿刻戎自由港</strong><span>点击查阅详细档案</span></button>
+                        <button class="sub-org-btn" onclick="openOrgDetail('圣赫利俄斯医疗会')"><strong>圣赫利俄斯医疗会</strong><span>点击查阅详细档案</span></button>
+                        <button class="sub-org-btn" onclick="openOrgDetail('流浪者教团')"><strong>流浪者教团</strong><span>点击查阅详细档案</span></button>
+                    </div>
+                </div>`
+            }
+        };
+
+        // 💥 统一的阵营跳转函数 (直接打开全屏文章)
+        window.scrollToFaction = function(factionName) {
+            openFactionDetail(factionName);
+        };
+
+        window.openFactionDetail = function(factionName) {
+            const data = factionLoreDB[factionName];
+            if (!data) {
+                SysModal.alert("该阵营的详细档案尚未解密。", "ACCESS DENIED");
+                return;
+            }
+            openArticle({
+                title: data.title,
+                tag: data.tag,
+                content: data.content
+            });
         };
 
         /* =========================================================
@@ -4771,8 +5844,8 @@
                 isDragging = false;
                 
                 if (!hasMoved) {
-                    // 💥 核心修复：如果点到的是菜单里的纯文字按钮，直接放行，不要触发圆球的收起逻辑！
-                    if (e.target.closest('.toc-btn')) return;
+                    // 💥 核心修复：如果点到的是展开的菜单内部（包括文字和下拉箭头），直接放行，不要触发圆球的收起逻辑！
+                    if (e.target.closest('.toc-list')) return;
 
                     // 触发按钮本体的上下弹动动画
                     worldToc.classList.remove('wobble');
@@ -4819,6 +5892,319 @@
                 });
             });
         }
+
+        /* =========================================================
+           💥 CMS 内容管理系统引擎 (支持编辑与删除) 💥
+           ========================================================= */
+        let articlesDB = [];
+        let editingArticleId = null; // 记录当前正在编辑的文章 ID
+
+        // 1. 发布/更新文章到 Supabase
+        document.getElementById('btn-publish-article').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-publish-article');
+            const type = document.getElementById('a-type').value;
+            const title = document.getElementById('a-title').value.trim();
+            const tag = document.getElementById('a-tag').value.trim();
+            const icon = document.getElementById('a-icon').value.trim();
+            const keywords = document.getElementById('a-keywords').value.trim();
+            const summary = document.getElementById('a-summary').value.trim();
+            const content = document.getElementById('a-content').value.trim();
+
+            if (!title || !content) {
+                SysModal.alert("标题和正文不能为空！", "⚠️ 格式错误");
+                return;
+            }
+
+            btn.innerText = "[ 📡 PROCESSING... ]";
+            btn.disabled = true;
+
+            try {
+                if (editingArticleId) {
+                    // 💥 更新已有文章
+                    const { error } = await supabaseClient.from('articles').update({
+                        type, title, tag, icon, keywords, summary, content
+                    }).eq('id', editingArticleId);
+                    if (error) throw error;
+                    await SysModal.alert("数据已成功更新！", "更新成功");
+                } else {
+                    // 💥 发布新文章
+                    const { error } = await supabaseClient.from('articles').insert([{
+                        type, title, tag, icon, keywords, summary, content
+                    }]);
+                    if (error) throw error;
+                    await SysModal.alert("数据已成功写入星际网络！", "发布成功");
+                }
+
+                // 恢复表单和按钮状态
+                document.getElementById('admin-article-form').reset();
+                editingArticleId = null;
+                btn.innerText = "[ UPLOAD TO DATABASE // 发布至数据库 ]";
+                btn.style.borderColor = "#f44336";
+                btn.style.color = "#f44336";
+                btn.style.background = "rgba(244,67,54,0.1)";
+                
+                fetchArticles(); // 重新拉取数据刷新页面
+            } catch (err) {
+                console.error(err);
+                SysModal.alert("操作失败，请检查网络或数据库权限。", "❌ ERROR");
+                btn.innerText = editingArticleId ? "[ UPDATE DATABASE // 更新至数据库 ]" : "[ UPLOAD TO DATABASE // 发布至数据库 ]";
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        // 2. 从数据库拉取文章并动态渲染
+        async function fetchArticles() {
+            try {
+                const { data, error } = await supabaseClient.from('articles').select('*');
+                if (error) throw error;
+                articlesDB = data;
+                
+                renderIntelGrid(); // 渲染情报卡片
+            } catch (err) {
+                console.error("拉取文章失败:", err);
+            }
+        }
+
+        // 3. 动态生成主界面的情报网格 (追加模式)
+        function renderIntelGrid() {
+            const grid = document.querySelector('.intel-grid');
+            if (!grid) return;
+
+            // 💥 核心修复：只清除之前渲染的“动态卡片”，保留写死在 HTML 里的老卡片！
+            document.querySelectorAll('.dynamic-intel').forEach(el => el.remove());
+
+            const intelArticles = articlesDB.filter(a => a.type === 'intel');
+            
+            intelArticles.forEach((item, index) => {
+                const card = document.createElement('div');
+                // 加上 dynamic-intel 类名，方便下次刷新时精准清除
+                card.className = 'intel-card article-card dynamic-intel'; 
+                card.id = `intel-dynamic-${index}`;
+                
+                card.setAttribute('data-keywords', item.keywords || '');
+                card.setAttribute('data-content', item.content || '');
+                
+                // 💥 新增：如果是管理员，在卡片右上角生成 [改] 和 [删] 按钮
+                let adminControls = '';
+                if (currentUser && currentUser.role === 'admin') {
+                    adminControls = `
+                        <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; z-index: 10;">
+                            <button onclick="event.stopPropagation(); editArticle('${item.id}')" style="background: rgba(255,235,59,0.2); border: 1px solid #ffeb3b; color: #ffeb3b; cursor: pointer; padding: 2px 6px; font-size: 12px; font-family: monospace; border-radius: 2px;">[改]</button>
+                            <button onclick="event.stopPropagation(); deleteArticle('${item.id}')" style="background: rgba(244,67,54,0.2); border: 1px solid #f44336; color: #f44336; cursor: pointer; padding: 2px 6px; font-size: 12px; font-family: monospace; border-radius: 2px;">[删]</button>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    ${adminControls}
+                    <span class="card-icon">${item.icon || '📁'}</span>
+                    <span class="card-level">${item.tag || '✦ INTEL'}</span>
+                    <h3 class="card-name">${item.title}</h3>
+                    <p class="card-desc">${item.summary || ''}</p>
+                    <div class="card-meta">
+                        <span class="card-price">[DECRYPTED]</span>
+                        <span class="card-duration">// LIVE DATA</span>
+                    </div>
+                `;
+                
+                card.onclick = () => openArticle({
+                    title: item.title,
+                    tag: item.tag,
+                    content: item.content
+                });
+                
+                // 💥 核心修复：把新卡片插入到网格的最前面，老卡片会被自动往后挤
+                grid.insertBefore(card, grid.firstChild);
+            });
+
+            updateSearchIndex();
+        }
+
+        // 4. 管理员专属：删除文章
+        window.deleteArticle = async function(id) {
+            const isSure = await SysModal.confirm("确定要永久删除这条情报吗？\n此操作不可逆！", "⚠️ 删除确认");
+            if (!isSure) return;
+
+            try {
+                await supabaseClient.from('articles').delete().eq('id', id);
+                await SysModal.alert("情报已从数据库中抹除。", "删除成功");
+                fetchArticles(); // 刷新页面
+            } catch (err) {
+                console.error(err);
+                SysModal.alert("删除失败，请检查网络。", "❌ ERROR");
+            }
+        };
+
+        // 5. 管理员专属：编辑文章 (调取数据到表单)
+        window.editArticle = function(id) {
+            const article = articlesDB.find(a => a.id === id);
+            if (!article) return;
+
+            // 记录正在编辑的 ID
+            editingArticleId = id;
+
+            // 把数据填回表单
+            document.getElementById('a-type').value = article.type;
+            document.getElementById('a-title').value = article.title;
+            document.getElementById('a-tag').value = article.tag;
+            document.getElementById('a-icon').value = article.icon;
+            document.getElementById('a-keywords').value = article.keywords;
+            document.getElementById('a-summary').value = article.summary;
+            document.getElementById('a-content').value = article.content;
+
+            // 改变按钮的颜色和文字，提示当前是“更新模式”
+            const btn = document.getElementById('btn-publish-article');
+            btn.innerText = "[ UPDATE DATABASE // 更新至数据库 ]";
+            btn.style.borderColor = "#ffeb3b";
+            btn.style.color = "#ffeb3b";
+            btn.style.background = "rgba(255,235,59,0.1)";
+
+            // 自动跳转到管理员控制台
+            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById('adminView').classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        // 6. 更新搜索索引
+        function updateSearchIndex() {
+            const articles = document.querySelectorAll('.article-card');
+            window.searchIndex = Array.from(articles).map((card) => {
+                return {
+                    title: card.querySelector('.card-name').innerText,
+                    tag: card.querySelector('.card-level').innerText,
+                    keywords: card.getAttribute('data-keywords').toLowerCase(),
+                    content: card.getAttribute('data-content') || "NO DATA FOUND.",
+                    element: card
+                };
+            });
+        }
+
+        /* =========================================================
+           💥 历史时间线 (Timeline) 交互引擎 💥
+           ========================================================= */
+        
+        // 1. 点击左侧导航，平滑滚动到对应年份
+        document.querySelectorAll('.timeline-nav a').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('data-scroll');
+                const targetEl = document.getElementById(targetId);
+                if (targetEl) {
+                    // 手机端因为有吸顶导航，需要减去偏移量防止遮挡
+                    const yOffset = window.innerWidth <= 900 ? -120 : 0;
+                    const y = targetEl.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                    window.scrollTo({ top: y, behavior: 'smooth' });
+                }
+            });
+        });
+
+        // 2. 专属雷达：监听滚动，自动展开左侧的折线与文字
+        const tlObserverOptions = {
+            root: null,
+            rootMargin: '-20% 0px -50% 0px', // 当区块到达屏幕中间偏上时触发
+            threshold: 0
+        };
+        
+        const tlObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.getAttribute('id');
+                    
+                    // 移除所有时间线节点的激活状态
+                    document.querySelectorAll('.timeline-nav li').forEach(li => li.classList.remove('active'));
+                    
+                    // 找到对应的节点并激活
+                    const activeAnchor = document.querySelector(`.timeline-nav a[data-scroll="${id}"]`);
+                    if (activeAnchor) {
+                        activeAnchor.parentElement.classList.add('active');
+                    }
+                }
+            });
+        }, tlObserverOptions);
+
+        // 将所有时间线区块加入雷达监控
+        document.querySelectorAll('.timeline-section').forEach(sec => {
+            if (sec) tlObserver.observe(sec);
+        });
+
+        /* =========================================================
+           💥 时间线与世界观的子页面切换逻辑 💥
+           ========================================================= */
+        
+        // 1. 从世界观进入时间线
+        window.openTimelineView = function() {
+            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById('timelineView').classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        // 2. 从时间线返回世界观
+        window.backToWorldView = function() {
+            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById('worldView').classList.add('active');
+            
+            // 自动滚动到时间线预览卡片的位置，体验更连贯
+            setTimeout(() => {
+                const previewBox = document.querySelector('#worldView .section-header');
+                if (previewBox) {
+                    const yOffset = -80;
+                    const y = previewBox.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                    window.scrollTo({ top: y, behavior: 'smooth' });
+                }
+            }, 50);
+        };
+
+        /* =========================================================
+           💥 用户终端代号修改逻辑 💥
+           ========================================================= */
+        window.changeTerminalName = async function() {
+            const newName = await SysModal.prompt("请输入新的终端代号：", currentUser.nickname, "⚙️ UPDATE NICKNAME // 修改代号");
+            
+            // 如果用户点了取消，或者输入为空，或者名字没变，就直接退出
+            if (!newName || newName.trim() === "" || newName.trim() === currentUser.nickname) return;
+            
+            const finalName = newName.trim();
+            
+            try {
+                // 1. 更新 Supabase 数据库里的 users 表
+                const { error } = await supabaseClient
+                    .from('users')
+                    .update({ nickname: finalName })
+                    .eq('id', currentUser.id);
+                    
+                if (error) throw error;
+                
+                // 2. 更新本地的 currentUser 数据
+                currentUser.nickname = finalName;
+                
+                // 3. 更新右上角的状态栏显示
+                const statusContainer = document.querySelector('.lang-text');
+                statusContainer.innerHTML = `
+                    <span class="op-key-text" title="点击即可全选复制">OP: ${currentUser.nickname} [${currentUser.id}]</span>
+                    <span class="logout-btn" title="断开终端连接">⏻退出</span>
+                `;
+                
+                // 重新绑定右上角退出按钮的事件
+                document.querySelector('.logout-btn').onclick = async function() {
+                    const msg = `即将断开当前干员的终端连接。\n请确保您已妥善保管当前密钥：【 ${currentUser.id} 】\n\n确认断开并切换身份吗？`;
+                    const isSure = await SysModal.confirm(msg, "⚠️ TERMINAL DISCONNECT // 断开连接");
+                    if (isSure) {
+                        localStorage.removeItem('tf141_device_id');
+                        location.reload(); 
+                    }
+                };
+                
+                // 4. 重新渲染个人终端界面
+                renderProfile();
+                
+                await SysModal.alert(`终端代号已成功更新为：${finalName}`, "✅ UPDATE SUCCESS");
+            } catch (err) {
+                console.error(err);
+                SysModal.alert("修改失败，请检查网络连接。", "❌ ERROR");
+            }
+        };
+
 
         // 💥 页面加载时，恢复刷新前的视图
         const savedView = sessionStorage.getItem('tf141_current_view');
