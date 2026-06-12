@@ -2256,29 +2256,42 @@
             gap: 8px; /* 间距稍微收紧 */
         }
 
+        /* 💥 目录主按钮样式 (提亮版) 💥 */
         .toc-btn {
             background: transparent;
             border: none;
-            color: #8bb9d6;
+            color: #e0f2fe; /* 从灰蓝提亮为冰蓝色 */
             text-align: left;
-            padding: 5px 0; /* 取消左右内边距，让文字靠左对齐 */
+            padding: 5px 0; 
             font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-            font-size: 0.9rem; /* 字体变小 */
+            font-size: 0.95rem; 
             cursor: pointer;
             transition: all 0.2s;
             border-left: 2px solid transparent;
             position: relative;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8); /* 增加一点黑色底影，让文字更清晰 */
         }
 
-        /* 悬停与激活（当前阅读位置）的高亮状态 */
+        /* 悬停与激活的高亮状态 */
         .toc-btn:hover, .toc-btn.active {
-            color: #e0f2fe;
-            background: transparent; /* 去掉悬停时的背景色块 */
+            color: #ffffff; /* 激活时变成纯白 */
+            background: transparent; 
             border-left: 2px solid #12a8ff;
-            padding-left: 10px; /* 悬停时往右顶出一点距离，留出蓝线的位置 */
-            text-shadow: 0 0 5px rgba(18, 168, 255, 0.5);
-            /* 去掉原有的 transform: translateX(5px)，使用 padding 实现更丝滑的对齐 */
+            padding-left: 10px; 
+            text-shadow: 0 0 8px #12a8ff; /* 增强发光效果 */
             transform: none; 
+        }
+
+        /* 💥 子目录专属样式 (提亮版) 💥 */
+        .toc-btn.sub-btn {
+            padding-left: 15px;
+            font-size: 0.85rem;
+            color: #8bb9d6; /* 去掉原本的 0.6 透明度，改为实色灰蓝 */
+        }
+        .toc-btn.sub-btn:hover, .toc-btn.sub-btn.active {
+            padding-left: 25px;
+            color: #e0f2fe; /* 悬停时提亮 */
+            text-shadow: 0 0 8px #12a8ff;
         }
 
         /* 💥 子目录折叠容器样式 💥 */
@@ -2300,16 +2313,6 @@
             transform: rotate(-90deg); /* 逆时针旋转90度，从朝左(◀)变成朝下(▼) */
         }
 
-        /* 💥 子目录专属样式 (缩进与弱化) 💥 */
-        .toc-btn.sub-btn {
-            padding-left: 15px;
-            font-size: 0.85rem;
-            color: rgba(139, 185, 214, 0.6);
-        }
-        .toc-btn.sub-btn:hover, .toc-btn.sub-btn.active {
-            padding-left: 25px;
-            color: #12a8ff;
-        }
 
         /* =========================================
            💥 历史时间线 (Timeline) 专属样式 💥
@@ -2673,12 +2676,12 @@
             .world-toc.align-left .toc-list { left: 0; right: auto; align-items: flex-start; }
             .world-toc.align-right .toc-list { right: 0; left: auto; align-items: flex-end; }
 
-            /* 纯文字按钮样式 */
+            /* 纯文字按钮样式 (手机端提亮版) */
             .toc-btn {
                 background: transparent !important;
                 border: none !important;
                 padding: 0 !important;
-                color: rgba(224, 242, 254, 0.7);
+                color: #e0f2fe !important; /* 从 0.7 的半透明提亮为实色冰蓝 */
                 font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
                 font-size: 15px;
                 letter-spacing: 1px;
@@ -2686,6 +2689,12 @@
                 text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.8);
                 opacity: 0;
                 pointer-events: none;
+            }
+
+            .toc-btn.active {
+                color: #ffffff !important; /* 激活时纯白 */
+                text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 12px rgba(18, 168, 255, 0.9) !important;
+                font-weight: bold;
             }
 
             /* 💥 修复手机端按钮隐身：通用浮现动画 💥 */
@@ -3035,10 +3044,7 @@
                                     <span class="toc-arrow" onclick="toggleSubMenu('intel-sub')" style="cursor: pointer; color: #12a8ff; padding: 5px 15px; font-size: 12px; display: inline-block; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);">◀</span>
                                 </div>
                                 <ul class="sub-toc-list" id="intel-sub">
-                                    <li><button class="toc-btn sub-btn" data-scroll="intel-1">└ C-62 研究报告</button></li>
-                                    <li><button class="toc-btn sub-btn" data-scroll="intel-2">└ 7号驳船袭击</button></li>
-                                    <li><button class="toc-btn sub-btn" data-scroll="intel-3">└ 活跃公民名录</button></li>
-                                    <li><button class="toc-btn sub-btn" data-scroll="intel-4">└ 战术装备清单</button></li>
+                                <!-- 💥 动态生成的情报目录会放在这里 💥 -->
                                 </ul>
                             </li>
                             
@@ -3082,89 +3088,11 @@
                             </div>
                         </section>
 
+                        <!-- 💥 动态渲染的主界面阵营区 💥 -->
                         <section class="world-section" id="sec-factions">
                             <h2 class="world-section-title"><span style="font-size: 1.5rem;">🌌</span> 势力分布 // FACTIONS</h2>
-                            <div class="faction-grid">
-                                <div class="faction-card psc" id="faction-psc">
-                                    <div class="faction-header">
-                                        <h3 style="cursor: pointer; text-decoration: underline; text-underline-offset: 4px; transition: 0.2s;" onclick="openFactionDetail('泛星联盟')" onmouseover="this.style.color='#12a8ff'" onmouseout="this.style.color='#fff'">泛星联盟 (P.S.C)</h3>
-                                        <span class="faction-tag">秩序 / 霸权 / 腐朽</span>
-                                    </div>
-                                    <p class="faction-desc">统治地球及内环星域的人类最高政体。<br><br>联盟掌握着绝大部分黑血精炼设施、星门航线和军事力量。对内环居民而言，他们是维系文明延续的守护者；而在外环人眼中，他们则是建立在压迫与垄断之上的统治者。</p>
-                                    <div class="sub-org-list">
-                                        <button class="sub-org-btn" onclick="openOrgDetail('战略安全局（SSA）')">
-                                            <strong>战略安全局（SSA）</strong>
-                                            <span>联盟直属情报机关，负责反间谍、反恐行动和内部监察。</span>
-                                        </button>
-                                        <button class="sub-org-btn" onclick="openOrgDetail('泰坦星脉财团')">
-                                            <strong>泰坦星脉财团</strong>
-                                            <span>垄断黑血产业的超级企业，被称为“没有王冠的皇帝”。</span>
-                                        </button>
-                                        <button class="sub-org-btn" onclick="openOrgDetail('第一舰队“黄金狮子”')">
-                                            <strong>第一舰队“黄金狮子”</strong>
-                                            <span>联盟最精锐的太空舰队，负责首都圈和主要航道安全。</span>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="faction-card frontier" id="faction-frontier">
-                                    <div class="faction-header">
-                                        <h3 style="cursor: pointer; text-decoration: underline; text-underline-offset: 4px; transition: 0.2s;" onclick="openFactionDetail('外环')" onmouseover="this.style.color='#12a8ff'" onmouseout="this.style.color='#fff'">外环（The Frontier）</h3>
-                                        <span class="faction-tag">生存 / 自由 / 混乱</span>
-                                    </div>
-                                    <p class="faction-desc">在联盟官方星图上，“外环”指代所有位于边缘航道之外的空间站、矿业殖民地和独立聚居区；而对生活在那里的人而言，这更像是一种身份，而非一个国家。<br><br>长期与地球和内环社会隔绝，使外环居民逐渐形成了独特的文化和身份认同，但他们从未真正统一。<br><br>这里既有革命者，也有商人；既有理想主义者，也有只想活下去的普通人。</p>
-                                    <div class="sub-org-list">
-                                        <button class="sub-org-btn" onclick="openOrgDetail('“黑火”解放战线')">
-                                            <strong>“黑火”解放战线</strong>
-                                            <span>激进反抗组织，支持者视其为自由战士，联盟则将其定义为恐怖组织。</span>
-                                        </button>
-                                        <button class="sub-org-btn" onclick="openOrgDetail('深空打捞者工会')">
-                                            <strong>深空打捞者工会</strong>
-                                            <span>由船长、机械师和回收商组成的松散联盟，掌握着庞大的地下贸易网络。</span>
-                                        </button>
-                                        <button class="sub-org-btn" onclick="openOrgDetail('“霓虹暗房”')">
-                                            <strong>“霓虹暗房”</strong>
-                                            <span>隐匿在深空网络中的极客与情报贩子，依靠骇入联盟防火墙窃取机密为生。</span>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="faction-card pmc" id="faction-pmc">
-                                    <div class="faction-header">
-                                        <h3 style="cursor: pointer; text-decoration: underline; text-underline-offset: 4px; transition: 0.2s;" onclick="openFactionDetail('独立防务承包商')" onmouseover="this.style.color='#12a8ff'" onmouseout="this.style.color='#fff'">独立防务承包商 (PMCs)</h3>
-                                        <span class="faction-tag">金钱 / 契约 / 硝烟</span>
-                                    </div>
-                                    <p class="faction-desc">不参与政治站队的私人武装，游走在联邦与反抗军的夹缝中，他们只服从信用点和合同，并向一切支付报酬的人提供武力。</p>
-                                    <div class="sub-org-list">
-                                        <button class="sub-org-btn" onclick="openOrgDetail('“深渊行者”国际安保')">
-                                            <strong>“深渊行者”国际安保</strong>
-                                            <span>顶级军事承包商，以纪律、专业和昂贵闻名。</span>
-                                        </button>
-                                        <button class="sub-org-btn" onclick="openOrgDetail('“锈血”佣兵团')">
-                                            <strong>“锈血”佣兵团</strong>
-                                            <span>臭名昭著的亡命徒集团，多数成员为罪犯和流浪者。</span>
-                                        </button>
-                                    </div>
-                                    </div>
-                                <div class="faction-card pmc" id="faction-freeport">
-                                    <div class="faction-header">
-                                        <h3 style="cursor: pointer; text-decoration: underline; text-underline-offset: 4px; transition: 0.2s;" onclick="openFactionDetail('自治空间站与自由港')" onmouseover="this.style.color='#12a8ff'" onmouseout="this.style.color='#fff'">自治空间站与自由港</h3>
-                                        <span class="faction-tag">贸易 / 中立 / 灰色秩序</span>
-                                    </div>
-                                    <p class="faction-desc">遍布深空的独立空间站与自由港。<br><br>它们依靠贸易、维修、医疗和情报生意生存，在战争与政治夹缝中维持脆弱的中立。</p>
-                                    <div class="sub-org-list">
-                                        <button class="sub-org-btn" onclick="openOrgDetail('阿刻戎自由港')">
-                                            <strong>阿刻戎自由港</strong>
-                                            <span>整个星系最大的黑市和中转站。</span>
-                                        </button>
-                                        <button class="sub-org-btn" onclick="openOrgDetail('圣赫利俄斯医疗会')">
-                                            <strong>圣赫利俄斯医疗会</strong>
-                                            <span>专门救治星尘病患者的民间组织。</span>
-                                        </button>
-                                        <button class="sub-org-btn" onclick="openOrgDetail('流浪者教团')">
-                                            <strong>流浪者教团</strong>
-                                            <span>诞生于矿工群体的新兴宗教，将黑血视为神赐之物。</span>
-                                        </button>
-                                    </div>
-                                </div>
+                            <div class="faction-grid" id="main-faction-grid">
+                                <!-- JS 将从数据库拉取阵营与组织并渲染在这里 -->
                             </div>
                         </section>
 
@@ -3183,42 +3111,25 @@
                     </div>
                 </div>
 
-                <!-- 3. 情报网格区 (移出 wrapper，成为 layout 的直接子元素) -->
+                <!-- 3. 情报网格区 -->
                 <section class="intel-section" id="intel-grid">
-                    <div class="section-header">
+                    <!-- 💥 新增：标题栏加入历史情报按钮，使用 flex 布局左右对齐 -->
+                    <div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 15px;">
                         <div>
                             <p class="section-label">✦ CLASSIFIED FILES</p>
-                            <h2 class="section-title">CORE <span class="accent">INTEL</span></h2>
+                            <h2 class="section-title">核心 <span class="accent">情报</span></h2>
                         </div>
+                        <button class="btn-ghost" style="padding: 8px 15px; font-size: 13px;" onclick="openHistoryIntel()">
+                            [ 历史情报库 ] →
+                        </button>
                     </div>
+                    
                     <div id="no-result-msg" style="display: none; color: #f44336; font-family: monospace; padding: 20px 0; font-size: 1.2rem;">
                         [ ❌ 未检索到相关内容 ]
                     </div>
-                    <div class="intel-grid">
-                        <div class="intel-card article-card" id="intel-1" data-keywords="c-62 黑血 矿石 星尘病 能源" data-content="【机密档案：C-62 同位素】&#10;&#10;俗称“黑血”，于太阳系外环小行星带深处首次被发现。&#10;&#10;特性：极高能的清洁聚变能源。指甲盖大小的纯净 C-62 足以驱动一艘重型星舰航行一个月。目前内环行星的繁华都市、最高议会的生命维持系统、各大舰队的重火力引擎，全部依赖“黑血”续命。&#10;&#10;医疗警告：原矿带有极强的神经毒性辐射。长期接触的底层矿工会患上不可逆的“星尘病”（器官纤维化与严重幻觉）。">
-                            <span class="card-icon">💎</span><span class="card-level">✦ LORE // 核心物质</span>
-                            <h3 class="card-name">C-62“黑血”研究报告</h3>
-                            <p class="card-desc">关于高能同位素 C-62 的开采记录、能源转化率以及“星尘病”的临床医学观察报告。</p>
-                            <div class="card-meta"><span class="card-price">[DECRYPTED]</span><span class="card-duration">// READ TIME: 3 MIN</span></div>
-                        </div>
-                        <div class="intel-card article-card" id="intel-2" data-keywords="战报 report 外环 泛星联盟 黑火 冲突" data-content="行动代号：碎星 (Operation Shattered Star)&#10;地点：外环 7号采矿驳船&#10;涉事阵营：泛星联盟第一舰队 vs “黑火”解放战线&#10;&#10;行动简报：星历2240年3月12日，“黑火”武装分子突袭了隶属于泰坦星脉财团的7号驳船，试图劫持当月开采的 C-62 原矿。联盟第一舰队“黄金狮子”下属的快速反应小队于 0400 时进行轨道空降介入。&#10;&#10;结果：驳船动力系统受损，30%原矿泄漏至太空。黑火武装分子撤退，联盟方 4 名特工阵亡。">
-                            <span class="card-icon">🎯</span><span class="card-level">◉ REPORT // 冲突战报</span>
-                            <h3 class="card-name">外环 7号驳船袭击事件</h3>
-                            <p class="card-desc">泛星联盟与“黑火”解放战线在深空矿区的最新交火记录。包含现场受损评估与轨道空降录像。</p>
-                            <div class="card-meta"><span class="card-price">[CLASSIFIED]</span><span class="card-duration">// LEVEL 3 REQUIRED</span></div>
-                        </div>
-                        <div class="intel-card article-card" id="intel-3" data-keywords="编制 roster 名录 公民 佣兵 pmc" data-content="[ 数据解密中... ]&#10;&#10;深空边缘活跃公民名录（部分）：&#10;&#10;> 泛星联盟 (P.S.C) 注册特工：拥有最高级别的星门通行权与合法持械许可。&#10;> 外环 (Frontier) 游击队员：多为矿工出身，擅长在零重力与高辐射环境下作战。&#10;> 独立防务承包商 (PMCs)：如“深渊行者”与“锈血”佣兵，只要信用点给够，他们可以为任何人扣动扳机。&#10;&#10;系统警告：部分阿刻戎自由港的黑市公民数据已被加密，需 Beta 级以上权限方可访问。">
-                            <span class="card-icon">👥</span><span class="card-level">★ ROSTER // 编制</span>
-                            <h3 class="card-name">深空活跃公民名录</h3>
-                            <p class="card-desc">最新解密级别的各阵营公民代号与专长一览表。包含联盟特工、外环反抗军及独立佣兵。</p>
-                            <div class="card-meta"><span class="card-price">[LIVE DATA]</span><span class="card-duration">// UPDATED: 2240</span></div>
-                        </div>
-                        <div class="intel-card article-card" id="intel-4" data-keywords="武器 装备 军械库 星舰 义体" data-content="深空作战标准配置清单：&#10;&#10;> 动能武器：电磁加速步枪（适用于真空环境，无后座力补偿模块需谨慎使用）&#10;> 战术装备：全封闭式 EVA 战斗服（内置防辐射内衬与微型生命维持系统）&#10;> 义体改造：神经突触加速器、机械义肢（多见于外环老兵与 PMC 佣兵）&#10;> 医疗物资：高浓度抗辐射凝胶（用于缓解星尘病早期症状）&#10;&#10;系统警告：所有军用级义体改造需在联盟战略安全局（SSA）进行备案。">
-                            <span class="card-icon">🔫</span><span class="card-level">⬡ ARMORY // 军械库</span>
-                            <h3 class="card-name">深空战术装备清单</h3>
-                            <p class="card-desc">包含电磁武器、EVA 战斗服、军用级义体改造及抗辐射医疗物资的详细参数与黑市报价。</p>
-                            <div class="card-meta"><span class="card-price">[INVENTORY]</span><span class="card-duration">// SUPPLY LOGS</span></div>
-                        </div>
+                    
+                    <div class="intel-grid" id="main-intel-grid">
+                        <!-- JS 将会在这里只渲染最新的 4 张卡片 -->
                     </div>
                 </section>
 
@@ -3320,81 +3231,13 @@
                     </button>
                 </div>
 
-                <!-- 阵营卡片网格区 -->
+                <!-- 💥 动态渲染的世界观阵营区 💥 -->
                 <div class="section-header" style="margin-bottom: 30px;">
                     <p class="section-label">✦ MAJOR FACTIONS</p>
                     <h2 class="section-title" style="font-size: 32px;">势力分布 <span class="accent">FACTIONS</span></h2>
                 </div>
-
-                <div class="intel-grid">
-                    
-                    <!-- 阵营卡片 1：泛星联盟 -->
-                    <div class="intel-card" style="cursor: default; display: flex; flex-direction: column;">
-                        <span class="card-icon" style="font-size: 2.5rem;">🏛️</span>
-                        <span class="card-level">✦ P.S.C // 统治阵营</span>
-                        <h3 class="card-name" style="font-size: 1.6rem;">泛星联盟</h3>
-                        <p class="card-desc" style="flex-grow: 1;">统治地球及内环星域的人类最高政体，掌握着绝大部分黑血精炼设施、星门航线和军事力量。</p>
-                        
-                        <button class="btn-ghost" style="width: 100%; padding: 12px; font-size: 14px; margin-bottom: 20px;" onclick="openFactionDetail('泛星联盟')">READ ARCHIVE →</button>
-                        
-                        <div style="border-top: 1px dashed rgba(18,168,255,0.3); padding-top: 15px; display: flex; flex-direction: column; gap: 5px;">
-                            <span style="color: #12a8ff; font-size: 12px; font-family: monospace; margin-bottom: 5px;">[ 下属组织档案 ]</span>
-                            <button class="index-org-btn" onclick="openOrgDetail('战略安全局（SSA）')">└ 战略安全局（SSA）</button>
-                            <button class="index-org-btn" onclick="openOrgDetail('泰坦星脉财团')">└ 泰坦星脉财团</button>
-                            <button class="index-org-btn" onclick="openOrgDetail('第一舰队“黄金狮子”')">└ 第一舰队“黄金狮子”</button>
-                        </div>
-                    </div>
-
-                    <!-- 阵营卡片 2：外环 -->
-                    <div class="intel-card" style="cursor: default; display: flex; flex-direction: column;">
-                        <span class="card-icon" style="font-size: 2.5rem;">🏴‍☠️</span>
-                        <span class="card-level">✦ FRONTIER // 边缘星区</span>
-                        <h3 class="card-name" style="font-size: 1.6rem;">外环</h3>
-                        <p class="card-desc" style="flex-grow: 1;">边缘航道之外的空间站与矿业殖民地。这里既有革命者，也有商人；既有理想主义者，也有只想活下去的普通人。</p>
-                        
-                        <button class="btn-ghost" style="width: 100%; padding: 12px; font-size: 14px; margin-bottom: 20px;" onclick="openFactionDetail('外环')">READ ARCHIVE →</button>
-                        
-                        <div style="border-top: 1px dashed rgba(18,168,255,0.3); padding-top: 15px; display: flex; flex-direction: column; gap: 5px;">
-                            <span style="color: #12a8ff; font-size: 12px; font-family: monospace; margin-bottom: 5px;">[ 下属组织档案 ]</span>
-                            <button class="index-org-btn" onclick="openOrgDetail('“黑火”解放战线')">└ “黑火”解放战线</button>
-                            <button class="index-org-btn" onclick="openOrgDetail('深空打捞者工会')">└ 深空打捞者工会</button>
-                            <button class="index-org-btn" onclick="openOrgDetail('“霓虹暗房”')">└ “霓虹暗房”</button>
-                        </div>
-                    </div>
-
-                    <!-- 阵营卡片 3：独立防务承包商 -->
-                    <div class="intel-card" style="cursor: default; display: flex; flex-direction: column;">
-                        <span class="card-icon" style="font-size: 2.5rem;">⚔️</span>
-                        <span class="card-level">✦ PMCs // 私人武装</span>
-                        <h3 class="card-name" style="font-size: 1.6rem;">独立防务承包商</h3>
-                        <p class="card-desc" style="flex-grow: 1;">不参与政治站队的私人武装，游走在联邦与反抗军的夹缝中，只服从信用点和合同。</p>
-                        
-                        <button class="btn-ghost" style="width: 100%; padding: 12px; font-size: 14px; margin-bottom: 20px;" onclick="openFactionDetail('独立防务承包商')">READ ARCHIVE →</button>
-                        
-                        <div style="border-top: 1px dashed rgba(18,168,255,0.3); padding-top: 15px; display: flex; flex-direction: column; gap: 5px;">
-                            <span style="color: #12a8ff; font-size: 12px; font-family: monospace; margin-bottom: 5px;">[ 下属组织档案 ]</span>
-                            <button class="index-org-btn" onclick="openOrgDetail('“深渊行者”国际安保')">└ “深渊行者”国际安保</button>
-                            <button class="index-org-btn" onclick="openOrgDetail('“锈血”佣兵团')">└ “锈血”佣兵团</button>
-                        </div>
-                    </div>
-
-                    <!-- 阵营卡片 4：自治空间站与自由港 -->
-                    <div class="intel-card" style="cursor: default; display: flex; flex-direction: column;">
-                        <span class="card-icon" style="font-size: 2.5rem;">⚖️</span>
-                        <span class="card-level">✦ NEUTRAL // 中立地带</span>
-                        <h3 class="card-name" style="font-size: 1.6rem;">自治空间站与自由港</h3>
-                        <p class="card-desc" style="flex-grow: 1;">遍布深空的独立空间站与自由港。依靠贸易、维修、医疗和情报生意生存，维持脆弱的中立。</p>
-                        
-                        <button class="btn-ghost" style="width: 100%; padding: 12px; font-size: 14px; margin-bottom: 20px;" onclick="openFactionDetail('自治空间站与自由港')">READ ARCHIVE →</button>
-                        
-                        <div style="border-top: 1px dashed rgba(18,168,255,0.3); padding-top: 15px; display: flex; flex-direction: column; gap: 5px;">
-                            <span style="color: #12a8ff; font-size: 12px; font-family: monospace; margin-bottom: 5px;">[ 下属组织档案 ]</span>
-                            <button class="index-org-btn" onclick="openOrgDetail('阿刻戎自由港')">└ 阿刻戎自由港</button>
-                            <button class="index-org-btn" onclick="openOrgDetail('圣赫利俄斯医疗会')">└ 圣赫利俄斯医疗会</button>
-                            <button class="index-org-btn" onclick="openOrgDetail('流浪者教团')">└ 流浪者教团</button>
-                        </div>
-                    </div>
-
+                <div class="intel-grid" id="world-faction-grid">
+                    <!-- JS 将从数据库拉取阵营与组织并渲染在这里 -->
                 </div>
             </div>
         </div>
@@ -3527,24 +3370,106 @@
             </div>
         </div>
 
-        <!-- 💥 新增：管理员内容发布中心 💥 -->
+        <!-- 💥 管理员控制台 (纯展示仪表盘) 💥 -->
         <div class="view-panel" id="adminView">
-            <div class="archive-container" style="max-width: 900px; margin: 0 auto;">
+            <div class="archive-container" style="max-width: 1000px; margin: 0 auto;">
+                
                 <div class="archive-header" style="border-bottom: 2px solid #f44336; padding-bottom: 15px; margin-bottom: 30px;">
-                    <h2 class="neon-title" style="font-size: 32px; color: #f44336; text-shadow: 0 0 15px rgba(244,67,54,0.5);">[ SYSTEM ADMIN // 内容管理中心 ]</h2>
-                    <p style="color: #ffb4a9; font-family: monospace;">最高指挥部数据录入终端。在此发布的内容将实时同步至所有干员的设备。</p>
+                    <h2 class="neon-title" style="font-size: 32px; color: #f44336; text-shadow: 0 0 15px rgba(244,67,54,0.5); margin-bottom: 10px;">[ SYSTEM ADMIN // 内容管理中心 ]</h2>
+                    <p style="color: #ffb4a9; font-family: monospace; margin: 0;">最高指挥部数据管理终端。您可以在此对全局核心数据进行统筹与修改。</p>
                 </div>
 
-                <div class="system-notice" style="border-color: #f44336; background: rgba(244,67,54,0.05); color: #ffb4a9;">
-                    <strong>操作指南：</strong> 选择发布类型，填写卡片信息与正文。正文支持直接输入换行，或使用 HTML 标签进行高级排版。
+                <!-- 排列式分区 1：核心情报 (横向滑动 + 搜索) -->
+                <div style="margin-bottom: 50px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid rgba(18, 168, 255, 0.3); padding-bottom: 10px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                        <h3 style="color: #12a8ff; margin: 0; font-family: monospace; text-shadow: 0 0 8px rgba(18,168,255,0.4); letter-spacing: 1px;">
+                            [ 📂 核心情报管理 ]
+                        </h3>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <!-- 专属搜索框 -->
+                            <div class="input-wrapper" style="border-color: #12a8ff; background: rgba(0,0,0,0.5); padding: 0 10px; border-radius: 4px; display: flex; align-items: center;">
+                                <span style="color: #12a8ff; font-size: 12px;">🔍</span>
+                                <input type="text" id="admin-intel-search" placeholder="搜索情报标题..." style="background: transparent; border: none; color: #fff; padding: 8px; font-family: monospace; font-size: 12px; outline: none; width: 150px;">
+                            </div>
+                            <!-- 专属新建按钮 -->
+                            <button class="submit-btn" style="margin: 0; padding: 8px 15px; font-size: 13px; color: #12a8ff; border-color: #12a8ff; background: rgba(18,168,255,0.1);" onclick="openAdminEditor('intel')">
+                                [ ➕ 新建情报 ]
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 💥 核心修改：改为 flex 横向排列，允许溢出滚动 -->
+                    <div class="intel-grid" id="admin-intel-grid" style="display: flex; overflow-x: auto; gap: 20px; padding-bottom: 15px; scrollbar-width: thin; scrollbar-color: #12a8ff rgba(0,0,0,0.5);">
+                        <div style="color:#8bb9d6; font-family:monospace;">加载中...</div>
+                    </div>
                 </div>
 
-                <form class="tactical-form" id="admin-article-form">
+                <!-- 排列式分区 2：时间轴 -->
+                <div style="margin-bottom: 50px;">
+                    <h3 style="color: #ffeb3b; border-bottom: 2px solid rgba(255, 235, 59, 0.3); padding-bottom: 10px; margin-bottom: 20px; font-family: monospace; text-shadow: 0 0 8px rgba(255,235,59,0.4); letter-spacing: 1px;">
+                        [ ⏳ 历史时间轴管理 ]
+                    </h3>
+                    <div style="background: rgba(255, 235, 59, 0.05); border: 1px dashed rgba(255, 235, 59, 0.3); padding: 30px; text-align: center; border-radius: 4px;">
+                        <p style="color: #ffeb3b; margin-top: 0; margin-bottom: 20px; font-family: monospace; font-size: 14px; opacity: 0.8;">在此跳转至时间轴视图进行概览验证。</p>
+                        <button class="submit-btn" style="color: #ffeb3b; border-color: #ffeb3b; background: rgba(255, 235, 59, 0.1); padding: 10px 30px; display: inline-block; width: auto;" onclick="openTimelineView()">
+                            [ ENTER TIMELINE // 进入时间轴页 ]
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 排列式分区 3：阵营与组织 -->
+                <div style="margin-bottom: 50px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid rgba(76, 175, 80, 0.3); padding-bottom: 10px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                        <h3 style="color: #4caf50; margin: 0; font-family: monospace; text-shadow: 0 0 8px rgba(76,175,80,0.4); letter-spacing: 1px;">
+                            [ 🛡️ 阵营与组织档案管理 ]
+                        </h3>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            
+                            <div class="input-wrapper" style="border-color: #4caf50; background: rgba(0,0,0,0.5); padding: 0 10px; border-radius: 4px; display: flex; align-items: center;">
+                                <span style="color: #4caf50; font-size: 12px;">🔍</span>
+                                <input type="text" id="admin-faction-search" placeholder="搜索阵营/组织..." style="background: transparent; border: none; color: #fff; padding: 8px; font-family: monospace; font-size: 12px; outline: none; width: 150px;">
+                            </div>
+                            <button class="submit-btn" style="margin: 0; padding: 8px 15px; font-size: 13px; color: #4caf50; border-color: #4caf50; background: rgba(76,175,80,0.1);" onclick="openAdminEditor('faction')">
+                                [ ➕ 新建阵营 ]
+                            </button>
+                            <button class="submit-btn" style="margin: 0; padding: 8px 15px; font-size: 13px; color: #4caf50; border-color: #4caf50; background: rgba(76,175,80,0.1);" onclick="openAdminEditor('org')">
+                                [ ➕ 新建组织 ]
+                            </button>
+                        </div>
+                    </div>
+                    <div class="intel-grid" id="admin-faction-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+                        <div style="color:#8bb9d6; font-family:monospace;">加载中...</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 💥 新增：全屏沉浸式数据编辑终端 💥 -->
+        <div class="view-panel" id="adminEditorView">
+            <div class="article-page-container" style="max-width: 1000px; padding-top: 2rem;">
+                
+                <div class="article-top-bar">
+                    <button class="btn-ghost" onclick="closeAdminEditor()" style="padding: 6px 12px; font-size: 14px; color: #ffeb3b; border-color: #ffeb3b;">
+                        &lt; RETURN TO DASHBOARD
+                    </button>
+                    <div class="article-sys-status" style="color: #ffeb3b;">
+                        <span class="blink-cursor">_</span> EDIT MODE ACTIVE
+                    </div>
+                </div>
+
+                <div class="archive-header" style="margin-bottom: 2rem;">
+                    <h2 class="neon-title" style="font-size: 32px; color: #ffeb3b; text-shadow: 0 0 15px rgba(255,235,59,0.5);" id="editor-main-title">[ 📝 新建数据档案 ]</h2>
+                    <p style="color: #8bb9d6; font-family: monospace;">请在此录入或修改核心情报、阵营与组织数据。正文支持 HTML 标签排版。</p>
+                </div>
+
+                <form class="tactical-form" id="admin-article-form" style="background: rgba(0, 5, 10, 0.8); border: 1px solid #ffeb3b; padding: 30px; border-radius: 6px; box-shadow: inset 0 0 30px rgba(255,235,59,0.05);">
+
                     <div class="form-grid">
                         <div class="input-group">
-                            <label style="color: #f44336;">发布类型</label>
-                            <div class="input-wrapper select-wrapper" style="border-color: rgba(244,67,54,0.4);">
-                                <span class="prefix" style="color: #f44336;">&gt;</span>
+                            <label style="color: #ffeb3b;">发布类型</label>
+                            <div class="input-wrapper" style="border-color: rgba(255,235,59,0.4);">
+                                <span class="prefix" style="color: #ffeb3b;">&gt;</span>
                                 <select id="a-type" style="color: #fff;">
                                     <option value="intel">情报卡片 (Intel Grid)</option>
                                     <option value="faction">阵营档案 (Faction)</option>
@@ -3553,54 +3478,66 @@
                             </div>
                         </div>
                         <div class="input-group">
-                            <label style="color: #f44336;">卡片图标 (Emoji或符号)</label>
-                            <div class="input-wrapper" style="border-color: rgba(244,67,54,0.4);">
-                                <span class="prefix" style="color: #f44336;">&gt;</span>
+                            <label style="color: #ffeb3b;">卡片图标 (Emoji或符号)</label>
+                            <div class="input-wrapper" style="border-color: rgba(255,235,59,0.4);">
+                                <span class="prefix" style="color: #ffeb3b;">&gt;</span>
                                 <input type="text" id="a-icon" placeholder="例如: 💎 或 🎯">
                             </div>
                         </div>
                     </div>
 
+                    <!-- 💥 新增：专属的父级阵营选择框 (默认隐藏，只有选了"组织"才会出现) 💥 -->
+                    <div class="input-group full-width" id="parent-faction-group" style="display: none; margin-top: 20px;">
+                        <label style="color: #4caf50;">所属阵营 (仅新建组织时需要绑定)</label>
+                        <div class="input-wrapper select-wrapper" style="border-color: rgba(76,175,80,0.4);">
+                            <span class="prefix" style="color: #4caf50;">&gt;</span>
+                            <select id="a-parent-faction" style="color: #fff;">
+                                <!-- JS 会自动把数据库里的阵营拉取到这里 -->
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="form-grid">
                         <div class="input-group">
-                            <label style="color: #f44336;">标题 (Title)</label>
-                            <div class="input-wrapper" style="border-color: rgba(244,67,54,0.4);">
-                                <span class="prefix" style="color: #f44336;">&gt;</span>
+                            <label style="color: #ffeb3b;">标题 (Title)</label>
+                            <div class="input-wrapper" style="border-color: rgba(255,235,59,0.4);">
+                                <span class="prefix" style="color: #ffeb3b;">&gt;</span>
                                 <input type="text" id="a-title" placeholder="例如: C-62“黑血”研究报告">
                             </div>
                         </div>
                         <div class="input-group">
-                            <label style="color: #f44336;">副标题/标签 (Tag)</label>
-                            <div class="input-wrapper" style="border-color: rgba(244,67,54,0.4);">
-                                <span class="prefix" style="color: #f44336;">&gt;</span>
+                            <label style="color: #ffeb3b;">副标题/标签 (Tag)</label>
+                            <div class="input-wrapper" style="border-color: rgba(255,235,59,0.4);">
+                                <span class="prefix" style="color: #ffeb3b;">&gt;</span>
                                 <input type="text" id="a-tag" placeholder="例如: ✦ LORE // 核心物质">
                             </div>
                         </div>
                     </div>
 
                     <div class="input-group full-width">
-                        <label style="color: #f44336;">搜索关键词 (Keywords，用空格隔开)</label>
-                        <div class="input-wrapper" style="border-color: rgba(244,67,54,0.4);">
-                            <span class="prefix" style="color: #f44336;">&gt;</span>
+                        <label style="color: #ffeb3b;">搜索关键词 (Keywords，用空格隔开)</label>
+                        <div class="input-wrapper" style="border-color: rgba(255,235,59,0.4);">
+                            <span class="prefix" style="color: #ffeb3b;">&gt;</span>
                             <input type="text" id="a-keywords" placeholder="例如: c-62 黑血 矿石 星尘病">
                         </div>
                     </div>
 
                     <div class="input-group full-width">
-                        <label style="color: #f44336;">卡片简介 (Summary - 显示在外部网格中)</label>
-                        <div class="input-wrapper" style="border-color: rgba(244,67,54,0.4);">
+                        <label style="color: #ffeb3b;">卡片简介 (Summary - 显示在外部网格中)</label>
+                        <div class="input-wrapper" style="border-color: rgba(255,235,59,0.4);">
                             <textarea id="a-summary" rows="2" placeholder="简短的描述..."></textarea>
                         </div>
                     </div>
 
                     <div class="input-group full-width">
-                        <label style="color: #f44336;">详细正文 (Content - 点开后全屏显示的内容)</label>
-                        <div class="input-wrapper" style="border-color: rgba(244,67,54,0.4);">
-                            <textarea id="a-content" rows="8" placeholder="在此输入详细档案正文..."></textarea>
+                        <label style="color: #ffeb3b;">详细正文 (Content - 点开后全屏显示的内容)</label>
+                        <div class="input-wrapper" style="border-color: rgba(255,235,59,0.4);">
+                            <!-- 💥 文本框加大了，写长篇设定更舒服 -->
+                            <textarea id="a-content" rows="15" placeholder="在此输入详细档案正文..."></textarea>
                         </div>
                     </div>
 
-                    <button type="button" class="submit-btn" id="btn-publish-article" style="color: #f44336; border-color: #f44336; background: rgba(244,67,54,0.1);">
+                    <button type="button" class="submit-btn" id="btn-publish-article" style="width: 100%; color: #060b14; border-color: #ffeb3b; background: #ffeb3b; font-size: 18px; margin-top: 20px;">
                         [ UPLOAD TO DATABASE // 发布至数据库 ]
                     </button>
                 </form>
@@ -3819,6 +3756,32 @@
             </div>
         </div>
 
+        <!-- 💥 新增：历史情报库视图 (History Intel View) 💥 -->
+        <div class="view-panel" id="historyIntelView">
+            <div class="archive-container" style="max-width: 1200px; margin: 0 auto; padding-top: 2rem; padding-bottom: 5rem;">
+                
+                <div class="article-top-bar">
+                    <button class="btn-ghost" onclick="backToMainFromHistory()" style="padding: 6px 12px; font-size: 14px;">
+                        &lt; RETURN TO MAIN
+                    </button>
+                    <div class="article-sys-status">
+                        <span class="blink-cursor">_</span> ARCHIVE ACCESS
+                    </div>
+                </div>
+
+                <div class="archive-header" style="margin-bottom: 3rem;">
+                    <h2 class="neon-title" style="font-size: 32px; text-align: left;">历史情报归档</h2>
+                    <p style="color: #8bb9d6; font-family: monospace;">[ PREVIOUS INTEL RECORDS ]</p>
+                </div>
+
+                <!-- 存放旧卡片的网格 -->
+                <div class="intel-grid" id="history-intel-grid">
+                    <!-- JS 会把第 5 张及以后的卡片渲染在这里 -->
+                </div>
+
+            </div>
+        </div>
+
 
      <!-- 💥 新增：全屏文章阅读视图 (Article View) 💥 -->
         <div class="view-panel" id="articleView">
@@ -3972,7 +3935,7 @@
                 if (currentUser && currentUser.role === 'guest') {
                     // 游客不能访问填表、审核、人设库和个人终端
                     if (['createView', 'queueView', 'profileView', 'logView'].includes(targetId)) {
-                        await SysModal.alert("游客无权访问此模块。\n请点击右上角 [ ⏻登录 ] 获取正式终端身份。", "⚠️ ACCESS DENIED // 权限拒绝");
+                        await SysModal.alert("游客无权访问此模块。\n请点击右上角 [ ⏻登录 ] 获取正式身份。", "⚠️ ACCESS DENIED // 拒绝访问");
                         return;
                     }
                 }
@@ -3983,7 +3946,7 @@
                     const hasApprovedProfile = characterDB.some(c => c.owner_id === currentUser.id);
 
                     if (!isAdmin && !hasApprovedProfile) {
-                        await SysModal.alert("您的档案尚未通过最高指挥部审核，无法访问正式机密库！\n请前往「WAIT // 战术等候室」查看审核进度。", "⚠️ ACCESS DENIED // 权限拒绝");
+                        await SysModal.alert("您的档案尚未通过管理员审核，无法访问档案库。\n请前往「审核中心」查看审核进度。", "⚠️ ACCESS DENIED // 拒绝访问");
                         return; 
                     }
                 }
@@ -4055,16 +4018,8 @@
         // 💥 新增：用于记忆打开文章前所在的视图 ID
         let previousViewId = 'mainView';
 
-        // 1. 提取所有文章卡片的数据
-        const searchIndex = Array.from(articles).map((card) => {
-            return {
-                title: card.querySelector('.card-name').innerText,
-                tag: card.querySelector('.card-level').innerText,
-                keywords: card.getAttribute('data-keywords').toLowerCase(),
-                content: card.getAttribute('data-content') || "NO DATA FOUND.",
-                element: card
-            };
-        });
+        // 1. 初始化全局搜索索引
+        window.searchIndex = [];
 
         // 2. 打开全屏文章的函数 (升级版：支持 HTML 与按钮渲染)
         function openArticle(item) {
@@ -4119,7 +4074,8 @@
                 return;
             }
 
-            const results = searchIndex.filter(item => 
+            // 💥 核心修复：使用 window.searchIndex
+            const results = window.searchIndex.filter(item => 
                 item.keywords.includes(query) || item.title.toLowerCase().includes(query)
             );
 
@@ -4128,8 +4084,8 @@
             if (results.length === 0) {
                 searchDropdown.innerHTML = `
                     <div class="dropdown-item" style="pointer-events: none; border-left: 4px solid #f44336;">
-                        <span class="dropdown-title" style="color: #f44336;">[ ❌ NO MATCH ]</span>
-                        <span class="dropdown-tag" style="color: #f44336;">未检索到相关机密档案</span>
+                        <span class="dropdown-title" style="color: #f44336;">[ ❌ 未查询到结果 ]</span>
+                        <span class="dropdown-tag" style="color: #f44336;">未检索到相关文章或档案</span>
                     </div>
                 `;
             } else {
@@ -4169,36 +4125,62 @@
         });
 
         /* =========================================================
-           💥 新增：世界观左侧导航栏滚动与监听引擎
+           💥 世界观左侧导航栏滚动与监听引擎 (全动态升级版) 💥
            ========================================================= */
-        const tocBtns = document.querySelectorAll('.toc-btn');
-        
-        // 1. 点击平滑滚动逻辑
-        tocBtns.forEach(btn => {
+        let isAutoScrolling = false;
+        let autoScrollTimeout = null;
+
+        // 1. 封装单个目录按钮的点击事件
+        window.bindSingleTocEvent = function(btn) {
             btn.addEventListener('click', () => {
                 const targetId = btn.getAttribute('data-scroll');
+                if (!targetId) return;
+
                 const targetEl = document.getElementById(targetId);
                 if (targetEl) {
-                    // 计算目标元素距离页面顶部的高度，减去 80px 偏移量防止被顶部毛玻璃遮挡
+                    isAutoScrolling = true;
+                    if (autoScrollTimeout) clearTimeout(autoScrollTimeout);
+
+                    document.querySelectorAll('.toc-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    const parentSub = btn.closest('.sub-toc-list');
+                    if (parentSub) {
+                        parentSub.classList.add('open');
+                        const parentDiv = parentSub.previousElementSibling;
+                        if (parentDiv) {
+                            const parentBtn = parentDiv.querySelector('.toc-btn');
+                            if (parentBtn) parentBtn.classList.add('active');
+                            const arrow = parentDiv.querySelector('.toc-arrow');
+                            if (arrow) arrow.classList.add('open');
+                        }
+                    }
+
                     const yOffset = -80; 
                     const y = targetEl.getBoundingClientRect().top + window.pageYOffset + yOffset;
                     window.scrollTo({ top: y, behavior: 'smooth' });
+
+                    autoScrollTimeout = setTimeout(() => {
+                        isAutoScrolling = false;
+                    }, 800);
                 }
             });
-        });
+        };
 
-        // 💥 新增：点击展开/收起子目录的函数 (带箭头旋转)
+        // 初始化绑定静态目录按钮
+        document.querySelectorAll('.toc-btn').forEach(btn => bindSingleTocEvent(btn));
+
+        // 点击展开/收起子目录的函数
         window.toggleSubMenu = function(id) {
             const sub = document.getElementById(id);
             if(sub) {
                 sub.classList.toggle('open');
-                // 找到对应的箭头并切换旋转状态
                 const arrow = sub.previousElementSibling.querySelector('.toc-arrow');
                 if(arrow) arrow.classList.toggle('open');
             }
         };
 
-        // 2. 战术雷达扫描：自动监听当前阅读位置并高亮左侧目录
+        // 2. 战术雷达扫描
         const observerOptions = {
             root: null,
             rootMargin: '-80px 0px -30% 0px', 
@@ -4206,29 +4188,26 @@
         };
 
         const sectionObserver = new IntersectionObserver((entries) => {
+            if (isAutoScrolling) return;
+
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     const id = entry.target.getAttribute('id');
                     
-                    // 移除所有按钮的高亮状态
                     document.querySelectorAll('.toc-btn').forEach(btn => btn.classList.remove('active'));
                     
-                    // 找到对应当前区块的按钮，为其加上高亮状态
                     const activeBtn = document.querySelector(`.toc-btn[data-scroll="${id}"]`);
                     if (activeBtn) {
                         activeBtn.classList.add('active');
                         
-                        // 💥 智能逻辑：如果当前滑到的是子目录，自动展开它的父级菜单！
                         const parentSub = activeBtn.closest('.sub-toc-list');
                         if (parentSub) {
                             parentSub.classList.add('open');
-                            // 找到父级按钮并让它也保持高亮
                             const parentDiv = parentSub.previousElementSibling;
                             if (parentDiv) {
                                 const parentBtn = parentDiv.querySelector('.toc-btn');
                                 if (parentBtn) parentBtn.classList.add('active');
                                 
-                                // 💥 让箭头也保持旋转展开状态
                                 const arrow = parentDiv.querySelector('.toc-arrow');
                                 if (arrow) arrow.classList.add('open');
                             }
@@ -4238,13 +4217,51 @@
             });
         }, observerOptions);
 
-        // 💥 将所有需要被雷达监控的区块加入观察列表 (包含主控、情报卡片、画廊)
-        // 💥 将所有需要被雷达监控的区块加入观察列表 (新增了 4 个阵营的 ID)
-        const observeTargets = '#main-hero, #sec-intro, #sec-conflict, #sec-factions, #faction-psc, #faction-frontier, #faction-pmc, #faction-freeport, #sec-onboard, #intel-grid, #intel-1, #intel-2, #intel-3, #intel-4, #gallery-strip';
-        
-        document.querySelectorAll(observeTargets).forEach(section => {
-            if (section) sectionObserver.observe(section);
-        });
+        // 3. 动态更新雷达监听目标
+        window.updateRadarTargets = function() {
+            sectionObserver.disconnect(); // 先断开所有旧监听
+            
+            // 监听静态区块
+            const staticTargets = '#main-hero, #sec-intro, #sec-conflict, #sec-factions, #faction-psc, #faction-frontier, #faction-pmc, #faction-freeport, #sec-onboard, #intel-grid, #gallery-strip';
+            document.querySelectorAll(staticTargets).forEach(section => {
+                if (section) sectionObserver.observe(section);
+            });
+            
+            // 监听所有情报卡片（包括动态生成的）
+            document.querySelectorAll('.intel-grid .intel-card').forEach(card => {
+                sectionObserver.observe(card);
+            });
+        };
+
+        // 4. 💥 核心：动态生成情报目录 💥
+        window.generateIntelTOC = function() {
+            const intelSubToc = document.getElementById('intel-sub');
+            if (!intelSubToc) return;
+            
+            intelSubToc.innerHTML = ''; // 清空旧目录
+            
+            // 遍历当前网格里的所有卡片（无论是写死的还是数据库拉取的）
+            const allCards = document.querySelectorAll('.intel-grid .intel-card');
+            allCards.forEach(card => {
+                const id = card.getAttribute('id');
+                const title = card.querySelector('.card-name').innerText;
+                
+                if (id && title) {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<button class="toc-btn sub-btn" data-scroll="${id}">└ ${title}</button>`;
+                    intelSubToc.appendChild(li);
+                    
+                    // 给新生成的按钮绑定点击事件
+                    bindSingleTocEvent(li.querySelector('.toc-btn'));
+                }
+            });
+            
+            // 目录生成完毕后，更新雷达监听
+            updateRadarTargets();
+        };
+
+        // 页面刚加载时，先根据 HTML 里写死的卡片生成一次目录
+        generateIntelTOC();
 
         /* =========================================================
            3. 💥 云端数据库联网逻辑 (Supabase 升级版) 💥
@@ -5894,19 +5911,66 @@
         }
 
         /* =========================================================
-           💥 CMS 内容管理系统引擎 (支持编辑与删除) 💥
+           💥 CMS 内容管理系统引擎 (阵营组织全动态升级版) 💥
            ========================================================= */
         let articlesDB = [];
-        let editingArticleId = null; // 记录当前正在编辑的文章 ID
+        let editingArticleId = null;
 
-        // 1. 发布/更新文章到 Supabase
+        // 💥 1. 打开全屏编辑器 (支持阵营/组织定制化)
+        window.openAdminEditor = function(defaultType = 'intel') {
+            editingArticleId = null;
+            document.getElementById('admin-article-form').reset();
+            
+            const typeSelect = document.getElementById('a-type');
+            const parentGroup = document.getElementById('parent-faction-group');
+            const parentSelect = document.getElementById('a-parent-faction');
+
+            if (typeSelect) {
+                typeSelect.value = defaultType;
+                typeSelect.style.pointerEvents = 'none';
+                typeSelect.style.opacity = '0.6';
+            }
+
+            // 如果是新建组织，显示父级阵营选择框，并动态拉取现有阵营
+            if (defaultType === 'org') {
+                parentGroup.style.display = 'flex';
+                parentSelect.innerHTML = '<option value="" disabled selected>-- 请选择所属阵营 --</option>';
+                const factions = articlesDB.filter(a => a.type === 'faction');
+                factions.forEach(f => {
+                    parentSelect.innerHTML += `<option value="${f.title}">${f.title}</option>`;
+                });
+            } else {
+                parentGroup.style.display = 'none';
+            }
+
+            let titleText = "[ 📝 新建核心情报 ]";
+            if (defaultType === 'faction') titleText = "[ 📝 新建主阵营 ]";
+            if (defaultType === 'org') titleText = "[ 📝 新建下属组织 ]";
+            
+            document.getElementById('editor-main-title').innerText = titleText;
+            document.getElementById('btn-publish-article').innerText = "[ UPLOAD TO DATABASE // 发布至数据库 ]";
+
+            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById('adminEditorView').classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.closeAdminEditor = function() {
+            editingArticleId = null;
+            document.getElementById('admin-article-form').reset();
+            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById('adminView').classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        // 2. 发布/更新文章到 Supabase
         document.getElementById('btn-publish-article').addEventListener('click', async () => {
             const btn = document.getElementById('btn-publish-article');
             const type = document.getElementById('a-type').value;
             const title = document.getElementById('a-title').value.trim();
             const tag = document.getElementById('a-tag').value.trim();
             const icon = document.getElementById('a-icon').value.trim();
-            const keywords = document.getElementById('a-keywords').value.trim();
+            let keywords = document.getElementById('a-keywords').value.trim();
             const summary = document.getElementById('a-summary').value.trim();
             const content = document.getElementById('a-content').value.trim();
 
@@ -5915,77 +5979,271 @@
                 return;
             }
 
+            // 💥 核心：如果是组织，把父级阵营的名字悄悄塞进 keywords 里，作为绑定凭证
+            if (type === 'org') {
+                const parentFaction = document.getElementById('a-parent-faction').value;
+                if (!parentFaction) {
+                    SysModal.alert("新建组织必须选择所属阵营！", "⚠️ 格式错误");
+                    return;
+                }
+                // 用特殊格式 [PARENT:阵营名] 存入 keywords
+                if (!keywords.includes(`[PARENT:${parentFaction}]`)) {
+                    keywords += ` [PARENT:${parentFaction}]`;
+                }
+            }
+
             btn.innerText = "[ 📡 PROCESSING... ]";
             btn.disabled = true;
 
             try {
+                const currentTime = new Date().toISOString();
+
                 if (editingArticleId) {
-                    // 💥 更新已有文章
                     const { error } = await supabaseClient.from('articles').update({
-                        type, title, tag, icon, keywords, summary, content
+                        type, title, tag, icon, keywords, summary, content, updated_at: currentTime
                     }).eq('id', editingArticleId);
                     if (error) throw error;
                     await SysModal.alert("数据已成功更新！", "更新成功");
                 } else {
-                    // 💥 发布新文章
                     const { error } = await supabaseClient.from('articles').insert([{
-                        type, title, tag, icon, keywords, summary, content
+                        type, title, tag, icon, keywords, summary, content, updated_at: currentTime
                     }]);
                     if (error) throw error;
                     await SysModal.alert("数据已成功写入星际网络！", "发布成功");
                 }
 
-                // 恢复表单和按钮状态
-                document.getElementById('admin-article-form').reset();
-                editingArticleId = null;
-                btn.innerText = "[ UPLOAD TO DATABASE // 发布至数据库 ]";
-                btn.style.borderColor = "#f44336";
-                btn.style.color = "#f44336";
-                btn.style.background = "rgba(244,67,54,0.1)";
-                
-                fetchArticles(); // 重新拉取数据刷新页面
+                closeAdminEditor();
+                fetchArticles(); 
             } catch (err) {
                 console.error(err);
                 SysModal.alert("操作失败，请检查网络或数据库权限。", "❌ ERROR");
-                btn.innerText = editingArticleId ? "[ UPDATE DATABASE // 更新至数据库 ]" : "[ UPLOAD TO DATABASE // 发布至数据库 ]";
+                btn.innerText = editingArticleId ? "[ UPDATE DATABASE // 覆盖保存 ]" : "[ UPLOAD TO DATABASE // 发布至数据库 ]";
             } finally {
                 btn.disabled = false;
             }
         });
 
-        // 2. 从数据库拉取文章并动态渲染
+        // 3. 从数据库拉取文章
         async function fetchArticles() {
             try {
                 const { data, error } = await supabaseClient.from('articles').select('*');
                 if (error) throw error;
-                articlesDB = data;
                 
-                renderIntelGrid(); // 渲染情报卡片
+                articlesDB = data.sort((a, b) => {
+                    const timeA = a.updated_at ? new Date(a.updated_at).getTime() : (a.id || 0);
+                    const timeB = b.updated_at ? new Date(b.updated_at).getTime() : (b.id || 0);
+                    return timeB - timeA; 
+                });
+                
+                renderIntelGrid(); 
+                renderFactions(); // 💥 渲染主界面和世界观的阵营区
+                
+                if (currentUser && currentUser.role === 'admin') {
+                    renderAdminDashboard();
+                }
             } catch (err) {
-                console.error("拉取文章失败:", err);
+                console.error("拉取文章失败:", err.message || err);
             }
         }
 
-        // 3. 动态生成主界面的情报网格 (追加模式)
-        function renderIntelGrid() {
-            const grid = document.querySelector('.intel-grid');
-            if (!grid) return;
+        // 💥 4. 动态渲染主界面和世界观的阵营区 💥
+        function renderFactions() {
+            const mainGrid = document.getElementById('main-faction-grid');
+            const worldGrid = document.getElementById('world-faction-grid');
+            if (!mainGrid || !worldGrid) return;
 
-            // 💥 核心修复：只清除之前渲染的“动态卡片”，保留写死在 HTML 里的老卡片！
-            document.querySelectorAll('.dynamic-intel').forEach(el => el.remove());
+            mainGrid.innerHTML = '';
+            worldGrid.innerHTML = '';
+
+            const factions = articlesDB.filter(a => a.type === 'faction');
+            const orgs = articlesDB.filter(a => a.type === 'org');
+
+            if (factions.length === 0) {
+                mainGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace;">[ 暂无阵营数据，请等待指挥部上传 ]</div>';
+                worldGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace;">[ 暂无阵营数据，请等待指挥部上传 ]</div>';
+                return;
+            }
+
+            // 按照旧版顺序排个序（可选，让 P.S.C 永远在前面）
+            const order = ["泛星联盟", "外环", "独立防务承包商", "自治空间站与自由港"];
+            factions.sort((a, b) => {
+                let idxA = order.findIndex(o => a.title.includes(o));
+                let idxB = order.findIndex(o => b.title.includes(o));
+                if (idxA === -1) idxA = 99;
+                if (idxB === -1) idxB = 99;
+                return idxA - idxB;
+            });
+
+            factions.forEach(faction => {
+                // 找出属于这个阵营的组织
+                const childOrgs = orgs.filter(o => o.keywords && o.keywords.includes(`[PARENT:${faction.title}]`));
+
+                // 决定主题色
+                let colorClass = 'pmc';
+                if (faction.title.includes('联盟')) colorClass = 'psc';
+                else if (faction.title.includes('外环')) colorClass = 'frontier';
+
+                // 渲染主界面的卡片
+                let subOrgsHTMLMain = childOrgs.map(org => `
+                    <button class="sub-org-btn" onclick="openArticleById('${org.id}')">
+                        <strong>${org.title}</strong>
+                        <span>${org.summary}</span>
+                    </button>
+                `).join('');
+
+                mainGrid.innerHTML += `
+                    <div class="faction-card ${colorClass}">
+                        <div class="faction-header">
+                            <h3 style="cursor: pointer; text-decoration: underline; text-underline-offset: 4px; transition: 0.2s;" onclick="openArticleById('${faction.id}')" onmouseover="this.style.color='#12a8ff'" onmouseout="this.style.color='#fff'">${faction.title}</h3>
+                            <span class="faction-tag">${faction.tag}</span>
+                        </div>
+                        <p class="faction-desc">${faction.summary}</p>
+                        <div class="sub-org-list">
+                            ${subOrgsHTMLMain}
+                        </div>
+                    </div>
+                `;
+
+                // 渲染世界观页面的卡片
+                let subOrgsHTMLWorld = childOrgs.map(org => `
+                    <button class="index-org-btn" onclick="openArticleById('${org.id}')">└ ${org.title}</button>
+                `).join('');
+
+                worldGrid.innerHTML += `
+                    <div class="intel-card" style="cursor: default; display: flex; flex-direction: column;">
+                        <span class="card-icon" style="font-size: 2.5rem;">${faction.icon || '🛡️'}</span>
+                        <span class="card-level">${faction.tag}</span>
+                        <h3 class="card-name" style="font-size: 1.6rem;">${faction.title}</h3>
+                        <p class="card-desc" style="flex-grow: 1;">${faction.summary}</p>
+                        <button class="btn-ghost" style="width: 100%; padding: 12px; font-size: 14px; margin-bottom: 20px;" onclick="openArticleById('${faction.id}')">点击阅读 →</button>
+                        <div style="border-top: 1px dashed rgba(18,168,255,0.3); padding-top: 15px; display: flex; flex-direction: column; gap: 5px;">
+                            <span style="color: #12a8ff; font-size: 12px; font-family: monospace; margin-bottom: 5px;">[ 下属组织档案 ]</span>
+                            ${subOrgsHTMLWorld}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // 辅助函数：通过 ID 打开文章
+        window.openArticleById = function(id) {
+            const article = articlesDB.find(a => String(a.id) === String(id));
+            if (article) {
+                openArticle({ title: article.title, tag: article.tag, content: article.content });
+            } else {
+                SysModal.alert("该档案尚未解密或不存在。", "ACCESS DENIED");
+            }
+        };
+
+        // 5. 后台专属：渲染管理员仪表盘
+        function renderAdminDashboard() {
+            const intelGrid = document.getElementById('admin-intel-grid');
+            const factionGrid = document.getElementById('admin-faction-grid');
+            if (!intelGrid || !factionGrid) return;
+
+            intelGrid.innerHTML = '';
+            factionGrid.innerHTML = '';
+
+            const intelSearchInput = document.getElementById('admin-intel-search');
+            const factionSearchInput = document.getElementById('admin-faction-search');
+            const intelQuery = intelSearchInput ? intelSearchInput.value.trim().toLowerCase() : '';
+            const factionQuery = factionSearchInput ? factionSearchInput.value.trim().toLowerCase() : '';
+
+            let intelArticles = articlesDB.filter(a => a.type === 'intel');
+            if (intelQuery) {
+                intelArticles = intelArticles.filter(a => 
+                    (a.title && a.title.toLowerCase().includes(intelQuery)) || 
+                    (a.keywords && a.keywords.toLowerCase().includes(intelQuery))
+                );
+            }
+
+            let factionArticles = articlesDB.filter(a => a.type === 'faction' || a.type === 'org');
+            if (factionQuery) {
+                factionArticles = factionArticles.filter(a => 
+                    (a.title && a.title.toLowerCase().includes(factionQuery)) || 
+                    (a.keywords && a.keywords.toLowerCase().includes(factionQuery))
+                );
+            }
+
+            const createAdminCard = (item, themeColor, isHorizontal = false) => {
+                const card = document.createElement('div');
+                card.className = 'intel-card';
+                card.style.borderColor = themeColor;
+                card.style.background = 'rgba(0,0,0,0.4)';
+                card.style.padding = '15px';
+                card.style.cursor = 'default';
+                card.style.display = 'flex';
+                card.style.flexDirection = 'column';
+                card.style.minHeight = '180px'; 
+                
+                if (isHorizontal) card.style.flex = '0 0 260px'; 
+
+                const typeLabel = item.type === 'intel' ? 'INTEL' : (item.type === 'faction' ? 'FACTION' : 'ORG');
+
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <span style="font-size: 20px;">${item.icon || '📁'}</span>
+                            <span style="font-family: monospace; color: ${themeColor}; font-size: 12px; border: 1px solid ${themeColor}; padding: 2px 6px; border-radius: 2px;">[ ${typeLabel} ]</span>
+                        </div>
+                        <div style="display: flex; gap: 5px;">
+                            <button onclick="editArticle('${item.id}')" style="background: rgba(255,235,59,0.1); border: 1px solid #ffeb3b; color: #ffeb3b; cursor: pointer; padding: 4px 8px; font-size: 12px; font-family: monospace; border-radius: 2px; transition: 0.2s;">[编辑]</button>
+                            <button onclick="deleteArticle('${item.id}')" style="background: rgba(244,67,54,0.1); border: 1px solid #f44336; color: #f44336; cursor: pointer; padding: 4px 8px; font-size: 12px; font-family: monospace; border-radius: 2px; transition: 0.2s;">[删除]</button>
+                        </div>
+                    </div>
+                    <h3 style="color: #fff; margin: 0 0 5px 0; font-size: 16px;">${item.title}</h3>
+                    <p style="color: #8bb9d6; font-size: 13px; margin: 0 0 10px 0; flex-grow: 1; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;">${item.summary || '暂无简介'}</p>
+                    <div style="font-family: monospace; font-size: 12px; color: #666; margin-top: auto;">TAG: ${item.tag || 'N/A'}</div>
+                `;
+                return card;
+            };
+
+            if (intelArticles.length === 0) {
+                intelGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace; padding: 20px 0;">[ 暂无核心情报记录 / 未搜索到结果 ]</div>';
+            } else {
+                intelArticles.forEach(item => intelGrid.appendChild(createAdminCard(item, '#12a8ff', true)));
+            }
+
+            if (factionArticles.length === 0) {
+                factionGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace;">[ 暂无阵营与组织记录 / 未搜索到结果 ]</div>';
+            } else {
+                factionArticles.forEach(item => factionGrid.appendChild(createAdminCard(item, '#4caf50', false)));
+            }
+        }
+
+        document.addEventListener('input', function(e) {
+            if (e.target.id === 'admin-intel-search' || e.target.id === 'admin-faction-search') {
+                renderAdminDashboard();
+            }
+        });
+
+        // 6. 动态生成情报网格 (主界面 Top 4 + 历史情报库)
+        function renderIntelGrid() {
+            const mainGrid = document.getElementById('main-intel-grid');
+            const historyGrid = document.getElementById('history-intel-grid');
+            if (!mainGrid || !historyGrid) return;
+
+            mainGrid.innerHTML = '';
+            historyGrid.innerHTML = '';
 
             const intelArticles = articlesDB.filter(a => a.type === 'intel');
-            
-            intelArticles.forEach((item, index) => {
+
+            if (intelArticles.length === 0) {
+                mainGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace; grid-column: 1/-1; padding: 20px 0;">[ 暂无情报数据，请等待指挥部上传 ]</div>';
+                historyGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace; grid-column: 1/-1; padding: 20px 0;">[ 暂无历史情报 ]</div>';
+                return;
+            }
+
+            const top4Cards = intelArticles.slice(0, 4);
+            const historyCards = intelArticles.slice(4);
+
+            const createCardHTML = (item, index, prefix) => {
                 const card = document.createElement('div');
-                // 加上 dynamic-intel 类名，方便下次刷新时精准清除
                 card.className = 'intel-card article-card dynamic-intel'; 
-                card.id = `intel-dynamic-${index}`;
-                
+                card.id = `intel-${prefix}-${index}`;
                 card.setAttribute('data-keywords', item.keywords || '');
                 card.setAttribute('data-content', item.content || '');
-                
-                // 💥 新增：如果是管理员，在卡片右上角生成 [改] 和 [删] 按钮
+
                 let adminControls = '';
                 if (currentUser && currentUser.role === 'admin') {
                     adminControls = `
@@ -6008,72 +6266,133 @@
                     </div>
                 `;
                 
-                card.onclick = () => openArticle({
-                    title: item.title,
-                    tag: item.tag,
-                    content: item.content
-                });
-                
-                // 💥 核心修复：把新卡片插入到网格的最前面，老卡片会被自动往后挤
-                grid.insertBefore(card, grid.firstChild);
-            });
+                card.onclick = () => openArticle({ title: item.title, tag: item.tag, content: item.content });
+                return card;
+            };
+
+            top4Cards.forEach((item, index) => mainGrid.appendChild(createCardHTML(item, index, 'main')));
+
+            if (historyCards.length === 0) {
+                historyGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace; grid-column: 1/-1; padding: 20px 0;">[ 当前没有更早的历史情报归档 ]</div>';
+            } else {
+                historyCards.forEach((item, index) => historyGrid.appendChild(createCardHTML(item, index, 'history')));
+            }
 
             updateSearchIndex();
+            generateIntelTOC();
         }
 
-        // 4. 管理员专属：删除文章
+        window.openHistoryIntel = function() {
+            const currentActivePanel = document.querySelector('.view-panel.active');
+            if (currentActivePanel && currentActivePanel.id !== 'historyIntelView') {
+                previousViewId = currentActivePanel.id;
+            }
+            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById('historyIntelView').classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.backToMainFromHistory = function() {
+            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+            const targetPanel = document.getElementById(previousViewId) || document.getElementById('mainView');
+            targetPanel.classList.add('active');
+            
+            setTimeout(() => {
+                const targetEl = document.getElementById('intel-grid');
+                if(targetEl) {
+                    const y = targetEl.getBoundingClientRect().top + window.pageYOffset - 80;
+                    window.scrollTo({ top: y, behavior: 'smooth' });
+                }
+            }, 50);
+        };
+
         window.deleteArticle = async function(id) {
-            const isSure = await SysModal.confirm("确定要永久删除这条情报吗？\n此操作不可逆！", "⚠️ 删除确认");
+            const isSure = await SysModal.confirm("确定要永久删除这条记录吗？\n此操作不可逆！", "⚠️ 删除确认");
             if (!isSure) return;
 
             try {
                 await supabaseClient.from('articles').delete().eq('id', id);
-                await SysModal.alert("情报已从数据库中抹除。", "删除成功");
-                fetchArticles(); // 刷新页面
+                await SysModal.alert("记录已从数据库中抹除。", "删除成功");
+                fetchArticles(); 
             } catch (err) {
                 console.error(err);
                 SysModal.alert("删除失败，请检查网络。", "❌ ERROR");
             }
         };
 
-        // 5. 管理员专属：编辑文章 (调取数据到表单)
+        // 💥 7. 管理员专属：编辑文章 (支持阵营回显)
         window.editArticle = function(id) {
-            const article = articlesDB.find(a => a.id === id);
-            if (!article) return;
+            const article = articlesDB.find(a => String(a.id) === String(id));
+            if (!article) {
+                SysModal.alert("无法读取该档案数据，请刷新页面重试。", "系统错误");
+                return;
+            }
 
-            // 记录正在编辑的 ID
-            editingArticleId = id;
+            editingArticleId = article.id;
 
-            // 把数据填回表单
-            document.getElementById('a-type').value = article.type;
-            document.getElementById('a-title').value = article.title;
-            document.getElementById('a-tag').value = article.tag;
-            document.getElementById('a-icon').value = article.icon;
-            document.getElementById('a-keywords').value = article.keywords;
-            document.getElementById('a-summary').value = article.summary;
-            document.getElementById('a-content').value = article.content;
+            const safeSet = (elId, val) => {
+                const el = document.getElementById(elId);
+                if (el) el.value = val || '';
+            };
 
-            // 改变按钮的颜色和文字，提示当前是“更新模式”
+            safeSet('a-type', article.type);
+            safeSet('a-title', article.title);
+            safeSet('a-tag', article.tag);
+            safeSet('a-icon', article.icon);
+            safeSet('a-keywords', article.keywords);
+            safeSet('a-summary', article.summary);
+            safeSet('a-content', article.content);
+
+            const typeSelect = document.getElementById('a-type');
+            const parentGroup = document.getElementById('parent-faction-group');
+            const parentSelect = document.getElementById('a-parent-faction');
+
+            if (typeSelect) {
+                typeSelect.style.pointerEvents = 'none';
+                typeSelect.style.opacity = '0.6';
+            }
+
+            // 如果编辑的是组织，回显父级阵营
+            if (article.type === 'org') {
+                parentGroup.style.display = 'flex';
+                parentSelect.innerHTML = '<option value="" disabled selected>-- 请选择所属阵营 --</option>';
+                const factions = articlesDB.filter(a => a.type === 'faction');
+                factions.forEach(f => {
+                    parentSelect.innerHTML += `<option value="${f.title}">${f.title}</option>`;
+                });
+                
+                // 从 keywords 中提取 [PARENT:xxx] 并选中
+                const match = article.keywords.match(/\[PARENT:(.+?)\]/);
+                if (match && match[1]) {
+                    parentSelect.value = match[1];
+                }
+            } else {
+                parentGroup.style.display = 'none';
+            }
+
+            const mainTitle = document.getElementById('editor-main-title');
+            if (mainTitle) mainTitle.innerText = "[ ⚙️ 修改数据档案 ]";
+            
             const btn = document.getElementById('btn-publish-article');
-            btn.innerText = "[ UPDATE DATABASE // 更新至数据库 ]";
-            btn.style.borderColor = "#ffeb3b";
-            btn.style.color = "#ffeb3b";
-            btn.style.background = "rgba(255,235,59,0.1)";
+            if (btn) btn.innerText = "[ UPDATE DATABASE // 覆盖保存 ]";
 
-            // 自动跳转到管理员控制台
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
-            document.getElementById('adminView').classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const editorView = document.getElementById('adminEditorView');
+            if (editorView) {
+                editorView.classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         };
 
-        // 6. 更新搜索索引
         function updateSearchIndex() {
             const articles = document.querySelectorAll('.article-card');
             window.searchIndex = Array.from(articles).map((card) => {
+                const nameEl = card.querySelector('.card-name');
+                const levelEl = card.querySelector('.card-level');
                 return {
-                    title: card.querySelector('.card-name').innerText,
-                    tag: card.querySelector('.card-level').innerText,
-                    keywords: card.getAttribute('data-keywords').toLowerCase(),
+                    title: nameEl ? nameEl.innerText : 'UNKNOWN TITLE',
+                    tag: levelEl ? levelEl.innerText : 'UNKNOWN TAG',
+                    keywords: (card.getAttribute('data-keywords') || '').toLowerCase(),
                     content: card.getAttribute('data-content') || "NO DATA FOUND.",
                     element: card
                 };
