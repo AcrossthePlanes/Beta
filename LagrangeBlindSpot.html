@@ -312,6 +312,7 @@
             transition: all 0.2s;
             position: relative;
             overflow: hidden;
+            flex-shrink: 0; /* 💥 核心修复：防止搜索结果过多时被强行挤压高度 */
         }
 
         .dropdown-item:last-child {
@@ -1654,94 +1655,6 @@
         }
 
         /* =========================================
-           移动端战术雷达扫描仪样式
-           ========================================= */
-        .mobile-scanner {
-            display: none; /* 默认在电脑端隐藏 */
-            position: relative;
-            width: 100%;
-            height: 250px;
-            background: #03060a;
-            border: 1px solid rgba(18, 168, 255, 0.4);
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 0 15px rgba(18, 168, 255, 0.1);
-            overflow: hidden;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .scanner-hud {
-            position: absolute;
-            top: 10px; left: 10px;
-            color: #12a8ff;
-            font-family: monospace;
-            font-size: 12px;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        /* 雷达表盘 */
-        .radar {
-            position: relative;
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            border: 1px solid rgba(18, 168, 255, 0.5);
-            background: 
-                linear-gradient(90deg, transparent 49.5%, rgba(18, 168, 255, 0.5) 49.5%, rgba(18, 168, 255, 0.5) 50.5%, transparent 50.5%),
-                linear-gradient(0deg, transparent 49.5%, rgba(18, 168, 255, 0.5) 49.5%, rgba(18, 168, 255, 0.5) 50.5%, transparent 50.5%),
-                radial-gradient(circle, transparent 30%, rgba(18, 168, 255, 0.2) 31%, transparent 32%),
-                radial-gradient(circle, transparent 60%, rgba(18, 168, 255, 0.2) 61%, transparent 62%);
-        }
-
-        /* 扫描指针 */
-        .sweep {
-            position: absolute;
-            top: 0; left: 50%;
-            width: 50%; height: 50%;
-            background: linear-gradient(45deg, rgba(18, 168, 255, 0.8) 0%, transparent 60%);
-            transform-origin: 0% 100%;
-            animation: spin 2s linear infinite;
-            border-left: 2px solid #12a8ff;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* 雷达上的公民光点 */
-        .radar-blip {
-            position: absolute;
-            width: 4px; height: 4px;
-            background: #fff;
-            border-radius: 50%;
-            box-shadow: 0 0 8px #fff, 0 0 15px #12a8ff;
-            animation: blink 2s infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 0; }
-            50% { opacity: 1; }
-        }
-
-        /* 💥 核心：媒体查询 (当屏幕宽度小于 768px 时触发) 💥 */
-        @media (max-width: 768px) {
-            #viewport {
-                display: none !important; /* 隐藏 3D 隧道 */
-            }
-            .mobile-scanner {
-                display: flex !important; /* 显示雷达 */
-            }
-            .system-notice {
-                font-size: 12px; /* 手机端稍微缩小提示文字 */
-            }
-        }
-
-        /* =========================================
            定制版系统终端弹窗 (SysModal) - 赛博升级版
            ========================================= */
         .sys-modal-overlay {
@@ -2172,6 +2085,29 @@
             letter-spacing: 4px; 
             text-shadow: 3px 0 rgba(18,168,255,0.8), -3px 0 rgba(244,67,54,0.8); 
             text-align: center;
+            /* 💥 新增：绑定赛博闪烁动画，4秒一个循环 */
+            animation: cyber-flicker 4s infinite;
+        }
+
+        /* 💥 新增：纯粹的明暗闪烁与色差瞬移（绝对不扭曲字体形状） */
+        @keyframes cyber-flicker {
+            0%, 100% { opacity: 1; text-shadow: 3px 0 rgba(18,168,255,0.8), -3px 0 rgba(244,67,54,0.8); }
+            /* 第一次轻微断电 */
+            5%  { opacity: 0.2; text-shadow: none; }
+            6%  { opacity: 1; text-shadow: 3px 0 rgba(18,168,255,0.8), -3px 0 rgba(244,67,54,0.8); }
+            /* 红蓝阴影瞬间炸开拉大 */
+            11% { opacity: 0.8; text-shadow: 6px 0 rgba(18,168,255,1), -6px 0 rgba(244,67,54,1); } 
+            12% { opacity: 1; text-shadow: 3px 0 rgba(18,168,255,0.8), -3px 0 rgba(244,67,54,0.8); }
+            /* 连续接触不良闪烁 */
+            45% { opacity: 1; }
+            46% { opacity: 0.1; }
+            47% { opacity: 0.9; }
+            48% { opacity: 0.1; }
+            49% { opacity: 1; }
+            /* 核心特效：红蓝阴影瞬间对调反转，极具赛博感 */
+            75% { opacity: 1; text-shadow: 3px 0 rgba(18,168,255,0.8), -3px 0 rgba(244,67,54,0.8); }
+            76% { opacity: 1; text-shadow: -3px 0 rgba(18,168,255,0.9), 3px 0 rgba(244,67,54,0.9); } 
+            77% { opacity: 1; text-shadow: 3px 0 rgba(18,168,255,0.8), -3px 0 rgba(244,67,54,0.8); }
         }
 
         /* =========================================
@@ -2329,36 +2265,60 @@
             background: #060b14;
         }
 
-        /* 左侧固定导航栏 */
+        /* 左侧固定导航栏容器 */
         .timeline-nav__wrapper {
             position: fixed;
             top: 0; left: 0;
+            width: 400px; 
             height: 100vh;
-            padding: 0 30px 0 50px;
-            display: flex;
-            flex-flow: column nowrap;
-            justify-content: center;
             z-index: 10;
-            pointer-events: none; /* 让空白区域可以穿透点击 */
+            pointer-events: none; 
         }
 
         /* 💥 时间线返回按钮专属样式 💥 */
         .timeline-return-btn {
             position: absolute;
-            top: 90px; /* 刚好固定在主标题 DEEP SPACE // 2240 的下方 */
+            top: 90px; 
             left: 20px;
             z-index: 100;
             padding: 8px 15px;
             font-size: 12px;
             background: rgba(6, 11, 20, 0.8);
             backdrop-filter: blur(5px);
-            pointer-events: auto; /* 确保能被点击 */
+            pointer-events: auto; 
         }
 
+        /* 💥 核心修复：绝对定位，画一个死边框，严格限制在返回按钮下方！ */
         .timeline-nav {
+            position: absolute;
+            top: 140px; /* 强制从 140px 开始，绝对不可能碰到 90px 的返回按钮 */
+            bottom: 0;  /* 延伸到底部 */
+            left: 10px; /* 配合 padding 把线包进去 */
+            width: 390px; 
             list-style: none;
-            margin: 0; padding: 0;
-            pointer-events: auto; /* 恢复导航区域的点击 */
+            margin: 0; 
+            padding: 0 0 150px 40px; /* 左侧 40px padding 保护折线不被切掉 */
+            pointer-events: auto; 
+            overflow-y: auto; 
+            overflow-x: hidden; 
+            scrollbar-width: none; 
+            -ms-overflow-style: none; 
+        }
+        .timeline-nav::-webkit-scrollbar { 
+            display: none; 
+        }
+
+        /* 💥 时间线返回按钮专属样式 💥 */
+        .timeline-return-btn {
+            position: absolute;
+            top: 90px; 
+            left: 20px;
+            z-index: 100;
+            padding: 8px 15px;
+            font-size: 12px;
+            background: rgba(6, 11, 20, 0.8);
+            backdrop-filter: blur(5px);
+            pointer-events: auto; 
         }
 
         .timeline-nav li {
@@ -2381,7 +2341,7 @@
             transition: all 0.3s ease-out;
         }
         .timeline-nav li:last-child::after {
-            display: none; /* 最后一个节点不需要向下连线 */
+            display: none; 
         }
 
         .timeline-nav a {
@@ -2467,7 +2427,7 @@
 
         /* 右侧内容区 */
         .timeline-content {
-            margin-left: 450px; /* 给左侧固定导航留出空间 */
+            margin-left: 450px; 
             width: calc(100% - 450px);
         }
 
@@ -2520,6 +2480,13 @@
                 pointer-events: auto;
             }
             .timeline-nav {
+                /* 💥 新增：重置电脑端的绝对定位，恢复手机端的横向排版 */
+                position: relative !important;
+                top: auto !important;
+                left: auto !important;
+                width: 100% !important;
+                padding: 0 !important;
+                
                 display: flex;
                 overflow-x: auto;
                 gap: 20px;
@@ -2548,38 +2515,258 @@
         }
 
 
-        /* =========================================
-           移动端专属优化 1：重构顶部导航栏与菜单按钮
+       /* =========================================
+           移动端专属优化 1：重构顶部导航栏与菜单按钮 (极致精简 视觉对齐版)
            ========================================= */
         @media (max-width: 768px) {
-            /* 顶部容器微调 */
-            .top-nav-wrapper { padding: 15px 15px 0 15px; }
-            
-            /* Header 改为纵向排布，避免左右打架 */
-            .header { flex-direction: column; align-items: flex-start; gap: 12px; padding-bottom: 12px; }
-            .group-name { font-size: 22px; white-space: nowrap; }
-            .header-right { width: 100%; align-items: flex-start; gap: 10px; }
-            
-            /* 身份信息栏：变成一个整齐的微型信息条 */
-            .lang-text {
-                width: 100%; font-size: 11px; justify-content: space-between;
-                background: rgba(18, 168, 255, 0.05); padding: 6px 8px;
-                border-radius: 4px; box-sizing: border-box; border-left: 2px solid #12a8ff;
+            /* 1. 顶级容器 */
+            .top-nav-wrapper { 
+                display: grid;
+                grid-template-columns: auto auto 1fr;
+                align-items: center; 
+                gap: 10px; /* 稍微拉近一点菜单和标题的距离 */
+                padding: 10px 15px;
+                border-bottom: 1px solid rgba(18, 168, 255, 0.5);
             }
             
-            /* 搜索框：占满全宽 */
-            .search-group { width: 100%; margin-top: 0; }
-            .search-input { flex-grow: 1; width: auto; }
-            .search-input:focus { width: auto; }
-
-            /* 悬浮菜单按钮：保持在搜索框下方原来的位置，但调小尺寸 */
+            .header { display: contents; }
+            
+            /* 2. 菜单按钮 (第 1 列) */
             .floating-menu-btn {
-                top: calc(100% + 10px); /* 悬浮在毛玻璃下方 */
-                right: 15px;
-                bottom: auto; /* 覆盖掉之前可能存在的 bottom 属性 */
-                width: 36px;
-                height: 36px;
-                font-size: 18px;
+                grid-column: 1;
+                grid-row: 1;
+                position: static; 
+                width: auto; height: auto;
+                background: transparent;
+                border: none;
+                box-shadow: none;
+                backdrop-filter: none;
+                font-size: 24px; /* 稍微调小一点，和标题更协调 */
+                padding: 0;
+                color: #12a8ff;
+                /* 💥 核心对齐修复：消除行高干扰，强制内部居中 */
+                line-height: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transform: translateY(9px); /* 👈 改这个数字，比如 2px(向下) 或 -2px(向上) */
+            }
+            .floating-menu-btn:hover {
+                transform: none;
+                box-shadow: none;
+                color: #fff;
+                text-shadow: 0 0 10px #12a8ff;
+            }
+
+            /* 3. 标题 (第 2 列) */
+            .group-name { 
+                grid-column: 2;
+                grid-row: 1;
+                font-size: 24px; 
+                white-space: nowrap; 
+                letter-spacing: 1px;
+                /* 💥 核心对齐修复：消除 Impact 字体自带的底部留白，并向下微调 1px */
+                line-height: 1;
+                margin-bottom: 0;
+                display: flex;
+                align-items: center;
+                transform: translateY(10px); 
+            }
+            
+            /* 4. 右侧容器 (第 3 列) */
+            .header-right {
+                grid-column: 3;
+                grid-row: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end; 
+                justify-content: center; /* 确保右侧整体在网格中垂直居中 */
+                gap: 5px; /* 稍微收紧名字和搜索框的间距 */
+                width: 100%;
+                transform: translateY(1px); /* 👈 改这个数字，比如 2px(向下) 或 -2px(向上) */
+            }
+
+            /* 5. 用户信息 (右上) */
+            .lang-text {
+                font-size: 12px; 
+                background: transparent; 
+                padding: 0;
+                border: none;
+                gap: 8px;
+                line-height: 1;
+            }
+            .hide-on-mobile { display: none; } 
+            
+            /* 6. 搜索框 (右下) */
+            .search-group { 
+                width: 95%; 
+                max-width: 140px; 
+                height: 20px; 
+                margin-top: 0; 
+                box-shadow: none; 
+                border: 1px solid #12a8ff; 
+                background: rgba(0, 5, 10, 0.6);
+            }
+            .search-group:focus-within {
+                box-shadow: 0 0 8px rgba(18,168,255,0.4);
+                transform: none; 
+            }
+            
+            .search-prefix { display: none; }
+            
+            .search-input { 
+                flex-grow: 1; 
+                width: 100%; 
+                font-size: 11px; 
+                padding: 0 6px; 
+                line-height: 24px; /* 确保输入框内文字垂直居中 */
+            }
+            .search-input:focus { width: 100%; } 
+            
+            .search-btn { 
+                padding: 0 8px; 
+                border-left: 1px solid rgba(18, 168, 255, 0.4); 
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .search-btn svg { width: 12px; height: 12px; } 
+
+            /* =========================================
+               💥 9. 办事大厅：两大巨型入口改为上下排列
+               ========================================= */
+            #queueView .archive-container > div:nth-child(2) {
+                flex-direction: column !important;
+                gap: 15px !important;
+            }
+            #queueView .archive-container > div:nth-child(2) .submit-btn {
+                width: 100% !important;
+                padding: 25px 15px !important; /* 稍微减小一点高度 */
+            }
+
+            /* =========================================
+               💥 10. 个人终端：组织卡片手机端重排
+               ========================================= */
+            .my-org-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+                padding: 15px;
+            }
+            .my-org-edit-btn {
+                width: 100%;
+                text-align: center;
+                box-sizing: border-box;
+            }
+
+            /* =========================================
+               💥 11. 所有编辑器/阅读器：顶部标题栏极简重构
+               ========================================= */
+            /* 隐藏所有装饰性的系统状态文本 (_ EDIT MODE ACTIVE 等) */
+            .article-sys-status {
+                display: none !important;
+            }
+
+            /* 统一调整所有全屏页面的顶部容器 */
+            .article-page-container {
+                position: relative;
+                padding-top: 15px !important;
+            }
+
+            /* 消除原本的 top-bar 占位 */
+            .article-top-bar {
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+            }
+
+            /* 返回按钮绝对定位到左上角 */
+            .article-top-bar .btn-ghost {
+                position: absolute;
+                top: 15px;
+                left: 15px;
+                z-index: 10;
+                padding: 4px 10px !important;
+                font-size: 12px !important;
+            }
+
+            /* 标题区域右对齐，并留出左侧空间 */
+            .article-page-container .archive-header {
+                text-align: right;
+                padding-bottom: 10px !important;
+                margin-bottom: 20px !important;
+                border-bottom: 1px dashed rgba(255,255,255,0.2) !important;
+                min-height: 30px;
+            }
+            
+            /* 针对不同页面的下划线颜色适配 */
+            #adminEditorView .archive-header { border-bottom-color: rgba(255,235,59,0.3) !important; }
+            #logEditorView .archive-header { border-bottom-color: rgba(224,64,251,0.3) !important; }
+            #historyIntelView .archive-header { border-bottom-color: rgba(18,168,255,0.3) !important; }
+            #logReaderView .archive-header { border-bottom-color: rgba(224,64,251,0.3) !important; }
+
+            /* 标题文字右对齐 */
+            .article-page-container .archive-header .neon-title,
+            .article-page-container .archive-header h1 {
+                text-align: right !important;
+                font-size: 16px !important; /* 缩小字号以适应单行 */
+                margin-top: 0 !important;
+                margin-bottom: 5px !important;
+                padding-left: 70px; /* 给左侧的返回按钮留出空间，防止重叠 */
+                line-height: 1.4;
+            }
+
+            /* 副标题文字右对齐 */
+            .article-page-container .archive-header p {
+                text-align: right !important;
+                font-size: 10px !important;
+                margin: 0 !important;
+            }
+
+            /* 针对文章阅读页 (Article View) 的特殊结构适配 */
+            #articleView .article-page-header {
+                text-align: right;
+                margin-bottom: 20px !important;
+            }
+            #articleView .article-page-title {
+                text-align: right !important;
+                font-size: 18px !important;
+                padding-left: 70px;
+                margin-bottom: 10px !important;
+            }
+            #articleView .article-page-meta {
+                display: inline-block;
+                float: right;
+                margin-bottom: 10px !important;
+                font-size: 10px !important;
+                padding: 3px 8px !important;
+            }
+            #articleView .article-divider {
+                clear: both;
+                margin-top: 10px !important;
+            }
+
+            /* =========================================
+               💥 12. 个人终端：更新档案按钮缩小右对齐
+               ========================================= */
+            .profile-update-btn {
+                width: auto !important; /* 覆盖手机端默认的 100% 宽度 */
+                display: inline-block !important;
+                padding: 6px 16px !important; /* 缩小内边距 */
+                font-size: 12px !important; /* 缩小字号 */
+            }
+
+            /* =========================================
+               💥 13. 个人终端：组织双按钮并排显示
+               ========================================= */
+            .my-org-actions {
+                width: 100%;
+                justify-content: space-between; /* 两个按钮平分空间 */
+            }
+            .my-org-action-btn {
+                flex: 1; /* 让两个按钮等宽 */
+                text-align: center;
+                padding: 8px 0 !important; /* 优化手机端点击区域 */
             }
         }
 
@@ -2722,8 +2909,42 @@
 
         }
 
-        /* 2. 纯手机端细节调整 (<= 768px) */
+            /* 2. 纯手机端细节调整 (<= 768px) */
         @media (max-width: 768px) {
+            
+            /* (如果你刚才加了隐藏3D隧道的代码，它应该在这里) */
+            .viewport-container {
+                display: none !important;
+            }
+
+            /* 💥 1. 极度缩小 P.S.C 芯片标签，并去掉双层硬阴影 */
+            .hero-chip {
+                font-size: 9px; /* 缩到非常小 */
+                padding: 2px 6px;
+                border-width: 1px;
+                box-shadow: none !important; /* 去掉双层样式 */
+                letter-spacing: 1px;
+                margin-bottom: 1rem;
+            }
+
+            /* 💥 2. 手机端扁平化所有双层粗野主义按钮与标签 */
+            .btn-primary, .btn-ghost, .article-page-meta {
+                box-shadow: none !important; /* 彻底去掉右下角的硬阴影（双层效果） */
+                transform: none !important;  /* 取消任何位移 */
+            }
+
+            /* 💥 3. 禁用手机端所有主要按钮的悬停特效，保持极简单层 */
+            .btn-primary:hover, .btn-ghost:hover, .submit-btn:hover, .sys-modal-btn:hover {
+                transform: none !important;
+                box-shadow: none !important;
+                /* 手机端触摸容易残留 hover 状态，去掉特效能让体验更清爽 */
+            }
+
+            /* 💥 新增：手机端彻底隐藏 3D 数据隧道 */
+            .viewport-container {
+                display: none !important;
+            }
+
             /* 英雄视觉区 (Hero Section) */
             .hero-section {
                 padding: 2rem 15px;
@@ -2736,15 +2957,40 @@
                 font-size: 0.85rem; /* 💥 缩小副标题 */
                 margin-top: 1.5rem;
             }
+
+            /* 💥 1. 英雄区按钮：缩小并左对齐 */
             .hero-actions {
-                flex-direction: column; 
-                gap: 15px;
+                flex-direction: row; /* 改回横向排列 */
+                flex-wrap: wrap;
+                gap: 10px; /* 按钮间距收紧 */
+                justify-content: flex-start; /* 强制左对齐 */
             }
-            /* 💥 修复：只让主界面英雄区的按钮占满全宽，不要误伤文章页的返回按钮 */
             .hero-actions .btn-primary, .hero-actions .btn-ghost {
-                width: 100%; 
+                width: auto; /* 取消全宽 */
+                padding: 8px 16px; /* 缩小内边距 */
+                font-size: 12px; /* 缩小字号 */
                 text-align: center;
-                box-sizing: border-box;
+            }
+
+            /* 💥 2. 滚动情报带：变细、字变小 */
+            .ticker {
+                padding: 4px 0; /* 上下内边距减小，让条变细 */
+                border-bottom-width: 1px; /* 底部边框变细 */
+            }
+            .ticker-item {
+                font-size: 10px; /* 字体缩小 */
+            }
+
+            /* 💥 3. 阵营与组织容器：直角、细彩条、紧凑间距 */
+            .faction-card, .intel-card {
+                border-radius: 0 !important; /* 彻底去掉圆角，变直角 */
+                padding: 15px !important; /* 内部留白变紧凑 */
+                border-top-width: 2px !important; /* 顶部的阵营彩色条变细 */
+            }
+            
+            /* 容器之间的间距变紧凑 */
+            .faction-grid, .intel-grid {
+                gap: 12px !important; /* 从原本的 25px/30px 缩小到 12px */
             }
 
             /* 情报网格区 (Intel Grid) */
@@ -2818,7 +3064,92 @@
                 font-size: 2.2rem; /* 缩小首字母下沉效果 */
                 margin-right: 6px;
             }
-        /* ✕ 删掉原先这里的 '}' 它是导致媒体查询提前关闭的元凶！*/
+
+
+
+        /* =========================================
+               💥 4. 势力分布：组织按钮变短、居中
+               ========================================= */
+            .sub-org-list {
+                align-items: center; /* 让内部按钮居中 */
+            }
+            .sub-org-btn {
+                width: fit-content !important; /* 宽度自适应内容，不再占满全宽 */
+                min-width: 70%; /* 给个最小宽度，保证视觉平衡 */
+                margin: 0 auto !important; /* 强制居中 */
+                text-align: center !important; /* 文字居中 */
+                padding: 10px 15px !important;
+                border-left: none !important; /* 居中后去掉左侧粗边框更好看 */
+                border-top: 2px solid #12a8ff !important; /* 改为顶部边框点缀 */
+            }
+            .sub-org-btn strong {
+                font-size: 14px !important; /* 缩小组织名称 */
+            }
+            .sub-org-btn span {
+                font-size: 11px !important; /* 缩小组织简介 */
+            }
+
+            /* =========================================
+               💥 5. 剧情与日志：标题与按钮极简重构
+               ========================================= */
+            /* 缩小主线记录和个人记录的标题 */
+            #storyView h3 {
+                font-size: 14px !important;
+            }
+            /* 让“仅自己可见”这几个字在手机端换行，防止和右边的按钮挤在一起 */
+            #storyView h3 span {
+                display: block;
+                font-size: 10px !important;
+                margin-top: 4px;
+            }
+            
+            /* 缩小更新主线、新增自戏/对戏按钮 */
+            #btn-edit-main-plot, #log-upload-btns .submit-btn {
+                padding: 4px 8px !important;
+                font-size: 11px !important;
+                width: auto !important; /* 取消全宽 */
+                letter-spacing: 0 !important; /* 去掉字间距，让按钮更短 */
+            }
+            
+            /* 确保新增按钮容器靠右对齐，且间距收紧 */
+            #log-upload-btns {
+                gap: 5px !important;
+                justify-content: flex-end;
+                flex-wrap: wrap; /* 如果屏幕太窄允许换行 */
+            }
+
+            /* =========================================
+               💥 6. 剧情进度卡片：手机端专属布局
+               ========================================= */
+            .plot-card {
+                padding: 15px !important; /* 缩小卡片内边距 */
+            }
+            /* 将顶部的 [当前进度] 标签和 [更新时间] 改为上下排列，防止重叠 */
+            .plot-card > div:first-child {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 8px;
+                margin-bottom: 10px !important;
+            }
+            .plot-status-current, .plot-status-past {
+                font-size: 11px !important;
+                padding: 2px 6px !important;
+            }
+            /* 缩小剧情标题和正文 */
+            .plot-card h3 {
+                font-size: 16px !important;
+                margin-bottom: 8px !important;
+            }
+            .plot-card p {
+                font-size: 12px !important;
+                margin-bottom: 10px !important;
+                -webkit-line-clamp: 4 !important; /* 手机端允许显示4行简介 */
+            }
+            /* 缩小左右切换的箭头按钮 */
+            .plot-nav-btn {
+                padding: 10px 5px !important;
+                font-size: 16px !important;
+            }
 
         /* 💥 修复：手机端系统弹窗 (SysModal) 适配 💥 */
             .sys-modal-box {
@@ -2841,6 +3172,52 @@
                 width: 100%; /* 按钮占满全宽，方便单手点击 */
                 text-align: center;
                 box-sizing: border-box;
+            }
+
+            /* =========================================
+               💥 7. 个人记录卡片：查阅按钮缩小并右对齐
+               ========================================= */
+            #solo-logs-grid .intel-card, #rp-logs-grid .intel-card {
+                display: flex;
+                flex-direction: column;
+            }
+            #solo-logs-grid .btn-ghost, #rp-logs-grid .btn-ghost {
+                width: fit-content !important; /* 取消全宽，自适应文字宽度 */
+                align-self: flex-end; /* 强制靠右对齐 */
+                padding: 4px 12px !important; /* 缩小内边距 */
+                font-size: 11px !important; /* 缩小字号 */
+                margin-top: 10px !important;
+                border-width: 1px !important; /* 边框变细 */
+            }
+
+            /* =========================================
+               💥 8. 剧情进度卡片：隐藏箭头，释放宽度
+               ========================================= */
+            .plot-nav-btn {
+                display: none !important; /* 手机端彻底隐藏左右箭头 */
+            }
+            .plot-carousel-wrapper {
+                gap: 0 !important; /* 去掉箭头留下的间距，让卡片占满全宽 */
+            }
+            /* 给卡片底部加一个微弱的滑动提示文字 */
+            .plot-card::after {
+                content: '⇦ 左右滑动切换进度 ⇨';
+                display: block;
+                text-align: center;
+                font-size: 10px;
+                color: rgba(224, 64, 251, 0.4);
+                margin-top: 15px;
+                font-family: monospace;
+                letter-spacing: 1px;
+            }
+
+            /* =========================================
+               💥 14. 修复手机端搜索下拉框过宽的问题
+               ========================================= */
+            .search-dropdown {
+                width: 85vw !important; /* 手机端改为相对屏幕宽度 */
+                max-width: 320px;
+                right: -5px; /* 微调右侧对齐，防止贴边太死 */
             }
             
         } /* ✅ 真正的媒体查询结束括号，必须放在最后这里！ */
@@ -3260,27 +3637,23 @@
 .plot-rich-text::-webkit-scrollbar-thumb { background: #e040fb; border-radius: 2px; }
 
 /* 富文本内部元素样式 */
-.plot-rich-text h1, .plot-rich-text h2, .plot-rich-text h3 {
-    color: #e040fb !important;
-    font-size: 20px !important;
-    margin-top: 0;
-    margin-bottom: 10px;
-    text-shadow: 0 0 10px rgba(224,64,251,0.4);
-    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-}
-.plot-rich-text p {
-    margin-bottom: 15px;
-}
-.plot-rich-text strong {
-    color: #ffeb3b; /* 加粗文字变成显眼的赛博黄 */
-}
-.plot-rich-text img {
-    max-width: 100%;
-    border: 1px solid #e040fb;
-    box-shadow: 0 0 15px rgba(224,64,251,0.2);
-    border-radius: 4px;
-    margin: 10px 0;
-}
+        .plot-rich-text h1, .plot-rich-text h2, .plot-rich-text h3 {
+            color: #e040fb !important; /* 强制使用专属霓虹紫 */
+            margin-top: 0;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(224,64,251,0.4);
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            line-height: 1.4;
+        }
+        
+        /* 💥 核心修复：拆分大中小标题的字号 */
+        .plot-rich-text h1 { font-size: 24px !important; }
+        .plot-rich-text h2 { font-size: 20px !important; }
+        .plot-rich-text h3 { font-size: 16px !important; }
+
+        .plot-rich-text p {
+            margin-bottom: 15px;
+        }
 
 /* =========================================
    滚动条与输入框高度优化 (自戏/对戏/富文本)
@@ -3453,6 +3826,69 @@
     margin-bottom: 15px;
     text-shadow: 0 0 10px rgba(18, 168, 255, 0.4);
 }
+
+/* =========================================
+           💥 个人终端：我管理的组织卡片样式
+           ========================================= */
+        .my-orgs-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .my-org-card {
+            background: rgba(18, 168, 255, 0.05);
+            border: 1px solid rgba(18, 168, 255, 0.2);
+            padding: 12px 15px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+        .my-org-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .my-org-icon {
+            font-size: 20px;
+            filter: drop-shadow(0 0 5px rgba(18,168,255,0.5));
+        }
+        .my-org-name {
+            color: #fff;
+            font-family: 'PingFang SC', sans-serif;
+            font-size: 15px;
+            letter-spacing: 1px;
+        }
+        .my-org-edit-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* 组织卡片双按钮容器 */
+        .my-org-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .my-org-action-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        /* =========================================
+           💥 剧情卡片滑动切换动画
+           ========================================= */
+        @keyframes plotSlideNext {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes plotSlidePrev {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .plot-anim-next { animation: plotSlideNext 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important; }
+        .plot-anim-prev { animation: plotSlidePrev 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important; }
 
     </style>
 </head>
@@ -3668,10 +4104,10 @@
                             <div class="world-text">
                                 <p>在这里，你可以是冷酷的联盟特工、满身机油味的黑市医生、或者是只认钱的战术小队爆破手。</p>
                                 <ol class="cyber-list">
-                                    <li>点击进入 <span class="world-highlight" style="cursor: pointer; text-decoration: underline; text-underline-offset: 4px; transition: 0.2s;" onclick="document.querySelector('[data-target=\'createView\']').click()" onmouseover="this.style.color='#fff'; this.style.textShadow='0 0 15px #12a8ff'" onmouseout="this.style.color='#12a8ff'; this.style.textShadow='0 0 8px rgba(18,168,255,0.4)'">【人设填写表】</span>。</li>
-                                    <li>选择你的 <strong>阵营</strong> 与 <strong>所属组织</strong>。</li>
-                                    <li>填写你的背景档案，生成属于你的深空身份卡。</li>
-                                </ol>
+    <li>前往 <span class="world-highlight" style="cursor: pointer; text-decoration: underline; text-underline-offset: 4px; transition: 0.2s;" onclick="document.querySelector('[data-target=\'queueView\']').click()" onmouseover="this.style.color='#fff'; this.style.textShadow='0 0 15px #12a8ff'" onmouseout="this.style.color='#12a8ff'; this.style.textShadow='0 0 8px rgba(18,168,255,0.4)'">【终端办事大厅】</span>，并选择 [ 录入公民档案 ]。</li>
+    <li>选择你的 <strong>阵营</strong> 与 <strong>所属组织</strong>。</li>
+    <li>填写你的背景档案，提交并生成属于你的深空身份卡。</li>
+</ol>
                                 <div class="glitch-text">星海浩瀚，祝你好运。</div>
                             </div>
                         </section>
@@ -3745,35 +4181,31 @@
         }
 
         /* =========================================
-   富文本定制渲染 (时间轴与文章)
-   ========================================= */
-/* 时间轴内部的富文本渲染样式 */
-.timeline-section .content-box h1,
-.timeline-section .content-box h2,
-.timeline-section .content-box h3 {
-    color: #12a8ff !important;
-    font-size: 26px !important;
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-    text-shadow: 0 0 10px rgba(18,168,255,0.4);
-}
-.timeline-section .content-box p {
-    color: #8bb9d6;
-    line-height: 1.8;
-    font-size: 16px;
-    margin-bottom: 15px;
-}
-.timeline-section .content-box strong {
-    color: #ffeb3b; /* 富文本加粗自动变成显眼的赛博黄 */
-}
-.timeline-section .content-box img {
-    max-width: 100%;
-    border: 1px solid #12a8ff;
-    box-shadow: 0 0 15px rgba(18,168,255,0.2);
-    border-radius: 4px;
-    margin: 10px 0;
-}
+           富文本定制渲染 (时间轴与文章)
+           ========================================= */
+        /* 时间轴内部的富文本渲染样式 */
+        .timeline-section .content-box h1,
+        .timeline-section .content-box h2,
+        .timeline-section .content-box h3 {
+            color: #12a8ff !important; /* 强制使用专属赛博蓝，无需在编辑器里手动选色 */
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            text-shadow: 0 0 10px rgba(18,168,255,0.4);
+            line-height: 1.4;
+        }
+        
+        /* 💥 核心修复：拆分大中小标题的字号 */
+        .timeline-section .content-box h1 { font-size: 28px !important; }
+        .timeline-section .content-box h2 { font-size: 22px !important; }
+        .timeline-section .content-box h3 { font-size: 18px !important; }
+
+        .timeline-section .content-box p {
+            color: #8bb9d6;
+            line-height: 1.8;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
 
 /* =========================================
    富文本编辑器 (Quill) 暗黑赛博风格微调
@@ -4121,7 +4553,7 @@
             <div class="archive-container" style="max-width: 1000px; margin: 0 auto;">
                 
                 <div class="archive-header" style="border-bottom: 2px solid #f44336; padding-bottom: 15px; margin-bottom: 30px;">
-                    <h2 class="neon-title" style="font-size: 32px; color: #f44336; text-shadow: 0 0 15px rgba(244,67,54,0.5); margin-bottom: 10px;">[ SYSTEM ADMIN // 内容管理中心 ]</h2>
+                    <h2 class="neon-title" style="font-size: 32px; color: #f44336; text-shadow: 0 0 15px rgba(244,67,54,0.5); margin-bottom: 10px;">[ 内容管理中心 ]</h2>
                     <p style="color: #ffb4a9; font-family: monospace; margin: 0;">管理员数据管理终端。您可以在此对全局核心数据进行统筹与修改。</p>
                 </div>
 
@@ -4809,19 +5241,6 @@
                     </div>
                 </div>
 
-                <!-- 💥 新增：移动端战术雷达视窗 (手机端显示) 💥 -->
-                <div class="mobile-scanner" id="mobileScanner">
-                    <div class="scanner-hud">
-                        <span>UPLINK: ACTIVE</span>
-                        <span>SCANNING SECTOR...</span>
-                    </div>
-                    <div class="radar">
-                        <div class="sweep"></div>
-                        <!-- 动态生成的雷达光点会放在这里 -->
-                        <div id="radar-blips"></div>
-                    </div>
-                </div>
-
                 <!-- 💥 新增：公民列表与详情面板 💥 -->
                 <div class="roster-container">
                     <div class="form-section-title">[ 已登记公民检索列表 ]</div>
@@ -5336,7 +5755,7 @@ window.triggerConflictRejection = async function(charDraft) {
             item.element.addEventListener('click', () => openArticle(item));
         });
 
-        // 5. 核心检索函数
+        // 5. 核心检索函数 (支持全局跳转)
         function handleSearch() {
             const query = searchInput.value.trim().toLowerCase();
             
@@ -5345,7 +5764,7 @@ window.triggerConflictRejection = async function(charDraft) {
                 return;
             }
 
-            // 💥 核心修复：使用 window.searchIndex
+            // 模糊匹配：只要关键词或标题包含搜索词即可
             const results = window.searchIndex.filter(item => 
                 item.keywords.includes(query) || item.title.toLowerCase().includes(query)
             );
@@ -5368,8 +5787,35 @@ window.triggerConflictRejection = async function(charDraft) {
                         <span class="dropdown-tag">${item.tag}</span>
                     `;
                     
-                    // 点击下拉项直接打开全屏文章
-                    div.onclick = () => openArticle(item);
+                    // 💥 核心：点击下拉项的智能跳转逻辑
+                    div.onclick = () => {
+                        if (item.type === 'character') {
+                            // 如果搜到的是人设，跳转到人设库并打开详情
+                            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+                            document.getElementById('logView').classList.add('active');
+                            sessionStorage.setItem('tf141_current_view', 'logView');
+                            
+                            if (window.innerWidth <= 768) {
+                                window.showMobileDetail(item.charIndex);
+                            } else {
+                                // PC端：如果有3D隧道，触发飞行；否则直接显示面板
+                                document.getElementById('viewport').scrollIntoView({behavior: 'smooth', block: 'center'});
+                                const targetItems = window.tunnelItems ? window.tunnelItems.filter(i => i.type === 'card' && i.charIndex === item.charIndex) : [];
+                                if(targetItems.length > 0 && window.triggerTunnelFly) {
+                                    window.triggerTunnelFly(targetItems[0].uniqueItemIndex);
+                                } else {
+                                    window.showDetailOverlay(item.charIndex);
+                                }
+                            }
+                        } else {
+                            // 如果搜到的是其他文章(情报/阵营/组织/剧情/记录)，直接调用全屏阅读器
+                            openArticle(item.originalData);
+                        }
+                        
+                        // 搜索完毕后清空并收起搜索框
+                        searchDropdown.classList.remove('active');
+                        searchInput.value = '';
+                    };
                     
                     searchDropdown.appendChild(div);
                 });
@@ -5617,15 +6063,15 @@ window.triggerConflictRejection = async function(charDraft) {
             // 💥 更新右上角身份状态栏
             const statusContainer = document.querySelector('.lang-text');
             if (currentUser.role === 'guest') {
-                // 游客状态：显示未注册，按钮变成“登录”
+                // 游客状态
                 statusContainer.innerHTML = `
-                    <span class="op-key-text" style="color: #8bb9d6;">OP: GUEST [UNREGISTERED]</span>
+                    <span class="op-key-text" style="color: #8bb9d6;"><span class="hide-on-mobile">OP: </span>GUEST<span class="hide-on-mobile"> [UNREGISTERED]</span></span>
                     <span class="logout-btn" title="注册或登录终端">⏻登录</span>
                 `;
             } else {
                 // 正式公民状态
                 statusContainer.innerHTML = `
-                    <span class="op-key-text" title="点击即可全选复制">OP: ${currentUser.nickname} [${currentUser.id}]</span>
+                    <span class="op-key-text" title="点击即可全选复制"><span class="hide-on-mobile">OP: </span>${currentUser.nickname}<span class="hide-on-mobile"> [${currentUser.id}]</span></span>
                     <span class="logout-btn" title="断开终端连接">⏻退出</span>
                 `;
             }
@@ -5674,8 +6120,6 @@ window.triggerConflictRejection = async function(charDraft) {
                 
                 renderRoster();  // ✅ 改回正确的拼写
                 init3DTunnel();  // 渲染 3D 隧道
-                renderRadar();
-                
                 renderQueue();   // 渲染战术等候室
                 renderQueue();   // 渲染战术等候室
                 renderProfile(); // 渲染个人终端主页
@@ -5684,6 +6128,8 @@ window.triggerConflictRejection = async function(charDraft) {
                 if (document.getElementById('forumView').classList.contains('active')) {
                     if (typeof initForum === 'function') initForum();
                 }
+// 👇👇👇 加上这行代码 👇👇👇
+                updateSearchIndex(); // 数据拉取完毕，更新全局搜索索引
                 
             } catch (error) {
                 console.error("卫星连接失败:", error);
@@ -5755,14 +6201,17 @@ window.triggerConflictRejection = async function(charDraft) {
             if (myOrgs.length > 0) {
                 myOrgsHtml = `<div style="margin-top: 20px; border-top: 1px dashed #12a8ff; padding-top: 15px;">
                     <h4 style="color: #12a8ff; margin-bottom: 10px; font-family: monospace; font-size: 14px;">[ 🏢 我管理的组织档案 ]</h4>
-                    <div style="display: flex; flex-direction: column; gap: 10px;">`;
+                    <div class="my-orgs-grid">`;
                 myOrgs.forEach(org => {
-                    myOrgsHtml += `<div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); padding: 10px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px;">
-                        <div>
-                            <span style="font-size: 16px;">${org.icon || '🏢'}</span>
-                            <strong style="color: #fff; margin-left: 5px; font-family: 'PingFang SC', sans-serif;">${org.title}</strong>
+                    myOrgsHtml += `<div class="my-org-card">
+                        <div class="my-org-info">
+                            <span class="my-org-icon">${org.icon || '🏢'}</span>
+                            <strong class="my-org-name">${org.title}</strong>
                         </div>
-                        <button class="sys-modal-btn confirm" style="padding: 4px 8px; font-size: 12px;" onclick="editMyOrg('${org.id}')">[ 修改设定 ]</button>
+                        <div class="my-org-actions">
+                            <button class="sys-modal-btn confirm my-org-action-btn" onclick="openArticleById('${org.id}')">[ 查看组织 ]</button>
+                            <button class="sys-modal-btn confirm my-org-action-btn" onclick="editMyOrg('${org.id}')">[ 修改档案 ]</button>
+                        </div>
                     </div>`;
                 });
                 myOrgsHtml += `</div></div>`;
@@ -5889,7 +6338,7 @@ window.triggerConflictRejection = async function(charDraft) {
                             <div class="detail-text-block"><span class="detail-lbl">备注 NOTES:</span><br>${renderDual(myChar, 'notes', 'hidden_notes')}</div>
                             
                             <div style="margin-top: 20px; text-align: right; border-top: 1px dashed rgba(18,168,255,0.3); padding-top: 15px;">
-                                <button class="sys-modal-btn confirm" onclick="editQueueChar('${myChar.id}')">[ 更新档案 ]</button>
+                                <button class="sys-modal-btn confirm profile-update-btn" onclick="editQueueChar('${myChar.id}')">[ 更新档案 ]</button>
                             </div>
                         ` : ''}
                         
@@ -6390,7 +6839,10 @@ window.triggerConflictRejection = async function(charDraft) {
             document.getElementById('f-appearance').value = char.appearance || '';
             document.getElementById('f-personality').value = char.personality || '';
             document.getElementById('f-notes').value = char.notes || '';
-            document.getElementById('f-occupation').value = char.occupation || '';
+            
+            // 💥 核心修复：加上 -custom，防止找不到元素报错卡死
+            document.getElementById('f-occupation-custom').value = char.occupation || ''; 
+            
             document.getElementById('f-orientation').value = char.orientation || '';
             document.getElementById('f-role').value = char.role || '';
 
@@ -6400,7 +6852,10 @@ window.triggerConflictRejection = async function(charDraft) {
                 // 💥 新增：回填真实姓名
                 document.getElementById('h-name').value = char.hidden_name || '';
                 document.getElementById('h-callsign').value = char.hidden_callsign || '';
-                document.getElementById('h-occupation').value = char.hidden_occupation || '';
+                
+                // 💥 核心修复：加上 -custom
+                document.getElementById('h-occupation-custom').value = char.hidden_occupation || ''; 
+                
                 document.getElementById('h-notes').value = char.hidden_notes || '';
                 
                 const hFac = document.getElementById('h-faction');
@@ -6570,33 +7025,10 @@ window.triggerConflictRejection = async function(charDraft) {
         /* =========================================================
            4. 💥 升级版 3D 赛博空间漫游引擎 (精准锁定修复版) 💥
            ========================================================= */
-
-        // 💥 渲染手机端雷达光点 (修复丢失的代码)
-        function renderRadar() {
-            const blipsContainer = document.getElementById('radar-blips');
-            if (!blipsContainer) return;
-            blipsContainer.innerHTML = '';
-            
-            // 为每个正式公民生成一个雷达光点
-            characterDB.forEach(() => {
-                const blip = document.createElement('div');
-                blip.className = 'radar-blip';
-                
-                const angle = Math.random() * Math.PI * 2;
-                const radius = Math.random() * 80; 
-                const x = 90 + Math.cos(angle) * radius - 2; 
-                const y = 90 + Math.sin(angle) * radius - 2;
-                
-                blip.style.left = `${x}px`;
-                blip.style.top = `${y}px`;
-                blip.style.animationDelay = `${Math.random() * 2}s`;
-                
-                blipsContainer.appendChild(blip);
-            });
-        }
-
         let tunnelRAF; 
         function init3DTunnel() {
+            // 💥 新增：如果是手机端，直接退出函数，彻底关闭 3D 渲染引擎，省电防卡顿！
+            if (window.innerWidth <= 768) return;
             if(tunnelRAF) cancelAnimationFrame(tunnelRAF);
 
             const CONFIG = { itemCount: 20, starCount: 150, zGap: 800, loopSize: 0, camSpeed: 2.5 };
@@ -6931,6 +7363,11 @@ window.triggerConflictRejection = async function(charDraft) {
             const char = characterDB[index];
             if(!char) return;
             const overlay = document.getElementById('tunnel-detail-overlay');
+            
+            // 💥 修复：重置表里状态与行内动画，防止上一个角色的状态残留
+            overlay.classList.remove('show-hidden');
+            overlay.style.animation = ''; 
+            
             overlay.style.display = 'flex';
 
             // 💥 新增：判断如果这个档案是当前用户自己的，给他一个编辑按钮
@@ -6977,7 +7414,6 @@ window.triggerConflictRejection = async function(charDraft) {
                 <!-- 💥 在底部的删除按钮旁边插入修改按钮 -->
                 <div style="display: flex; justify-content: flex-start; align-items: center; margin-top: 20px;">
                     ${editActionHtml}
-                    <!-- 删掉原来的 onclick="deleteChar" 避免普通群友直接删正式库 -->
                 </div>
             `;
         };
@@ -6990,7 +7426,8 @@ window.triggerConflictRejection = async function(charDraft) {
             overlay.style.animation = 'cyber-collapse 0.3s forwards';
             setTimeout(() => {
                 overlay.style.display = 'none';
-                overlay.style.animation = 'cyber-expand 0.4s cubic-bezier(0.2, 1, 0.3, 1) forwards'; 
+                // 💥 修复核心：彻底清空行内动画属性，让 CSS 接管下一次的展开特效
+                overlay.style.animation = ''; 
                 
                 if(window.tunnelItems) {
                     window.tunnelItems.forEach(i => {
@@ -7578,8 +8015,13 @@ window.triggerConflictRejection = async function(charDraft) {
                 const childOrgs = orgs.filter(o => o.keywords && o.keywords.includes(`[PARENT:${faction.title}]`));
 
                 let colorClass = 'pmc';
-                if (faction.title.includes('联盟')) colorClass = 'psc';
-                else if (faction.title.includes('外环')) colorClass = 'frontier';
+                let factionId = `faction-${faction.id}`; // 默认兜底 ID
+                
+                // 💥 修复：为四大阵营精准分配 ID，以便左侧目录能够成功跳转！
+                if (faction.title.includes('联盟')) { colorClass = 'psc'; factionId = 'faction-psc'; }
+                else if (faction.title.includes('外环')) { colorClass = 'frontier'; factionId = 'faction-frontier'; }
+                else if (faction.title.includes('承包商')) { colorClass = 'pmc'; factionId = 'faction-pmc'; }
+                else if (faction.title.includes('自由港') || faction.title.includes('空间站')) { colorClass = 'pmc'; factionId = 'faction-freeport'; }
 
                 let subOrgsHTMLMain = childOrgs.map(org => `
                     <button class="sub-org-btn" onclick="openArticleById('${org.id}')">
@@ -7589,7 +8031,7 @@ window.triggerConflictRejection = async function(charDraft) {
                 `).join('');
 
                 mainGrid.innerHTML += `
-                    <div class="faction-card ${colorClass}">
+                    <div class="faction-card ${colorClass}" id="${factionId}">
                         <div class="faction-header">
                             <h3 style="cursor: pointer; text-decoration: underline; text-underline-offset: 4px; transition: 0.2s;" onclick="openArticleById('${faction.id}')" onmouseover="this.style.color='#12a8ff'" onmouseout="this.style.color='#fff'">${faction.title}</h3>
                             <span class="faction-tag">${faction.tag}</span>
@@ -7680,10 +8122,12 @@ window.triggerConflictRejection = async function(charDraft) {
 
             let timelineArticles = articlesDB.filter(a => a.type === 'timeline');
             
-            // 💥 强制按时间轴年份升序排列（提取数字排序，忽略文字）
+            // 💥 修复：只提取第一个出现的数字作为排序依据，防止 "2190-2200" 变成 21902200 被排到最后
             timelineArticles.sort((a, b) => {
-                const yearA = parseInt(String(a.tag || '').replace(/[^\d]/g, '')) || 0;
-                const yearB = parseInt(String(b.tag || '').replace(/[^\d]/g, '')) || 0;
+                const matchA = String(a.tag || '').match(/\d+/);
+                const matchB = String(b.tag || '').match(/\d+/);
+                const yearA = matchA ? parseInt(matchA[0], 10) : 0;
+                const yearB = matchB ? parseInt(matchB[0], 10) : 0;
                 return yearA - yearB;
             });
 
@@ -7770,10 +8214,12 @@ function renderAdminDashboard() {
 
     let timelineArticles = articlesDB.filter(a => a.type === 'timeline');
     
-    // 💥 强制按时间轴年份升序排列（提取数字排序，忽略文字）
+    // 💥 修复：管理员面板的时间轴排序也用同样的逻辑
     timelineArticles.sort((a, b) => {
-        const yearA = parseInt(String(a.tag || '').replace(/[^\d]/g, '')) || 0;
-        const yearB = parseInt(String(b.tag || '').replace(/[^\d]/g, '')) || 0;
+        const matchA = String(a.tag || '').match(/\d+/);
+        const matchB = String(b.tag || '').match(/\d+/);
+        const yearA = matchA ? parseInt(matchA[0], 10) : 0;
+        const yearB = matchB ? parseInt(matchB[0], 10) : 0;
         return yearA - yearB; 
     });
 
@@ -8045,21 +8491,51 @@ function renderAdminDashboard() {
             }
         };
 
-        // 11. 更新文章的搜索索引
-        function updateSearchIndex() {
-            const articles = document.querySelectorAll('.article-card');
-            window.searchIndex = Array.from(articles).map((card) => {
-                const nameEl = card.querySelector('.card-name');
-                const levelEl = card.querySelector('.card-level');
-                return {
-                    title: nameEl ? nameEl.innerText : 'UNKNOWN TITLE',
-                    tag: levelEl ? levelEl.innerText : 'UNKNOWN TAG',
-                    keywords: (card.getAttribute('data-keywords') || '').toLowerCase(),
-                    content: card.getAttribute('data-content') || "NO DATA FOUND.",
-                    element: card
-                };
+        // 11. 💥 全局搜索引擎：从数据库构建索引
+        window.updateSearchIndex = function() {
+            window.searchIndex = [];
+
+            // 1. 索引所有文章 (情报、阵营、组织、时间轴、剧情、记录)
+            articlesDB.forEach(a => {
+                if (a.status === 'pending' || a.status === 'rejected') return; // 过滤掉草稿
+                
+                let typeLabel = 'DATABASE';
+                if (a.type === 'intel') typeLabel = 'INTEL // 情报';
+                if (a.type === 'faction') typeLabel = 'FACTION // 阵营';
+                if (a.type === 'org') typeLabel = 'ORG // 组织';
+                if (a.type === 'timeline') typeLabel = 'TIMELINE // 历史';
+                if (a.type === 'plot') typeLabel = 'STORY // 主线';
+                if (a.type === 'solo_log') typeLabel = 'SOLO LOG // 自戏';
+                if (a.type === 'rp_log') typeLabel = 'RP LOG // 对戏';
+
+                window.searchIndex.push({
+                    type: a.type,
+                    title: a.title,
+                    tag: a.tag || typeLabel,
+                    // 把标题和关键词拼在一起，提高模糊搜索命中率
+                    keywords: ((a.keywords || '') + ' ' + (a.title || '')).toLowerCase(),
+                    originalData: a
+                });
             });
-        }
+
+            // 2. 索引所有已通过的公民档案
+            characterDB.forEach((c, index) => {
+                if (c.status !== 'approved') return;
+                
+                // 💥 核心修复：人设只通过名字/代号调取，不再把阵营、组织和职业塞进关键词！
+                // 这样搜阵营时就不会搜出一大堆玩家档案了。
+                let kw = `${c.callsign} ${c.name} ${c.hidden_callsign || ''} ${c.hidden_name || ''}`.toLowerCase();
+                
+                window.searchIndex.push({
+                    type: 'character',
+                    title: `${c.callsign} // ${c.name}`,
+                    tag: 'CITIZEN // 公民档案',
+                    keywords: kw,
+                    originalData: c,
+                    charIndex: index // 记录它在数组中的位置，方便点击时打开详情
+                });
+            });
+        };
 
         // 12. 一键导入旧版时间轴数据
         window.importOldTimeline = async function() {
@@ -8169,11 +8645,13 @@ window.initForum = async function() {
         authorTypeSelect.innerHTML = optionsHtml;
     }
 
-    // 判断发帖框是否显示
-    if (!myChar && (!currentUser || currentUser.role !== 'admin')) {
+    // 💥 核心修复：判断发帖框是否显示 (兼容 super_admin)
+    const isAdmin = currentUser && ['admin', 'super_admin'].includes(currentUser.role);
+    
+    if (!myChar && !isAdmin) {
         postBox.style.display = 'none';
     } else {
-        if (currentForumChannel === 'ANNOUNCEMENT' && currentUser.role !== 'admin') {
+        if (currentForumChannel === 'ANNOUNCEMENT' && !isAdmin) {
             postBox.style.display = 'none'; // 只有管理员能发公告
         } else {
             postBox.style.display = 'block';
@@ -8348,7 +8826,9 @@ window.submitForumPost = async function() {
     const content = input.value.trim();
     if (!content) return;
 
-    if (currentForumChannel === 'ANNOUNCEMENT' && currentUser?.role !== 'admin') {
+    // 💥 核心修复：兼容 super_admin 的发帖拦截
+    const isAdmin = currentUser && ['admin', 'super_admin'].includes(currentUser.role);
+    if (currentForumChannel === 'ANNOUNCEMENT' && !isAdmin) {
         SysModal.alert('权限不足，无法发布公告。', 'ACCESS DENIED');
         return;
     }
@@ -8478,7 +8958,6 @@ window.deleteForumPost = async function(postId) {
             threshold: 0
         };
         
-        // 💥 修复：将 tlObserver 绑定到 window 全局对象，让动态渲染的数据也能识别到它！
         window.tlObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -8490,7 +8969,17 @@ window.deleteForumPost = async function(postId) {
                     // 找到对应的节点并激活
                     const activeAnchor = document.querySelector(`.timeline-nav a[data-scroll="${id}"]`);
                     if (activeAnchor) {
-                        activeAnchor.parentElement.classList.add('active');
+                        const activeLi = activeAnchor.parentElement;
+                        activeLi.classList.add('active');
+                        
+                        // 💥 核心联动：当你在右侧滚动页面时，左侧导航栏自动跟随滚动！
+                        const navContainer = document.querySelector('.timeline-nav');
+                        if (navContainer) {
+                            navContainer.scrollTo({
+                                top: activeLi.offsetTop - 100, // 保持在偏上的位置，视野最好
+                                behavior: 'smooth'
+                            });
+                        }
                     }
                 }
             });
@@ -8601,7 +9090,7 @@ window.deleteForumPost = async function(postId) {
                 // 3. 更新右上角的状态栏显示
                 const statusContainer = document.querySelector('.lang-text');
                 statusContainer.innerHTML = `
-                    <span class="op-key-text" title="点击即可全选复制">OP: ${currentUser.nickname} [${currentUser.id}]</span>
+                    <span class="op-key-text" title="点击即可全选复制"><span class="hide-on-mobile">OP: </span>${currentUser.nickname}<span class="hide-on-mobile"> [${currentUser.id}]</span></span>
                     <span class="logout-btn" title="断开终端连接">⏻退出</span>
                 `;
                 
@@ -8692,8 +9181,20 @@ window.deleteForumPost = async function(postId) {
             return `<button class="decrypt-btn" onclick="
                 const card = this.closest('.profile-card, .roster-detail, .tunnel-detail-overlay');
                 card.classList.toggle('show-hidden');
-                card.classList.add('glitch-anim');
-                setTimeout(() => card.classList.remove('glitch-anim'), 400);
+                
+                // 💥 终极修复：使用 Web Animations API 驱动闪烁。
+                // 这种方式独立于 CSS 运行，绝对不会触发面板的二次展开！
+                card.animate([
+                    { filter: 'contrast(1) brightness(1) hue-rotate(0deg)', transform: 'scale(1) translateX(0)' },
+                    { filter: 'contrast(2) brightness(2) hue-rotate(90deg)', transform: 'scale(1) translateX(-6px)', offset: 0.2 },
+                    { filter: 'contrast(0.5) brightness(0.5) hue-rotate(-90deg)', transform: 'scale(1) translateX(6px)', offset: 0.4 },
+                    { filter: 'contrast(2) brightness(2) hue-rotate(180deg)', transform: 'scale(1) translateX(-3px)', offset: 0.6 },
+                    { filter: 'contrast(0.8) brightness(1.5) hue-rotate(45deg)', transform: 'scale(1) translateX(3px)', offset: 0.8 },
+                    { filter: 'contrast(1) brightness(1) hue-rotate(0deg)', transform: 'scale(1) translateX(0)' }
+                ], {
+                    duration: 300,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                });
             ">[ DECRYPT ]</button>`;
         };
 
@@ -8909,15 +9410,21 @@ if(!title || !parentFaction || !content) {
             }
         });
 
-        // 6. 组织审核详情面板与操作 (支持行内批注版)
+       // 6. 组织审核详情面板与操作 (支持行内批注版)
         window.showOrgQueueDetail = function(org) {
             const detail = document.getElementById('queue-org-detail');
             detail.style.display = 'block';
 
+            // 💥 核心修复 1：解析可能为字符串的 JSON 批注数据，防止代码外露
+            let reviewObj = org.review_comments;
+            if (typeof reviewObj === 'string') {
+                try { reviewObj = JSON.parse(reviewObj); } catch(e) {}
+            }
+
             // 1. 初始化批注暂存区 (如果是已驳回状态，自动载入历史批注)
             window.currentAdminAnnotations = {};
-            if (org.status === 'rejected' && org.review_comments && org.review_comments.fields) {
-                window.currentAdminAnnotations = JSON.parse(JSON.stringify(org.review_comments.fields));
+            if (org.status === 'rejected' && reviewObj && reviewObj.fields) {
+                window.currentAdminAnnotations = JSON.parse(JSON.stringify(reviewObj.fields));
             }
 
             const getExistingAnno = (key) => {
@@ -8971,8 +9478,8 @@ if(!title || !parentFaction || !content) {
 
             // 提取全局总结文本
             let summaryText = '';
-            if (org.status === 'rejected' && org.review_comments) {
-                summaryText = typeof org.review_comments.general === 'string' ? org.review_comments.general : (typeof org.review_comments === 'string' ? org.review_comments : '');
+            if (org.status === 'rejected' && reviewObj) {
+                summaryText = reviewObj.general || '';
             }
 
             // 管理员：底部的审核批注工作台
@@ -9010,7 +9517,7 @@ if(!title || !parentFaction || !content) {
 
             // 用户视角：顶部的全局总结框
             let feedbackHtml = '';
-            if (org.status === 'rejected' && org.review_comments) {
+            if (org.status === 'rejected' && reviewObj) {
                 feedbackHtml = `
                     <div class="system-notice" style="border-color:#f44336; background: rgba(244,67,54,0.1);">
                         <div style="color: #f44336; font-weight: bold; margin-bottom: ${summaryText ? '8px' : '0'}; font-family: monospace;">[ 需要修改 ]</div>
@@ -9041,11 +9548,24 @@ if(!title || !parentFaction || !content) {
                 `;
             }
 
+            // 💥 核心修复 2：提取并渲染职位信息
+            const posObj = getOrgPositions(org.content);
+            let posDisplay = '<span style="color:#8bb9d6; font-size: 13px;">无固定职位限制 (所有人均可自由填写)</span>';
+            if (posObj && Object.keys(posObj).length > 0) {
+                posDisplay = Object.entries(posObj).map(([k, v]) => {
+                    return `<span style="background: rgba(139,195,74,0.1); border: 1px solid rgba(139,195,74,0.3); color: #c5e1a5; padding: 2px 8px; border-radius: 2px; margin-right: 5px; display: inline-block; margin-bottom: 5px; font-family: monospace; font-size: 12px;">${k}: ${v > 0 ? v + '人' : '不限'}</span>`;
+                }).join('');
+            }
+            const positionsField = renderOrgField('positions', '预设职位与名额', posDisplay, true);
+
+            // 清理 content 中的隐藏 div，防止代码外露
+            const cleanContent = (org.content || '').replace(/<div data-positions='.*?' style='display:none;'><\/div>/g, '').replace(/\n/g, '<br>');
+
             // 通过构建器渲染各大模块
             const factionField = renderOrgField('faction', '所属阵营', org.keywords.replace('[PARENT:', '').replace(']', ''));
             const tagField = renderOrgField('tag', '类型标签', org.tag);
             const summaryField = renderOrgField('summary', '简介', org.summary, true);
-            const contentField = renderOrgField('content', '详细设定', org.content.replace(/\n/g, '<br>'), true);
+            const contentField = renderOrgField('content', '详细设定', cleanContent, true);
 
             detail.innerHTML = `
                 <div class="detail-header" style="border-bottom-color: #8bc34a; display: flex; flex-direction: column; align-items: flex-start; padding-bottom: 15px; margin-bottom: 15px;">
@@ -9062,6 +9582,7 @@ if(!title || !parentFaction || !content) {
                     ${factionField}
                     ${tagField}
                 </div>
+                ${positionsField}
                 ${summaryField}
                 ${contentField}
                 ${adminControls}
@@ -9180,16 +9701,17 @@ if(!title || !parentFaction || !content) {
                 }
             }
 
-            // 2. 从数据库筛选出主线剧情，并按时间倒序排列（最新的在最前面，也就是 index 0）
+            // 2. 从数据库筛选出主线剧情，并按时间正序排列（最老的在最前面，最新的在最后面）
             plotArticlesDB = articlesDB.filter(a => a.type === 'plot').sort((a, b) => {
                 const timeA = new Date(a.updated_at || 0).getTime();
                 const timeB = new Date(b.updated_at || 0).getTime();
-                return timeB - timeA; 
+                return timeA - timeB; // 💥 改为正序：老 -> 新
             });
 
-            // 每次打开页面，默认显示最新的一条（当前进度）
-            currentPlotIndex = 0;
+            // 每次打开页面，默认显示最新的一条（当前进度，即数组的最后一个）
+            currentPlotIndex = plotArticlesDB.length > 0 ? plotArticlesDB.length - 1 : 0;
             updatePlotCarousel();
+
         };
 
         /* =========================================================
@@ -9519,9 +10041,8 @@ if(!title || !parentFaction || !content) {
         });
 
 
-
         // 3. 渲染轮播图卡片
-        window.updatePlotCarousel = function() {
+        window.updatePlotCarousel = function(direction = 0) { // 💥 接收方向参数
             const container = document.getElementById('main-plot-content');
             const prevBtn = document.getElementById('plot-prev-btn');
             const nextBtn = document.getElementById('plot-next-btn');
@@ -9541,20 +10062,38 @@ if(!title || !parentFaction || !content) {
 
             const plot = plotArticlesDB[currentPlotIndex];
             
-            // 💥 核心逻辑：如果 index 是 0（最新的一条），就是“当前进度”，否则就是“往期内容”
-            const isCurrent = (currentPlotIndex === 0);
+            // 💥 核心逻辑：如果 index 是最后一个，就是“当前进度”，否则就是“往期内容”
+            const isCurrent = (currentPlotIndex === plotArticlesDB.length - 1);
             const statusHtml = isCurrent 
                 ? `<span class="plot-status-current">▶ 当前进度</span>` 
                 : `<span class="plot-status-past">⏳ 往期内容</span>`;
 
             const timeStr = plot.updated_at ? new Date(plot.updated_at).toISOString().split('T')[0] : 'UNKNOWN';
 
-            // 渲染卡片 HTML
+            let adminControls = '';
+            if (currentUser && ['admin', 'super_admin'].includes(currentUser.role)) {
+                adminControls = `
+                    <div style="display: flex; gap: 5px; z-index: 10;">
+                        <button onclick="event.stopPropagation(); editArticle('${plot.id}')" style="background: rgba(255,235,59,0.2); border: 1px solid #ffeb3b; color: #ffeb3b; cursor: pointer; padding: 2px 8px; font-size: 12px; font-family: monospace; border-radius: 2px;">[改]</button>
+                        <button onclick="event.stopPropagation(); deleteArticle('${plot.id}')" style="background: rgba(244,67,54,0.2); border: 1px solid #f44336; color: #f44336; cursor: pointer; padding: 2px 8px; font-size: 12px; font-family: monospace; border-radius: 2px;">[删]</button>
+                    </div>
+                `;
+            }
+
+            // 💥 核心新增：根据方向决定动画类名
+            let animClass = '';
+            if (direction === 1) animClass = 'plot-anim-next'; // 往老剧情翻，卡片从右边滑入
+            else if (direction === -1) animClass = 'plot-anim-prev'; // 往新剧情翻，卡片从左边滑入
+
+            // 渲染卡片 HTML (将 animClass 嵌入到 class 里)
             container.innerHTML = `
-                <div class="plot-card" onclick="openArticleById('${plot.id}')">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div class="plot-card ${animClass}" onclick="openArticleById('${plot.id}')">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                         ${statusHtml}
-                        <span style="color: #e1bee7; font-size: 12px; font-family: monospace; opacity: 0.8;">[ UPDATED: ${timeStr} ]</span>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <span style="color: #e1bee7; font-size: 12px; font-family: monospace; opacity: 0.8;">[ UPDATED: ${timeStr} ]</span>
+                            ${adminControls}
+                        </div>
                     </div>
                     <h3 style="color: #e040fb; margin: 0 0 10px 0; font-size: 22px; text-shadow: 0 0 10px rgba(224,64,251,0.4);">${plot.title}</h3>
                     <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0 0 15px 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${plot.summary || '点击查阅详细剧情...'}</p>
@@ -9562,10 +10101,7 @@ if(!title || !parentFaction || !content) {
                 </div>
             `;
 
-            // 控制左右箭头的禁用状态
-            // 如果是最新的一条（0），不能再往前翻（左箭头禁用）
             if(prevBtn) prevBtn.disabled = (currentPlotIndex === 0);
-            // 如果是最老的一条，不能再往后翻（右箭头禁用）
             if(nextBtn) nextBtn.disabled = (currentPlotIndex === plotArticlesDB.length - 1);
         };
 
@@ -9575,7 +10111,7 @@ if(!title || !parentFaction || !content) {
             const newIndex = currentPlotIndex + direction;
             if (newIndex >= 0 && newIndex < plotArticlesDB.length) {
                 currentPlotIndex = newIndex;
-                updatePlotCarousel();
+                updatePlotCarousel(direction); // 💥 核心：把方向参数传给渲染函数
             }
         };
 
@@ -9642,6 +10178,40 @@ if(!title || !parentFaction || !content) {
                 ]
             }
         });
+
+        /* =========================================================
+           💥 手机端：主线剧情卡片手势滑动逻辑 💥
+           ========================================================= */
+        const plotWrapper = document.getElementById('main-plot-content');
+        if (plotWrapper) {
+            let touchStartX = 0;
+            let touchEndX = 0;
+
+            // 手指按下时记录 X 坐标
+            plotWrapper.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            // 手指抬起时记录 X 坐标，并判断滑动方向
+            plotWrapper.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                handlePlotSwipe();
+            }, { passive: true });
+
+            function handlePlotSwipe() {
+                const swipeThreshold = 40; // 滑动距离阈值（像素），超过这个距离才算滑动
+                
+                if (touchEndX < touchStartX - swipeThreshold) {
+                    // 向左滑：看下一页（更【新】的剧情，即当前进度）
+                    if (typeof navigatePlot === 'function') navigatePlot(1);
+                }
+                
+                if (touchEndX > touchStartX + swipeThreshold) {
+                    // 向右滑：看上一页（更【老】的剧情，即往期内容）
+                    if (typeof navigatePlot === 'function') navigatePlot(-1);
+                }
+            }
+        }
         
         // （如果你后续需要为人设表单增加“保存”、“导出图片”等高级功能，代码可以继续写在这里）
     </script>
