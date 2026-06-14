@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>皂队露露忌日发文小工具</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -15,33 +15,83 @@
             --warning: #ffaa00; /* 提醒黄 */
             --box-bg: #2d2d2d;
             --border: #404040;
+            --dimmed: #555555;
         }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .header { text-align: center; margin-bottom: 20px; }
         .header h1 { margin: 0 0 10px 0; color: var(--accent); letter-spacing: 2px; }
         
+        /* 顶部数据看板 */
         .dashboard { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 900px; }
         .card { background: var(--panel-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border); text-align: center; flex: 1; min-width: 150px; }
         .card-title { font-size: 14px; color: #aaa; }
         .card-value { font-size: 24px; color: var(--accent); font-weight: bold; margin-top: 8px; }
         .card-value.warning { color: var(--warning); }
         
+        /* 上传区 */
         .upload-section { background: var(--panel-bg); padding: 15px; border-radius: 8px; border: 1px dashed var(--accent); margin-bottom: 30px; width: 100%; max-width: 900px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; box-sizing: border-box; }
-        input, button { padding: 8px 12px; border-radius: 4px; border: 1px solid var(--border); background: var(--box-bg); color: white; outline: none; }
+        .upload-section span { color: var(--accent); font-weight: bold; white-space: nowrap; }
+        input, button { padding: 8px 12px; border-radius: 4px; border: 1px solid var(--border); background: var(--box-bg); color: white; outline: none; box-sizing: border-box; }
         input:focus { border-color: var(--accent); }
-        button { background: var(--accent); color: black; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
+        button { background: var(--accent); color: black; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; white-space: nowrap; }
         button:hover { background: var(--accent-alt); }
 
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; width: 100%; max-width: 900px; }
-        .day-box { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px; min-height: 90px; display: flex; flex-direction: column; position: relative; }
-        .day-box.is-today { border-color: white; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
-        .date-label { font-size: 12px; color: #888; font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 4px; }
+        /* 月历控制台 */
+        .calendar-container { width: 100%; max-width: 900px; background: var(--panel-bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px; box-sizing: border-box; }
+        .month-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .month-controls h2 { margin: 0; color: var(--text-main); font-size: 20px; letter-spacing: 1px; }
+        .nav-btn { background: var(--box-bg); border: 1px solid var(--border); color: var(--text-main); padding: 6px 15px; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        .nav-btn:hover { background: var(--border); color: var(--accent); border-color: var(--accent); }
+
+        /* 响应式日历包裹层 (用于手机端横向滑动) */
+        .calendar-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         
-        .target-badge { font-size: 11px; background: rgba(255, 170, 0, 0.15); color: var(--warning); padding: 2px 6px; border-radius: 4px; margin-bottom: 4px; display: inline-block; width: fit-content;}
+        /* 星期表头 */
+        .weekday-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-bottom: 10px; text-align: center; font-weight: bold; color: #888; font-size: 14px; min-width: 700px; }
+        
+        /* 日历网格 */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; min-width: 700px; padding-bottom: 10px;}
+        .day-box { background: var(--box-bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px; min-height: 100px; display: flex; flex-direction: column; position: relative; transition: all 0.2s; }
+        .day-box.empty { background: transparent; border: none; pointer-events: none; }
+        .day-box.out-of-scope { opacity: 0.4; background: #1a1a1a; }
+        .day-box.is-today { border-color: white; box-shadow: 0 0 10px rgba(255,255,255,0.15); }
+        
+        .date-label { font-size: 14px; color: #aaa; font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 6px; display: flex; justify-content: space-between; }
+        
+        .target-badge { font-size: 11px; background: rgba(255, 170, 0, 0.15); color: var(--warning); padding: 2px 4px; border-radius: 3px; margin-bottom: 4px; display: inline-block; width: fit-content; line-height: 1.2;}
         .target-badge.mega { background: rgba(0, 210, 106, 0.2); color: var(--accent); border: 1px solid var(--accent); font-weight: bold; }
         
-        .post-item { font-size: 11px; color: var(--text-main); background: var(--box-bg); padding: 3px 5px; border-radius: 3px; margin-bottom: 3px; border-left: 2px solid var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .post-count { font-size: 11px; color: var(--accent); text-align: right; margin-top: auto; padding-top: 4px; }
+        .post-item { font-size: 11px; color: var(--text-main); background: #222; padding: 4px; border-radius: 3px; margin-bottom: 4px; border-left: 2px solid var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: default; }
+        .post-item:hover { white-space: normal; overflow: visible; word-break: break-all; position: relative; z-index: 10; background: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.5);}
+        
+        .post-count { font-size: 11px; color: var(--accent); text-align: right; margin-top: auto; padding-top: 4px; font-weight: bold; }
+
+        /* =========================================
+           📱 移动端媒体查询 (Media Queries)
+           ========================================= */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .header h1 { font-size: 22px; }
+            
+            /* 数据面板变成 1列或2列 堆叠 */
+            .dashboard { flex-direction: column; gap: 10px; }
+            .card { width: 100%; padding: 12px; }
+            
+            /* 上传表单纵向排布，按钮变大 */
+            .upload-section { flex-direction: column; align-items: stretch; padding: 15px; }
+            .upload-section span { text-align: center; margin-bottom: 8px; }
+            .upload-section input, .upload-section button { width: 100%; margin-bottom: 10px; }
+            .upload-section button { margin-bottom: 0; padding: 12px; font-size: 16px; }
+
+            /* 月历控制台紧凑化 */
+            .calendar-container { padding: 12px; }
+            .month-controls h2 { font-size: 16px; }
+            .nav-btn { padding: 6px 12px; font-size: 14px; }
+            
+            /* 隐藏滚动条但保留滚动功能，让界面更清爽 */
+            .calendar-wrapper::-webkit-scrollbar { display: none; }
+            .calendar-wrapper { -ms-overflow-style: none; scrollbar-width: none; }
+        }
     </style>
 </head>
 <body>
@@ -52,7 +102,7 @@
 
     <div class="dashboard">
         <div class="card">
-            <div class="card-title">总存稿进度</div>
+            <div class="card-title">总存稿入库</div>
             <div class="card-value"><span id="total-done">0</span> / 141</div>
         </div>
         <div class="card">
@@ -60,56 +110,67 @@
             <div class="card-value" id="daily-write-target">0.00</div>
         </div>
         <div class="card">
-            <div class="card-title">今日发布要求</div>
+            <div class="card-title">今日发文要求</div>
             <div class="card-value warning" id="today-publish-target">-</div>
         </div>
     </div>
 
+    <!-- 上传控制台 -->
     <div class="upload-section">
-        <span style="color: var(--accent); font-weight: bold;">[存稿入库]</span>
+        <span>[存稿入库]</span>
         <input type="date" id="post-date" required title="计划发布日期">
-        <input type="text" id="post-title" placeholder="文章标题/梗概" required style="flex:1; min-width:150px;">
+        <input type="text" id="post-title" placeholder="文章标题/梗概" required>
         <input type="file" id="post-file" accept=".txt,.md,.docx,.pdf">
         <button onclick="uploadPost()" id="upload-btn">提交上传</button>
     </div>
 
-    <div class="calendar-grid" id="calendar">
+    <!-- 月历视图区 (新增了一个 wrapper 用于横向滚动) -->
+    <div class="calendar-container">
+        <div class="month-controls">
+            <button class="nav-btn" onclick="changeMonth(-1)">&#9664; 上月</button>
+            <h2 id="current-month-display">2026年 6月</h2>
+            <button class="nav-btn" onclick="changeMonth(1)">下月 &#9654;</button>
         </div>
+        
+        <div class="calendar-wrapper">
+            <div class="weekday-header">
+                <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+            </div>
+            <div class="calendar-grid" id="calendar">
+                <!-- 日历格子动态生成 -->
+            </div>
+        </div>
+    </div>
 
     <script>
         // ==========================================
-        // 记得在这里填入你的钥匙！
+        // 记得在这里填入你的钥匙🔑
         // ==========================================
         const SUPABASE_URL = 'https://bhfbtnylovoettdgvuzj.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_afZtwvnLJunR_uFDVxQvjg_t_ZqCkoO';
-        const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const client = supabase.createClient('https://bhfbtnylovoettdgvuzj.supabase.co', 'sb_publishable_afZtwvnLJunR_uFDVxQvjg_t_ZqCkoO');
 
         const TOTAL_POSTS = 141;
-        const START_DATE = new Date('2026-06-13');
-        const END_DATE = new Date('2026-10-11');
+        const PROJECT_START = '2026-06-13';
+        const PROJECT_END = '2026-10-11';
         
         let existingPosts = [];
+        let currentViewDate = new Date();
 
-        // 智能核心：计算每一天应该发几篇
         function getPublishTarget(dateString) {
-            if (dateString < '2026-08-15' || dateString > '2026-10-11') return 0;
-            if (dateString === '2026-08-15' || dateString === '2026-10-11') return 24;
+            if (dateString < '2026-08-15' || dateString > PROJECT_END) return 0;
+            if (dateString === '2026-08-15' || dateString === PROJECT_END) return 24;
 
-            // 中间56天 2-2-1 节奏排期计算
             const start = new Date('2026-08-16').getTime();
             const current = new Date(dateString).getTime();
             const diffDays = Math.floor((current - start) / (1000 * 3600 * 24));
 
-            if (dateString === '2026-10-10') return 1; // 10.10特殊微调收尾
+            if (dateString === '2026-10-10') return 1; 
             return (diffDays % 3 === 2) ? 1 : 2;
         }
 
-        // 格式化日期为 YYYY-MM-DD 本地时区防偏移
-        function formatDate(dateObj) {
-            const y = dateObj.getFullYear();
-            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-            const d = String(dateObj.getDate()).padStart(2, '0');
-            return `${y}-${m}-${d}`;
+        function formatDate(year, month, day) {
+            return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         }
 
         async function init() {
@@ -129,14 +190,13 @@
             document.getElementById('total-done').innerText = doneCount;
 
             const now = new Date();
-            const todayStr = formatDate(now);
+            const todayStr = formatDate(now.getFullYear(), now.getMonth() + 1, now.getDate());
             
-            // 算今日发文
             const pubTarget = getPublishTarget(todayStr);
             document.getElementById('today-publish-target').innerText = pubTarget > 0 ? `发 ${pubTarget} 篇` : "无发文任务";
 
-            // 算日均需写
-            const timeDiff = END_DATE.getTime() - now.getTime();
+            const endDate = new Date(PROJECT_END);
+            const timeDiff = endDate.getTime() - now.getTime();
             const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
             const remainingPosts = TOTAL_POSTS - doneCount;
 
@@ -149,36 +209,53 @@
             document.getElementById('daily-write-target').innerText = writeTarget;
         }
 
+        function changeMonth(offset) {
+            currentViewDate.setMonth(currentViewDate.getMonth() + offset);
+            renderCalendar();
+        }
+
         function renderCalendar() {
             const calendar = document.getElementById('calendar');
             calendar.innerHTML = '';
 
-            const todayStr = formatDate(new Date());
-            let currentDate = new Date(START_DATE);
+            const year = currentViewDate.getFullYear();
+            const month = currentViewDate.getMonth();
             
-            while (currentDate <= END_DATE) {
-                const dateString = formatDate(currentDate);
+            document.getElementById('current-month-display').innerText = `${year}年 ${month + 1}月`;
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            const today = new Date();
+            const todayStr = formatDate(today.getFullYear(), today.getMonth() + 1, today.getDate());
+
+            for (let i = 0; i < firstDayIndex; i++) {
+                const emptyBox = document.createElement('div');
+                emptyBox.className = 'day-box empty';
+                calendar.appendChild(emptyBox);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateString = formatDate(year, month + 1, day);
                 const box = document.createElement('div');
                 box.className = 'day-box';
-                if (dateString === todayStr) box.classList.add('is-today');
                 
-                // 日期头
+                if (dateString === todayStr) box.classList.add('is-today');
+                if (dateString < PROJECT_START || dateString > PROJECT_END) box.classList.add('out-of-scope');
+                
                 const dateLabel = document.createElement('div');
                 dateLabel.className = 'date-label';
-                const dayOfWeek = ['日','一','二','三','四','五','六'][currentDate.getDay()];
-                dateLabel.innerText = `${currentDate.getMonth() + 1}/${currentDate.getDate()} (周${dayOfWeek})`;
+                dateLabel.innerText = day;
                 box.appendChild(dateLabel);
 
-                // 智能标注：发文目标
                 const targetCount = getPublishTarget(dateString);
                 if (targetCount > 0) {
                     const badge = document.createElement('div');
                     badge.className = targetCount === 24 ? 'target-badge mega' : 'target-badge';
-                    badge.innerText = targetCount === 24 ? `🚀 发文: ${targetCount}篇` : `🎯 需发: ${targetCount}篇`;
+                    badge.innerText = targetCount === 24 ? `🚀 发: ${targetCount}篇` : `🎯 发: ${targetCount}篇`;
                     box.appendChild(badge);
                 }
 
-                // 显示当天绑定的存稿
                 const postsToday = existingPosts.filter(p => p.target_date === dateString);
                 postsToday.forEach(post => {
                     const item = document.createElement('div');
@@ -187,21 +264,26 @@
                     box.appendChild(item);
                 });
 
-                // 进度对比底部角标
                 if (targetCount > 0) {
                     const progress = document.createElement('div');
                     progress.className = 'post-count';
-                    progress.innerText = `存稿 ${postsToday.length}/${targetCount}`;
+                    progress.innerText = `${postsToday.length}/${targetCount}`;
+                    
                     if (postsToday.length >= targetCount) {
                         progress.style.color = '#fff';
                         box.style.background = 'rgba(0, 210, 106, 0.1)';
                         box.style.borderColor = 'var(--accent)';
                     }
                     box.appendChild(progress);
+                } else if (postsToday.length > 0) {
+                    const extra = document.createElement('div');
+                    extra.className = 'post-count';
+                    extra.style.color = '#888';
+                    extra.innerText = `存稿: ${postsToday.length}`;
+                    box.appendChild(extra);
                 }
 
                 calendar.appendChild(box);
-                currentDate.setDate(currentDate.getDate() + 1);
             }
         }
 
