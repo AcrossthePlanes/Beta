@@ -769,7 +769,7 @@
             color: #12a8ff;
         }
 
-        /* ─── 4. 横向拖拽画廊区 GALLERY STRIP ─── */
+        /* ─── 横向拖拽画廊区 GALLERY STRIP ─── */
         .gallery-strip {
             position: relative;
             background: rgba(0,0,0,0.5);
@@ -793,21 +793,45 @@
         }
 
         .gallery-item {
-            flex: 0 0 350px;
+            flex: 1 0 320px; /* 自动拉伸填满屏幕 */
+            max-width: 500px; /* 限制最大宽度，防止屏幕太大时拉得太长 */
             height: 220px;
             border: 2px solid rgba(18, 168, 255, 0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: relative; /* 💥 核心：改为相对定位，方便内部文字绝对定位 */
             font-family: monospace;
-            color: rgba(18,168,255,0.6);
+            color: rgba(18,168,255,0.8);
             user-select: none;
-            transition: border-color 0.3s;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+            overflow: hidden; /* 确保背景放大时不会溢出边框 */
         }
         
         .gallery-item:hover {
             border-color: #12a8ff;
-            box-shadow: inset 0 0 20px rgba(18,168,255,0.2);
+            box-shadow: 0 0 20px rgba(18, 168, 255, 0.4), inset 0 0 40px rgba(18,168,255,0.6);
+            background-size: 110% !important; /* 悬停时背景微微放大 */
+        }
+
+        /* 💥 新增：右下角专属的文字标签样式 */
+        .gallery-item-label {
+            position: absolute;
+            bottom: 15px; /* 距离底部 15px */
+            right: 15px;  /* 距离右侧 15px */
+            background: rgba(0, 5, 10, 0.85); /* 给文字加个深色底，防止看不清 */
+            padding: 4px 10px;
+            border: 1px solid #12a8ff;
+            font-size: 12px;
+            letter-spacing: 1px;
+            box-shadow: 2px 2px 0 rgba(18, 168, 255, 0.2); /* 粗野主义小阴影 */
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        /* 鼠标悬停在图片上时，右下角的标签会反色高亮 */
+        .gallery-item:hover .gallery-item-label {
+            background: #12a8ff;
+            color: #060b14;
+            box-shadow: 4px 4px 0 rgba(18, 168, 255, 0.4);
         }
 
         /* ─── 横向拖拽情报流 (GALLERY DRAG SCROLL) ─── */
@@ -1558,12 +1582,12 @@
             box-sizing: border-box;
         }
 
-        /* ─── 全屏文章阅读视图 (Cyber-Brutalism Article Page) ─── */
+        /* ─── 全屏文章阅读视图 (沉浸式全息文档风格) ─── */
         .article-page-container {
             width: 100%;
-            max-width: 1000px;
+            max-width: 900px; /* 稍微收窄一点，最适合长文阅读的宽度 */
             margin: 0 auto;
-            padding: 2rem 0 5rem 0;
+            padding: 2rem 20px 5rem 20px;
             animation: fadeIn 0.4s ease-out;
         }
 
@@ -1571,8 +1595,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 3rem;
-            border-bottom: 2px solid rgba(18, 168, 255, 0.3);
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(18, 168, 255, 0.3);
             padding-bottom: 1rem;
         }
 
@@ -1584,65 +1608,98 @@
         }
 
         .article-page-header {
+            text-align: center; /* 标题居中，更有正式档案的仪式感 */
             margin-bottom: 3rem;
         }
 
         .article-page-meta {
             display: inline-block;
-            background: #12a8ff;
-            color: #060b14;
+            background: rgba(18, 168, 255, 0.1);
+            border: 1px solid #12a8ff;
+            color: #12a8ff;
             font-family: "Impact", monospace;
-            font-size: 1rem;
-            padding: 5px 15px;
+            font-size: 0.9rem;
+            padding: 4px 15px;
             letter-spacing: 2px;
             margin-bottom: 1.5rem;
-            box-shadow: 4px 4px 0 rgba(18, 168, 255, 0.3);
+            border-radius: 2px;
         }
 
         .article-page-title {
-            font-family: "Impact", "Arial Black", sans-serif;
-            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-family: "Impact", "Microsoft YaHei", sans-serif;
+            font-size: clamp(2rem, 5vw, 3.5rem);
             color: #e0f2fe;
             margin: 0;
-            line-height: 1.1;
+            line-height: 1.2;
             letter-spacing: 2px;
-            text-transform: uppercase;
             text-shadow: 0 0 15px rgba(18, 168, 255, 0.4);
         }
 
         .article-divider {
-            height: 4px;
-            background: repeating-linear-gradient(
-                45deg,
-                #12a8ff,
-                #12a8ff 10px,
-                transparent 10px,
-                transparent 20px
-            );
-            margin-top: 2rem;
-            opacity: 0.5;
+            height: 2px;
+            width: 60%;
+            margin: 2rem auto 0 auto;
+            background: linear-gradient(90deg, transparent, #12a8ff, transparent);
+            opacity: 0.6;
         }
 
-        .article-page-content {
+        /* 💥 核心：统一官方文章与个人记录的阅读面板样式 */
+        .article-page-content, .solo-log-content {
             font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             line-height: 2;
-            color: #8bb9d6;
-            white-space: pre-wrap; /* 保留换行符 */
-            background: rgba(0, 5, 10, 0.6);
-            border: 2px solid rgba(18, 168, 255, 0.2);
-            padding: 3rem;
-            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+            color: #a0c4d8; /* 柔和的灰蓝色，保护视力 */
+            background: rgba(6, 11, 20, 0.85); /* 深色毛玻璃底 */
+            border: 1px solid rgba(18, 168, 255, 0.2);
+            border-top: 4px solid #12a8ff; /* 顶部赛博高光线 */
+            padding: 3rem 4rem;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(18, 168, 255, 0.05);
+            word-wrap: break-word;
         }
 
-        /* 给文章正文里的段落加点科幻感 */
-        .article-page-content::first-letter {
-            font-size: 3rem;
+        /* 富文本内部排版优化 */
+        .article-page-content p, .solo-log-content p { margin-bottom: 1.5em; }
+        
+        .article-page-content h1, .article-page-content h2, .article-page-content h3,
+        .solo-log-content h1, .solo-log-content h2, .solo-log-content h3 {
+            color: #e0f2fe;
+            margin-top: 2em;
+            margin-bottom: 1em;
+            border-bottom: 1px dashed rgba(18, 168, 255, 0.3);
+            padding-bottom: 0.5em;
+            font-family: "PingFang SC", sans-serif;
+            text-shadow: 0 0 8px rgba(18, 168, 255, 0.4);
+        }
+
+        .article-page-content img, .solo-log-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            border: 1px solid rgba(18, 168, 255, 0.4);
+            box-shadow: 0 0 15px rgba(18, 168, 255, 0.1);
+            margin: 1.5em 0;
+        }
+
+        .article-page-content blockquote, .solo-log-content blockquote {
+            border-left: 4px solid #12a8ff;
+            background: rgba(18, 168, 255, 0.05);
+            padding: 1em 1.5em;
+            margin: 1.5em 0;
+            color: #8bb9d6;
+            font-style: italic;
+        }
+
+        /* 首字母下沉特效 (仅限第一段，防止破坏排版) */
+        .article-page-content > p:first-of-type::first-letter {
+            font-size: 3.5rem;
             color: #12a8ff;
             float: left;
-            line-height: 1;
-            margin-right: 10px;
+            line-height: 0.8;
+            margin-right: 12px;
+            margin-top: 5px;
             font-family: "Impact", sans-serif;
+            text-shadow: 0 0 10px rgba(18, 168, 255, 0.5);
         }
 
         .article-page-footer {
@@ -2725,90 +2782,76 @@
             }
 
             /* =========================================
-               💥 11. 所有编辑器/阅读器：顶部标题栏极简重构
+               💥 11. 所有编辑器/阅读器：手机端排版重构
                ========================================= */
-            /* 隐藏所有装饰性的系统状态文本 (_ EDIT MODE ACTIVE 等) */
+            .article-page-container {
+                padding: 15px !important;
+            }
+
+            /* 恢复正常的顶部栏布局 */
+            .article-top-bar {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                margin-bottom: 20px !important;
+                border-bottom: 1px solid rgba(18, 168, 255, 0.3) !important;
+                padding-bottom: 10px !important;
+            }
+
+            /* 返回按钮恢复正常流式布局 */
+            .article-top-bar .btn-ghost {
+                position: static !important;
+                padding: 6px 12px !important;
+                font-size: 12px !important;
+                width: auto !important;
+            }
+
+            /* 隐藏装饰性文字，节省空间 */
             .article-sys-status {
                 display: none !important;
             }
 
-            /* 统一调整所有全屏页面的顶部容器 */
-            .article-page-container {
-                position: relative;
-                padding-top: 15px !important;
-            }
-
-            /* 消除原本的 top-bar 占位 */
-            .article-top-bar {
-                margin: 0 !important;
-                padding: 0 !important;
-                border: none !important;
-            }
-
-            /* 返回按钮绝对定位到左上角 */
-            .article-top-bar .btn-ghost {
-                position: absolute;
-                top: 15px;
-                left: 15px;
-                z-index: 10;
-                padding: 4px 10px !important;
-                font-size: 12px !important;
-            }
-
-            /* 标题区域右对齐，并留出左侧空间 */
-            .article-page-container .archive-header {
-                text-align: right;
-                padding-bottom: 10px !important;
-                margin-bottom: 20px !important;
-                border-bottom: 1px dashed rgba(255,255,255,0.2) !important;
-                min-height: 30px;
-            }
-            
-            /* 针对不同页面的下划线颜色适配 */
-            #adminEditorView .archive-header { border-bottom-color: rgba(255,235,59,0.3) !important; }
-            #logEditorView .archive-header { border-bottom-color: rgba(224,64,251,0.3) !important; }
-            #historyIntelView .archive-header { border-bottom-color: rgba(18,168,255,0.3) !important; }
-            #logReaderView .archive-header { border-bottom-color: rgba(224,64,251,0.3) !important; }
-
-            /* 标题文字右对齐 */
-            .article-page-container .archive-header .neon-title,
-            .article-page-container .archive-header h1 {
-                text-align: right !important;
-                font-size: 16px !important; /* 缩小字号以适应单行 */
-                margin-top: 0 !important;
-                margin-bottom: 5px !important;
-                padding-left: 70px; /* 给左侧的返回按钮留出空间，防止重叠 */
-                line-height: 1.4;
-            }
-
-            /* 副标题文字右对齐 */
-            .article-page-container .archive-header p {
-                text-align: right !important;
-                font-size: 10px !important;
-                margin: 0 !important;
-            }
-
-            /* 针对文章阅读页 (Article View) 的特殊结构适配 */
-            #articleView .article-page-header {
-                text-align: right;
+            /* 标题区域恢复左对齐/居中，去掉奇怪的 padding */
+            .article-page-header, .archive-header {
+                text-align: left !important;
                 margin-bottom: 20px !important;
             }
-            #articleView .article-page-title {
-                text-align: right !important;
-                font-size: 18px !important;
-                padding-left: 70px;
+
+            .article-page-title, .archive-header .neon-title, .archive-header h1 {
+                text-align: left !important;
+                font-size: 22px !important; /* 手机端标题字号 */
+                padding-left: 0 !important;
+                line-height: 1.3 !important;
                 margin-bottom: 10px !important;
             }
-            #articleView .article-page-meta {
-                display: inline-block;
-                float: right;
-                margin-bottom: 10px !important;
+
+            .article-page-meta {
+                float: none !important;
+                display: inline-block !important;
                 font-size: 10px !important;
                 padding: 3px 8px !important;
+                margin-bottom: 15px !important;
             }
-            #articleView .article-divider {
-                clear: both;
-                margin-top: 10px !important;
+
+            .article-divider {
+                width: 100% !important;
+                margin-top: 15px !important;
+            }
+
+            /* 💥 核心：手机端正文阅读区内边距优化 */
+            .article-page-content, .solo-log-content {
+                padding: 1.5rem 1rem !important; /* 左右留白缩小到 1rem，最大化阅读空间 */
+                font-size: 1rem !important; /* 16px 基础字号，最适合手机阅读 */
+                line-height: 1.8 !important;
+                border-width: 1px !important;
+                border-top-width: 3px !important;
+            }
+
+            .article-page-content > p:first-of-type::first-letter {
+                font-size: 2.5rem !important; /* 手机端首字母下沉稍微缩小 */
+                margin-right: 8px !important;
+                margin-top: 2px !important;
             }
 
             /* =========================================
@@ -3115,34 +3158,6 @@
             }
             .glitch-text {
                 font-size: 1.5rem;
-            }
-
-            /* 💥 新增：全屏文章阅读页的手机端专属适配 💥 */
-            .article-page-container {
-                padding: 1rem 15px 3rem 15px;
-            }
-            .article-top-bar {
-                margin-bottom: 1.5rem;
-                flex-direction: column; /* 手机端顶部栏改为上下排列 */
-                align-items: flex-start;
-                gap: 15px;
-            }
-            /* 💥 修复：让返回按钮变回小巧精致的尺寸 */
-            .article-top-bar .btn-ghost {
-                padding: 6px 12px;
-                font-size: 0.8rem;
-                width: auto; /* 恢复自适应宽度 */
-            }
-            .article-page-title {
-                font-size: 1.6rem; /* 缩小文章大标题 */
-            }
-            .article-page-content {
-                font-size: 0.95rem; /* 缩小文章正文 */
-                padding: 1.2rem; /* 缩小文章内边距，留出更多阅读空间 */
-            }
-            .article-page-content::first-letter {
-                font-size: 2.2rem; /* 缩小首字母下沉效果 */
-                margin-right: 6px;
             }
 
 
@@ -4378,11 +4393,26 @@ textarea:-webkit-autofill:active {
                 <div class="gallery-strip" id="gallery-strip">
                     <div class="gallery-caption">✦ SATELLITE IMAGERY // 卫星扫描图传</div>
                     <div class="article-grid" id="galleryStrip" style="padding: 2rem; gap: 30px;">
-                        <div class="gallery-item placeholder-a"><span>[MAP_GRID_01]</span></div>
-                        <div class="gallery-item placeholder-b"><span>[TARGET_BUILDING]</span></div>
-                        <div class="gallery-item placeholder-c"><span>[DRONE_FOOTAGE]</span></div>
-                        <div class="gallery-item placeholder-a"><span>[EXTRACTION_POINT]</span></div>
-                    </div>
+    <!-- 1. 猎户座星云 -->
+    <div class="gallery-item" style="background: linear-gradient(rgba(0, 5, 10, 0.2), rgba(18, 168, 255, 0.1)), url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=600&q=80'); background-size: cover; background-position: center;">
+        <span class="gallery-item-label">[ORION_NEBULA]</span>
+    </div>
+    
+    <!-- 2. 国际空间站俯瞰地球 -->
+    <div class="gallery-item" style="background: linear-gradient(rgba(0, 5, 10, 0.2), rgba(18, 168, 255, 0.1)), url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80'); background-size: cover; background-position: center;">
+        <span class="gallery-item-label">[EARTH_ORBIT]</span>
+    </div>
+    
+    <!-- 3. 璀璨星团 (已修复链接) -->
+    <div class="gallery-item" style="background: linear-gradient(rgba(0, 5, 10, 0.2), rgba(18, 168, 255, 0.1)), url('https://images.unsplash.com/photo-1447433693259-c8549e937d62?q=80&w=1777&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'); background-size: cover; background-position: center;">
+        <span class="gallery-item-label">[OMEGA_CLUSTER]</span>
+    </div>
+    
+    <!-- 4. 月球表面宇航员 -->
+    <div class="gallery-item" style="background: linear-gradient(rgba(0, 5, 10, 0.2), rgba(18, 168, 255, 0.1)), url('https://images.unsplash.com/photo-1541873676-a18131494184?auto=format&fit=crop&w=600&q=80'); background-size: cover; background-position: center;">
+        <span class="gallery-item-label">[LUNAR_BASE_C62]</span>
+    </div>
+</div>
                 </div>
 
             </div> <!-- world-layout 结束 -->
@@ -6011,6 +6041,8 @@ window.triggerConflictRejection = async function(charDraft) {
 
         // 2. 打开全屏文章的函数 (终极融合版：支持官方档案与个人记录)
         window.openArticle = function(item) {
+            window.lastScrollY = window.scrollY || window.pageYOffset; // 💥 记录当前滚动位置
+            
             const isRp = item.type === 'rp_log' || (item.tag && item.tag.includes('RP LOG'));
             const isSolo = item.type === 'solo_log' || (item.tag && item.tag.includes('SOLO LOG'));
 
@@ -6109,15 +6141,11 @@ window.triggerConflictRejection = async function(charDraft) {
         // 3. 返回按钮逻辑 (升级版：返回记忆的视图)
         backToMainBtn.addEventListener('click', () => {
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
-            
-            // 恢复到之前记录的视图（如果找不到，兜底返回主界面）
             const targetPanel = document.getElementById(previousViewId) || document.getElementById('mainView');
             targetPanel.classList.add('active');
-            
-            // 💥 核心：从文章返回时，也要把退回的界面存入记忆中
             sessionStorage.setItem('tf141_current_view', targetPanel.id);
             
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: window.lastScrollY || 0, behavior: 'auto' }); // 💥 瞬间恢复滚动位置
         });
 
         // 4. 给主界面的每个卡片绑定点击事件
@@ -6365,6 +6393,20 @@ window.triggerConflictRejection = async function(charDraft) {
         let characterDB = [];
         let currentUser = null; // 记录当前登录的群友身份
 
+        // 💥 新增：一键复制终端密钥功能
+        window.copyOpKey = function(key) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(key).then(() => {
+                    SysModal.alert(`终端密钥【 ${key} 】已成功复制到剪贴板！\n\n请妥善保管，在其他设备上输入此密钥即可恢复您的身份与档案。`, "✅ 复制成功");
+                }).catch(err => {
+                    // 如果浏览器不支持剪贴板 API，降级为弹窗手动复制
+                    SysModal.prompt("您的浏览器不支持自动复制，请手动复制以下密钥：", key, "终端密钥");
+                });
+            } else {
+                SysModal.prompt("请手动复制以下密钥：", key, "终端密钥");
+            }
+        };
+
         // 2. 💥 终端身份认证系统 (支持密钥恢复与游客模式)
         async function initIdentity() {
             let deviceId = localStorage.getItem('tf141_device_id');
@@ -6453,7 +6495,7 @@ window.triggerConflictRejection = async function(charDraft) {
                             <div style="color:#8bb9d6; font-size:12px; text-align:center;">[ 暂无新消息 ]</div>
                         </div>
                     </div>
-                    <span class="op-key-text" title="点击即可全选复制"><span class="hide-on-mobile">OP: </span>${currentUser.nickname}<span class="hide-on-mobile"> [${currentUser.id}]</span></span>
+                    <span class="op-key-text" title="点击一键复制密钥" onclick="copyOpKey('${currentUser.id}')" style="cursor: pointer; transition: 0.2s;" onmouseover="this.style.color='#fff'; this.style.textShadow='0 0 8px #12a8ff'" onmouseout="this.style.color=''; this.style.textShadow='none'"><span class="hide-on-mobile">OP: </span>${currentUser.nickname}<span class="hide-on-mobile"> [${currentUser.id}]</span></span>
                     <span class="logout-btn" title="断开终端连接">⏻退出</span>
                 `;
             }
@@ -7296,7 +7338,8 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
         }
 
         // 💥 新增：一键调取被驳回/排队中的档案到填写卡
-        window.editQueueChar = async function(id) {
+         window.editQueueChar = async function(id) {
+            window.lastScrollY = window.scrollY || window.pageYOffset; // 💥 记录滚动位置
             // 💥 修复：强制转换为文本进行对比，防止数字和文本严格相等判断失败
             const char = pendingDB.find(c => String(c.id) === String(id)) || 
                          characterDB.find(c => String(c.id) === String(id));
@@ -7409,7 +7452,7 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
             window.scrollTo({ top: 0, behavior: 'smooth' });
             
             await SysModal.alert("旧档案数据已成功载入，请直接在表单上进行修改。", "调取成功");
-        }
+        };
 
         // 💥 新增：管理员专属的正式库删除功能
         window.deleteChar = async function(id) {
@@ -8516,6 +8559,7 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
 
         // 1. 打开全屏编辑器 (智能记忆来路版)
         window.openAdminEditor = function(defaultType = 'intel') {
+            window.lastScrollY = window.scrollY || window.pageYOffset; // 💥 记录滚动位置
             // 💥 记录是从哪个页面点进来的
             const currentActivePanel = document.querySelector('.view-panel.active');
             if (currentActivePanel && currentActivePanel.id !== 'adminEditorView') {
@@ -8592,7 +8636,6 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
             document.getElementById('admin-article-form').reset();
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
             
-            // 💥 智能返回之前的页面
             const targetPanelId = window.editorPreviousViewId || 'adminView';
             const targetPanel = document.getElementById(targetPanelId);
             if (targetPanel) {
@@ -8600,7 +8643,7 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                 sessionStorage.setItem('tf141_current_view', targetPanelId);
             }
             
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: window.lastScrollY || 0, behavior: 'auto' }); // 💥 瞬间恢复滚动位置
         };
 
         // 3. 发布/更新文章到 Supabase
@@ -9069,26 +9112,31 @@ function renderAdminDashboard() {
                 card.id = `intel-${prefix}-${index}`;
                 card.setAttribute('data-keywords', item.keywords || '');
                 card.setAttribute('data-content', item.content || '');
+                card.style.display = 'flex';
+                card.style.flexDirection = 'column';
 
                 let adminControls = '';
                 if (currentUser && ['admin', 'super_admin'].includes(currentUser?.role)) {
+                    // 💥 核心修复：废除绝对定位
                     adminControls = `
-                        <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; z-index: 10;">
-                            <button onclick="event.stopPropagation(); editArticle('${item.id}')" style="background: rgba(255,235,59,0.2); border: 1px solid #ffeb3b; color: #ffeb3b; cursor: pointer; padding: 2px 6px; font-size: 12px; font-family: monospace; border-radius: 2px;">[改]</button>
-                            <button onclick="event.stopPropagation(); deleteArticle('${item.id}')" style="background: rgba(244,67,54,0.2); border: 1px solid #f44336; color: #f44336; cursor: pointer; padding: 2px 6px; font-size: 12px; font-family: monospace; border-radius: 2px;">[删]</button>
+                        <div style="display: flex; gap: 5px; z-index: 10; flex-shrink: 0;">
+                            <button onclick="event.stopPropagation(); editArticle('${item.id}')" style="background: rgba(255,235,59,0.15); border: 1px solid #ffeb3b; color: #ffeb3b; cursor: pointer; padding: 4px 8px; font-size: 12px; font-family: monospace; border-radius: 2px; transition: 0.2s;">[改]</button>
+                            <button onclick="event.stopPropagation(); deleteArticle('${item.id}')" style="background: rgba(244,67,54,0.15); border: 1px solid #f44336; color: #f44336; cursor: pointer; padding: 4px 8px; font-size: 12px; font-family: monospace; border-radius: 2px; transition: 0.2s;">[删]</button>
                         </div>
                     `;
                 }
 
                 card.innerHTML = `
-                    ${adminControls}
-                    <span class="card-level">${item.tag || '✦ INTEL'}</span>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 10px;">
+                        <span class="card-level" style="margin: 0; white-space: nowrap;">${item.tag || '✦ INTEL'}</span>
+                        ${adminControls}
+                    </div>
                     <h3 class="card-name">${item.title}</h3>
-                    <p class="card-desc">${item.summary || ''}</p>
-                    <div class="card-meta">
-    <span class="card-price">[已解密]</span>
-    <span class="card-duration">// 实时数据</span>
-</div>
+                    <p class="card-desc" style="flex-grow: 1;">${item.summary || ''}</p>
+                    <div class="card-meta" style="margin-top: auto;">
+                        <span class="card-price">[已解密]</span>
+                        <span class="card-duration">// 实时数据</span>
+                    </div>
                 `;
                 
                 card.onclick = () => openArticle({ title: item.title, tag: item.tag, content: item.content });
@@ -9106,30 +9154,6 @@ function renderAdminDashboard() {
             updateSearchIndex();
             generateIntelTOC();
         }
-
-        window.openHistoryIntel = function() {
-            const currentActivePanel = document.querySelector('.view-panel.active');
-            if (currentActivePanel && currentActivePanel.id !== 'historyIntelView') {
-                previousViewId = currentActivePanel.id;
-            }
-            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
-            document.getElementById('historyIntelView').classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
-
-        window.backToMainFromHistory = function() {
-            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
-            const targetPanel = document.getElementById(previousViewId) || document.getElementById('mainView');
-            targetPanel.classList.add('active');
-            
-            setTimeout(() => {
-                const targetEl = document.getElementById('intel-grid');
-                if(targetEl) {
-                    const y = targetEl.getBoundingClientRect().top + window.pageYOffset - 80;
-                    window.scrollTo({ top: y, behavior: 'smooth' });
-                }
-            }, 50);
-        };
 
         // 9. 管理员专属：永久删除文章
         window.deleteArticle = async function(id) {
@@ -9695,160 +9719,174 @@ window.deleteForumPost = async function(postId) {
 };
 
 /* =========================================================
-   💥 全局消息提示系统 (Notifications) 💥
-   ========================================================= */
-// 展开/收起消息盒子
-window.toggleNotifications = function(e) {
-    e.stopPropagation();
-    const dropdown = document.getElementById('notif-dropdown');
-    if (dropdown) {
-        if (dropdown.style.display === 'none' || dropdown.style.display === '') {
-            dropdown.style.display = 'flex';
-            document.getElementById('notif-badge').style.display = 'none';
-            
-            // 💥 标记当前时间为已读时间，存入本地缓存
-            localStorage.setItem(`tf141_notif_read_${currentUser.id}`, Date.now());
-        } else {
-            dropdown.style.display = 'none';
-            // 💥 收起时刷新列表，把刚才看过的移入历史记录
-            checkNotifications();
-        }
-    }
-};
-
-// 点击外部关闭消息盒子
-document.addEventListener('click', (e) => {
-    const wrapper = document.getElementById('notif-wrapper');
-    const dropdown = document.getElementById('notif-dropdown');
-    if (wrapper && dropdown && !wrapper.contains(e.target)) {
-        if (dropdown.style.display === 'flex') {
-            dropdown.style.display = 'none';
-            checkNotifications(); // 点击外部关闭时也刷新历史记录
-        }
-    }
-});
-
-// 点击消息跳转至对应的频段
-window.gotoPost = function(channel) {
-    const dropdown = document.getElementById('notif-dropdown');
-    if (dropdown) dropdown.style.display = 'none';
-    
-    const forumBtn = document.querySelector('.wiki-item-btn[data-target="forumView"]');
-    if(forumBtn) forumBtn.click();
-    
-    setTimeout(() => switchForumChannel(channel), 100);
-};
-
-// 检查被提及的新消息
-window.checkNotifications = async function() {
-    if (!currentUser || currentUser.role === 'guest') return;
-    const myChar = characterDB.find(c => c.owner_id === currentUser.id);
-    if (!myChar) return;
-
-    const callsign = myChar.callsign;
-    const hiddenCallsign = (myChar.has_hidden && myChar.hidden_callsign) ? myChar.hidden_callsign.trim() : null;
-
-    // 💥 修复：同时检索表身份和里身份的艾特
-    let query = `content.ilike.%@${callsign}%`;
-    if (hiddenCallsign) {
-        query += `,content.ilike.%@${hiddenCallsign}%`;
-    }
-
-    try {
-        const { data: comments, error: cErr } = await supabaseClient
-            .from('forum_comments')
-            .select('*, forum_posts(channel)')
-            .or(query)
-            .order('created_at', { ascending: false })
-            .limit(15);
-            
-        const { data: posts, error: pErr } = await supabaseClient
-            .from('forum_posts')
-            .select('*')
-            .or(query)
-            .order('created_at', { ascending: false })
-            .limit(15);
-
-        if (cErr || pErr) throw (cErr || pErr);
-
-        let allMentions = [];
-        if (comments) allMentions = allMentions.concat(comments.map(c => ({...c, is_post: false, chan: c.forum_posts?.channel})));
-        if (posts) allMentions = allMentions.concat(posts.map(p => ({...p, is_post: true, chan: p.channel})));
-        
-        // 排除自己艾特自己的情况
-        allMentions = allMentions.filter(m => m.owner_id !== currentUser.id);
-        
-        allMentions.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-        allMentions = allMentions.slice(0, 15); // 最多保留15条记录
-
-        // 💥 核心：读取上次查看的时间戳，区分新消息和历史消息
-        const lastReadTime = parseInt(localStorage.getItem(`tf141_notif_read_${currentUser.id}`) || '0', 10);
-        
-        const newMentions = allMentions.filter(m => new Date(m.created_at).getTime() > lastReadTime);
-        const historyMentions = allMentions.filter(m => new Date(m.created_at).getTime() <= lastReadTime);
-
-        const badge = document.getElementById('notif-badge');
-        const dropdown = document.getElementById('notif-dropdown');
-        
-        // 控制小红点显示
-        if (newMentions.length > 0) {
-            if (badge) {
-                badge.style.display = 'inline-block';
-                badge.innerText = newMentions.length > 9 ? '9+' : newMentions.length;
+           💥 全局消息提示系统 (Notifications) 💥
+           ========================================================= */
+        // 展开/收起消息盒子
+        window.toggleNotifications = async function(e) {
+            e.stopPropagation();
+            const dropdown = document.getElementById('notif-dropdown');
+            if (dropdown) {
+                if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+                    // 1. 展开面板，隐藏小红点
+                    dropdown.style.display = 'flex';
+                    document.getElementById('notif-badge').style.display = 'none';
+                    
+                    // 2. 💥 立即显示加载动画，解决“反应慢”的错觉
+                    dropdown.innerHTML = '<div style="color:#12a8ff; font-size:12px; text-align:center; padding:15px;"><span class="blink-cursor">_</span> SYNCING SIGNAL...</div>';
+                    
+                    // 3. 💥 实时拉取最新消息并渲染
+                    await checkNotifications();
+                    
+                    // 4. 💥 渲染完毕后，标记当前时间为已读时间。这样本次你看到的还是 [NEW]，但下次打开时它们就会变成 [HISTORY]
+                    localStorage.setItem(`tf141_notif_read_${currentUser.id}`, Date.now());
+                } else {
+                    dropdown.style.display = 'none';
+                }
             }
-        } else {
-            if (badge) badge.style.display = 'none';
-        }
+        };
 
-        // 渲染下拉面板
-        if (dropdown) {
-            let html = '';
+        // 点击外部关闭消息盒子
+        document.addEventListener('click', (e) => {
+            const wrapper = document.getElementById('notif-wrapper');
+            const dropdown = document.getElementById('notif-dropdown');
+            if (wrapper && dropdown && !wrapper.contains(e.target)) {
+                if (dropdown.style.display === 'flex') {
+                    dropdown.style.display = 'none';
+                    // 💥 去掉了原来这里多余的 checkNotifications()，减轻服务器负担
+                }
+            }
+        });
+
+        // 点击消息跳转至对应的频段 (这段保持不变)
+        window.gotoPost = function(channel) {
+            const dropdown = document.getElementById('notif-dropdown');
+            if (dropdown) dropdown.style.display = 'none';
             
-            const renderMentionItem = (item, isNew) => {
-                const author = characterDB.find(char => char.owner_id === item.owner_id);
-                let authorName = author ? author.callsign : '某人';
-                if (item.author_type === 'hidden' && author?.has_hidden) authorName = author.hidden_callsign;
+            const forumBtn = document.querySelector('.wiki-item-btn[data-target="forumView"]');
+            if(forumBtn) forumBtn.click();
+            
+            setTimeout(() => switchForumChannel(channel), 100);
+        };
+
+        // 检查被提及的新消息
+        window.checkNotifications = async function() {
+            if (!currentUser || currentUser.role === 'guest') return;
+            const dropdown = document.getElementById('notif-dropdown');
+            
+            const myChar = characterDB.find(c => c.owner_id === currentUser.id);
+            if (!myChar) {
+                // 💥 修复：如果用户还没建卡，给个友好的提示，而不是什么都不显示
+                if (dropdown) dropdown.innerHTML = `<div style="color:#8bb9d6; font-size:12px; text-align:center; padding:15px;">[ 需要先录入公民档案，才能接收加密通讯 ]</div>`;
+                return;
+            }
+
+            const callsign = myChar.callsign;
+            const hiddenCallsign = (myChar.has_hidden && myChar.hidden_callsign) ? myChar.hidden_callsign.trim() : null;
+
+            // 同时检索表身份和里身份的艾特
+            let query = `content.ilike.%@${callsign}%`;
+            if (hiddenCallsign) {
+                query += `,content.ilike.%@${hiddenCallsign}%`;
+            }
+
+            try {
+                const { data: comments, error: cErr } = await supabaseClient
+                    .from('forum_comments')
+                    .select('*, forum_posts(channel)')
+                    .or(query)
+                    .order('created_at', { ascending: false })
+                    .limit(15);
+                    
+                const { data: posts, error: pErr } = await supabaseClient
+                    .from('forum_posts')
+                    .select('*')
+                    .or(query)
+                    .order('created_at', { ascending: false })
+                    .limit(15);
+
+                if (cErr || pErr) throw (cErr || pErr);
+
+                let allMentions = [];
+                if (comments) allMentions = allMentions.concat(comments.map(c => ({...c, is_post: false, chan: c.forum_posts?.channel})));
+                if (posts) allMentions = allMentions.concat(posts.map(p => ({...p, is_post: true, chan: p.channel})));
                 
-                const timeStr = new Date(item.created_at).toLocaleString();
-                const snippet = item.content.length > 25 ? item.content.substring(0, 25) + '...' : item.content;
-                const actionStr = item.is_post ? "在全息广播中提到了你" : "在回复中提到了你";
+                // 排除自己艾特自己的情况
+                allMentions = allMentions.filter(m => m.owner_id !== currentUser.id);
                 
-                // 新消息高亮，历史消息变暗
-                const borderStyle = isNew ? 'border:1px solid #12a8ff;' : 'border:1px solid rgba(18,168,255,0.3); opacity: 0.6;';
-                const titleColor = isNew ? '#e0f2fe' : '#8bb9d6';
+                allMentions.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+                allMentions = allMentions.slice(0, 15); // 最多保留15条记录
+
+                const lastReadTime = parseInt(localStorage.getItem(`tf141_notif_read_${currentUser.id}`) || '0', 10);
                 
-                return `
-                    <div style="background:rgba(0,5,10,0.8); ${borderStyle} padding:8px; border-radius:4px; cursor:pointer; transition:0.2s; margin-bottom:5px;" onmouseover="this.style.background='rgba(18,168,255,0.2)'; this.style.opacity='1';" onmouseout="this.style.background='rgba(0,5,10,0.8)'; this.style.opacity='${isNew ? 1 : 0.6}';" onclick="gotoPost('${item.chan}')">
-                        <div style="color:${titleColor}; font-size:12px; margin-bottom:4px;">
-                            ${isNew ? '<span style="color:#f44336; font-weight:bold; margin-right:4px;">[NEW]</span>' : ''}
-                            <strong>${authorName}</strong> ${actionStr}
-                        </div>
-                        <div style="color:#8bb9d6; font-size:11px; margin-bottom:4px;">"${snippet}"</div>
-                        <div style="color:#12a8ff; font-size:10px; font-family:monospace; opacity:0.8;">${timeStr} | 频道: ${item.chan}</div>
-                    </div>
-                `;
-            };
+                const newMentions = allMentions.filter(m => new Date(m.created_at).getTime() > lastReadTime);
+                const historyMentions = allMentions.filter(m => new Date(m.created_at).getTime() <= lastReadTime);
 
-            if (newMentions.length > 0) {
-                html += `<div style="font-family:monospace; color:#12a8ff; font-weight:bold; border-bottom:1px dashed rgba(18,168,255,0.4); padding-bottom:5px; margin-bottom:5px;">[ 最新提及 MENTIONS ]</div>`;
-                newMentions.forEach(item => html += renderMentionItem(item, true));
-            }
-            
-            if (historyMentions.length > 0) {
-                html += `<div style="font-family:monospace; color:#666; font-weight:bold; border-bottom:1px dashed rgba(255,255,255,0.2); padding-bottom:5px; margin-top:10px; margin-bottom:5px;">[ 历史消息 HISTORY ]</div>`;
-                historyMentions.forEach(item => html += renderMentionItem(item, false));
-            }
+                const badge = document.getElementById('notif-badge');
+                
+                // 控制小红点显示
+                if (newMentions.length > 0) {
+                    if (badge) {
+                        badge.style.display = 'inline-block';
+                        badge.innerText = newMentions.length > 9 ? '9+' : newMentions.length;
+                    }
+                } else {
+                    if (badge) badge.style.display = 'none';
+                }
 
-            if (allMentions.length === 0) {
-                html = `<div style="color:#8bb9d6; font-size:12px; text-align:center; padding:10px;">[ 暂无任何消息 ]</div>`;
+                // 渲染下拉面板
+                if (dropdown) {
+                    let html = '';
+                    
+                    const renderMentionItem = (item, isNew) => {
+                        const author = characterDB.find(char => char.owner_id === item.owner_id);
+                        let authorName = author ? author.callsign : '某人';
+                        if (item.author_type === 'hidden' && author?.has_hidden) authorName = author.hidden_callsign;
+                        
+                        const timeStr = new Date(item.created_at).toLocaleString();
+                        const snippet = item.content.length > 25 ? item.content.substring(0, 25) + '...' : item.content;
+                        const actionStr = item.is_post ? "在全息广播中提到了你" : "在回复中提到了你";
+                        
+                        // 新消息高亮，历史消息变暗
+                        const borderStyle = isNew ? 'border:1px solid #12a8ff;' : 'border:1px solid rgba(18,168,255,0.3); opacity: 0.6;';
+                        const titleColor = isNew ? '#e0f2fe' : '#8bb9d6';
+                        
+                        return `
+                            <div style="background:rgba(0,5,10,0.8); ${borderStyle} padding:8px; border-radius:4px; cursor:pointer; transition:0.2s; margin-bottom:5px;" onmouseover="this.style.background='rgba(18,168,255,0.2)'; this.style.opacity='1';" onmouseout="this.style.background='rgba(0,5,10,0.8)'; this.style.opacity='${isNew ? 1 : 0.6}';" onclick="gotoPost('${item.chan}')">
+                                <div style="color:${titleColor}; font-size:12px; margin-bottom:4px;">
+                                    ${isNew ? '<span style="color:#f44336; font-weight:bold; margin-right:4px;">[NEW]</span>' : ''}
+                                    <strong>${authorName}</strong> ${actionStr}
+                                </div>
+                                <div style="color:#8bb9d6; font-size:11px; margin-bottom:4px;">"${snippet}"</div>
+                                <div style="color:#12a8ff; font-size:10px; font-family:monospace; opacity:0.8;">${timeStr} | 频道: ${item.chan}</div>
+                            </div>
+                        `;
+                    };
+
+                    // 渲染最新消息
+                    if (newMentions.length > 0) {
+                        html += `<div style="font-family:monospace; color:#12a8ff; font-weight:bold; border-bottom:1px dashed rgba(18,168,255,0.4); padding-bottom:5px; margin-bottom:5px;">[ 最新提及 MENTIONS ]</div>`;
+                        newMentions.forEach(item => html += renderMentionItem(item, true));
+                    }
+                    
+                    // 渲染历史消息
+                    if (historyMentions.length > 0) {
+                        html += `<div style="font-family:monospace; color:#666; font-weight:bold; border-bottom:1px dashed rgba(255,255,255,0.2); padding-bottom:5px; margin-top:10px; margin-bottom:5px;">[ 历史消息 HISTORY ]</div>`;
+                        historyMentions.forEach(item => html += renderMentionItem(item, false));
+                    }
+
+                    if (allMentions.length === 0) {
+                        html = `<div style="color:#8bb9d6; font-size:12px; text-align:center; padding:15px;">[ 暂无任何通讯记录 ]</div>`;
+                    }
+                    
+                    dropdown.innerHTML = html;
+                }
+            } catch (e) {
+                console.error("Failed to fetch notifications:", e);
+                if (dropdown) {
+                    dropdown.innerHTML = `<div style="color:#f44336; font-size:12px; text-align:center; padding:15px;">[ ✕ 通讯接收失败，信号丢失 ]</div>`;
+                }
             }
-            
-            dropdown.innerHTML = html;
-        }
-    } catch (e) {
-        console.error("Failed to fetch notifications:", e);
-    }
-};
+        };
 
 // 💥 侧边栏点击逻辑 (终极修复版)
         wikiButtons.forEach(button => {
@@ -9970,6 +10008,7 @@ window.checkNotifications = async function() {
         
         // 1. 时间线视图与返回
         window.openTimelineView = function() {
+            window.lastScrollY = window.scrollY || window.pageYOffset; // 💥 记录滚动位置
             const currentActivePanel = document.querySelector('.view-panel.active');
             if (currentActivePanel && currentActivePanel.id !== 'timelineView') {
                 previousViewId = currentActivePanel.id; 
@@ -9986,14 +10025,13 @@ window.checkNotifications = async function() {
 
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
             document.getElementById('timelineView').classList.add('active');
-            sessionStorage.setItem('tf141_current_view', 'timelineView'); // 💥 新增记忆
+            sessionStorage.setItem('tf141_current_view', 'timelineView');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
         window.backToWorldView = function() {
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
             
-            // 💥 核心修复：强制指定返回世界观页（除非明确是从管理员后台进来的）
             let targetId = 'worldView';
             if (typeof previousViewId !== 'undefined' && previousViewId === 'adminView') {
                 targetId = 'adminView';
@@ -10002,34 +10040,22 @@ window.checkNotifications = async function() {
             const targetPanel = document.getElementById(targetId);
             if (targetPanel) {
                 targetPanel.classList.add('active');
-                sessionStorage.setItem('tf141_current_view', targetId); // 记忆当前视图
+                sessionStorage.setItem('tf141_current_view', targetId);
             }
             
-            if (targetId === 'worldView') {
-                setTimeout(() => {
-                    // 自动滚动到世界观页的时间线预览卡片处
-                    const previewBox = document.querySelector('#worldView .section-header');
-                    if (previewBox) {
-                        // 手机端因为有吸顶导航，偏移量要大一点防止遮挡
-                        const yOffset = window.innerWidth <= 900 ? -120 : -80;
-                        const y = previewBox.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                        window.scrollTo({ top: y, behavior: 'smooth' });
-                    }
-                }, 50);
-            } else {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
+            window.scrollTo({ top: window.lastScrollY || 0, behavior: 'auto' }); // 💥 瞬间恢复滚动位置
         };
 
         // 2. 历史情报视图与返回
         window.openHistoryIntel = function() {
+            window.lastScrollY = window.scrollY || window.pageYOffset; // 💥 记录滚动位置
             const currentActivePanel = document.querySelector('.view-panel.active');
             if (currentActivePanel && currentActivePanel.id !== 'historyIntelView') {
                 previousViewId = currentActivePanel.id;
             }
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
             document.getElementById('historyIntelView').classList.add('active');
-            sessionStorage.setItem('tf141_current_view', 'historyIntelView'); // 💥 新增记忆
+            sessionStorage.setItem('tf141_current_view', 'historyIntelView');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
@@ -10037,15 +10063,9 @@ window.checkNotifications = async function() {
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
             const targetPanel = document.getElementById(previousViewId) || document.getElementById('mainView');
             targetPanel.classList.add('active');
-            sessionStorage.setItem('tf141_current_view', targetPanel.id); // 💥 新增记忆
+            sessionStorage.setItem('tf141_current_view', targetPanel.id);
             
-            setTimeout(() => {
-                const targetEl = document.getElementById('intel-grid');
-                if(targetEl) {
-                    const y = targetEl.getBoundingClientRect().top + window.pageYOffset - 80;
-                    window.scrollTo({ top: y, behavior: 'smooth' });
-                }
-            }, 50);
+            window.scrollTo({ top: window.lastScrollY || 0, behavior: 'auto' }); // 💥 瞬间恢复滚动位置
         };
 
         /* =========================================================
@@ -10074,7 +10094,7 @@ window.checkNotifications = async function() {
                 // 3. 更新右上角的状态栏显示
                 const statusContainer = document.querySelector('.lang-text');
                 statusContainer.innerHTML = `
-                    <span class="op-key-text" title="点击即可全选复制"><span class="hide-on-mobile">OP: </span>${currentUser.nickname}<span class="hide-on-mobile"> [${currentUser.id}]</span></span>
+                    <span class="op-key-text" title="点击一键复制密钥" onclick="copyOpKey('${currentUser.id}')" style="cursor: pointer; transition: 0.2s;" onmouseover="this.style.color='#fff'; this.style.textShadow='0 0 8px #12a8ff'" onmouseout="this.style.color=''; this.style.textShadow='none'"><span class="hide-on-mobile">OP: </span>${currentUser.nickname}<span class="hide-on-mobile"> [${currentUser.id}]</span></span>
                     <span class="logout-btn" title="断开终端连接">⏻退出</span>
                 `;
                 
@@ -10179,19 +10199,27 @@ window.checkNotifications = async function() {
 
         // 1. 通用视图切换助手
         window.openView = function(targetId) {
+            window.lastScrollY = window.scrollY || window.pageYOffset; // 💥 记录滚动位置
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
             const targetPanel = document.getElementById(targetId);
             if (targetPanel) { 
                 targetPanel.classList.add('active'); 
                 sessionStorage.setItem('tf141_current_view', targetId);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                window.scrollTo({ top: 0, behavior: 'smooth' }); // 进入新页面时回到顶部
             }
         };
+
 
         // 💥 新增：表单专属返回助手（智能返回上一页）
         window.closeForm = function() {
             const targetId = window.formPreviousView || 'queueView';
-            openView(targetId);
+            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+            const targetPanel = document.getElementById(targetId);
+            if (targetPanel) { 
+                targetPanel.classList.add('active'); 
+                sessionStorage.setItem('tf141_current_view', targetId);
+                window.scrollTo({ top: window.lastScrollY || 0, behavior: 'auto' }); // 💥 瞬间恢复滚动位置
+            }
         };
 
         // 2. 拦截 fetchArticles，分离出待审核的组织
@@ -10760,17 +10788,21 @@ if(!title || !parentFaction || !content) {
                 
                 card.style.borderColor = color;
                 card.style.background = 'rgba(0,0,0,0.4)';
+                card.style.display = 'flex';
+                card.style.flexDirection = 'column';
                 
-                // 💥 核心：加上了 [改] 按钮，点击时传入 log.id
+                // 💥 核心修复：废除绝对定位，改用 Flex 布局将标签和按钮分列左右
                 card.innerHTML = `
-                    <div style="position: absolute; top: 10px; right: 10px; z-index: 10; display: flex; gap: 5px;">
-                        <button onclick="event.stopPropagation(); openLogEditor('${isRp ? 'rp' : 'solo'}', '${log.id}')" style="background: rgba(255,235,59,0.2); border: 1px solid #ffeb3b; color: #ffeb3b; cursor: pointer; padding: 2px 6px; font-size: 12px; font-family: monospace; border-radius: 2px;">[改]</button>
-                        <button onclick="event.stopPropagation(); deleteArticle('${log.id}')" style="background: rgba(244,67,54,0.2); border: 1px solid #f44336; color: #f44336; cursor: pointer; padding: 2px 6px; font-size: 12px; font-family: monospace; border-radius: 2px;">[删]</button>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px;">
+                        <span class="card-level" style="color: ${color}; border-color: ${color}; background: ${isRp ? 'rgba(224,64,251,0.1)' : 'rgba(18,168,255,0.1)'}; margin: 0; white-space: nowrap;">${tag}</span>
+                        <div style="display: flex; gap: 5px; z-index: 10; flex-shrink: 0;">
+                            <button onclick="event.stopPropagation(); openLogEditor('${isRp ? 'rp' : 'solo'}', '${log.id}')" style="background: rgba(255,235,59,0.15); border: 1px solid #ffeb3b; color: #ffeb3b; cursor: pointer; padding: 4px 8px; font-size: 12px; font-family: monospace; border-radius: 2px; transition: 0.2s;">[改]</button>
+                            <button onclick="event.stopPropagation(); deleteArticle('${log.id}')" style="background: rgba(244,67,54,0.15); border: 1px solid #f44336; color: #f44336; cursor: pointer; padding: 4px 8px; font-size: 12px; font-family: monospace; border-radius: 2px; transition: 0.2s;">[删]</button>
+                        </div>
                     </div>
-                    <span class="card-level" style="color: ${color}; border-color: ${color}; background: ${isRp ? 'rgba(224,64,251,0.1)' : 'rgba(18,168,255,0.1)'};">${tag}</span>
-                    <h3 class="card-name" style="font-size: 16px;">${log.title}</h3>
-                    <p class="card-desc" style="font-size: 13px;">${log.summary || '无简介'}</p>
-                    <button class="btn-ghost" style="width: 100%; padding: 8px; font-size: 12px; color: ${color}; border-color: ${color};">查阅记录 →</button>
+                    <h3 class="card-name" style="font-size: 16px; margin-bottom: 8px;">${log.title}</h3>
+                    <p class="card-desc" style="font-size: 13px; flex-grow: 1; margin-bottom: 15px;">${log.summary || '无简介'}</p>
+                    <button class="btn-ghost" style="width: 100%; padding: 8px; font-size: 12px; color: ${color}; border-color: ${color}; margin-top: auto;">查阅记录 →</button>
                 `;
                 card.onclick = () => openArticleById(log.id);
                 return card;
@@ -10789,6 +10821,7 @@ if(!title || !parentFaction || !content) {
 
         // 3. 打开记录编辑器 (支持传入 logId 进行二次编辑)
         window.openLogEditor = function(type, logId = null) {
+            window.lastScrollY = window.scrollY || window.pageYOffset; // 💥 记录滚动位置
             window.editingLogId = logId;
             window.editingRpMsgId = null; // 重置单句编辑状态
 
@@ -10861,8 +10894,9 @@ if(!title || !parentFaction || !content) {
         window.closeLogEditor = function() {
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
             document.getElementById('storyView').classList.add('active');
-            sessionStorage.setItem('tf141_current_view', 'storyView'); // 💥 新增记忆
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            sessionStorage.setItem('tf141_current_view', 'storyView');
+            
+            window.scrollTo({ top: window.lastScrollY || 0, behavior: 'auto' }); // 💥 瞬间恢复滚动位置
         };
 
         // 绑定专属阅读器的返回按钮
@@ -10870,8 +10904,9 @@ if(!title || !parentFaction || !content) {
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
             const targetPanel = document.getElementById(previousViewId) || document.getElementById('storyView');
             targetPanel.classList.add('active');
-            sessionStorage.setItem('tf141_current_view', targetPanel.id); // 💥 新增记忆
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            sessionStorage.setItem('tf141_current_view', targetPanel.id);
+            
+            window.scrollTo({ top: window.lastScrollY || 0, behavior: 'auto' }); // 💥 瞬间恢复滚动位置
         });
 
         // 4. 对戏生成器逻辑 (支持单句修改与时间戳)
@@ -11263,13 +11298,18 @@ if(!title || !parentFaction || !content) {
             setInterval(function() {
                 if (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'super_admin') return;
 
+                // 💥 核心修复：判断是否为移动端设备
+                const isMobile = window.innerWidth <= 900 || /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
                 // 探测 A：视窗挤压探测 (检测停靠在浏览器边缘的控制台)
-                // 如果浏览器外壳和内部网页的尺寸差值大于 160px，说明控制台被打开了
-                const widthDiff = window.outerWidth - window.innerWidth > 160;
-                const heightDiff = window.outerHeight - window.innerHeight > 160;
-                
-                if (widthDiff || heightDiff) {
-                    triggerRedScreen();
+                // 💥 手机端浏览器导航栏收缩会导致高度剧变，且手机端无控制台，因此在手机端直接跳过此检测！
+                if (!isMobile) {
+                    const widthDiff = window.outerWidth - window.innerWidth > 160;
+                    const heightDiff = window.outerHeight - window.innerHeight > 160;
+                    
+                    if (widthDiff || heightDiff) {
+                        triggerRedScreen();
+                    }
                 }
 
                 // 探测 B：时间差冻结探测 (检测独立窗口弹出的控制台)
