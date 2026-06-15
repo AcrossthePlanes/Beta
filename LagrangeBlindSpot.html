@@ -4144,6 +4144,49 @@ textarea:-webkit-autofill:active {
             }
         }
 
+        /* =========================================
+           组织专属阅读器 Tab 样式
+           ========================================= */
+        .org-tabs {
+            display: flex;
+            border-bottom: 1px solid rgba(139, 195, 74, 0.4);
+            margin-bottom: 20px;
+            gap: 5px;
+        }
+        .org-tab-btn {
+            background: transparent;
+            border: 1px solid rgba(139, 195, 74, 0.3);
+            border-bottom: none;
+            color: rgba(139, 195, 74, 0.6);
+            padding: 10px 25px;
+            font-family: monospace;
+            font-size: 15px;
+            cursor: pointer;
+            border-radius: 4px 4px 0 0;
+            transition: 0.2s;
+            position: relative;
+            top: 1px;
+        }
+        .org-tab-btn:hover {
+            background: rgba(139, 195, 74, 0.1);
+            color: #8bc34a;
+        }
+        .org-tab-btn.active {
+            background: rgba(139, 195, 74, 0.15);
+            color: #8bc34a;
+            border-color: #8bc34a;
+            text-shadow: 0 0 8px rgba(139, 195, 74, 0.5);
+            border-bottom: 1px solid rgba(6, 11, 20, 1); /* 制造融合视错觉 */
+            z-index: 2;
+        }
+        .org-tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .org-tab-content.active {
+            display: block;
+        }
+
     </style>
 </head>
 <body class="secure-no-select">
@@ -5025,8 +5068,10 @@ textarea:-webkit-autofill:active {
 
                     <div class="input-group full-width" style="margin-top: 20px;">
                         <label style="color: #ffeb3b;">详细正文 (Content - 点开后全屏显示的内容)</label>
-                        <div class="input-wrapper" style="border-color: rgba(255,235,59,0.4); display: block; background: rgba(0,0,0,0.6);">
-                            <div class="input-group full-width" id="admin-org-positions-group" style="display: none; margin-top: 10px;">
+                        <div class="input-wrapper" style="border-color: rgba(255,235,59,0.4); display: block; background: rgba(0,0,0,0.6); padding: 15px;">
+                            
+                            <!-- 1. 组织职位与名额限制 -->
+                            <div class="input-group full-width" id="admin-org-positions-group" style="display: none; margin-bottom: 15px;">
                                 <label style="color: #ffeb3b;">组织职位与名额限制</label>
                                 <div class="input-wrapper" style="border-color: rgba(255,235,59,0.4);">
                                     <span class="prefix" style="color: #ffeb3b;">&gt;</span>
@@ -5034,13 +5079,23 @@ textarea:-webkit-autofill:active {
                                 </div>
                             </div>
 
-                            <div class="input-group full-width" id="admin-org-rp-group" style="display: none; margin-top: 10px;">
+                            <!-- 2. 需要自戏考核的职位 -->
+                            <div class="input-group full-width" id="admin-org-rp-group" style="display: none; margin-bottom: 15px;">
                                 <label style="color: #ffeb3b;">需要自戏考核的职位</label>
                                 <div class="input-wrapper" style="border-color: rgba(255,235,59,0.4);">
                                     <span class="prefix" style="color: #ffeb3b;">&gt;</span>
                                     <input type="text" id="a-rp-positions" placeholder="例如: 队长, 狙击手。填 ALL 代表所有职位均需自戏">
                                 </div>
                             </div>
+
+                            <!-- 3. 各职位具体要求 -->
+                            <div class="input-group full-width" id="admin-org-reqs-group" style="display: none; margin-bottom: 15px;">
+                                <label style="color: #ffeb3b;">各职位具体要求</label>
+                                <div class="input-wrapper" style="border-color: rgba(255,235,59,0.4);">
+                                    <textarea id="a-org-reqs" rows="3" placeholder="例如：&#10;PSC秘书长：需要年龄50+，活跃度高。"></textarea>
+                                </div>
+                            </div>
+
                             <!-- 富文本编辑器容器 -->
                             <div id="editor-container" style="height: 350px;"></div>
                         </div>
@@ -5519,6 +5574,12 @@ textarea:-webkit-autofill:active {
                             <span class="prefix" style="color: #8bc34a;">&gt;</span>
                             <input type="text" id="o-rp-positions" placeholder="例如: 队长, 狙击手。填 ALL 代表所有职位均需自戏">
                         </div>
+                        <div class="input-group full-width" style="margin-top: 20px;">
+                        <label style="color: #8bc34a;">各职位具体要求 (选填)</label>
+                        <div class="input-wrapper" style="border-color: rgba(139,195,74,0.4);">
+                            <textarea id="o-reqs" rows="3" placeholder="例如：&#10;医疗兵：需要有战地急救经验。&#10;突击手：要求服从指挥，活跃度高。"></textarea>
+                        </div>
+                    </div>
                         <div style="font-size: 12px; color: #8bb9d6; margin-top: 5px; opacity: 0.8;">玩家申请这些职位时，必须提交一段不少于 200 字的自戏。</div>
                     </div>
 
@@ -5803,7 +5864,6 @@ window.parsePositionsStr = function(str) {
                 const div = doc.querySelector('div[data-positions]');
                 if (div) {
                     let rawStr = div.getAttribute('data-positions');
-                    // 💥 强力清洗：把富文本编辑器搞乱的 &quot; 全部还原成标准双引号
                     let cleanStr = rawStr.replace(/&quot;/g, '"').replace(/&apos;/g, "'");
                     return JSON.parse(cleanStr);
                 }
@@ -5813,6 +5873,7 @@ window.parsePositionsStr = function(str) {
             return null;
         };
 
+        // 💥 解析自戏考核要求
         window.getOrgRpPositions = function(content) {
             if (!content) return "";
             try {
@@ -5821,7 +5882,6 @@ window.parsePositionsStr = function(str) {
                 const div = doc.querySelector('div[data-rp-positions]');
                 if (div) {
                     let rawStr = div.getAttribute('data-rp-positions') || "";
-                    // 💥 同样强力清洗自戏要求的字符串
                     return rawStr.replace(/&quot;/g, '"').replace(/&apos;/g, "'");
                 }
             } catch(e) { 
@@ -5830,36 +5890,52 @@ window.parsePositionsStr = function(str) {
             return "";
         };
 
-// 在全屏文章阅读器渲染组织详情时，展示华丽的职位招募面板
-window.renderOrgPositionsStatus = function(orgName, content) {
-    const positions = getOrgPositions(content);
-    if (!positions) return '';
-    
-    // 实时计算当前通过的公民占用了多少名额 (同时计算表里身份)
-    const approvedChars = characterDB.filter(c => c.status === 'approved');
-    let html = '<div style="margin: 20px 0; padding: 20px; background: rgba(139,195,74,0.05); border: 1px solid rgba(139,195,74,0.4); border-radius: 4px; box-shadow: inset 0 0 20px rgba(139,195,74,0.1);">';
-    html += '<h4 style="color: #8bc34a; margin: 0 0 15px 0; font-family: monospace; letter-spacing: 2px;">[ 📊 组织编制招募状态 ]</h4>';
-    html += '<div style="display: flex; flex-wrap: wrap; gap: 10px;">';
-    
-    for (const [pos, limit] of Object.entries(positions)) {
-        let count = 0;
-        approvedChars.forEach(c => {
-            if (c.organization === orgName && c.occupation === pos) count++;
-            if (c.has_hidden && c.hidden_org === orgName && c.hidden_occupation === pos) count++;
-        });
-        
-        const isFull = limit > 0 && count >= limit;
-        const color = isFull ? '#f44336' : '#8bc34a';
-        const bg = isFull ? 'rgba(244,67,54,0.1)' : 'rgba(139,195,74,0.15)';
-        const text = limit > 0 ? `${pos}: ${count}/${limit}` : `${pos}: ${count}人 (招募无上限)`;
-        const icon = isFull ? '🚫' : '✅';
-        
-        html += `<span style="padding: 6px 12px; border: 1px solid ${color}; background: ${bg}; color: ${color}; font-size: 13px; border-radius: 4px; font-family: monospace;">${icon} ${text}</span>`;
-    }
-    
-    html += '</div></div>';
-    return html;
-};
+        // 💥 新增：解析职位具体要求
+        window.getOrgReqs = function(content) {
+            if (!content) return "";
+            try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(content, 'text/html');
+                const div = doc.querySelector('div[data-reqs]');
+                if (div) {
+                    let rawStr = div.getAttribute('data-reqs') || "";
+                    // 还原换行符和引号
+                    return rawStr.replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&#10;/g, '\n');
+                }
+            } catch(e) { 
+                console.error("要求解析失败:", e); 
+            }
+            return "";
+        };
+
+// 💥 渲染组织名额状态 (去除了 Emoji)
+        window.renderOrgPositionsStatus = function(orgName, content) {
+            const positions = getOrgPositions(content);
+            if (!positions) return '';
+            
+            const approvedChars = characterDB.filter(c => c.status === 'approved');
+            let html = '<div style="margin-bottom: 20px;">';
+            html += '<h4 style="color: #8bc34a; margin: 0 0 15px 0; font-family: monospace; letter-spacing: 2px;">[ 📊 编制与名额状态 ]</h4>';
+            html += '<div style="display: flex; flex-wrap: wrap; gap: 10px;">';
+            
+            for (const [pos, limit] of Object.entries(positions)) {
+                let count = 0;
+                approvedChars.forEach(c => {
+                    if (c.organization === orgName && c.occupation === pos) count++;
+                    if (c.has_hidden && c.hidden_org === orgName && c.hidden_occupation === pos) count++;
+                });
+                
+                const isFull = limit > 0 && count >= limit;
+                const color = isFull ? '#f44336' : '#8bc34a';
+                const bg = isFull ? 'rgba(244,67,54,0.1)' : 'rgba(139,195,74,0.15)';
+                const text = limit > 0 ? (isFull ? `${pos}: ${count}/${limit} [满员]` : `${pos}: ${count}/${limit} [招募中]`) : `${pos}: ${count}人 [不限额]`;
+                
+                html += `<span style="padding: 6px 12px; border: 1px solid ${color}; background: ${bg}; color: ${color}; font-size: 13px; border-radius: 4px; font-family: monospace;">${text}</span>`;
+            }
+            
+            html += '</div></div>';
+            return html;
+        };
 
 // 审核前：检查冲突
 window.processIdentityCapacity = async function(orgName, occupation, charId) {
@@ -6112,10 +6188,40 @@ window.triggerConflictRejection = async function(charDraft) {
                 let renderContent = item.content;
                 
                 // 💥 拦截：如果是组织档案，且配置了职位名额，抽出并渲染华丽面板
+                // 💥 拦截：如果是组织档案，启用 Tab 选项卡排版
                 if (item.type === 'org') {
                     const positionsHtml = renderOrgPositionsStatus(item.title, item.content);
-                    const cleanContent = item.content.replace(/<div[^>]*data-positions=['"].*?['"][^>]*><\/div>/g, '').replace(/<div[^>]*data-rp-positions=['"].*?['"][^>]*><\/div>/g, '');
-                    renderContent = positionsHtml + cleanContent;
+                    const rpReqs = window.getOrgRpPositions(item.content);
+                    const reqs = window.getOrgReqs(item.content);
+                    
+                    let recruitHtml = positionsHtml;
+                    
+                    if (rpReqs) {
+                        recruitHtml += `<div style="margin-top: 20px; padding: 15px; background: rgba(18,168,255,0.05); border-left: 4px solid #12a8ff;"><h4 style="color: #12a8ff; margin: 0 0 10px 0; font-family: monospace;">[ 自戏考核要求 ]</h4><p style="color: #8bb9d6; font-size: 14px; margin: 0;">以下职位需要提交不少于 200 字的自戏考核：<br><strong style="color: #e0f2fe;">${rpReqs}</strong></p></div>`;
+                    }
+                    if (reqs) {
+                        recruitHtml += `<div style="margin-top: 20px; padding: 15px; background: rgba(255,235,59,0.05); border-left: 4px solid #ffeb3b;"><h4 style="color: #ffeb3b; margin: 0 0 10px 0; font-family: monospace;">[ 职位具体要求 ]</h4><div style="color: #fff8b0; font-size: 14px; line-height: 1.8; white-space: pre-wrap;">${reqs}</div></div>`;
+                    }
+                    
+                    if (!positionsHtml && !rpReqs && !reqs) {
+                        recruitHtml = `<div style="color: #8bb9d6; font-family: monospace; padding: 20px 0;">[ 暂无特殊招募要求，所有人均可自由申请加入 ]</div>`;
+                    }
+
+                    // 剔除隐藏数据
+                    const cleanContent = item.content.replace(/<div[^>]*data-positions=['"].*?['"][^>]*><\/div>/g, '')
+                                                     .replace(/<div[^>]*data-rp-positions=['"].*?['"][^>]*><\/div>/g, '')
+                                                     
+                                                     .replace(/<div[^>]*data-reqs=['"].*?['"][^>]*><\/div>/g, '');
+                    
+                    // 组装 Tab 结构
+                    renderContent = `
+                        <div class="org-tabs">
+                            <button class="org-tab-btn active" onclick="document.querySelectorAll('.org-tab-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active'); document.getElementById('org-lore').style.display='block'; document.getElementById('org-recruit').style.display='none';">详细设定</button>
+                            <button class="org-tab-btn" onclick="document.querySelectorAll('.org-tab-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active'); document.getElementById('org-lore').style.display='none'; document.getElementById('org-recruit').style.display='block';">招募大厅</button>
+                        </div>
+                        <div id="org-lore" class="org-tab-content active">${cleanContent}</div>
+                        <div id="org-recruit" class="org-tab-content">${recruitHtml}</div>
+                    `;
                 }
 
                 if (renderContent.includes('<') && renderContent.includes('>')) {
@@ -8595,7 +8701,9 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
             }
 
             if (defaultType === 'org') {
-                document.getElementById('admin-org-positions-group').style.display = 'block'; // 💥 显示名额框
+                document.getElementById('admin-org-positions-group').style.display = 'block';
+                document.getElementById('admin-org-rp-group').style.display = 'block';
+                document.getElementById('admin-org-reqs-group').style.display = 'block'; // 💥 加上这行
                 parentGroup.style.display = 'flex';
                 parentSelect.innerHTML = '<option value="" disabled selected>-- 请选择所属阵营 --</option>';
                 const factions = articlesDB.filter(a => a.type === 'faction');
@@ -8668,6 +8776,12 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                 const rpPosStr = document.getElementById('a-rp-positions').value.trim();
                 if (rpPosStr) {
                     content += `<div data-rp-positions='${rpPosStr}' style='display:none;'></div>`;
+                }
+                // 💥 加上这段保存职位要求
+                const reqsStr = document.getElementById('a-org-reqs').value.trim();
+                if (reqsStr) {
+                    const encodedReqs = reqsStr.replace(/\n/g, '&#10;');
+                    content += `<div data-reqs='${encodedReqs}' style='display:none;'></div>`;
                 }
             }
 
@@ -9235,6 +9349,10 @@ function renderAdminDashboard() {
                 const rpPosStr = window.getOrgRpPositions(article.content);
                 document.getElementById('a-rp-positions').value = rpPosStr || '';
                 
+                // 💥 加上这段回显职位要求
+                document.getElementById('admin-org-reqs-group').style.display = 'block';
+                document.getElementById('a-org-reqs').value = window.getOrgReqs(article.content) || '';
+                
                 parentGroup.style.display = 'flex';
                 parentSelect.innerHTML = '<option value="" disabled selected>-- 请选择所属阵营 --</option>';
                 const factions = articlesDB.filter(a => a.type === 'faction');
@@ -9253,7 +9371,7 @@ function renderAdminDashboard() {
             }
 
             // 💥 剔除隐藏的 JSON 代码后再喂给富文本编辑器
-            let cleanContent = article.content.replace(/<div[^>]*data-positions=['"].*?['"][^>]*><\/div>/g, '').replace(/<div[^>]*data-rp-positions=['"].*?['"][^>]*><\/div>/g, '');
+            let cleanContent = article.content.replace(/<div[^>]*data-positions=['"].*?['"][^>]*><\/div>/g, '').replace(/<div[^>]*data-rp-positions=['"].*?['"][^>]*><\/div>/g, '').replace(/<div[^>]*data-reqs=['"].*?['"][^>]*><\/div>/g, '');
             if(window.quill) {
                 window.quill.root.innerHTML = cleanContent || '';
             }
@@ -10334,6 +10452,7 @@ window.deleteForumPost = async function(postId) {
             document.getElementById('o-title').value = org.title || '';
             document.getElementById('o-tag').value = org.tag || '';
             document.getElementById('o-summary').value = org.summary || '';
+            document.getElementById('o-reqs').value = window.getOrgReqs(org.content) || ''; // 💥 加上这行
             
             // 💥 剥离职位数据，填充到职位文本框
             const posObj = getOrgPositions(org.content);
@@ -10344,7 +10463,7 @@ window.deleteForumPost = async function(postId) {
             }
             
             // 💥 剔除隐藏的 JSON 代码后再扔给正文文本框，防止出现乱码
-            document.getElementById('o-content').value = (org.content || '').replace(/<div[^>]*data-positions=['"].*?['"][^>]*><\/div>/g, '').replace(/<div[^>]*data-rp-positions=['"].*?['"][^>]*><\/div>/g, '').trim();
+            document.getElementById('o-content').value = (org.content || '').replace(/<div[^>]*data-positions=['"].*?['"][^>]*><\/div>/g, '').replace(/<div[^>]*data-rp-positions=['"].*?['"][^>]*><\/div>/g, '').replace(/<div[^>]*data-reqs=['"].*?['"][^>]*><\/div>/g, '').trim();
             
             const parentMatch = org.keywords.match(/\[PARENT:(.+?)\]/);
             if (parentMatch && parentMatch[1]) {
@@ -10372,9 +10491,15 @@ if (posObj && Object.keys(posObj).length > 0) {
 }
 
 const rpPosStr = document.getElementById('o-rp-positions').value.trim();
-if (rpPosStr) {
-    content += `\n<div data-rp-positions='${rpPosStr}' style='display:none;'></div>`;
-}
+            if (rpPosStr) {
+                content += `\n<div data-rp-positions='${rpPosStr}' style='display:none;'></div>`;
+            }
+            // 💥 加上这段保存职位要求
+            const reqsStr = document.getElementById('o-reqs').value.trim();
+            if (reqsStr) {
+                const encodedReqs = reqsStr.replace(/\n/g, '&#10;'); // 保护换行符
+                content += `\n<div data-reqs='${encodedReqs}' style='display:none;'></div>`;
+            }
 
 if(!title || !parentFaction || !content) {
                 await SysModal.alert('请完整填写组织名称、阵营和详细设定！', 'SYSTEM NOTE');
@@ -10580,7 +10705,7 @@ if(!title || !parentFaction || !content) {
             const positionsField = renderOrgField('positions', '预设职位与名额', posDisplay, true);
 
             // 清理 content 中的隐藏 div，防止代码外露
-            const cleanContent = (org.content || '').replace(/<div[^>]*data-positions=['"].*?['"][^>]*><\/div>/g, '').replace(/<div[^>]*data-rp-positions=['"].*?['"][^>]*><\/div>/g, '').replace(/\n/g, '<br>');
+            const cleanContent = (org.content || '').replace(/<div[^>]*data-positions=['"].*?['"][^>]*><\/div>/g, '').replace(/<div[^>]*data-rp-positions=['"].*?['"][^>]*><\/div>/g, '').replace(/<div[^>]*data-reqs=['"].*?['"][^>]*><\/div>/g, '').replace(/\n/g, '<br>');
 
             const svgOrg = `<svg viewBox="0 0 24 24" style="width: 1.2em; height: 1.2em; fill: currentColor; vertical-align: middle; margin-top: -2px; margin-right: 6px;"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>`;
 
