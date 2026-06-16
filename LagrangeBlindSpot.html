@@ -6,6 +6,7 @@
     <title>拉格朗日点盲区</title>
 
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
 
 
 
@@ -4291,6 +4292,59 @@ textarea:-webkit-autofill:active {
         .fp-feed::-webkit-scrollbar-thumb { background: #12a8ff; }
         .forum-profile-box.hidden-mode .fp-feed::-webkit-scrollbar-thumb { background: #e91e63; }
 
+        /* =========================================
+           论坛发帖框 (PC & 手机端响应式优化)
+           ========================================= */
+        .post-box-header {
+            display: flex; justify-content: space-between; align-items: flex-start; 
+            margin-bottom: 15px; border-bottom: 1px dashed rgba(76, 175, 80, 0.4); padding-bottom: 15px;
+        }
+        .post-box-user { display: flex; align-items: center; gap: 15px; }
+        .post-box-avatar-el {
+            width: 45px; height: 45px; background: rgba(76, 175, 80, 0.1); border: 2px solid #4caf50; 
+            display: flex; justify-content: center; align-items: center; font-family: 'Impact', sans-serif; color: #4caf50; font-size: 22px;
+        }
+        .post-box-name-el { color: #fff; font-weight: bold; font-size: 16px; margin-bottom: 4px; }
+        .post-box-subtitle { color: #4caf50; font-family: monospace; font-size: 11px; }
+        .post-box-profile-btn { border-color: #4caf50; color: #4caf50; padding: 4px 10px; font-size: 12px; }
+        
+        .post-box-select {
+            background: rgba(0,0,0,0.5); color: #fff; border: 1px solid #4caf50; padding: 8px; 
+            font-family: monospace; margin-bottom: 10px; outline: none; width: 100%; border-radius: 4px;
+        }
+        .post-box-footer { display: flex; justify-content: flex-end; }
+        .post-box-submit-btn { margin: 0; padding: 8px 20px; font-size: 14px; color: #060b14; background: #4caf50; border-color: #4caf50; }
+
+        /* 💥 手机端专属排版 💥 */
+        @media (max-width: 768px) {
+            .forum-post-box {
+                padding: 15px !important;
+                border-width: 1px !important;
+                box-shadow: none !important; /* 去掉厚重阴影，显得更轻盈 */
+            }
+            .post-box-header {
+                flex-direction: column; /* 手机端改为上下排列 */
+                gap: 12px;
+            }
+            .post-box-subtitle {
+                display: none; /* 隐藏冗长的副标题，节省空间 */
+            }
+            .post-box-profile-btn {
+                width: 100% !important; /* 按钮占满全宽 */
+                text-align: center;
+                padding: 8px !important;
+            }
+            .post-box-footer {
+                justify-content: center;
+            }
+            .post-box-submit-btn {
+                width: 100% !important; /* 发送按钮占满全宽，方便单手点击 */
+                padding: 12px !important; /* 增加高度，更好按 */
+                font-size: 16px !important;
+                letter-spacing: 2px;
+            }
+        }
+
     </style>
 </head>
 <body class="secure-no-select">
@@ -4300,15 +4354,41 @@ textarea:-webkit-autofill:active {
             <div class="sys-modal-header" id="sysModalTitle">[ SYSTEM MESSAGE ]</div>
             <div class="sys-modal-body" id="sysModalMsg"></div>
             
-            <!-- 仅在需要输入的 prompt 时显示 -->
-            <div class="input-wrapper" id="sysModalInputWrapper" style="display: none; margin-top: 15px;">
-                <span class="prefix">&gt;</span>
-                <input type="text" id="sysModalInput" autocomplete="off">
+           <!-- 仅在需要输入的 prompt 时显示 -->
+            <div class="input-wrapper" id="sysModalInputWrapper" style="display: none; margin-top: 15px; flex-direction: column;">
+                <div style="display: flex; width: 100%;">
+                    <span class="prefix">&gt;</span>
+                    <input type="text" id="sysModalInput" autocomplete="off">
+                </div>
+                <!-- 💥 新增：用于修改长帖子的多行文本框 -->
+                <textarea id="sysModalTextarea" rows="6" style="display: none; width: 100%; background: transparent; border: none; color: #fff; padding: 10px; font-family: 'PingFang SC', monospace; font-size: 14px; outline: none; resize: vertical; box-sizing: border-box;"></textarea>
             </div>
 
             <div class="sys-modal-actions">
                 <button class="sys-modal-btn cancel" id="sysModalCancelBtn">[ 取消 ]</button>
                 <button class="sys-modal-btn confirm" id="sysModalConfirmBtn">[ 确认 ]</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 💥 头像裁剪与上传弹窗 -->
+    <div class="sys-modal-overlay" id="avatarUploadModal" style="z-index: 9999999;">
+        <div class="sys-modal-box" style="max-width: 400px;">
+            <div class="sys-modal-header" id="avatarModalTitle">[ UPLOAD AVATAR // 上传影像数据 ]</div>
+            
+            <div style="margin-bottom: 15px; text-align: center;">
+                <input type="file" id="avatarFileInput" accept="image/*" style="display: none;">
+                <button class="sys-modal-btn confirm" style="width: 100%;" onclick="document.getElementById('avatarFileInput').click()">[ 📁 选择本地图片 ]</button>
+            </div>
+            
+            <!-- 裁剪区域 -->
+            <div id="cropperContainer" style="width: 100%; height: 300px; background: #000; display: none; margin-bottom: 15px; border: 1px solid #12a8ff;">
+                <img id="cropperImage" src="" style="max-width: 100%; display: block;">
+            </div>
+            
+            <div class="sys-modal-actions">
+                <button class="sys-modal-btn cancel" onclick="closeAvatarUploader()">[ 取消 ]</button>
+                <button class="sys-modal-btn confirm" id="btnSaveAvatar" style="display: none;">[ ✂️ 裁剪并上传 ]</button>
             </div>
         </div>
     </div>
@@ -4956,29 +5036,37 @@ textarea:-webkit-autofill:active {
             <div class="forum-main">
                 
                 <!-- 发帖输入区 -->
+                <!-- 发帖输入区 -->
                 <div class="forum-post-box" id="forum-post-box" style="display: none;">
                     
-                    <!-- 💥 新增：发帖人信息与主页按钮 -->
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px dashed rgba(76, 175, 80, 0.4); padding-bottom: 15px;">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <div id="post-box-avatar" style="width: 45px; height: 45px; background: rgba(76, 175, 80, 0.1); border: 2px solid #4caf50; display: flex; justify-content: center; align-items: center; font-family: 'Impact', sans-serif; color: #4caf50; font-size: 22px;">?</div>
-                            <div>
-                                <div id="post-box-name" style="color: #fff; font-weight: bold; font-size: 16px; margin-bottom: 4px;">UNKNOWN</div>
-                                <div style="color: #4caf50; font-family: monospace; font-size: 11px;">[ UPLINK SECURE // 正在编辑全息广播 ]</div>
+                    <div class="post-box-header">
+                        <div class="post-box-user">
+                            <div id="post-box-avatar" class="post-box-avatar-el">?</div>
+                            <div class="post-box-user-text">
+                                <div id="post-box-name" class="post-box-name-el">UNKNOWN</div>
+                                <div class="post-box-subtitle">[ UPLINK SECURE // 正在编辑全息广播 ]</div>
                             </div>
                         </div>
-                        <button id="post-box-profile-btn" class="sys-modal-btn confirm" style="border-color: #4caf50; color: #4caf50; padding: 4px 10px; font-size: 12px;" onclick="openForumProfile(currentUser.id, false)">[ 我的主页 ]</button>
+                        <button id="post-box-profile-btn" class="sys-modal-btn confirm post-box-profile-btn" onclick="openForumProfile(currentUser.id, false)">[ 我的主页 ]</button>
                     </div>
                     
-                    <!-- 💥 核心：加上了 onchange 事件，切换身份时实时更新上面的头像 -->
-                    <select id="forum-author-type" style="background: rgba(0,0,0,0.5); color: #fff; border: 1px solid #4caf50; padding: 8px; font-family: monospace; margin-bottom: 10px; outline: none; width: 100%; border-radius: 4px;" onchange="if(window.updatePostBoxUI) window.updatePostBoxUI()">
+                    <select id="forum-author-type" class="post-box-select" onchange="if(window.updatePostBoxUI) window.updatePostBoxUI()">
                         <option value="public">以 [ 表身份 ] 发言</option>
                         <option value="hidden" id="forum-opt-hidden" style="display:none; color: #e91e63;">以 [ 里身份 ] 发言</option>
                     </select>
+
+                    <!-- 💥 新增：频道管理员专属的公告复选框 -->
+                    <div id="announcement-toggle-wrapper" style="display: none; margin-bottom: 10px; padding: 10px; background: rgba(255,235,59,0.1); border: 1px dashed #ffeb3b; border-radius: 4px;">
+                        <label style="color: #ffeb3b; font-size: 13px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-family: monospace;">
+                            <input type="checkbox" id="is-channel-announcement" style="width: 16px; height: 16px;"> 
+                            ⚠️ 以管理员身份发布频道置顶公告
+                        </label>
+                    </div>
                     
                     <textarea id="new-post-content" class="forum-textarea" placeholder="输入你想广播的内容..."></textarea>
-                    <div style="display: flex; justify-content: flex-end;">
-                        <button class="submit-btn" style="margin: 0; padding: 8px 20px; font-size: 14px; color: #060b14; background: #4caf50; border-color: #4caf50;" onclick="submitForumPost()">[ 发送广播 ]</button>
+                    
+                    <div class="post-box-footer">
+                        <button class="submit-btn post-box-submit-btn" onclick="submitForumPost()">[ 发送广播 ]</button>
                     </div>
                 </div>
 
@@ -5228,6 +5316,16 @@ textarea:-webkit-autofill:active {
                                 <div class="input-wrapper" style="border-color: rgba(255,235,59,0.4);">
                                     <textarea id="a-org-reqs" rows="3" placeholder="例如：&#10;PSC秘书长：需要年龄50+，活跃度高。"></textarea>
                                 </div>
+                            </div>
+
+                            <!-- 4. 频道管理员 -->
+                            <div class="input-group full-width" id="admin-channel-admins-group" style="display: none; margin-bottom: 15px;">
+                                <label style="color: #ffeb3b;">频道管理员 (选填)</label>
+                                <div class="input-wrapper" style="border-color: rgba(255,235,59,0.4);">
+                                    <span class="prefix" style="color: #ffeb3b;">&gt;</span>
+                                    <input type="text" id="a-channel-admins" placeholder="输入终端密钥(OP-XXX)，多个用逗号分隔">
+                                </div>
+                                <div style="font-size: 12px; color: #8bb9d6; margin-top: 5px;">被指定的公民可以在该阵营/组织的专属频道内删帖并发布置顶公告。</div>
                             </div>
 
                             <!-- 富文本编辑器容器 -->
@@ -5860,6 +5958,8 @@ textarea:-webkit-autofill:active {
     <!-- 💥 把富文本编辑器 Quill 的 JS 移动到这里！必须在你的主代码块上方！ -->
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
     <script>
            /* =========================================================
            0. 终端全局弹窗引擎 (SysModal) - 赛博动画升级版
@@ -5876,6 +5976,116 @@ window.getCyberLoaderHTML = function(text = 'UPLINKING...', color = '#12a8ff') {
         </div>
     `;
 };
+
+/* =========================================================
+           💥 头像裁剪与云端上传引擎 💥
+           ========================================================= */
+        let cropperInstance = null;
+        let currentAvatarTarget = ''; // 记录当前在传哪个头像：'profile', 'forum_public', 'forum_hidden'
+
+        window.openAvatarUploader = function(target) {
+            currentAvatarTarget = target;
+            const titleEl = document.getElementById('avatarModalTitle');
+            if (target === 'profile') titleEl.innerText = '[ 更新个人终端证件照 ]';
+            if (target === 'forum_public') titleEl.innerText = '[ 更新论坛表身份头像 ]';
+            if (target === 'forum_hidden') titleEl.innerText = '[ 更新论坛里身份头像 ]';
+
+            document.getElementById('avatarFileInput').value = '';
+            document.getElementById('cropperContainer').style.display = 'none';
+            document.getElementById('btnSaveAvatar').style.display = 'none';
+            if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+            
+            document.getElementById('avatarUploadModal').classList.add('active');
+        };
+
+        window.closeAvatarUploader = function() {
+            document.getElementById('avatarUploadModal').classList.remove('active');
+            if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+        };
+
+        // 监听文件选择
+        document.getElementById('avatarFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const imgEl = document.getElementById('cropperImage');
+                imgEl.src = event.target.result;
+                document.getElementById('cropperContainer').style.display = 'block';
+                document.getElementById('btnSaveAvatar').style.display = 'block';
+
+                if (cropperInstance) cropperInstance.destroy();
+                // 启动裁剪器，强制 1:1 正方形比例
+                cropperInstance = new Cropper(imgEl, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    background: false,
+                    dragMode: 'move'
+                });
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // 点击裁剪并上传
+        document.getElementById('btnSaveAvatar').addEventListener('click', async function() {
+            if (!cropperInstance) return;
+            const btn = this;
+            btn.innerText = '[ 📡 UPLOADING... ]';
+            btn.disabled = true;
+
+            // 1. 获取裁剪后的 Canvas，并压缩为 200x200 的 WebP 格式 (极度省空间)
+            const canvas = cropperInstance.getCroppedCanvas({ width: 200, height: 200 });
+            canvas.toBlob(async (blob) => {
+                try {
+                    const myChar = characterDB.find(c => c.owner_id === currentUser.id);
+                    if (!myChar) throw new Error("未找到公民档案");
+
+                    // 2. 生成唯一文件名并上传到 Supabase Storage
+                    const fileName = `${myChar.id}_${currentAvatarTarget}_${Date.now()}.webp`;
+                    const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                        .from('avatars')
+                        .upload(fileName, blob, { contentType: 'image/webp', upsert: true });
+                    
+                    if (uploadError) throw uploadError;
+
+                    // 3. 获取公开 URL
+                    const { data: publicUrlData } = supabaseClient.storage.from('avatars').getPublicUrl(fileName);
+                    const finalUrl = publicUrlData.publicUrl;
+
+                    // 4. 更新到数据库的对应字段
+                    const updatePayload = {};
+                    if (currentAvatarTarget === 'profile') updatePayload.avatar_url = finalUrl;
+                    if (currentAvatarTarget === 'forum_public') updatePayload.forum_avatar_url = finalUrl;
+                    if (currentAvatarTarget === 'forum_hidden') updatePayload.hidden_avatar_url = finalUrl;
+
+                    const { error: dbError } = await supabaseClient.from('characters').update(updatePayload).eq('id', myChar.id);
+                    if (dbError) throw dbError;
+
+                    // 5. 刷新本地数据与 UI
+                    if (currentAvatarTarget === 'profile') myChar.avatar_url = finalUrl;
+                    if (currentAvatarTarget === 'forum_public') myChar.forum_avatar_url = finalUrl;
+                    if (currentAvatarTarget === 'forum_hidden') myChar.hidden_avatar_url = finalUrl;
+
+                    closeAvatarUploader();
+                    SysModal.alert("影像数据已成功同步至星际网络！", "✅ UPLOAD SUCCESS");
+                    
+                    // 刷新对应界面
+                    if (currentAvatarTarget === 'profile') renderProfile();
+                    else {
+                        openForumProfile(currentUser.id, currentAvatarTarget === 'forum_hidden');
+                        if (window.updatePostBoxUI) window.updatePostBoxUI();
+                        loadForumData(true);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    SysModal.alert("上传失败，请检查网络或存储桶权限。", "✕ ERROR");
+                } finally {
+                    btn.innerText = '[ ✂️ 裁剪并上传 ]';
+                    btn.disabled = false;
+                }
+            }, 'image/webp', 0.8);
+        });
 
 /* =========================================================
            💥 深空多语言随机生成器 (英、日、法、德、俄) 💥
@@ -5896,22 +6106,20 @@ window.getCyberLoaderHTML = function(text = 'UPLINKING...', color = '#12a8ff') {
         };
 
         const SysModal = {
-            closeTimeout: null, // 用于记录关闭动画的定时器
-            
+            closeTimeout: null,
             init() {
                 this.overlay = document.getElementById('sysModalOverlay');
                 this.title = document.getElementById('sysModalTitle');
                 this.msg = document.getElementById('sysModalMsg');
                 this.inputWrapper = document.getElementById('sysModalInputWrapper');
                 this.input = document.getElementById('sysModalInput');
+                this.textarea = document.getElementById('sysModalTextarea'); // 💥 新增
                 this.btnConfirm = document.getElementById('sysModalConfirmBtn');
                 this.btnCancel = document.getElementById('sysModalCancelBtn');
             },
             show(opts) {
                 return new Promise(resolve => {
                     if (!this.overlay) this.init();
-                    
-                    // 💥 如果正在播放关闭动画，立刻打断并恢复显示
                     if (this.closeTimeout) clearTimeout(this.closeTimeout);
                     this.overlay.classList.remove('closing');
                     
@@ -5920,22 +6128,27 @@ window.getCyberLoaderHTML = function(text = 'UPLINKING...', color = '#12a8ff') {
                     
                     if (opts.type === 'prompt') {
                         this.inputWrapper.style.display = 'flex';
-                        this.input.value = opts.defaultText || '';
-                        setTimeout(() => this.input.focus(), 100);
+                        // 💥 核心：根据传入的类型决定显示单行还是多行输入框
+                        if (opts.inputType === 'textarea') {
+                            this.input.parentElement.style.display = 'none';
+                            this.textarea.style.display = 'block';
+                            this.textarea.value = opts.defaultText || '';
+                            setTimeout(() => this.textarea.focus(), 100);
+                        } else {
+                            this.textarea.style.display = 'none';
+                            this.input.parentElement.style.display = 'flex';
+                            this.input.value = opts.defaultText || '';
+                            setTimeout(() => this.input.focus(), 100);
+                        }
                     } else {
                         this.inputWrapper.style.display = 'none';
                     }
 
-                    if (opts.type === 'alert') {
-                        this.btnCancel.style.display = 'none';
-                    } else {
-                        this.btnCancel.style.display = 'block';
-                    }
+                    this.btnCancel.style.display = opts.type === 'alert' ? 'none' : 'block';
 
-                    // 绑定事件
                     this.btnConfirm.onclick = () => {
                         this.close();
-                        if (opts.type === 'prompt') resolve(this.input.value.trim());
+                        if (opts.type === 'prompt') resolve(opts.inputType === 'textarea' ? this.textarea.value.trim() : this.input.value.trim());
                         else if (opts.type === 'confirm') resolve(true);
                         else resolve();
                     };
@@ -5946,25 +6159,18 @@ window.getCyberLoaderHTML = function(text = 'UPLINKING...', color = '#12a8ff') {
                         else if (opts.type === 'confirm') resolve(false);
                     };
 
-                    this.input.onkeydown = (e) => {
-                        if (e.key === 'Enter') this.btnConfirm.click();
-                    };
-
+                    this.input.onkeydown = (e) => { if (e.key === 'Enter') this.btnConfirm.click(); };
                     this.overlay.classList.add('active');
                 });
             },
             close() { 
-                // 💥 核心：先加上 closing 类触发断电动画
                 this.overlay.classList.add('closing');
-                
-                // 等待 300ms 动画播完后，再真正隐藏弹窗
-                this.closeTimeout = setTimeout(() => {
-                    this.overlay.classList.remove('active', 'closing');
-                }, 300); 
+                this.closeTimeout = setTimeout(() => { this.overlay.classList.remove('active', 'closing'); }, 300); 
             },
             alert(msg, title) { return this.show({ type: 'alert', msg, title }); },
             confirm(msg, title) { return this.show({ type: 'confirm', msg, title }); },
-            prompt(msg, defaultText, title) { return this.show({ type: 'prompt', msg, defaultText, title }); }
+            // 💥 核心：prompt 增加 inputType 参数
+            prompt(msg, defaultText, title, inputType = 'text') { return this.show({ type: 'prompt', msg, defaultText, title, inputType }); }
         };
 
         /* =========================================================
@@ -7032,6 +7238,13 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
 
             const avatarLetter = myChar.callsign ? myChar.callsign.charAt(0).toUpperCase() : '?';
 
+            // 💥 渲染真实头像
+            const avatarContent = myChar.avatar_url ? `<img src="${myChar.avatar_url}" style="width:100%; height:100%; object-fit:cover;">` : avatarLetter;
+            
+            // 💥 如果是本人，允许点击修改
+            const avatarClickAttr = myChar.owner_id === currentUser.id ? `onclick="openAvatarUploader('profile')" style="cursor:pointer;" title="点击修改证件照"` : '';
+
+
             let feedbackHtml = '';
             if (myChar.status === 'rejected' && myChar.review_comments) {
                 let listHtml = '';
@@ -7064,12 +7277,11 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
             }
 
             // 💥 状态 2：组装完整的 ID 卡片
-            container.innerHTML = `
+             container.innerHTML = `
                 <div class="profile-card" style="border-color: ${themeColor}; box-shadow: inset 0 0 30px rgba(${rgbColor}, 0.1);">
-                    
                     <div class="profile-avatar-section">
-                        <div class="avatar-placeholder" style="border-color: ${themeColor}; color: ${themeColor}; text-shadow: 0 0 15px ${themeColor};">
-                            ${avatarLetter}
+                        <div class="avatar-placeholder" style="border-color: ${themeColor}; color: ${themeColor}; text-shadow: 0 0 15px ${themeColor}; overflow: hidden;" ${avatarClickAttr}>
+                            ${avatarContent}
                         </div>
                         <div class="profile-status-badge ${statusClass}">${statusText}</div>
                         <div style="font-family: monospace; font-size: 12px; color: #8bb9d6; text-align: center; line-height: 1.6;">
@@ -7245,6 +7457,7 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                 input.style.height = 'auto'; // 恢复默认高度
             }
         };
+
 
         // 💥 显示审核详情与管理员操作面板 (行内批注终极修复版)
         window.showQueueDetail = function(char) {
@@ -8851,6 +9064,12 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                 parentGroup.style.display = 'none';
             }
 
+            if (defaultType === 'faction' || defaultType === 'org') {
+                document.getElementById('admin-channel-admins-group').style.display = 'block'; // 💥 阵营和组织都可以设管理员
+            } else {
+                document.getElementById('admin-channel-admins-group').style.display = 'none';
+            }
+
             let titleText = "[ 📝 新建核心情报 ]";
             if (defaultType === 'faction') titleText = "[ 📝 新建主阵营 ]";
             if (defaultType === 'org') titleText = "[ 📝 新建下属组织 ]";
@@ -8899,8 +9118,10 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
             const summary = document.getElementById('a-summary').value.trim();
             let content = window.quill.root.innerHTML.trim();
 
-            // 💥 拦截并注入职位 JSON (如果处于修改组织状态，先清除老标签防止重复)
-            content = content.replace(/<div data-positions='.*?' style='display:none;'><\/div>/g, '').replace(/<div data-rp-positions='.*?' style='display:none;'><\/div>/g, '');
+            // 💥 新增：获取频道管理员输入框的值
+            const channel_admins = document.getElementById('a-channel-admins') ? document.getElementById('a-channel-admins').value.trim() : '';
+
+            content = content.replace(/<div data-positions='.*?' style='display:none;'><\/div>/g, '').replace(/<div data-rp-positions='.*?' style='display:none;'><\/div>/g, '').replace(/<div data-reqs='.*?' style='display:none;'><\/div>/g, '');
             if (type === 'org') {
                 const posStr = document.getElementById('a-org-positions').value.trim();
                 const posObj = parsePositionsStr(posStr);
@@ -8911,7 +9132,6 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                 if (rpPosStr) {
                     content += `<div data-rp-positions='${rpPosStr}' style='display:none;'></div>`;
                 }
-                // 💥 加上这段保存职位要求
                 const reqsStr = document.getElementById('a-org-reqs').value.trim();
                 if (reqsStr) {
                     const encodedReqs = reqsStr.replace(/\n/g, '&#10;');
@@ -8942,15 +9162,17 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                 const currentTime = new Date().toISOString();
 
                 if (editingArticleId) {
+                    // 💥 核心：把 channel_admins 存入数据库
                     const { error } = await supabaseClient.from('articles').update({
-                        type, title, tag, icon, keywords, summary, content, updated_at: currentTime
+                        type, title, tag, icon, keywords, summary, content, channel_admins, updated_at: currentTime
                     }).eq('id', editingArticleId);
                     if (error) throw error;
                     await SysModal.alert("数据已成功更新！", "更新成功");
                 } else {
+                    // 💥 核心：把 channel_admins 存入数据库
                     const { error } = await supabaseClient.from('articles').insert([{
-                        type, title, tag, icon, keywords, summary, content, updated_at: currentTime,
-                        status: 'approved', owner_id: 'system' // 💥 修复：后台建的组织归属为 system，不再绑在个人名下
+                        type, title, tag, icon, keywords, summary, content, channel_admins, updated_at: currentTime,
+                        status: 'approved', owner_id: 'system'
                     }]);
                     if (error) throw error;
                     await SysModal.alert("数据已成功写入星际网络！", "发布成功");
@@ -9442,6 +9664,15 @@ function renderAdminDashboard() {
                 }
             }
 
+            // 💥 加上这段回显频道管理员
+                if (article.type === 'faction' || article.type === 'org') {
+                    document.getElementById('admin-channel-admins-group').style.display = 'block';
+                    document.getElementById('a-channel-admins').value = article.channel_admins || '';
+                } else {
+                    document.getElementById('admin-channel-admins-group').style.display = 'none';
+                    document.getElementById('a-channel-admins').value = '';
+                }
+
             editingArticleId = article.id;
 
             const safeSet = (elId, val) => {
@@ -9635,6 +9866,14 @@ function renderAdminDashboard() {
                     if (myChar.hidden_org && myChar.hidden_org !== '无归属 / 独狼') channels.push(`ORG_${myChar.hidden_org}`);
                 }
             }
+            // 💥 新增：把我管理的频道也加进去
+            articlesDB.forEach(a => {
+                if ((a.type === 'faction' || a.type === 'org') && a.channel_admins && a.channel_admins.includes(currentUser.id)) {
+                    const prefix = a.type === 'faction' ? 'FACTION_' : 'ORG_';
+                    const chanName = prefix + a.title;
+                    if (!channels.includes(chanName)) channels.push(chanName);
+                }
+            });
             return channels;
         };
 
@@ -9684,8 +9923,8 @@ function renderAdminDashboard() {
             }
         };
 
-        // 4. 打开个人主页弹窗
-        window.openForumProfile = function(targetOwnerId, viewAsHidden) {
+        // 4. 打开个人主页弹窗 (升级为异步云端跨频段拉取)
+        window.openForumProfile = async function(targetOwnerId, viewAsHidden) {
             const targetChar = characterDB.find(c => c.owner_id === targetOwnerId);
             if (!targetChar) { SysModal.alert("无法获取该用户的档案信息。"); return; }
             
@@ -9703,6 +9942,22 @@ function renderAdminDashboard() {
             const officialName = viewAsHidden ? targetChar.hidden_callsign : targetChar.callsign;
             const faction = viewAsHidden ? targetChar.hidden_faction : targetChar.faction;
             const avatarLetter = displayName.charAt(0).toUpperCase();
+
+            // 💥 渲染真实头像
+            const avatarUrl = viewAsHidden ? targetChar.hidden_avatar_url : targetChar.forum_avatar_url;
+            const avatarContent = avatarUrl ? `<img src="${avatarUrl}" style="width:100%; height:100%; object-fit:cover;">` : avatarLetter;
+            
+            // 💥 如果是本人，允许点击修改
+            const avatarClickAttr = isMe ? `onclick="openAvatarUploader('${viewAsHidden ? 'forum_hidden' : 'forum_public'}')" style="cursor:pointer;" title="点击修改论坛头像"` : '';
+
+            document.getElementById('fp-avatar').innerHTML = avatarContent;
+            if (isMe) {
+                document.getElementById('fp-avatar').setAttribute('onclick', `openAvatarUploader('${viewAsHidden ? 'forum_hidden' : 'forum_public'}')`);
+                document.getElementById('fp-avatar').style.cursor = 'pointer';
+            } else {
+                document.getElementById('fp-avatar').removeAttribute('onclick');
+                document.getElementById('fp-avatar').style.cursor = 'default';
+            }
             
             let editBtnHtml = '';
             if (isMe) {
@@ -9714,178 +9969,286 @@ function renderAdminDashboard() {
             document.getElementById('fp-name').innerHTML = `${displayName} ${editBtnHtml}`;
             document.getElementById('fp-desc').innerText = `官方代号: ${officialName} | 阵营: ${faction}`;
 
-            // 💥 核心：过滤帖子 (只看同频道的，且区分表里身份)
-            const myChannels = getMyAccessibleChannels();
-            const targetPosts = forumPostsDB.filter(p => {
-                if (p.owner_id !== targetOwnerId) return false;
-                // 严格区分表里身份的帖子，防止身份泄露！
-                if (viewAsHidden && p.author_type !== 'hidden') return false;
-                if (!viewAsHidden && p.author_type === 'hidden') return false;
-                // 权限过滤
-                if (myChannels === 'ALL') return true;
-                return myChannels.includes(p.channel);
-            });
-
-            // 渲染帖子流
-            if (targetPosts.length === 0) {
-                feed.innerHTML = `<div style="color:#666; text-align:center; margin-top: 20px; font-family:monospace;">[ 该身份在您可访问的频道内暂无广播记录 ]</div>`;
-            } else {
-                feed.innerHTML = targetPosts.map(post => {
-                    const timeStr = new Date(post.created_at).toLocaleString();
-                    const borderColor = viewAsHidden ? 'rgba(233,30,99,0.3)' : 'rgba(18,168,255,0.3)';
-                    const titleColor = viewAsHidden ? '#ff80ab' : '#12a8ff';
-                    
-                    // 帖子里的名字也要遵循频道规则
-                    const postName = getForumDisplayName(targetChar, post.channel, viewAsHidden);
-
-                    return `
-                        <div style="background: rgba(0,0,0,0.5); border: 1px solid ${borderColor}; padding: 15px; border-radius: 4px;">
-                            <div style="display:flex; justify-content:space-between; margin-bottom: 10px; border-bottom: 1px dashed ${borderColor}; padding-bottom: 5px;">
-                                <span style="color: ${titleColor}; font-weight: bold; font-size: 14px;">${postName}</span>
-                                <span style="color: #666; font-family: monospace; font-size: 11px;">${timeStr} | ${post.channel}</span>
-                            </div>
-                            <div style="color: #fff; font-size: 13px; line-height: 1.6; word-break: break-word;">
-                                ${formatContentWithCollapse(post.content, true, 'profile-post-' + post.id)}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-
+            // 💥 核心 1：先弹出窗口，并显示科幻加载动画
+            feed.innerHTML = window.getCyberLoaderHTML('正在跨频段检索通讯记录...', viewAsHidden ? '#e91e63' : '#12a8ff');
             modal.classList.add('active');
+
+            // 💥 核心 2：直接向云端数据库发起跨频道查询
+            try {
+                const myChannels = getMyAccessibleChannels();
+                let query = supabaseClient
+                    .from('forum_posts')
+                    .select('*')
+                    .eq('owner_id', targetOwnerId)
+                    .eq('author_type', viewAsHidden ? 'hidden' : 'public')
+                    .order('created_at', { ascending: false });
+
+                // 权限与上下文过滤
+                if (currentForumChannel.startsWith('ORG_')) {
+                    query = query.eq('channel', currentForumChannel); // 如果在工作频道看主页，只拉取工作频道的帖
+                } else if (myChannels !== 'ALL') {
+                    query = query.in('channel', myChannels); // 否则，拉取所有我有权限看的频道的帖
+                }
+
+                const { data: targetPosts, error } = await query;
+                if (error) throw error;
+
+                // 渲染帖子流
+                if (!targetPosts || targetPosts.length === 0) {
+                    feed.innerHTML = `<div style="color:#666; text-align:center; margin-top: 20px; font-family:monospace;">[ 该身份在您可访问的频道内暂无广播记录 ]</div>`;
+                } else {
+                    feed.innerHTML = targetPosts.map(post => {
+                        const timeStr = new Date(post.created_at).toLocaleString();
+                        const borderColor = viewAsHidden ? 'rgba(233,30,99,0.3)' : 'rgba(18,168,255,0.3)';
+                        const titleColor = viewAsHidden ? '#ff80ab' : '#12a8ff';
+                        
+                        const postName = getForumDisplayName(targetChar, post.channel, viewAsHidden);
+
+                        let channelBadge = '';
+                        if (post.channel === 'GLOBAL') {
+                            channelBadge = '<span style="color:#12a8ff; border:1px solid #12a8ff; background:rgba(18,168,255,0.1); padding:2px 6px; border-radius:2px; font-size:10px; margin-left:8px; white-space:nowrap;">📢 全频段</span>';
+                        } else if (post.channel === 'ANNOUNCEMENT') {
+                            channelBadge = '<span style="color:#ffeb3b; border:1px solid #ffeb3b; background:rgba(255,235,59,0.1); padding:2px 6px; border-radius:2px; font-size:10px; margin-left:8px; white-space:nowrap;">⚠️ 公告</span>';
+                        } else if (post.channel.startsWith('FACTION_')) {
+                            channelBadge = `<span style="color:#12a8ff; border:1px solid #12a8ff; background:rgba(18,168,255,0.1); padding:2px 6px; border-radius:2px; font-size:10px; margin-left:8px; white-space:nowrap;">🛡️ ${post.channel.replace('FACTION_', '')}</span>`;
+                        } else if (post.channel.startsWith('ORG_')) {
+                            channelBadge = `<span style="color:#8bc34a; border:1px solid #8bc34a; background:rgba(139,195,74,0.1); padding:2px 6px; border-radius:2px; font-size:10px; margin-left:8px; white-space:nowrap;">🏢 ${post.channel.replace('ORG_', '')}</span>`;
+                        }
+
+                        return `
+                            <div style="background: rgba(0,0,0,0.5); border: 1px solid ${borderColor}; padding: 15px; border-radius: 4px;">
+                                <div style="display:flex; justify-content:space-between; margin-bottom: 10px; border-bottom: 1px dashed ${borderColor}; padding-bottom: 5px; align-items: flex-start; gap: 10px;">
+                                    <div style="display:flex; align-items:center; flex-wrap: wrap; gap: 4px;">
+                                        <span style="color: ${titleColor}; font-weight: bold; font-size: 14px;">${postName}</span>
+                                        ${channelBadge}
+                                    </div>
+                                    <span style="color: #666; font-family: monospace; font-size: 11px; white-space: nowrap;">${timeStr}</span>
+                                </div>
+                                <div style="color: #fff; font-size: 13px; line-height: 1.6; word-break: break-word;">
+                                    ${formatContentWithCollapse(post.content, true, 'profile-post-' + post.id)}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } catch (err) {
+                console.error(err);
+                feed.innerHTML = `<div style="color:#f44336; text-align:center; margin-top: 20px; font-family:monospace;">[ ✕ 跨频段检索失败，请检查网络 ]</div>`;
+            }
         };
 
         window.closeForumProfile = function() {
             document.getElementById('forumProfileModal').classList.remove('active');
         };
 
-// 1. 初始化论坛 (每次进入论坛时调用)
-window.initForum = async function() {
-    const channelBox = document.getElementById('forum-channels');
-    const postBox = document.getElementById('forum-post-box');
-    const authorTypeSelect = document.getElementById('forum-author-type'); // 获取发帖身份下拉框
-    
-    // 获取当前用户的人设档案（用来判断身份）
-    let myChar = null;
-    if (currentUser && currentUser.role !== 'guest') {
-        myChar = characterDB.find(c => c.owner_id === currentUser.id);
-    }
-
-    // 渲染左侧频道
-    let channelsHtml = `
-        <button class="channel-btn ${currentForumChannel === 'GLOBAL' ? 'active' : ''}" onclick="switchForumChannel('GLOBAL')">📢 全频段广播</button>
-        <button class="channel-btn ${currentForumChannel === 'ANNOUNCEMENT' ? 'active' : ''}" onclick="switchForumChannel('ANNOUNCEMENT')" style="color: #ffeb3b;">⚠️ 全频道公告</button>
-    `;
-
-    // 解锁表身份的【阵营加密频道】
-    if (myChar && myChar.faction) {
-        const factionChan = `FACTION_${myChar.faction}`;
-        channelsHtml += `
-            <button class="channel-btn ${currentForumChannel === factionChan ? 'active' : ''}" onclick="switchForumChannel('${factionChan}')" style="color: #12a8ff;">🛡️ ${myChar.faction} 内部频段</button>
-        `;
-    }
-    
-    // 💥 修复：如果启用了里身份，解锁里身份的【暗网加密频道】！
-    if (myChar && myChar.has_hidden && myChar.hidden_faction) {
-        const hiddenFactionChan = `FACTION_${myChar.hidden_faction}`;
-        // 防止表里阵营一样导致重复生成按钮
-        if (hiddenFactionChan !== `FACTION_${myChar.faction}`) {
-            channelsHtml += `
-                <button class="channel-btn ${currentForumChannel === hiddenFactionChan ? 'active' : ''}" onclick="switchForumChannel('${hiddenFactionChan}')" style="color: #e91e63;">🥷 ${myChar.hidden_faction} 暗网频段</button>
-            `;
-        }
-    }
-
-    // 💥 新增：解锁表身份的【组织工作频道】
-    if (myChar && myChar.organization && myChar.organization !== '无归属 / 独狼') {
-        const orgChan = `ORG_${myChar.organization}`;
-        channelsHtml += `
-            <button class="channel-btn ${currentForumChannel === orgChan ? 'active' : ''}" onclick="switchForumChannel('${orgChan}')" style="color: #8bc34a;">🏢 ${myChar.organization} 工作频段</button>
-        `;
-    }
-    
-    // 💥 新增：解锁里身份的【暗网组织工作频道】
-    if (myChar && myChar.has_hidden && myChar.hidden_org && myChar.hidden_org !== '无归属 / 独狼') {
-        const hOrgChan = `ORG_${myChar.hidden_org}`;
-        if (hOrgChan !== `ORG_${myChar.organization}`) {
-            channelsHtml += `
-                <button class="channel-btn ${currentForumChannel === hOrgChan ? 'active' : ''}" onclick="switchForumChannel('${hOrgChan}')" style="color: #e91e63;">🥷 ${myChar.hidden_org} 暗网工作频段</button>
-            `;
-        }
-    }
-
-    // 💥 新增：如果是管理员，直接遍历所有存在的阵营，把所有内部频道都显示出来，方便监视
-    if (currentUser && ['admin', 'super_admin'].includes(currentUser.role)) {
-        const allFactions = articlesDB.filter(a => a.type === 'faction').map(a => a.title);
-        allFactions.forEach(f => {
-            const fChan = `FACTION_${f}`;
-            // 避免和上面自己所属的阵营按钮重复
-            if ((!myChar || myChar.faction !== f) && (!myChar || !myChar.has_hidden || myChar.hidden_faction !== f)) {
-                channelsHtml += `
-                    <button class="channel-btn ${currentForumChannel === fChan ? 'active' : ''}" onclick="switchForumChannel('${fChan}')" style="color: #8bb9d6; opacity: 0.8;">👁️ [监听] ${f} 频段</button>
-                `;
+// 1. 初始化论坛
+        window.initForum = async function() {
+            const channelBox = document.getElementById('forum-channels');
+            const postBox = document.getElementById('forum-post-box');
+            const authorTypeSelect = document.getElementById('forum-author-type');
+            
+            let myChar = null;
+            if (currentUser && currentUser.role !== 'guest') {
+                myChar = characterDB.find(c => c.owner_id === currentUser.id);
             }
-        });
-    }
-    
-    channelBox.innerHTML = channelsHtml;
 
-    // 💥 修复：动态重构发帖身份下拉框，彻底解决无法选择里身份的问题
-    if (authorTypeSelect) {
-        let optionsHtml = `<option value="public">以 [ 表身份 ] 发言</option>`;
-        if (myChar && myChar.has_hidden) {
-            optionsHtml += `<option value="hidden" style="color: #e91e63;">以 [ 里身份 ] 发言</option>`;
-        }
-        authorTypeSelect.innerHTML = optionsHtml;
-    }
+            let channelsHtml = `
+                <button class="channel-btn ${currentForumChannel === 'GLOBAL' ? 'active' : ''}" onclick="switchForumChannel('GLOBAL')">📢 全频段广播</button>
+                <button class="channel-btn ${currentForumChannel === 'ANNOUNCEMENT' ? 'active' : ''}" onclick="switchForumChannel('ANNOUNCEMENT')" style="color: #ffeb3b;">⚠️ 全频道公告</button>
+            `;
 
-    // 💥 核心修复：判断发帖框是否显示 (兼容 super_admin)
-    const isAdmin = currentUser && ['admin', 'super_admin'].includes(currentUser.role);
-    
-    if (!myChar && !isAdmin) {
-        postBox.style.display = 'none';
-    } else {
-        if (currentForumChannel === 'ANNOUNCEMENT' && !isAdmin) {
-            postBox.style.display = 'none'; // 只有管理员能发公告
-        } else {
-            postBox.style.display = 'block';
-        }
-    }
+            if (myChar && myChar.faction) {
+                const factionChan = `FACTION_${myChar.faction}`;
+                channelsHtml += `<button class="channel-btn ${currentForumChannel === factionChan ? 'active' : ''}" onclick="switchForumChannel('${factionChan}')" style="color: #12a8ff;">🛡️ ${myChar.faction} 内部频段</button>`;
+            }
+            if (myChar && myChar.has_hidden && myChar.hidden_faction) {
+                const hiddenFactionChan = `FACTION_${myChar.hidden_faction}`;
+                if (hiddenFactionChan !== `FACTION_${myChar.faction}`) {
+                    channelsHtml += `<button class="channel-btn ${currentForumChannel === hiddenFactionChan ? 'active' : ''}" onclick="switchForumChannel('${hiddenFactionChan}')" style="color: #e91e63;">🥷 ${myChar.hidden_faction} 暗网频段</button>`;
+                }
+            }
+            if (myChar && myChar.organization && myChar.organization !== '无归属 / 独狼') {
+                const orgChan = `ORG_${myChar.organization}`;
+                channelsHtml += `<button class="channel-btn ${currentForumChannel === orgChan ? 'active' : ''}" onclick="switchForumChannel('${orgChan}')" style="color: #8bc34a;">🏢 ${myChar.organization} 工作频段</button>`;
+            }
+            if (myChar && myChar.has_hidden && myChar.hidden_org && myChar.hidden_org !== '无归属 / 独狼') {
+                const hOrgChan = `ORG_${myChar.hidden_org}`;
+                if (hOrgChan !== `ORG_${myChar.organization}`) {
+                    channelsHtml += `<button class="channel-btn ${currentForumChannel === hOrgChan ? 'active' : ''}" onclick="switchForumChannel('${hOrgChan}')" style="color: #e91e63;">🥷 ${myChar.hidden_org} 暗网工作频段</button>`;
+                }
+            }
 
-    await loadForumData();
-    // 💥 新增：动态更新发帖框的头像和名字
-    window.updatePostBoxUI = function() {
-        if (!myChar) return;
-        const typeSelect = document.getElementById('forum-author-type');
-        const isHidden = typeSelect ? typeSelect.value === 'hidden' : false;
-        
-        const displayName = getForumDisplayName(myChar, currentForumChannel, isHidden);
-        const avatarLetter = displayName.charAt(0).toUpperCase();
-        
-        const avatarEl = document.getElementById('post-box-avatar');
-        const nameEl = document.getElementById('post-box-name');
-        const profileBtn = document.getElementById('post-box-profile-btn');
-        
-        if (avatarEl) {
-            avatarEl.innerText = avatarLetter;
-            avatarEl.style.borderColor = isHidden ? '#e91e63' : '#4caf50';
-            avatarEl.style.color = isHidden ? '#e91e63' : '#4caf50';
-            avatarEl.style.background = isHidden ? 'rgba(233, 30, 99, 0.1)' : 'rgba(76, 175, 80, 0.1)';
-        }
-        if (nameEl) {
-            nameEl.innerText = displayName;
-            nameEl.style.color = isHidden ? '#ff80ab' : '#fff';
-        }
-        if (profileBtn) {
-            profileBtn.onclick = () => openForumProfile(currentUser.id, isHidden);
-            profileBtn.style.borderColor = isHidden ? '#e91e63' : '#4caf50';
-            profileBtn.style.color = isHidden ? '#e91e63' : '#4caf50';
-        }
-    };
-    
-    // 初始化调用一次
-    window.updatePostBoxUI();
-};
+            const isGlobalAdmin = currentUser && ['admin', 'super_admin'].includes(currentUser.role);
+
+            if (isGlobalAdmin) {
+                const allFactions = articlesDB.filter(a => a.type === 'faction').map(a => a.title);
+                allFactions.forEach(f => {
+                    const fChan = `FACTION_${f}`;
+                    if ((!myChar || myChar.faction !== f) && (!myChar || !myChar.has_hidden || myChar.hidden_faction !== f)) {
+                        channelsHtml += `<button class="channel-btn ${currentForumChannel === fChan ? 'active' : ''}" onclick="switchForumChannel('${fChan}')" style="color: #8bb9d6; opacity: 0.8;">👁️ [监听] ${f} 频段</button>`;
+                    }
+                });
+            }
+
+            articlesDB.forEach(a => {
+                if ((a.type === 'faction' || a.type === 'org') && a.channel_admins && a.channel_admins.includes(currentUser.id)) {
+                    const prefix = a.type === 'faction' ? 'FACTION_' : 'ORG_';
+                    const chanName = prefix + a.title;
+                    const label = a.type === 'faction' ? '内部频段' : '工作频段';
+                    if (!channelsHtml.includes(`switchForumChannel('${chanName}')`)) {
+                        channelsHtml += `<button class="channel-btn ${currentForumChannel === chanName ? 'active' : ''}" onclick="switchForumChannel('${chanName}')" style="color: #ffeb3b; border-color: #ffeb3b;">👑 [管理] ${a.title} ${label}</button>`;
+                    }
+                }
+            });
+            
+            channelBox.innerHTML = channelsHtml;
+
+            let isChannelAdmin = false;
+            if (currentForumChannel.startsWith('FACTION_')) {
+                const name = currentForumChannel.replace('FACTION_', '');
+                const article = articlesDB.find(a => a.type === 'faction' && a.title === name);
+                if (article && article.channel_admins && article.channel_admins.includes(currentUser.id)) isChannelAdmin = true;
+            } else if (currentForumChannel.startsWith('ORG_')) {
+                const name = currentForumChannel.replace('ORG_', '');
+                const article = articlesDB.find(a => a.type === 'org' && a.title === name);
+                if (article && article.channel_admins && article.channel_admins.includes(currentUser.id)) isChannelAdmin = true;
+            }
+
+            const canManage = isGlobalAdmin || isChannelAdmin;
+
+            let isListeningMode = false;
+            if (isGlobalAdmin) {
+                if (currentForumChannel.startsWith('FACTION_')) {
+                    const targetFaction = currentForumChannel.replace('FACTION_', '');
+                    isListeningMode = !(myChar && (myChar.faction === targetFaction || (myChar.has_hidden && myChar.hidden_faction === targetFaction)));
+                } else if (currentForumChannel.startsWith('ORG_')) {
+                    const targetOrg = currentForumChannel.replace('ORG_', '');
+                    isListeningMode = !(myChar && (myChar.organization === targetOrg || (myChar.has_hidden && myChar.hidden_org === targetOrg)));
+                }
+            }
+
+            // 💥 动态重构发帖身份下拉框 (加入双重公告选项)
+            if (authorTypeSelect) {
+                let optionsHtml = '';
+                
+                // 如果不是监听模式，且有档案，才能用个人身份发帖
+                if (!isListeningMode && myChar) {
+                    optionsHtml += `<option value="public">以 [ 表身份 ] 发言</option>`;
+                    if (myChar.has_hidden) {
+                        optionsHtml += `<option value="hidden" style="color: #e91e63;">以 [ 里身份 ] 发言</option>`;
+                    }
+                }
+                
+                // 网站管理员永远可以以系统总控身份发言
+                if (isGlobalAdmin) {
+                    optionsHtml += `<option value="admin" style="color: #f44336;">以 [ 系统总控 ] 发言</option>`;
+                }
+
+                // 如果有管理权限，且不是全局/公告频道，加入发公告选项
+                if (canManage && currentForumChannel !== 'GLOBAL' && currentForumChannel !== 'ANNOUNCEMENT') {
+                    if (!isListeningMode && myChar) {
+                        optionsHtml += `<option value="announcement_public" style="color: #ffeb3b;">⚠️ 以 [ 个人身份 ] 发布置顶公告</option>`;
+                    }
+                    if (isGlobalAdmin) {
+                        optionsHtml += `<option value="announcement_admin" style="color: #ffeb3b;">⚠️ 以 [ 系统总控 ] 发布置顶公告</option>`;
+                    }
+                }
+                authorTypeSelect.innerHTML = optionsHtml;
+            }
+
+            // 💥 判断发帖框是否显示 (管理员在监听模式下也能发帖了！)
+            if (!myChar && !isGlobalAdmin) {
+                postBox.style.display = 'none';
+            } else if (isListeningMode && !isGlobalAdmin) {
+                postBox.style.display = 'none'; 
+            } else {
+                if (currentForumChannel === 'ANNOUNCEMENT' && !isGlobalAdmin) {
+                    postBox.style.display = 'none'; 
+                } else {
+                    postBox.style.display = 'block';
+                }
+            }
+
+            if (window.updatePostBoxUI) window.updatePostBoxUI();
+            await loadForumData();
+        };
+
+        // 💥 动态更新发帖框的头像、名字和颜色
+        window.updatePostBoxUI = function() {
+            const myChar = characterDB.find(c => c.owner_id === currentUser.id);
+            const isGlobalAdmin = currentUser && ['admin', 'super_admin'].includes(currentUser.role);
+            
+            if (!myChar && !isGlobalAdmin) return;
+
+            const typeSelect = document.getElementById('forum-author-type');
+            const selectedType = typeSelect ? typeSelect.value : 'public';
+            
+            const isHidden = selectedType === 'hidden';
+            const isAnnPublic = selectedType === 'announcement_public';
+            const isAnnAdmin = selectedType === 'announcement_admin';
+            const isAdminNoChar = selectedType === 'admin' || isAnnAdmin;
+            
+            let displayName = "UNKNOWN";
+            if (isAdminNoChar) {
+                displayName = "系统总控";
+            } else if (myChar) {
+                displayName = getForumDisplayName(myChar, currentForumChannel, isHidden);
+            }
+            
+            const avatarLetter = isAdminNoChar ? '⚙️' : displayName.charAt(0).toUpperCase();
+
+            const avatarUrl = isHidden ? myChar.hidden_avatar_url : myChar.forum_avatar_url;
+        const avatarContent = (avatarUrl && !isAdminNoChar) ? `<img src="${avatarUrl}" style="width:100%; height:100%; object-fit:cover;">` : avatarLetter;
+            
+            const avatarEl = document.getElementById('post-box-avatar');
+            const nameEl = document.getElementById('post-box-name');
+            const profileBtn = document.getElementById('post-box-profile-btn');
+            const subtitleEl = document.querySelector('.post-box-subtitle');
+            
+            let themeColor = '#4caf50'; 
+            let bgColor = 'rgba(76, 175, 80, 0.1)';
+            let subtitleText = '[ UPLINK SECURE // 正在编辑全息广播 ]';
+
+            if (isHidden) {
+                themeColor = '#e91e63'; 
+                bgColor = 'rgba(233, 30, 99, 0.1)';
+                subtitleText = '[ ENCRYPTED // 正在编辑暗网广播 ]';
+            } else if (isAnnPublic || isAnnAdmin) {
+                themeColor = '#ffeb3b'; 
+                bgColor = 'rgba(255, 235, 59, 0.1)';
+                subtitleText = '[ OVERRIDE // 正在编辑置顶公告 ]';
+            } else if (isAdminNoChar) {
+                themeColor = '#f44336'; 
+                bgColor = 'rgba(244, 67, 54, 0.1)';
+                subtitleText = '[ SYS_ADMIN // 系统总控广播 ]';
+            }
+            
+            if (avatarEl) {
+                avatarEl.innerHTML = avatarContent;
+                avatarEl.style.overflow = 'hidden'; // 确保图片不超出圆角
+                avatarEl.style.borderColor = themeColor;
+                avatarEl.style.color = themeColor;
+                avatarEl.style.background = bgColor;
+            }
+            if (nameEl) {
+                nameEl.innerText = displayName;
+                nameEl.style.color = isHidden ? '#ff80ab' : '#fff';
+            }
+            if (subtitleEl) {
+                subtitleEl.innerText = subtitleText;
+                subtitleEl.style.color = themeColor;
+            }
+            if (profileBtn) {
+                if (isAdminNoChar) {
+                    profileBtn.style.display = 'none'; 
+                } else {
+                    profileBtn.style.display = 'block';
+                    profileBtn.onclick = () => openForumProfile(currentUser.id, isHidden);
+                    profileBtn.style.borderColor = themeColor;
+                    profileBtn.style.color = themeColor;
+                }
+            }
+        };
 
 // 2. 切换频道
         window.switchForumChannel = function(channel) {
@@ -9928,6 +10291,12 @@ window.initForum = async function() {
                 }
 
                 forumPostsDB = posts;
+                // 💥 核心：在前端进行排序，让频道公告永远置顶！
+                forumPostsDB.sort((a, b) => {
+                    if (a.is_announcement && !b.is_announcement) return -1;
+                    if (!a.is_announcement && b.is_announcement) return 1;
+                    return new Date(b.created_at) - new Date(a.created_at);
+                });
                 forumCommentsDB = comments;
                 
                 renderForumFeed();
@@ -9997,180 +10366,280 @@ window.formatMentions = function(text) {
         };
 
 // 4. 渲染帖子流 (全面增强版)
-window.renderForumFeed = function() {
-    const feed = document.getElementById('forum-feed');
-    feed.innerHTML = '';
+        window.renderForumFeed = function() {
+            const feed = document.getElementById('forum-feed');
+            feed.innerHTML = '';
 
-    let myChar = null;
-    if (currentUser && currentUser.role !== 'guest') {
-        myChar = characterDB.find(c => c.owner_id === currentUser.id);
-    }
+            let myChar = null;
+            if (currentUser && currentUser.role !== 'guest') {
+                myChar = characterDB.find(c => c.owner_id === currentUser.id);
+            }
 
-    if (currentForumChannel.startsWith('FACTION_') && ['admin', 'super_admin'].includes(currentUser?.role)) {
-        const targetFaction = currentForumChannel.replace('FACTION_', '');
-        const isMyFaction = myChar && (myChar.faction === targetFaction || (myChar.has_hidden && myChar.hidden_faction === targetFaction));
-        if (!isMyFaction) {
-            feed.innerHTML += `
-                <div class="system-notice" style="border-color: #f44336; background: rgba(244,67,54,0.1); margin-bottom: 20px;">
-                    <div style="color: #f44336; font-weight: bold; font-family: monospace;">[ 管理员监听模式 ]</div>
-                    <div style="color: #ffb4a9; font-size: 13px; margin-top: 5px;">您正在以管理员最高权限监听【${targetFaction}】的内部加密通讯。</div>
-                </div>
-            `;
-        }
-    }
+            const isGlobalAdmin = currentUser && ['admin', 'super_admin'].includes(currentUser.role);
+            let isChannelAdmin = false;
+            
+            if (currentForumChannel.startsWith('FACTION_')) {
+                const targetFaction = currentForumChannel.replace('FACTION_', '');
+                const article = articlesDB.find(a => a.type === 'faction' && a.title === targetFaction);
+                if (article && article.channel_admins && article.channel_admins.includes(currentUser.id)) isChannelAdmin = true;
+            } else if (currentForumChannel.startsWith('ORG_')) {
+                const targetOrg = currentForumChannel.replace('ORG_', '');
+                const article = articlesDB.find(a => a.type === 'org' && a.title === targetOrg);
+                if (article && article.channel_admins && article.channel_admins.includes(currentUser.id)) isChannelAdmin = true;
+            }
 
-    if (forumPostsDB.length === 0) {
-        feed.innerHTML = '<div style="color:#8bb9d6; font-family:monospace;">[ 当前频段暂无通讯记录 ]</div>';
-        return;
-    }
+            const canManage = isGlobalAdmin || isChannelAdmin;
 
-    forumPostsDB.forEach(post => {
-        const authorChar = characterDB.find(c => c.owner_id === post.owner_id);
-        let callsign = authorChar ? authorChar.callsign : (post.owner_id === 'admin' ? '系统总控' : 'UNKNOWN');
-        let factionTag = authorChar ? authorChar.faction : (post.owner_id === 'admin' ? 'SYS_ADMIN' : 'LOST_SIGNAL');
-        
-        let cardClass = 'post-card';
-        if (post.channel === 'ANNOUNCEMENT') cardClass += ' announcement';
-        else if (post.channel.startsWith('FACTION_')) cardClass += ' faction';
-        else if (post.channel.startsWith('ORG_')) cardClass += ' org'; // 顺手加个 org 的类名
+            // 💥 补回丢失的 isListeningMode 定义
+            let isListeningMode = false;
+            if (isGlobalAdmin) {
+                if (currentForumChannel.startsWith('FACTION_')) {
+                    const targetFaction = currentForumChannel.replace('FACTION_', '');
+                    isListeningMode = !(myChar && (myChar.faction === targetFaction || (myChar.has_hidden && myChar.hidden_faction === targetFaction)));
+                } else if (currentForumChannel.startsWith('ORG_')) {
+                    const targetOrg = currentForumChannel.replace('ORG_', '');
+                    isListeningMode = !(myChar && (myChar.organization === targetOrg || (myChar.has_hidden && myChar.hidden_org === targetOrg)));
+                }
+            }
 
-        let isHiddenPost = false;
-        if (post.author_type === 'hidden' && authorChar && authorChar.has_hidden) {
-            isHiddenPost = true;
-            factionTag = authorChar.hidden_faction;
-        }
-        
-        // 💥 使用智能名字渲染器
-        callsign = getForumDisplayName(authorChar, post.channel, isHiddenPost);
-        if (post.owner_id === 'admin') callsign = '系统总控';
-        
-        const avatarLetter = callsign.charAt(0).toUpperCase();
+            // 渲染管理横幅
+            if (isGlobalAdmin && !isChannelAdmin && currentForumChannel !== 'GLOBAL' && currentForumChannel !== 'ANNOUNCEMENT') {
+                feed.innerHTML += `
+                    <div class="system-notice" style="border-color: #f44336; background: rgba(244,67,54,0.1); margin-bottom: 20px;">
+                        <div style="color: #f44336; font-weight: bold; font-family: monospace;">[ 最高权限介入 ]</div>
+                        <div style="color: #ffb4a9; font-size: 13px; margin-top: 5px;">您正在以网站管理员权限介入此频段。您可以删帖或发布置顶公告。</div>
+                    </div>
+                `;
+            } else if (isChannelAdmin) {
+                feed.innerHTML += `
+                    <div class="system-notice" style="border-color: #ffeb3b; background: rgba(255,235,59,0.1); margin-bottom: 20px;">
+                        <div style="color: #ffeb3b; font-weight: bold; font-family: monospace;">[ 频道管理员模式 ]</div>
+                        <div style="color: #fff8b0; font-size: 13px; margin-top: 5px;">您是当前频道的管理员，拥有删帖与发布置顶公告的权限。</div>
+                    </div>
+                `;
+            }
 
-        const timeObj = new Date(post.created_at);
-        const timeStr = `${timeObj.getFullYear()}-${String(timeObj.getMonth()+1).padStart(2,'0')}-${String(timeObj.getDate()).padStart(2,'0')} ${String(timeObj.getHours()).padStart(2,'0')}:${String(timeObj.getMinutes()).padStart(2,'0')}`;
+            if (forumPostsDB.length === 0) {
+                feed.innerHTML += '<div style="color:#8bb9d6; font-family:monospace;">[ 当前频段暂无通讯记录 ]</div>';
+                return;
+            }
 
-        // 💥 评论区增强：里身份渲染、回复按钮、删除按钮与【智能折叠系统】
-        const postComments = forumCommentsDB.filter(c => c.post_id === post.id);
-        let commentsHtml = '';
-        
-        if (postComments.length > 0) {
-            // 提取单个评论的渲染逻辑为一个内部函数，方便复用
-            const renderSingleComment = (c) => {
-                const cAuthor = characterDB.find(char => char.owner_id === c.owner_id);
-                let isHidden = c.author_type === 'hidden' && cAuthor && cAuthor.has_hidden;
-                let cName = getForumDisplayName(cAuthor, post.channel, isHidden);
-
-                let nameStyle = 'color: #12a8ff; font-weight: bold;';
-
-                let cDeleteBtn = (['admin', 'super_admin'].includes(currentUser?.role) || c.owner_id === currentUser?.id)
-                    ? `<span style="color:#f44336; cursor:pointer; font-size:12px; margin-left:8px;" onclick="deleteForumComment('${c.id}')">[删]</span>` : '';
+            forumPostsDB.forEach(post => {
+                const authorChar = characterDB.find(c => c.owner_id === post.owner_id);
                 
-                let cReplyBtn = '';
-                if (myChar || ['admin', 'super_admin'].includes(currentUser?.role)) {
-                    cReplyBtn = `<span style="color:#8bb9d6; cursor:pointer; font-size:12px; margin-left:8px; opacity:0.8;" onclick="replyToComment('${post.id}', '${cName}')">[回复]</span>`;
+                let cardClass = 'post-card';
+                if (post.channel === 'ANNOUNCEMENT' || post.is_announcement) cardClass += ' announcement';
+                else if (post.channel.startsWith('FACTION_')) cardClass += ' faction';
+                else if (post.channel.startsWith('ORG_')) cardClass += ' org';
+
+                let isHiddenPost = false;
+                if (post.author_type === 'hidden' && authorChar && authorChar.has_hidden) {
+                    isHiddenPost = true;
+                }
+                
+                let callsign = getForumDisplayName(authorChar, post.channel, isHiddenPost);
+                if (post.owner_id === 'admin' || post.author_type === 'admin') callsign = '系统总控';
+
+                const avatarLetter = (post.owner_id === 'admin' || post.author_type === 'admin') ? '⚙️' : callsign.charAt(0).toUpperCase();
+                let avatarContent = avatarLetter;
+                if (post.owner_id !== 'admin' && post.author_type !== 'admin' && authorChar) {
+                    const avatarUrl = isHiddenPost ? authorChar.hidden_avatar_url : authorChar.forum_avatar_url;
+                    if (avatarUrl) {
+                        avatarContent = `<img src="${avatarUrl}" style="width:100%; height:100%; object-fit:cover;">`;
+                    }
+                }
+                const timeObj = new Date(post.created_at);
+                const timeStr = `${timeObj.getFullYear()}-${String(timeObj.getMonth()+1).padStart(2,'0')}-${String(timeObj.getDate()).padStart(2,'0')} ${String(timeObj.getHours()).padStart(2,'0')}:${String(timeObj.getMinutes()).padStart(2,'0')}`;
+
+                const postComments = forumCommentsDB.filter(c => c.post_id === post.id);
+                let commentsHtml = '';
+                
+                if (postComments.length > 0) {
+                    const renderSingleComment = (c) => {
+                        const cAuthor = characterDB.find(char => char.owner_id === c.owner_id);
+                        let isHidden = c.author_type === 'hidden' && cAuthor && cAuthor.has_hidden;
+                        let cName = getForumDisplayName(cAuthor, post.channel, isHidden);
+                        if (c.author_type === 'admin') cName = '系统总控';
+
+                        let nameStyle = 'color: #12a8ff; font-weight: bold;';
+
+                        let cDeleteBtn = (canManage || c.owner_id === currentUser?.id)
+                            ? `<span style="color:#f44336; cursor:pointer; font-size:12px;" onclick="deleteForumComment('${c.id}')">[删]</span>` : '';
+                        
+                        let cEditBtn = (c.owner_id === currentUser?.id || isGlobalAdmin) 
+                            ? `<span style="color:#ffeb3b; cursor:pointer; font-size:12px;" onclick="editForumComment('${c.id}')">[改]</span>` : '';
+                        
+                        let cReplyBtn = '';
+                        if ((myChar && !isListeningMode) || isGlobalAdmin) {
+                            cReplyBtn = `<span style="color:#8bb9d6; cursor:pointer; font-size:12px; opacity:0.8;" onclick="replyToComment('${post.id}', '${cName}')">[回复]</span>`;
+                        }
+
+                        return `
+                            <div class="comment-item" style="display:flex; flex-direction:column; margin-bottom:12px; padding-bottom:8px; border-bottom:1px dashed rgba(255,255,255,0.05);">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:4px; align-items: flex-start; gap: 10px;">
+                                    <div style="display:flex; align-items:center; flex-wrap:wrap; gap:6px;">
+                                        <span class="comment-author" style="${nameStyle}; cursor:pointer;" onclick="openForumProfile('${c.owner_id}', ${isHidden})">[${cName}]</span>
+                                        ${cReplyBtn}
+                                        ${cEditBtn}
+                                        ${cDeleteBtn}
+                                    </div>
+                                    <span style="font-family:monospace; color:#666; font-size:10px; flex-shrink:0; margin-top:2px;">${new Date(c.created_at).toLocaleString()}</span>
+                                </div>
+                                <div class="comment-content">${formatContentWithCollapse(c.content, false, 'comment-' + c.id)}</div>
+                            </div>
+                        `;
+                    };
+
+                    const COMMENT_LIMIT = 3; 
+                    if (postComments.length <= COMMENT_LIMIT) {
+                        commentsHtml = postComments.map(renderSingleComment).join('');
+                    } else {
+                        const visibleComments = postComments.slice(0, COMMENT_LIMIT).map(renderSingleComment).join('');
+                        const hiddenComments = postComments.slice(COMMENT_LIMIT).map(renderSingleComment).join('');
+                        const hiddenCount = postComments.length - COMMENT_LIMIT;
+                        commentsHtml = `
+                            ${visibleComments}
+                            <div id="hidden-comments-${post.id}" style="display: none;">${hiddenComments}</div>
+                            <button class="expand-toggle-btn" style="width: 100%; text-align: center; background: rgba(18,168,255,0.05); border: 1px dashed rgba(18,168,255,0.3); margin-top: 5px; padding: 8px 0;" onclick="toggleComments('${post.id}', ${hiddenCount}, this)">
+                                [ 展开其余 ${hiddenCount} 条回复 ↓ ]
+                            </button>
+                        `;
+                    }
                 }
 
-                return `
-                    <div class="comment-item" style="display:flex; flex-direction:column; margin-bottom:12px; padding-bottom:8px; border-bottom:1px dashed rgba(255,255,255,0.05);">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:4px; align-items: flex-start;">
-                            <span class="comment-author" style="${nameStyle}; cursor:pointer;" onclick="openForumProfile('${c.owner_id}', ${isHidden})">[${cName}]</span> ${cReplyBtn} ${cDeleteBtn}
-                            <span style="font-family:monospace; color:#666; font-size:10px;">${new Date(c.created_at).toLocaleString()}</span>
-                        </div>
-                        <div class="comment-content">${formatContentWithCollapse(c.content, false, 'comment-' + c.id)}</div>
-                    </div>
-                `;
-            };
-
-            const COMMENT_LIMIT = 3; // 💥 设定阈值：超过 3 条回复就折叠
-            
-            if (postComments.length <= COMMENT_LIMIT) {
-                // 没超标，直接全部渲染
-                commentsHtml = postComments.map(renderSingleComment).join('');
-            } else {
-                // 超标了，切分数组
-                const visibleComments = postComments.slice(0, COMMENT_LIMIT).map(renderSingleComment).join('');
-                const hiddenComments = postComments.slice(COMMENT_LIMIT).map(renderSingleComment).join('');
-                const hiddenCount = postComments.length - COMMENT_LIMIT;
+                const hasChar = characterDB.some(c => c.owner_id === currentUser?.id);
+                let commentInputHtml = '';
                 
-                // 组装：可见部分 + 隐藏容器 + 展开按钮
-                commentsHtml = `
-                    ${visibleComments}
-                    <div id="hidden-comments-${post.id}" style="display: none;">
-                        ${hiddenComments}
+                if ((hasChar && !isListeningMode) || isGlobalAdmin) {
+                    let authorTypeHtml = ''; 
+                    let optHtml = '';
+                    if (hasChar && !isListeningMode) {
+                        optHtml += `<option value="public">以 [ 表身份 ] 回复</option>`;
+                        if (myChar.has_hidden) {
+                            optHtml += `<option value="hidden" style="color: #e91e63;">以 [ 里身份 ] 回复</option>`;
+                        }
+                    }
+                    if (isGlobalAdmin) {
+                        optHtml += `<option value="admin" style="color: #f44336;">以 [ 系统总控 ] 回复</option>`;
+                    }
+                    
+                    if (optHtml) {
+                        authorTypeHtml = `
+                            <select id="comment-author-type-${post.id}" style="background: rgba(0,0,0,0.5); color: #fff; border: 1px solid #12a8ff; padding: 4px; font-family: monospace; outline: none; border-radius: 2px; font-size:12px; margin-bottom: 5px;">
+                                ${optHtml}
+                            </select>
+                        `;
+                    }
+
+                    commentInputHtml = `
+                        <div class="comment-input-box" style="display:flex; flex-direction:column; gap:8px; margin-top: 15px;">
+                            ${authorTypeHtml}
+                            <div style="display:flex; gap:8px; align-items: flex-end;">
+                                <textarea id="comment-input-${post.id}" 
+                                    rows="1" 
+                                    placeholder="输入回复... (电脑端 Enter 发送)" 
+                                    oninput="this.style.height='auto'; this.style.height=(this.scrollHeight)+'px';"
+                                    onkeydown="if(event.key==='Enter') { const isMobile = window.innerWidth <= 900 || /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent); if(!isMobile && !event.shiftKey) { event.preventDefault(); submitComment('${post.id}'); } }" 
+                                    style="flex:1; background: rgba(0,0,0,0.5); border: 1px solid rgba(18, 168, 255, 0.3); color: #fff; padding: 8px 10px; font-family: 'PingFang SC', sans-serif; outline: none; resize: none; border-radius: 2px; min-height: 34px; max-height: 120px; overflow-y: auto; font-size: 13px; line-height: 1.4;"></textarea>
+                                <button class="sys-modal-btn confirm" style="width: auto !important; min-width: 60px; padding: 0 15px !important; height: 34px; line-height: 34px; white-space:nowrap; flex-shrink: 0; font-size: 12px; border-width: 1px; margin: 0 !important;" onclick="submitComment('${post.id}')">回复</button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                let factionHtml = '';
+                if (post.channel.startsWith('ORG_')) {
+                    let factionTag = authorChar ? authorChar.faction : 'LOST_SIGNAL';
+                    if (isHiddenPost) factionTag = authorChar.hidden_faction;
+                    factionHtml = `<br><span>${factionTag}</span>`;
+                }
+
+                const div = document.createElement('div');
+                div.className = cardClass;
+                div.id = `forum-post-${post.id}`; 
+                
+                // 💥 核心权限判定
+                const isOwner = post.owner_id === currentUser?.id;
+                
+                let deleteBtnHtml = '';
+                let editBtnHtml = '';
+                let auditBtnHtml = '';
+
+                // 删帖权限：管理员 或 自己
+                if (canManage || isOwner) {
+                    deleteBtnHtml = `<span style="color:#f44336; cursor:pointer; font-size:12px; margin-left: 10px;" onclick="deleteForumPost('${post.id}')">[删]</span>`;
+                }
+
+                // 💥 改帖权限：自己可以改自己的，管理员只能改公告
+                if (isOwner || (canManage && post.is_announcement)) {
+                    editBtnHtml = `<span style="color:#ffeb3b; cursor:pointer; font-size:12px; margin-left: 10px;" onclick="editForumPost('${post.id}')">[改]</span>`;
+                }
+
+                // 💥 审核权限：管理员专属 (且不能审核自己的帖子)
+                if (canManage && !isOwner) {
+                    if (post.status === 'auditing') {
+                        auditBtnHtml = `<span style="color:#4caf50; cursor:pointer; font-size:12px; margin-left: 10px;" onclick="unauditForumPost('${post.id}')">[解审]</span>`;
+                    } else {
+                        auditBtnHtml = `<span style="color:#ff9800; cursor:pointer; font-size:12px; margin-left: 10px;" onclick="auditForumPost('${post.id}')">[审核]</span>`;
+                    }
+                }
+
+                let annBadge = '';
+                if (post.is_announcement) {
+                    annBadge = `<span style="color:#ffeb3b; border:1px solid #ffeb3b; background:rgba(255,235,59,0.1); padding:2px 6px; border-radius:2px; font-size:10px; margin-left:8px; white-space:nowrap;">⚠️ 频道公告</span>`;
+                }
+
+                // 💥 核心：审核状态的 UI 渲染逻辑
+                let finalPostContentHtml = '';
+                let finalCommentsHtml = commentsHtml;
+                let finalCommentInputHtml = commentInputHtml;
+
+                if (post.status === 'auditing') {
+                    if (isOwner || canManage) {
+                        // 发帖人或管理员：能看到原因和原内容（半透明）
+                        finalPostContentHtml = `
+                            <div style="background: rgba(244,67,54,0.1); border: 1px dashed #f44336; padding: 10px; margin-bottom: 10px; border-radius: 4px;">
+                                <div style="color: #f44336; font-weight: bold; font-size: 13px; margin-bottom: 5px; font-family: monospace;">[ ⚠️ 该贴正在审核中 ]</div>
+                                <div style="color: #ffb4a9; font-size: 12px;">原因：${post.audit_reason || '无'}</div>
+                                ${isOwner ? '<div style="color: #ffeb3b; font-size: 12px; margin-top: 5px;">您可以点击右上角的 [改] 按钮修改内容，修改后将自动解除审核状态。</div>' : ''}
+                            </div>
+                            <div style="opacity: 0.5; pointer-events: none;">${formatContentWithCollapse(post.content, true, 'post-' + post.id)}</div>
+                        `;
+                    } else {
+                        // 其他普通用户：只能看到审核提示，隐藏内容和评论区
+                        finalPostContentHtml = `
+                            <div style="background: rgba(244,67,54,0.1); border: 1px dashed #f44336; padding: 20px; text-align: center; border-radius: 4px;">
+                                <span style="color: #f44336; font-weight: bold; font-family: monospace; letter-spacing: 1px;">[ ⚠️ 该贴正在审核中 ]</span>
+                            </div>
+                        `;
+                        finalCommentsHtml = ''; 
+                        finalCommentInputHtml = ''; 
+                    }
+                } else {
+                    // 正常帖子
+                    finalPostContentHtml = formatContentWithCollapse(post.content, true, 'post-' + post.id);
+                }
+
+                div.innerHTML = `
+                    <div class="post-header">
+                        <div class="post-author">
+                            <div class="post-avatar" style="cursor:pointer; overflow:hidden;" onclick="openForumProfile('${post.owner_id}', ${isHiddenPost})">${avatarContent}</div>
+                            <div class="post-info">
+                                <h4 style="cursor:pointer; display:inline-block;" onclick="openForumProfile('${post.owner_id}', ${isHiddenPost})">${callsign}</h4> ${annBadge} ${editBtnHtml} ${auditBtnHtml} ${deleteBtnHtml}
+                                ${factionHtml}
+                            </div>
+                        </div>
+                        <div class="post-time">${timeStr}</div>
                     </div>
-                    <button class="expand-toggle-btn" style="width: 100%; text-align: center; background: rgba(18,168,255,0.05); border: 1px dashed rgba(18,168,255,0.3); margin-top: 5px; padding: 8px 0;" onclick="toggleComments('${post.id}', ${hiddenCount}, this)">
-                        [ 展开其余 ${hiddenCount} 条回复 ↓ ]
-                    </button>
+                    <div class="post-content">${finalPostContentHtml}</div>
+                    <div class="comments-section">
+                        ${finalCommentsHtml}
+                        ${finalCommentInputHtml}
+                    </div>
                 `;
-            }
-        }
-
-        // 💥 评论输入框增强：新增表里身份选择下拉框
-        const hasChar = characterDB.some(c => c.owner_id === currentUser?.id);
-        let commentInputHtml = '';
-        if (hasChar || ['admin', 'super_admin'].includes(currentUser?.role)) {
-            let authorTypeHtml = ''; // 💥 就是这行刚才可能被误删了
-            if (myChar && myChar.has_hidden) {
-                authorTypeHtml = `
-                    <select id="comment-author-type-${post.id}" style="background: rgba(0,0,0,0.5); color: #fff; border: 1px solid #12a8ff; padding: 4px; font-family: monospace; outline: none; border-radius: 2px; font-size:12px;">
-                        <option value="public">以 [ 表身份 ] 回复</option>
-                        <option value="hidden" style="color: #e91e63;">以 [ 里身份 ] 回复</option>
-                    </select>
-                `;
-            }
-
-            commentInputHtml = `
-                <div class="comment-input-box" style="display:flex; flex-direction:column; gap:8px; margin-top: 15px;">
-                    ${authorTypeHtml}
-                    <div style="display:flex; gap:8px; align-items: flex-end;">
-                        <textarea id="comment-input-${post.id}" 
-                            rows="1" 
-                            placeholder="输入回复... (电脑端 Enter+Shift换行)" 
-                            oninput="this.style.height='auto'; this.style.height=(this.scrollHeight)+'px';"
-                            onkeydown="if(event.key==='Enter') { const isMobile = window.innerWidth <= 900 || /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent); if(!isMobile && !event.shiftKey) { event.preventDefault(); submitComment('${post.id}'); } }" 
-                            style="flex:1; background: rgba(0,0,0,0.5); border: 1px solid rgba(18, 168, 255, 0.3); color: #fff; padding: 8px 10px; font-family: 'PingFang SC', sans-serif; outline: none; resize: none; border-radius: 2px; min-height: 34px; max-height: 120px; overflow-y: auto; font-size: 13px; line-height: 1.4;"></textarea>
-                        
-                        <button class="sys-modal-btn confirm" style="width: auto !important; min-width: 60px; padding: 0 15px !important; height: 34px; line-height: 34px; white-space:nowrap; flex-shrink: 0; font-size: 12px; border-width: 1px; margin: 0 !important;" onclick="submitComment('${post.id}')">回复</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        // 💥 核心修复：非工作频段（非 ORG_ 开头）不显示阵营标签
-        let factionHtml = '';
-        if (post.channel.startsWith('ORG_')) {
-            factionHtml = `<br><span>${factionTag}</span>`;
-        }
-
-        const div = document.createElement('div');
-        div.className = cardClass;
-        div.id = `forum-post-${post.id}`; 
-        
-        let deleteBtnHtml = '';
-        if (['admin', 'super_admin'].includes(currentUser?.role) || post.owner_id === currentUser?.id) {
-            deleteBtnHtml = `<span style="color:#f44336; cursor:pointer; font-size:12px; margin-left: 10px;" onclick="deleteForumPost('${post.id}')">[删]</span>`;
-        }
-
-        div.innerHTML = `
-            <div class="post-header">
-                <div class="post-author">
-                    <div class="post-avatar" style="cursor:pointer;" onclick="openForumProfile('${post.owner_id}', ${isHiddenPost})">${avatarLetter}</div>
-                    <div class="post-info">
-                        <h4 style="cursor:pointer; display:inline-block;" onclick="openForumProfile('${post.owner_id}', ${isHiddenPost})">${callsign}</h4> ${deleteBtnHtml}
-                        ${factionHtml} <!-- 💥 只有工作频道才会渲染这行 -->
-                    </div>
-                </div>
-                <div class="post-time">${timeStr}</div>
-            </div>
-            <div class="post-content">${formatContentWithCollapse(post.content, true, 'post-' + post.id)}</div>
-            <div class="comments-section">
-                ${commentsHtml}
-                ${commentInputHtml}
-            </div>
-        `;
-        feed.appendChild(div);
-    });
-};
+                feed.appendChild(div);
+            });
+        };
 
 // 💥 回复快捷键：将用户名填入输入框
 window.replyToComment = function(postId, authorName) {
@@ -10193,34 +10662,134 @@ window.deleteForumComment = async function(commentId) {
     }
 };
 
-// 5. 发布新帖子
-window.submitForumPost = async function() {
-    const input = document.getElementById('new-post-content');
-    const content = input.value.trim();
-    if (!content) return;
+        // 5. 发布新帖子
+        window.submitForumPost = async function() {
+            const input = document.getElementById('new-post-content');
+            const content = input.value.trim();
+            if (!content) return;
 
-    const isAdmin = currentUser && ['admin', 'super_admin'].includes(currentUser.role);
-    if (currentForumChannel === 'ANNOUNCEMENT' && !isAdmin) {
-        SysModal.alert('权限不足，无法发布公告。', 'ACCESS DENIED');
-        return;
-    }
+            const isGlobalAdmin = currentUser && ['admin', 'super_admin'].includes(currentUser.role);
+            if (currentForumChannel === 'ANNOUNCEMENT' && !isGlobalAdmin) {
+                SysModal.alert('权限不足，无法发布公告。', 'ACCESS DENIED');
+                return;
+            }
 
-    try {
-        const { error } = await supabaseClient.from('forum_posts').insert([{
-            owner_id: currentUser.id,
-            channel: currentForumChannel,
-            content: content,
-            author_type: document.getElementById('forum-author-type').value
-        }]);
-        if (error) throw error;
-        
-        input.value = '';
-        loadForumData(true); 
-    } catch (err) {
-        console.error(err);
-        SysModal.alert('发送失败，请检查网络。', 'ERROR');
-    }
-};
+            const typeSelectVal = document.getElementById('forum-author-type').value;
+            let authorType = typeSelectVal;
+            let isAnn = false;
+
+            // 💥 核心：解析双重公告选项
+            if (typeSelectVal === 'announcement_public') {
+                isAnn = true;
+                authorType = 'public';
+            } else if (typeSelectVal === 'announcement_admin') {
+                isAnn = true;
+                authorType = 'admin';
+            } else if (currentForumChannel === 'ANNOUNCEMENT') {
+                isAnn = true;
+            }
+
+            if (typeSelectVal === 'admin') {
+                authorType = 'admin';
+            }
+
+            try {
+                const { error } = await supabaseClient.from('forum_posts').insert([{
+                    owner_id: currentUser.id,
+                    channel: currentForumChannel,
+                    content: content,
+                    author_type: authorType,
+                    is_announcement: isAnn
+                }]);
+                if (error) throw error;
+                
+                input.value = '';
+                const typeSelect = document.getElementById('forum-author-type');
+                if (typeSelect) {
+                    const myChar = characterDB.find(c => c.owner_id === currentUser.id);
+                    typeSelect.value = (myChar ? 'public' : 'admin');
+                    if(window.updatePostBoxUI) window.updatePostBoxUI();
+                }
+                loadForumData(true); 
+            } catch (err) {
+                console.error(err);
+                SysModal.alert('发送失败，请检查网络。', 'ERROR');
+            }
+        };
+
+        // 💥 修改帖子 (支持更新时间与自动解除审核)
+        window.editForumPost = async function(postId) {
+            const post = forumPostsDB.find(p => p.id === postId);
+            if (!post) return;
+            
+            const newContent = await SysModal.prompt("修改广播内容：", post.content, "📝 EDIT POST // 修改广播", 'textarea');
+            if (newContent === null || newContent.trim() === '') return;
+            
+            try {
+                // 💥 核心：修改后更新 created_at 刷新发帖时间，并自动解除审核状态
+                const { error } = await supabaseClient.from('forum_posts').update({ 
+                    content: newContent.trim(),
+                    created_at: new Date().toISOString(), // 刷新发帖时间，帖子会重新顶到最上面
+                    status: 'active', // 自动解除审核
+                    audit_reason: null
+                }).eq('id', postId);
+                if (error) throw error;
+                loadForumData(true);
+            } catch (e) {
+                SysModal.alert("修改失败，请检查网络。", "ERROR");
+            }
+        };
+
+        // 💥 新增：将帖子送去审核
+        window.auditForumPost = async function(postId) {
+            const reason = await SysModal.prompt("请输入送审原因（仅发帖人可见）：", "", "⚠️ AUDIT POST // 帖子审核", "textarea");
+            if (reason === null || reason.trim() === '') return;
+
+            try {
+                const { error } = await supabaseClient.from('forum_posts').update({ 
+                    status: 'auditing',
+                    audit_reason: reason.trim()
+                }).eq('id', postId);
+                if (error) throw error;
+                loadForumData(true);
+            } catch (e) {
+                SysModal.alert("操作失败，请检查网络。", "ERROR");
+            }
+        };
+
+        // 💥 新增：管理员手动解除审核
+        window.unauditForumPost = async function(postId) {
+            const isSure = await SysModal.confirm("确认解除该帖的审核状态吗？", "✅ 解除审核");
+            if (!isSure) return;
+
+            try {
+                const { error } = await supabaseClient.from('forum_posts').update({ 
+                    status: 'active',
+                    audit_reason: null
+                }).eq('id', postId);
+                if (error) throw error;
+                loadForumData(true);
+            } catch (e) {
+                SysModal.alert("操作失败，请检查网络。", "ERROR");
+            }
+        };
+
+        // 💥 新增：修改评论
+        window.editForumComment = async function(commentId) {
+            const comment = forumCommentsDB.find(c => c.id === commentId);
+            if (!comment) return;
+            
+            const newContent = await SysModal.prompt("修改回复内容：", comment.content, "📝 EDIT COMMENT // 修改回复", 'textarea');
+            if (newContent === null || newContent.trim() === '') return;
+            
+            try {
+                const { error } = await supabaseClient.from('forum_comments').update({ content: newContent.trim() }).eq('id', commentId);
+                if (error) throw error;
+                loadForumData(true);
+            } catch (e) {
+                SysModal.alert("修改失败，请检查网络。", "ERROR");
+            }
+        };
 
 // 6. 发布评论 (修改以支持 author_type)
 window.submitComment = async function(postId) {
