@@ -1719,7 +1719,7 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 5, 10, 0.85);
             backdrop-filter: blur(10px);
-            z-index: 100000; 
+            z-index: 999999 !important; /* 💥 核心修复：提高层级，确保永远在最顶层 */
             display: none; 
             justify-content: center; align-items: center;
             opacity: 0; transition: opacity 0.3s ease;
@@ -4235,6 +4235,62 @@ textarea:-webkit-autofill:active {
             white-space: pre-wrap; /* 保留正常的换行符 */
         }
 
+        /* =========================================
+           论坛个人主页弹窗 (Forum Profile Modal)
+           ========================================= */
+        .forum-profile-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 5, 10, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 100000; 
+            display: none; 
+            justify-content: center; align-items: center;
+            padding: 20px; box-sizing: border-box;
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .forum-profile-modal.active { display: flex; opacity: 1; }
+        
+        .forum-profile-box {
+            background: rgba(6, 11, 20, 0.95);
+            border: 2px solid #12a8ff;
+            box-shadow: 0 0 30px rgba(18, 168, 255, 0.3), inset 0 0 20px rgba(18, 168, 255, 0.1);
+            width: 100%; max-width: 600px; max-height: 85vh;
+            display: flex; flex-direction: column;
+            position: relative;
+        }
+        .forum-profile-box.hidden-mode {
+            border-color: #e91e63;
+            box-shadow: 0 0 30px rgba(233, 30, 99, 0.3), inset 0 0 20px rgba(233, 30, 99, 0.1);
+        }
+
+        .fp-header {
+            padding: 20px; border-bottom: 1px dashed rgba(18, 168, 255, 0.4);
+            display: flex; gap: 20px; align-items: center; position: relative;
+        }
+        .forum-profile-box.hidden-mode .fp-header { border-bottom-color: rgba(233, 30, 99, 0.4); }
+
+        .fp-avatar {
+            width: 80px; height: 80px; font-size: 40px;
+            background: rgba(18, 168, 255, 0.1); border: 2px solid #12a8ff;
+            display: flex; justify-content: center; align-items: center;
+            font-family: "Impact", sans-serif; color: #12a8ff;
+        }
+        .forum-profile-box.hidden-mode .fp-avatar {
+            background: rgba(233, 30, 99, 0.1); border-color: #e91e63; color: #e91e63;
+        }
+
+        .fp-info h2 { margin: 0 0 5px 0; color: #fff; font-size: 24px; display: flex; align-items: center; gap: 10px; }
+        .fp-info p { margin: 0; color: #8bb9d6; font-family: monospace; font-size: 13px; }
+        .forum-profile-box.hidden-mode .fp-info p { color: #ff80ab; }
+
+        .fp-feed {
+            flex: 1; overflow-y: auto; padding: 20px;
+            display: flex; flex-direction: column; gap: 15px;
+        }
+        .fp-feed::-webkit-scrollbar { width: 4px; }
+        .fp-feed::-webkit-scrollbar-thumb { background: #12a8ff; }
+        .forum-profile-box.hidden-mode .fp-feed::-webkit-scrollbar-thumb { background: #e91e63; }
+
     </style>
 </head>
 <body class="secure-no-select">
@@ -4253,6 +4309,23 @@ textarea:-webkit-autofill:active {
             <div class="sys-modal-actions">
                 <button class="sys-modal-btn cancel" id="sysModalCancelBtn">[ 取消 ]</button>
                 <button class="sys-modal-btn confirm" id="sysModalConfirmBtn">[ 确认 ]</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 💥 论坛个人主页弹窗 -->
+    <div class="forum-profile-modal" id="forumProfileModal" onclick="if(event.target===this) closeForumProfile()">
+        <div class="forum-profile-box" id="forumProfileBox">
+            <button class="close-btn" style="position: absolute; top: 15px; right: 15px; z-index: 10;" onclick="closeForumProfile()">[X] CLOSE</button>
+            <div class="fp-header">
+                <div class="fp-avatar" id="fp-avatar">?</div>
+                <div class="fp-info">
+                    <h2 id="fp-name">NAME</h2>
+                    <p id="fp-desc">DESC</p>
+                </div>
+            </div>
+            <div class="fp-feed" id="fp-feed">
+                <!-- 帖子流 -->
             </div>
         </div>
     </div>
@@ -4884,12 +4957,25 @@ textarea:-webkit-autofill:active {
                 
                 <!-- 发帖输入区 -->
                 <div class="forum-post-box" id="forum-post-box" style="display: none;">
-                    <div style="color: #4caf50; font-family: monospace; margin-bottom: 10px; font-weight: bold;">[ UPLINK SECURE // 正在编辑全息广播 ]</div>
-                    <!-- 💥 新增：论坛发言身份选择 -->
-                    <select id="forum-author-type" style="background: rgba(0,0,0,0.5); color: #fff; border: 1px solid #4caf50; padding: 8px; font-family: monospace; margin-bottom: 10px; outline: none; width: 100%; border-radius: 4px;">
+                    
+                    <!-- 💥 新增：发帖人信息与主页按钮 -->
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px dashed rgba(76, 175, 80, 0.4); padding-bottom: 15px;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div id="post-box-avatar" style="width: 45px; height: 45px; background: rgba(76, 175, 80, 0.1); border: 2px solid #4caf50; display: flex; justify-content: center; align-items: center; font-family: 'Impact', sans-serif; color: #4caf50; font-size: 22px;">?</div>
+                            <div>
+                                <div id="post-box-name" style="color: #fff; font-weight: bold; font-size: 16px; margin-bottom: 4px;">UNKNOWN</div>
+                                <div style="color: #4caf50; font-family: monospace; font-size: 11px;">[ UPLINK SECURE // 正在编辑全息广播 ]</div>
+                            </div>
+                        </div>
+                        <button id="post-box-profile-btn" class="sys-modal-btn confirm" style="border-color: #4caf50; color: #4caf50; padding: 4px 10px; font-size: 12px;" onclick="openForumProfile(currentUser.id, false)">[ 我的主页 ]</button>
+                    </div>
+                    
+                    <!-- 💥 核心：加上了 onchange 事件，切换身份时实时更新上面的头像 -->
+                    <select id="forum-author-type" style="background: rgba(0,0,0,0.5); color: #fff; border: 1px solid #4caf50; padding: 8px; font-family: monospace; margin-bottom: 10px; outline: none; width: 100%; border-radius: 4px;" onchange="if(window.updatePostBoxUI) window.updatePostBoxUI()">
                         <option value="public">以 [ 表身份 ] 发言</option>
                         <option value="hidden" id="forum-opt-hidden" style="display:none; color: #e91e63;">以 [ 里身份 ] 发言</option>
                     </select>
+                    
                     <textarea id="new-post-content" class="forum-textarea" placeholder="输入你想广播的内容..."></textarea>
                     <div style="display: flex; justify-content: flex-end;">
                         <button class="submit-btn" style="margin: 0; padding: 8px 20px; font-size: 14px; color: #060b14; background: #4caf50; border-color: #4caf50;" onclick="submitForumPost()">[ 发送广播 ]</button>
@@ -9530,6 +9616,149 @@ function renderAdminDashboard() {
         let forumPostsDB = [];
         let forumCommentsDB = [];
 
+        /* =========================================================
+           💥 论坛个人主页与权限引擎 💥
+           ========================================================= */
+        
+        // 1. 获取当前用户有权访问的所有频道
+        window.getMyAccessibleChannels = function() {
+            if (!currentUser) return [];
+            if (['admin', 'super_admin'].includes(currentUser.role)) return 'ALL'; // 管理员能看所有
+            
+            let channels = ['GLOBAL', 'ANNOUNCEMENT'];
+            const myChar = characterDB.find(c => c.owner_id === currentUser.id);
+            if (myChar) {
+                if (myChar.faction) channels.push(`FACTION_${myChar.faction}`);
+                if (myChar.organization && myChar.organization !== '无归属 / 独狼') channels.push(`ORG_${myChar.organization}`);
+                if (myChar.has_hidden) {
+                    if (myChar.hidden_faction) channels.push(`FACTION_${myChar.hidden_faction}`);
+                    if (myChar.hidden_org && myChar.hidden_org !== '无归属 / 独狼') channels.push(`ORG_${myChar.hidden_org}`);
+                }
+            }
+            return channels;
+        };
+
+        // 2. 智能名字渲染器 (处理自定义名字与组织频道的强制实名)
+        window.getForumDisplayName = function(char, channel, isHidden) {
+            if (!char) return "UNKNOWN";
+            
+            if (channel.startsWith('ORG_')) {
+                // 💥 组织工作频道：强制显示 [组织] 全名 - 职位
+                if (isHidden) {
+                    return `[${char.hidden_org || '无组织'}] ${char.hidden_name || char.hidden_callsign} - ${char.hidden_occupation || '未知'}`;
+                } else {
+                    return `[${char.organization || '无组织'}] ${char.name || char.callsign} - ${char.occupation || '未知'}`;
+                }
+            } else {
+                // 💥 其他频道：显示自定义名字，没有则用代号
+                if (isHidden) {
+                    return char.hidden_forum_name || char.hidden_callsign;
+                } else {
+                    return char.forum_name || char.callsign;
+                }
+            }
+        };
+
+        // 3. 修改自定义昵称
+        window.editForumName = async function(isHidden) {
+            const myChar = characterDB.find(c => c.owner_id === currentUser.id);
+            const currentName = isHidden ? (myChar.hidden_forum_name || myChar.hidden_callsign) : (myChar.forum_name || myChar.callsign);
+            
+            const newName = await SysModal.prompt("请输入新的论坛自定义昵称：\n(留空则恢复默认代号)\n\n注：组织工作频道将强制显示真实姓名与职位，不受此昵称影响。", currentName, "修改论坛昵称");
+            if (newName === null) return; 
+            
+            const finalName = newName.trim();
+            const updateData = {};
+            if (isHidden) updateData.hidden_forum_name = finalName;
+            else updateData.forum_name = finalName;
+            
+            try {
+                await supabaseClient.from('characters').update(updateData).eq('id', myChar.id);
+                if (isHidden) myChar.hidden_forum_name = finalName;
+                else myChar.forum_name = finalName;
+                
+                openForumProfile(currentUser.id, isHidden); // 刷新主页
+                loadForumData(true); // 无痕刷新论坛帖子
+            } catch (e) {
+                SysModal.alert("修改失败，请检查网络。", "ERROR");
+            }
+        };
+
+        // 4. 打开个人主页弹窗
+        window.openForumProfile = function(targetOwnerId, viewAsHidden) {
+            const targetChar = characterDB.find(c => c.owner_id === targetOwnerId);
+            if (!targetChar) { SysModal.alert("无法获取该用户的档案信息。"); return; }
+            
+            const isMe = targetOwnerId === currentUser.id;
+            const modal = document.getElementById('forumProfileModal');
+            const box = document.getElementById('forumProfileBox');
+            const feed = document.getElementById('fp-feed');
+            
+            // 样式切换 (表/里)
+            if (viewAsHidden) box.classList.add('hidden-mode');
+            else box.classList.remove('hidden-mode');
+
+            // 头部信息渲染
+            const displayName = viewAsHidden ? (targetChar.hidden_forum_name || targetChar.hidden_callsign) : (targetChar.forum_name || targetChar.callsign);
+            const officialName = viewAsHidden ? targetChar.hidden_callsign : targetChar.callsign;
+            const faction = viewAsHidden ? targetChar.hidden_faction : targetChar.faction;
+            const avatarLetter = displayName.charAt(0).toUpperCase();
+            
+            let editBtnHtml = '';
+            if (isMe) {
+                const btnColor = viewAsHidden ? '#e91e63' : '#12a8ff';
+                editBtnHtml = `<button class="sys-modal-btn confirm" style="margin-left: 15px; padding: 2px 8px; font-size: 12px; border-color: ${btnColor}; color: ${btnColor};" onclick="editForumName(${viewAsHidden})">[ 修改昵称 ]</button>`;
+            }
+
+            document.getElementById('fp-avatar').innerText = avatarLetter;
+            document.getElementById('fp-name').innerHTML = `${displayName} ${editBtnHtml}`;
+            document.getElementById('fp-desc').innerText = `官方代号: ${officialName} | 阵营: ${faction}`;
+
+            // 💥 核心：过滤帖子 (只看同频道的，且区分表里身份)
+            const myChannels = getMyAccessibleChannels();
+            const targetPosts = forumPostsDB.filter(p => {
+                if (p.owner_id !== targetOwnerId) return false;
+                // 严格区分表里身份的帖子，防止身份泄露！
+                if (viewAsHidden && p.author_type !== 'hidden') return false;
+                if (!viewAsHidden && p.author_type === 'hidden') return false;
+                // 权限过滤
+                if (myChannels === 'ALL') return true;
+                return myChannels.includes(p.channel);
+            });
+
+            // 渲染帖子流
+            if (targetPosts.length === 0) {
+                feed.innerHTML = `<div style="color:#666; text-align:center; margin-top: 20px; font-family:monospace;">[ 该身份在您可访问的频道内暂无广播记录 ]</div>`;
+            } else {
+                feed.innerHTML = targetPosts.map(post => {
+                    const timeStr = new Date(post.created_at).toLocaleString();
+                    const borderColor = viewAsHidden ? 'rgba(233,30,99,0.3)' : 'rgba(18,168,255,0.3)';
+                    const titleColor = viewAsHidden ? '#ff80ab' : '#12a8ff';
+                    
+                    // 帖子里的名字也要遵循频道规则
+                    const postName = getForumDisplayName(targetChar, post.channel, viewAsHidden);
+
+                    return `
+                        <div style="background: rgba(0,0,0,0.5); border: 1px solid ${borderColor}; padding: 15px; border-radius: 4px;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 10px; border-bottom: 1px dashed ${borderColor}; padding-bottom: 5px;">
+                                <span style="color: ${titleColor}; font-weight: bold; font-size: 14px;">${postName}</span>
+                                <span style="color: #666; font-family: monospace; font-size: 11px;">${timeStr} | ${post.channel}</span>
+                            </div>
+                            <div style="color: #fff; font-size: 13px; line-height: 1.6; word-break: break-word;">
+                                ${formatContentWithCollapse(post.content, true, 'profile-post-' + post.id)}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            modal.classList.add('active');
+        };
+
+        window.closeForumProfile = function() {
+            document.getElementById('forumProfileModal').classList.remove('active');
+        };
+
 // 1. 初始化论坛 (每次进入论坛时调用)
 window.initForum = async function() {
     const channelBox = document.getElementById('forum-channels');
@@ -9563,6 +9792,24 @@ window.initForum = async function() {
         if (hiddenFactionChan !== `FACTION_${myChar.faction}`) {
             channelsHtml += `
                 <button class="channel-btn ${currentForumChannel === hiddenFactionChan ? 'active' : ''}" onclick="switchForumChannel('${hiddenFactionChan}')" style="color: #e91e63;">🥷 ${myChar.hidden_faction} 暗网频段</button>
+            `;
+        }
+    }
+
+    // 💥 新增：解锁表身份的【组织工作频道】
+    if (myChar && myChar.organization && myChar.organization !== '无归属 / 独狼') {
+        const orgChan = `ORG_${myChar.organization}`;
+        channelsHtml += `
+            <button class="channel-btn ${currentForumChannel === orgChan ? 'active' : ''}" onclick="switchForumChannel('${orgChan}')" style="color: #8bc34a;">🏢 ${myChar.organization} 工作频段</button>
+        `;
+    }
+    
+    // 💥 新增：解锁里身份的【暗网组织工作频道】
+    if (myChar && myChar.has_hidden && myChar.hidden_org && myChar.hidden_org !== '无归属 / 独狼') {
+        const hOrgChan = `ORG_${myChar.hidden_org}`;
+        if (hOrgChan !== `ORG_${myChar.organization}`) {
+            channelsHtml += `
+                <button class="channel-btn ${currentForumChannel === hOrgChan ? 'active' : ''}" onclick="switchForumChannel('${hOrgChan}')" style="color: #e91e63;">🥷 ${myChar.hidden_org} 暗网工作频段</button>
             `;
         }
     }
@@ -9606,6 +9853,38 @@ window.initForum = async function() {
     }
 
     await loadForumData();
+    // 💥 新增：动态更新发帖框的头像和名字
+    window.updatePostBoxUI = function() {
+        if (!myChar) return;
+        const typeSelect = document.getElementById('forum-author-type');
+        const isHidden = typeSelect ? typeSelect.value === 'hidden' : false;
+        
+        const displayName = getForumDisplayName(myChar, currentForumChannel, isHidden);
+        const avatarLetter = displayName.charAt(0).toUpperCase();
+        
+        const avatarEl = document.getElementById('post-box-avatar');
+        const nameEl = document.getElementById('post-box-name');
+        const profileBtn = document.getElementById('post-box-profile-btn');
+        
+        if (avatarEl) {
+            avatarEl.innerText = avatarLetter;
+            avatarEl.style.borderColor = isHidden ? '#e91e63' : '#4caf50';
+            avatarEl.style.color = isHidden ? '#e91e63' : '#4caf50';
+            avatarEl.style.background = isHidden ? 'rgba(233, 30, 99, 0.1)' : 'rgba(76, 175, 80, 0.1)';
+        }
+        if (nameEl) {
+            nameEl.innerText = displayName;
+            nameEl.style.color = isHidden ? '#ff80ab' : '#fff';
+        }
+        if (profileBtn) {
+            profileBtn.onclick = () => openForumProfile(currentUser.id, isHidden);
+            profileBtn.style.borderColor = isHidden ? '#e91e63' : '#4caf50';
+            profileBtn.style.color = isHidden ? '#e91e63' : '#4caf50';
+        }
+    };
+    
+    // 初始化调用一次
+    window.updatePostBoxUI();
 };
 
 // 2. 切换频道
@@ -9753,12 +10032,18 @@ window.renderForumFeed = function() {
         let cardClass = 'post-card';
         if (post.channel === 'ANNOUNCEMENT') cardClass += ' announcement';
         else if (post.channel.startsWith('FACTION_')) cardClass += ' faction';
+        else if (post.channel.startsWith('ORG_')) cardClass += ' org'; // 顺手加个 org 的类名
 
+        let isHiddenPost = false;
         if (post.author_type === 'hidden' && authorChar && authorChar.has_hidden) {
-            callsign = authorChar.hidden_callsign;
+            isHiddenPost = true;
             factionTag = authorChar.hidden_faction;
-            // 💥 修复：去掉了 cardClass += ' hidden-identity'; 让里身份完美伪装成普通人
         }
+        
+        // 💥 使用智能名字渲染器
+        callsign = getForumDisplayName(authorChar, post.channel, isHiddenPost);
+        if (post.owner_id === 'admin') callsign = '系统总控';
+        
         const avatarLetter = callsign.charAt(0).toUpperCase();
 
         const timeObj = new Date(post.created_at);
@@ -9772,9 +10057,8 @@ window.renderForumFeed = function() {
             // 提取单个评论的渲染逻辑为一个内部函数，方便复用
             const renderSingleComment = (c) => {
                 const cAuthor = characterDB.find(char => char.owner_id === c.owner_id);
-                let cName = cAuthor ? cAuthor.callsign : 'UNKNOWN';
                 let isHidden = c.author_type === 'hidden' && cAuthor && cAuthor.has_hidden;
-                if (isHidden) cName = cAuthor.hidden_callsign;
+                let cName = getForumDisplayName(cAuthor, post.channel, isHidden);
 
                 let nameStyle = 'color: #12a8ff; font-weight: bold;';
 
@@ -9789,7 +10073,7 @@ window.renderForumFeed = function() {
                 return `
                     <div class="comment-item" style="display:flex; flex-direction:column; margin-bottom:12px; padding-bottom:8px; border-bottom:1px dashed rgba(255,255,255,0.05);">
                         <div style="display:flex; justify-content:space-between; margin-bottom:4px; align-items: flex-start;">
-                            <span class="comment-author" style="${nameStyle}">[${cName}] ${cReplyBtn} ${cDeleteBtn}</span>
+                            <span class="comment-author" style="${nameStyle}; cursor:pointer;" onclick="openForumProfile('${c.owner_id}', ${isHidden})">[${cName}]</span> ${cReplyBtn} ${cDeleteBtn}
                             <span style="font-family:monospace; color:#666; font-size:10px;">${new Date(c.created_at).toLocaleString()}</span>
                         </div>
                         <div class="comment-content">${formatContentWithCollapse(c.content, false, 'comment-' + c.id)}</div>
@@ -9852,9 +10136,15 @@ window.renderForumFeed = function() {
             `;
         }
 
+        // 💥 核心修复：非工作频段（非 ORG_ 开头）不显示阵营标签
+        let factionHtml = '';
+        if (post.channel.startsWith('ORG_')) {
+            factionHtml = `<br><span>${factionTag}</span>`;
+        }
+
         const div = document.createElement('div');
         div.className = cardClass;
-        div.id = `forum-post-${post.id}`; // 💥 新增：给帖子加上 ID 方便定位
+        div.id = `forum-post-${post.id}`; 
         
         let deleteBtnHtml = '';
         if (['admin', 'super_admin'].includes(currentUser?.role) || post.owner_id === currentUser?.id) {
@@ -9864,15 +10154,16 @@ window.renderForumFeed = function() {
         div.innerHTML = `
             <div class="post-header">
                 <div class="post-author">
-                    <div class="post-avatar">${avatarLetter}</div>
+                    <div class="post-avatar" style="cursor:pointer;" onclick="openForumProfile('${post.owner_id}', ${isHiddenPost})">${avatarLetter}</div>
                     <div class="post-info">
-                        <h4>${callsign} ${deleteBtnHtml}</h4>
-                        <span>${factionTag}</span>
+                        <h4 style="cursor:pointer; display:inline-block;" onclick="openForumProfile('${post.owner_id}', ${isHiddenPost})">${callsign}</h4> ${deleteBtnHtml}
+                        ${factionHtml} <!-- 💥 只有工作频道才会渲染这行 -->
                     </div>
                 </div>
                 <div class="post-time">${timeStr}</div>
             </div>
             <div class="post-content">${formatContentWithCollapse(post.content, true, 'post-' + post.id)}</div>
+            <div class="comments-section">
                 ${commentsHtml}
                 ${commentInputHtml}
             </div>
