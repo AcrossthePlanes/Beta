@@ -4345,6 +4345,210 @@ textarea:-webkit-autofill:active {
             }
         }
 
+        /* =========================================
+           💥 终极修复：防止所有头像被挤压变形
+           ========================================= */
+        .post-avatar, 
+        .fp-avatar, 
+        .post-box-avatar-el,
+        .profile-avatar-section .avatar-placeholder {
+            flex-shrink: 0 !important; /* 绝对禁止被挤压缩小 */
+            overflow: hidden !important; /* 确保图片完美贴合边框 */
+        }
+        
+        /* 确保图片永远按比例填充，不拉伸 */
+        .post-avatar img, 
+        .fp-avatar img, 
+        .post-box-avatar-el img,
+        .profile-avatar-section .avatar-placeholder img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+
+        /* =========================================
+           💥 终极修复：论坛昵称挤压与按钮小巧左对齐 💥
+           ========================================= */
+        .fp-info { flex: 1; min-width: 0 !important; }
+        .fp-info h2 { flex-wrap: wrap !important; word-break: break-word !important; }
+        .fp-avatar { flex-shrink: 0 !important; min-width: 80px !important; min-height: 80px !important; }
+        
+        /* 强制让这两个按钮变小，覆盖掉 sys-modal-btn 的默认全宽 */
+        #fp-name .sys-modal-btn, .post-box-profile-btn {
+            width: auto !important;
+            min-width: 0 !important;
+            padding: 2px 10px !important;
+            font-size: 11px !important;
+            line-height: 1.5 !important;
+            height: auto !important;
+            display: inline-block !important;
+            margin-top: 0 !important;
+        }
+        
+        #fp-name .sys-modal-btn { margin-left: 10px !important; }
+
+        /* 手机端专属排版 */
+        @media (max-width: 768px) {
+            .fp-info h2 {
+                flex-direction: column !important; 
+                align-items: flex-start !important;
+                gap: 6px !important;
+                font-size: 20px !important; 
+            }
+            #fp-name .sys-modal-btn {
+                margin-left: 0 !important; /* 手机端取消左边距，完美和昵称左对齐 */
+                margin-top: 4px !important;
+            }
+            .post-box-profile-btn {
+                align-self: flex-start !important;
+                margin-left: 60px !important; /* 头像45px + 间距15px，完美对齐昵称 */
+                margin-top: -5px !important;
+            }
+            .fp-avatar {
+                width: 60px !important; height: 60px !important;
+                min-width: 60px !important; min-height: 60px !important;
+                font-size: 30px !important;
+            }
+        }
+
+        /* =========================================
+           💥 终极修复：发帖框头像放大与完美网格对齐 💥
+           ========================================= */
+        /* 1. 电脑端头像也适当放大，显得更大气 */
+        .post-box-avatar-el {
+            width: 60px !important; 
+            height: 60px !important; 
+            font-size: 28px !important;
+        }
+
+        /* 2. 手机端专属网格排版 */
+        @media (max-width: 768px) {
+            /* 废弃之前的上下排列，改用高级的 Grid 网格布局 */
+            .post-box-header {
+                display: grid !important;
+                grid-template-columns: auto 1fr !important; /* 左边头像自适应，右边文字占满 */
+                grid-template-rows: auto auto !important;    /* 两行：第一行名字，第二行按钮 */
+                gap: 6px 15px !important;                    /* 行间距 6px，列间距 15px */
+                align-items: center !important;
+                flex-direction: unset !important; 
+            }
+            
+            /* 魔法属性：让包裹名字的 div 隐身，内部元素直接参与网格排版 */
+            .post-box-user {
+                display: contents !important; 
+            }
+            
+            /* 头像跨越两行，并进一步放大 */
+            .post-box-avatar-el {
+                grid-column: 1 !important;
+                grid-row: 1 / 3 !important; 
+                width: 65px !important;  
+                height: 65px !important;
+                font-size: 32px !important;
+            }
+            
+            /* 名字在第一行，靠下对齐贴近按钮 */
+            .post-box-user-text {
+                grid-column: 2 !important;
+                grid-row: 1 !important;
+                align-self: end !important; 
+            }
+            .post-box-name-el {
+                font-size: 18px !important; 
+                margin-bottom: 0 !important;
+            }
+            
+            /* 按钮在第二行，靠上对齐贴近名字，彻底告别错位 */
+            .post-box-profile-btn {
+                grid-column: 2 !important;
+                grid-row: 2 !important;
+                margin: 0 !important; /* 清除之前写的 60px 边距 */
+                align-self: start !important; 
+                width: fit-content !important; 
+            }
+        }
+
+        /* =========================================
+           💥 修复：论坛帖子操作按钮文字断行 💥
+           ========================================= */
+        /* 强制让帖子头部的所有小按钮（[审核]、[改]、[删]）作为一个整体，不许从中间断开文字 */
+        .post-info span {
+            white-space: nowrap !important; 
+            display: inline-block !important; 
+        }
+        
+        /* 确保名字太长时，名字本身可以正常换行，而不会把按钮挤出屏幕 */
+        .post-info h4 {
+            word-break: break-word !important; 
+            vertical-align: middle !important;
+        }
+
+        /* =========================================
+           💥 终极修复：彻底锁死屏幕，防止向右拉伸撑破 💥
+           ========================================= */
+        /* 1. 修复：改用 clip 替代 hidden，既能防止横向拉伸，又不会破坏顶部导航栏的 sticky 吸顶效果 */
+        body {
+            overflow-x: clip !important; 
+            width: 100% !important;
+            max-width: 100vw !important;
+            position: relative;
+        }
+
+        @media (max-width: 900px) {
+            /* 2. 限制目录的最大宽度，防止文字太长撑破屏幕 */
+            .toc-list {
+                max-width: 85vw !important;
+                box-sizing: border-box !important;
+            }
+            
+            /* 3. 核心魔法：让目录默认向左展开（right: 0）
+               这样即使在零点几毫秒的渲染延迟中，它也绝对不会向右冲出屏幕！ */
+            .world-toc:not(.align-left) .toc-list {
+                right: 0 !important;
+                left: auto !important;
+                align-items: flex-end !important;
+            }
+            
+            /* 确保文字过长时自动换行，而不是硬撑 */
+            .toc-btn {
+                white-space: normal !important;
+                word-break: break-word !important;
+                text-align: right !important;
+            }
+            .world-toc.align-left .toc-btn {
+                text-align: left !important;
+            }
+        }
+
+        /* =========================================
+           💥 终极修复：目录球层级与全屏毛玻璃 💥
+           ========================================= */
+        /* 1. 升级全局遮罩，加入高级赛博毛玻璃特效 */
+        .overlay {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            background: rgba(0, 5, 10, 0.6) !important; /* 稍微调浅一点底色，透出毛玻璃质感 */
+            transition: opacity 0.3s ease; /* 增加渐隐渐显动画 */
+        }
+
+        @media (max-width: 900px) {
+            /* 2. 精准控制目录球层级：低于侧边栏(100)，高于毛玻璃遮罩(90) */
+            .world-toc {
+                z-index: 95 !important;
+            }
+        }
+
+        /* =========================================
+           💥 修复：电脑端顶部标题放大 💥
+           ========================================= */
+        @media (min-width: 769px) {
+            .group-name {
+                font-size: 42px !important; /* 从 24px 放大到 42px，显得更大气 */
+                line-height: 0.8 !important; /* 消除 Impact 字体自带的上下留白，防止撑破导航栏 */
+                transform: translateY(2px); /* 稍微往下微调，让它和右侧的搜索框底部完美对齐 */
+            }
+        }
+
     </style>
 </head>
 <body class="secure-no-select">
@@ -5039,15 +5243,14 @@ textarea:-webkit-autofill:active {
                 <!-- 发帖输入区 -->
                 <div class="forum-post-box" id="forum-post-box" style="display: none;">
                     
-                    <div class="post-box-header">
-                        <div class="post-box-user">
-                            <div id="post-box-avatar" class="post-box-avatar-el">?</div>
-                            <div class="post-box-user-text">
-                                <div id="post-box-name" class="post-box-name-el">UNKNOWN</div>
-                                <div class="post-box-subtitle">[ UPLINK SECURE // 正在编辑全息广播 ]</div>
-                            </div>
+                    <div class="post-box-header" style="display: flex; gap: 15px; align-items: center; margin-bottom: 15px; border-bottom: 1px dashed rgba(76, 175, 80, 0.4); padding-bottom: 15px;">
+                        <div id="post-box-avatar" class="post-box-avatar-el">?</div>
+                        <div class="post-box-user-text">
+                            <div id="post-box-name" class="post-box-name-el">UNKNOWN</div>
+                            <div class="post-box-subtitle">[ UPLINK SECURE // 正在编辑全息广播 ]</div>
+                            <!-- 💥 核心修复：把按钮移到文字容器内部，实现绝对完美的左对齐 -->
+                            <button id="post-box-profile-btn" class="sys-modal-btn confirm post-box-profile-btn" onclick="openForumProfile(currentUser.id, false)">[ 我的主页 ]</button>
                         </div>
-                        <button id="post-box-profile-btn" class="sys-modal-btn confirm post-box-profile-btn" onclick="openForumProfile(currentUser.id, false)">[ 我的主页 ]</button>
                     </div>
                     
                     <select id="forum-author-type" class="post-box-select" onchange="if(window.updatePostBoxUI) window.updatePostBoxUI()">
@@ -6392,7 +6595,15 @@ window.triggerConflictRejection = async function(charDraft) {
         menuBtn.addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('show'); });
         function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
         closeBtn.addEventListener('click', closeSidebar);
-        overlay.addEventListener('click', closeSidebar);
+        overlay.addEventListener('click', () => {
+            closeSidebar(); // 关闭侧边栏
+            // 💥 联动：点击毛玻璃时，也同时收起目录球
+            const toc = document.querySelector('.world-toc');
+            if (toc && toc.classList.contains('open')) {
+                toc.classList.remove('open');
+                overlay.classList.remove('show');
+            }
+        });
 
 
         /* =========================================================
@@ -8892,9 +9103,10 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                 startX = touch.clientX;
                 startY = touch.clientY;
                 
-                const rect = worldToc.getBoundingClientRect();
-                initialLeft = rect.left;
-                initialTop = rect.top;
+                // 💥 核心修复：使用 offsetLeft/Top 替代 getBoundingClientRect
+                // 这样可以无视 transform 动画带来的坐标偏移，彻底解决“向右平移”的灵异跳动！
+                initialLeft = worldToc.offsetLeft;
+                initialTop = worldToc.offsetTop;
                 
                 isDragging = true;
                 hasMoved = false;
@@ -8908,11 +9120,15 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                 const dx = touch.clientX - startX;
                 const dy = touch.clientY - startY;
                 
-                if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+                // 💥 核心修复：将防误触阈值提高到 15px，过滤掉点击时的轻微手抖
+                if (Math.abs(dx) > 15 || Math.abs(dy) > 15) {
                     hasMoved = true;
-                    e.preventDefault(); 
-                    // 拖拽时自动收起菜单
+                    // 💥 核心修复：先问浏览器能不能取消，能取消再阻止默认滚动
+                    if (e.cancelable) {
+                        e.preventDefault(); 
+                    }
                     worldToc.classList.remove('open');
+                    document.getElementById('overlay').classList.remove('show'); // 💥 拖拽时收起毛玻璃
                 }
 
                 if (hasMoved) {
@@ -8970,6 +9186,12 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
 
                     // 切换菜单显示状态
                     worldToc.classList.toggle('open');
+                    // 💥 联动：展开时显示全屏毛玻璃，收起时隐藏
+                    if (worldToc.classList.contains('open')) {
+                        document.getElementById('overlay').classList.add('show');
+                    } else {
+                        document.getElementById('overlay').classList.remove('show');
+                    }
                 }
             });
 
@@ -8979,6 +9201,7 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                 btn.addEventListener('click', () => {
                     if (window.innerWidth <= 900) {
                         worldToc.classList.remove('open');
+                        document.getElementById('overlay').classList.remove('show'); // 💥 点击跳转后收起毛玻璃
                         worldToc.classList.remove('wobble');
                         void worldToc.offsetWidth;
                         worldToc.classList.add('wobble');
@@ -9962,7 +10185,8 @@ function renderAdminDashboard() {
             let editBtnHtml = '';
             if (isMe) {
                 const btnColor = viewAsHidden ? '#e91e63' : '#12a8ff';
-                editBtnHtml = `<button class="sys-modal-btn confirm" style="margin-left: 15px; padding: 2px 8px; font-size: 12px; border-color: ${btnColor}; color: ${btnColor};" onclick="editForumName(${viewAsHidden})">[ 修改昵称 ]</button>`;
+                // 💥 核心修复：加上 fp-edit-btn 类名，交由 CSS 智能控制边距
+                editBtnHtml = `<button class="sys-modal-btn confirm fp-edit-btn" style="padding: 2px 8px; font-size: 12px; border-color: ${btnColor}; color: ${btnColor};" onclick="editForumName(${viewAsHidden})">[ 修改昵称 ]</button>`;
             }
 
             document.getElementById('fp-avatar').innerText = avatarLetter;
@@ -10015,6 +10239,30 @@ function renderAdminDashboard() {
                             channelBadge = `<span style="color:#8bc34a; border:1px solid #8bc34a; background:rgba(139,195,74,0.1); padding:2px 6px; border-radius:2px; font-size:10px; margin-left:8px; white-space:nowrap;">🏢 ${post.channel.replace('ORG_', '')}</span>`;
                         }
 
+                        // 💥 核心修复：在个人主页中也加入严格的审核状态拦截
+                        let finalContentHtml = '';
+                        if (post.status === 'auditing') {
+                            // 只有本人或管理员能看到原因和半透明内容
+                            if (post.owner_id === currentUser?.id || (currentUser && ['admin', 'super_admin'].includes(currentUser.role))) {
+                                finalContentHtml = `
+                                    <div style="background: rgba(244,67,54,0.1); border: 1px dashed #f44336; padding: 8px; margin-bottom: 8px; border-radius: 4px;">
+                                        <div style="color: #f44336; font-weight: bold; font-size: 12px;">[ ⚠️ 审核中 ] 原因：${post.audit_reason || '无'}</div>
+                                    </div>
+                                    <div style="opacity: 0.5; pointer-events: none;">${formatContentWithCollapse(post.content, true, 'profile-post-' + post.id)}</div>
+                                `;
+                            } else {
+                                // 其他普通群友只能看到隐藏提示
+                                finalContentHtml = `
+                                    <div style="background: rgba(244,67,54,0.1); border: 1px dashed #f44336; padding: 15px; text-align: center; border-radius: 4px;">
+                                        <span style="color: #f44336; font-weight: bold; font-size: 12px;">[ ⚠️ 该贴正在审核中，内容已隐藏 ]</span>
+                                    </div>
+                                `;
+                            }
+                        } else {
+                            // 正常帖子
+                            finalContentHtml = formatContentWithCollapse(post.content, true, 'profile-post-' + post.id);
+                        }
+
                         return `
                             <div style="background: rgba(0,0,0,0.5); border: 1px solid ${borderColor}; padding: 15px; border-radius: 4px;">
                                 <div style="display:flex; justify-content:space-between; margin-bottom: 10px; border-bottom: 1px dashed ${borderColor}; padding-bottom: 5px; align-items: flex-start; gap: 10px;">
@@ -10025,7 +10273,7 @@ function renderAdminDashboard() {
                                     <span style="color: #666; font-family: monospace; font-size: 11px; white-space: nowrap;">${timeStr}</span>
                                 </div>
                                 <div style="color: #fff; font-size: 13px; line-height: 1.6; word-break: break-word;">
-                                    ${formatContentWithCollapse(post.content, true, 'profile-post-' + post.id)}
+                                    ${finalContentHtml}
                                 </div>
                             </div>
                         `;
@@ -10035,10 +10283,12 @@ function renderAdminDashboard() {
                 console.error(err);
                 feed.innerHTML = `<div style="color:#f44336; text-align:center; margin-top: 20px; font-family:monospace;">[ ✕ 跨频段检索失败，请检查网络 ]</div>`;
             }
-        };
 
+            // 💥 关闭论坛个人主页
         window.closeForumProfile = function() {
-            document.getElementById('forumProfileModal').classList.remove('active');
+            const modal = document.getElementById('forumProfileModal');
+            if (modal) modal.classList.remove('active');
+        };
         };
 
 // 1. 初始化论坛
@@ -10466,8 +10716,7 @@ window.formatMentions = function(text) {
                         let cDeleteBtn = (canManage || c.owner_id === currentUser?.id)
                             ? `<span style="color:#f44336; cursor:pointer; font-size:12px;" onclick="deleteForumComment('${c.id}')">[删]</span>` : '';
                         
-                        let cEditBtn = (c.owner_id === currentUser?.id || isGlobalAdmin) 
-                            ? `<span style="color:#ffeb3b; cursor:pointer; font-size:12px;" onclick="editForumComment('${c.id}')">[改]</span>` : '';
+                        // 💥 已经移除了 cEditBtn (修改评论按钮)
                         
                         let cReplyBtn = '';
                         if ((myChar && !isListeningMode) || isGlobalAdmin) {
@@ -10480,7 +10729,6 @@ window.formatMentions = function(text) {
                                     <div style="display:flex; align-items:center; flex-wrap:wrap; gap:6px;">
                                         <span class="comment-author" style="${nameStyle}; cursor:pointer;" onclick="openForumProfile('${c.owner_id}', ${isHidden})">[${cName}]</span>
                                         ${cReplyBtn}
-                                        ${cEditBtn}
                                         ${cDeleteBtn}
                                     </div>
                                     <span style="font-family:monospace; color:#666; font-size:10px; flex-shrink:0; margin-top:2px;">${new Date(c.created_at).toLocaleString()}</span>
@@ -10717,7 +10965,7 @@ window.deleteForumComment = async function(commentId) {
             }
         };
 
-        // 💥 修改帖子 (支持更新时间与自动解除审核)
+        // 💥 修改帖子 (恢复自动解除审核功能)
         window.editForumPost = async function(postId) {
             const post = forumPostsDB.find(p => p.id === postId);
             if (!post) return;
@@ -10726,16 +10974,17 @@ window.deleteForumComment = async function(commentId) {
             if (newContent === null || newContent.trim() === '') return;
             
             try {
-                // 💥 核心：修改后更新 created_at 刷新发帖时间，并自动解除审核状态
+                // 既然数据库已经有了 status 和 audit_reason 字段，我们可以恢复自动解除审核的功能
                 const { error } = await supabaseClient.from('forum_posts').update({ 
                     content: newContent.trim(),
-                    created_at: new Date().toISOString(), // 刷新发帖时间，帖子会重新顶到最上面
                     status: 'active', // 自动解除审核
                     audit_reason: null
                 }).eq('id', postId);
+                
                 if (error) throw error;
                 loadForumData(true);
             } catch (e) {
+                console.error("修改广播报错:", e);
                 SysModal.alert("修改失败，请检查网络。", "ERROR");
             }
         };
