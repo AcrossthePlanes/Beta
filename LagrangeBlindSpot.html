@@ -4187,6 +4187,54 @@ textarea:-webkit-autofill:active {
             display: block;
         }
 
+        /* =========================================
+           论坛长文本智能折叠系统
+           ========================================= */
+        .content-collapse-wrapper {
+            max-height: 120px; /* 默认折叠高度，大约 5-6 行 */
+            overflow: hidden;
+            /* 💥 核心黑科技：使用遮罩实现底部文字渐隐，完美融合任何背景色 */
+            -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+            mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+            transition: max-height 0.5s cubic-bezier(0, 1, 0, 1); /* 丝滑展开动画 */
+        }
+        
+        .content-collapse-wrapper.expanded {
+            max-height: 3000px; /* 展开后的最大高度限制（足够容纳万字长文） */
+            -webkit-mask-image: none;
+            mask-image: none;
+            transition: max-height 0.5s ease-in-out;
+        }
+
+        .expand-toggle-btn {
+            background: transparent;
+            border: none;
+            color: #12a8ff;
+            font-family: monospace;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 5px 0;
+            margin-top: 5px;
+            display: inline-block;
+            transition: 0.2s;
+        }
+
+        .expand-toggle-btn:hover {
+            color: #fff;
+            text-shadow: 0 0 8px #12a8ff;
+        }
+
+        /* =========================================
+           💥 论坛排版终极修复：强制换行防撑破
+           ========================================= */
+        .post-content, 
+        .comment-content, 
+        .content-collapse-wrapper {
+            word-break: break-word !important; /* 强制打断长单词或连续字母 */
+            overflow-wrap: anywhere !important; /* 确保在任何情况下都不会撑出容器 */
+            white-space: pre-wrap; /* 保留正常的换行符 */
+        }
+
     </style>
 </head>
 <body class="secure-no-select">
@@ -9567,47 +9615,107 @@ window.initForum = async function() {
             initForum(); // 重新渲染 UI 和数据
         };
 
-// 3. 从云端加载帖子和评论
-window.loadForumData = async function() {
-    const feed = document.getElementById('forum-feed');
-    feed.innerHTML = window.getCyberLoaderHTML('正在解密通讯信号...', '#4caf50');
+// 3. 从云端加载帖子和评论 (加入保持滚动位置功能)
+        window.loadForumData = async function(keepScroll = false) {
+            const feed = document.getElementById('forum-feed');
+            const currentScroll = window.scrollY || window.pageYOffset; // 记录当前滚动位置
 
-    try {
-        // 拉取当前频道的帖子
-        const { data: posts, error: pErr } = await supabaseClient
-            .from('forum_posts')
-            .select('*')
-            .eq('channel', currentForumChannel)
-            .order('created_at', { ascending: false });
-        if (pErr) throw pErr;
+            if (!keepScroll) {
+                // 首次进入论坛时，显示加载动画
+                feed.innerHTML = window.getCyberLoaderHTML('正在解密通讯信号...', '#4caf50');
+            } else {
+                // 发送消息刷新时，仅降低透明度，不销毁 DOM，防止页面跳动
+                feed.style.opacity = '0.5'; 
+            }
 
-        // 拉取这些帖子对应的评论
-        const postIds = posts.map(p => p.id);
-        let comments = [];
-        if (postIds.length > 0) {
-            const { data: coms, error: cErr } = await supabaseClient
-                .from('forum_comments')
-                .select('*')
-                .in('post_id', postIds)
-                .order('created_at', { ascending: true });
-            if (cErr) throw cErr;
-            comments = coms;
-        }
+            try {
+                const { data: posts, error: pErr } = await supabaseClient
+                    .from('forum_posts')
+                    .select('*')
+                    .eq('channel', currentForumChannel)
+                    .order('created_at', { ascending: false });
+                if (pErr) throw pErr;
 
-        forumPostsDB = posts;
-        forumCommentsDB = comments;
-        
-        renderForumFeed();
-    } catch (err) {
-        console.error(err);
-        feed.innerHTML = '<div style="color:#f44336; font-family:monospace;">[ ✕ 信号丢失，无法读取通讯频段 ]</div>';
-    }
-};
+                const postIds = posts.map(p => p.id);
+                let comments = [];
+                if (postIds.length > 0) {
+                    const { data: coms, error: cErr } = await supabaseClient
+                        .from('forum_comments')
+                        .select('*')
+                        .in('post_id', postIds)
+                        .order('created_at', { ascending: true });
+                    if (cErr) throw cErr;
+                    comments = coms;
+                }
+
+                forumPostsDB = posts;
+                forumCommentsDB = comments;
+                
+                renderForumFeed();
+
+                // 恢复滚动位置
+                if (keepScroll) {
+                    window.scrollTo({ top: currentScroll, behavior: 'auto' });
+                }
+            } catch (err) {
+                console.error(err);
+                feed.innerHTML = '<div style="color:#f44336; font-family:monospace;">[ ✕ 信号丢失，无法读取通讯频段 ]</div>';
+            } finally {
+                feed.style.opacity = '1'; // 恢复透明度
+            }
+        };
 
 // 💥 格式化文本：高亮艾特 (@某人) 💥
 window.formatMentions = function(text) {
     return text.replace(/@([^\s，。！？、：；]+)/g, '<span style="color:#ffeb3b; text-shadow:0 0 5px rgba(255,235,59,0.5); font-weight:bold; cursor:pointer;">@$1</span>');
 };
+
+// 💥 智能折叠判定引擎 (修复了首行多余空格的问题)
+        window.formatContentWithCollapse = function(text, isPost, id) {
+            const formatted = formatMentions(text.replace(/\n/g, '<br>'));
+            const lineCount = (text.match(/\n/g) || []).length;
+            const charCount = text.length;
+            
+            // 设定阈值：帖子容忍度高一点，评论容忍度低一点
+            const limitLines = isPost ? 6 : 4;
+            const limitChars = isPost ? 200 : 100;
+            
+            // 如果超标，则包裹折叠 HTML
+            if (lineCount > limitLines || charCount > limitChars) {
+                // 💥 核心修复：去掉了模板字符串里的所有换行和缩进空格，防止被 pre-wrap 渲染出来
+                return `<div class="content-collapse-wrapper" id="collapse-${id}">${formatted}</div><button class="expand-toggle-btn" onclick="toggleCollapse('collapse-${id}', this)">[ 展开全文 ↓ ]</button>`;
+            }
+            // 没超标就正常显示
+            return formatted;
+        };
+
+        // 💥 展开/收起切换动作
+        window.toggleCollapse = function(wrapperId, btn) {
+            const wrapper = document.getElementById(wrapperId);
+            if (wrapper.classList.contains('expanded')) {
+                wrapper.classList.remove('expanded');
+                btn.innerText = '[ 展开全文 ↓ ]';
+                // 收起时稍微往上滚一点，防止视野丢失
+                wrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+                wrapper.classList.add('expanded');
+                btn.innerText = '[ 收起 ↑ ]';
+            }
+        };
+
+        // 💥 展开/收起多余评论
+        window.toggleComments = function(postId, hiddenCount, btn) {
+            const hiddenDiv = document.getElementById('hidden-comments-' + postId);
+            if (hiddenDiv.style.display === 'none') {
+                hiddenDiv.style.display = 'block';
+                btn.innerText = '[ 收起回复 ↑ ]';
+            } else {
+                hiddenDiv.style.display = 'none';
+                btn.innerText = `[ 展开其余 ${hiddenCount} 条回复 ↓ ]`;
+                // 收起时，让页面滚回到这条帖子的顶部，防止视野丢失
+                document.getElementById('forum-post-' + postId).scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        };
 
 // 4. 渲染帖子流 (全面增强版)
 window.renderForumFeed = function() {
@@ -9649,27 +9757,27 @@ window.renderForumFeed = function() {
         if (post.author_type === 'hidden' && authorChar && authorChar.has_hidden) {
             callsign = authorChar.hidden_callsign;
             factionTag = authorChar.hidden_faction;
-            cardClass += ' hidden-identity'; 
+            // 💥 修复：去掉了 cardClass += ' hidden-identity'; 让里身份完美伪装成普通人
         }
         const avatarLetter = callsign.charAt(0).toUpperCase();
 
         const timeObj = new Date(post.created_at);
         const timeStr = `${timeObj.getFullYear()}-${String(timeObj.getMonth()+1).padStart(2,'0')}-${String(timeObj.getDate()).padStart(2,'0')} ${String(timeObj.getHours()).padStart(2,'0')}:${String(timeObj.getMinutes()).padStart(2,'0')}`;
 
-        // 💥 评论区增强：里身份渲染、回复按钮与删除按钮
+        // 💥 评论区增强：里身份渲染、回复按钮、删除按钮与【智能折叠系统】
         const postComments = forumCommentsDB.filter(c => c.post_id === post.id);
         let commentsHtml = '';
         
         if (postComments.length > 0) {
-            commentsHtml = postComments.map(c => {
+            // 提取单个评论的渲染逻辑为一个内部函数，方便复用
+            const renderSingleComment = (c) => {
                 const cAuthor = characterDB.find(char => char.owner_id === c.owner_id);
                 let cName = cAuthor ? cAuthor.callsign : 'UNKNOWN';
                 let isHidden = c.author_type === 'hidden' && cAuthor && cAuthor.has_hidden;
                 if (isHidden) cName = cAuthor.hidden_callsign;
 
-                let nameStyle = isHidden ? 'color: #ff80ab; text-shadow: 0 0 5px #e91e63;' : 'color: #12a8ff; font-weight: bold;';
+                let nameStyle = 'color: #12a8ff; font-weight: bold;';
 
-                // 删除与回复控制
                 let cDeleteBtn = (['admin', 'super_admin'].includes(currentUser?.role) || c.owner_id === currentUser?.id)
                     ? `<span style="color:#f44336; cursor:pointer; font-size:12px; margin-left:8px;" onclick="deleteForumComment('${c.id}')">[删]</span>` : '';
                 
@@ -9684,17 +9792,40 @@ window.renderForumFeed = function() {
                             <span class="comment-author" style="${nameStyle}">[${cName}] ${cReplyBtn} ${cDeleteBtn}</span>
                             <span style="font-family:monospace; color:#666; font-size:10px;">${new Date(c.created_at).toLocaleString()}</span>
                         </div>
-                        <span class="comment-content">${formatMentions(c.content.replace(/\n/g, '<br>'))}</span>
+                        <div class="comment-content">${formatContentWithCollapse(c.content, false, 'comment-' + c.id)}</div>
                     </div>
                 `;
-            }).join('');
+            };
+
+            const COMMENT_LIMIT = 3; // 💥 设定阈值：超过 3 条回复就折叠
+            
+            if (postComments.length <= COMMENT_LIMIT) {
+                // 没超标，直接全部渲染
+                commentsHtml = postComments.map(renderSingleComment).join('');
+            } else {
+                // 超标了，切分数组
+                const visibleComments = postComments.slice(0, COMMENT_LIMIT).map(renderSingleComment).join('');
+                const hiddenComments = postComments.slice(COMMENT_LIMIT).map(renderSingleComment).join('');
+                const hiddenCount = postComments.length - COMMENT_LIMIT;
+                
+                // 组装：可见部分 + 隐藏容器 + 展开按钮
+                commentsHtml = `
+                    ${visibleComments}
+                    <div id="hidden-comments-${post.id}" style="display: none;">
+                        ${hiddenComments}
+                    </div>
+                    <button class="expand-toggle-btn" style="width: 100%; text-align: center; background: rgba(18,168,255,0.05); border: 1px dashed rgba(18,168,255,0.3); margin-top: 5px; padding: 8px 0;" onclick="toggleComments('${post.id}', ${hiddenCount}, this)">
+                        [ 展开其余 ${hiddenCount} 条回复 ↓ ]
+                    </button>
+                `;
+            }
         }
 
         // 💥 评论输入框增强：新增表里身份选择下拉框
         const hasChar = characterDB.some(c => c.owner_id === currentUser?.id);
         let commentInputHtml = '';
         if (hasChar || ['admin', 'super_admin'].includes(currentUser?.role)) {
-            let authorTypeHtml = '';
+            let authorTypeHtml = ''; // 💥 就是这行刚才可能被误删了
             if (myChar && myChar.has_hidden) {
                 authorTypeHtml = `
                     <select id="comment-author-type-${post.id}" style="background: rgba(0,0,0,0.5); color: #fff; border: 1px solid #12a8ff; padding: 4px; font-family: monospace; outline: none; border-radius: 2px; font-size:12px;">
@@ -9707,9 +9838,15 @@ window.renderForumFeed = function() {
             commentInputHtml = `
                 <div class="comment-input-box" style="display:flex; flex-direction:column; gap:8px; margin-top: 15px;">
                     ${authorTypeHtml}
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="comment-input-${post.id}" placeholder="输入回复内容..." onkeydown="if(event.key==='Enter') submitComment('${post.id}')" style="flex:1;">
-                        <button class="sys-modal-btn confirm" style="padding: 6px 12px; height: 100%; white-space:nowrap;" onclick="submitComment('${post.id}')">回复</button>
+                    <div style="display:flex; gap:8px; align-items: flex-end;">
+                        <textarea id="comment-input-${post.id}" 
+                            rows="1" 
+                            placeholder="输入回复... (电脑端 Enter+Shift换行)" 
+                            oninput="this.style.height='auto'; this.style.height=(this.scrollHeight)+'px';"
+                            onkeydown="if(event.key==='Enter') { const isMobile = window.innerWidth <= 900 || /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent); if(!isMobile && !event.shiftKey) { event.preventDefault(); submitComment('${post.id}'); } }" 
+                            style="flex:1; background: rgba(0,0,0,0.5); border: 1px solid rgba(18, 168, 255, 0.3); color: #fff; padding: 8px 10px; font-family: 'PingFang SC', sans-serif; outline: none; resize: none; border-radius: 2px; min-height: 34px; max-height: 120px; overflow-y: auto; font-size: 13px; line-height: 1.4;"></textarea>
+                        
+                        <button class="sys-modal-btn confirm" style="width: auto !important; min-width: 60px; padding: 0 15px !important; height: 34px; line-height: 34px; white-space:nowrap; flex-shrink: 0; font-size: 12px; border-width: 1px; margin: 0 !important;" onclick="submitComment('${post.id}')">回复</button>
                     </div>
                 </div>
             `;
@@ -9717,6 +9854,7 @@ window.renderForumFeed = function() {
 
         const div = document.createElement('div');
         div.className = cardClass;
+        div.id = `forum-post-${post.id}`; // 💥 新增：给帖子加上 ID 方便定位
         
         let deleteBtnHtml = '';
         if (['admin', 'super_admin'].includes(currentUser?.role) || post.owner_id === currentUser?.id) {
@@ -9734,8 +9872,7 @@ window.renderForumFeed = function() {
                 </div>
                 <div class="post-time">${timeStr}</div>
             </div>
-            <div class="post-content">${formatMentions(post.content.replace(/\n/g, '<br>'))}</div>
-            <div class="comments-section">
+            <div class="post-content">${formatContentWithCollapse(post.content, true, 'post-' + post.id)}</div>
                 ${commentsHtml}
                 ${commentInputHtml}
             </div>
@@ -9759,7 +9896,7 @@ window.deleteForumComment = async function(commentId) {
     if (!isSure) return;
     try {
         await supabaseClient.from('forum_comments').delete().eq('id', commentId);
-        loadForumData();
+        loadForumData(true);
     } catch(e) {
         SysModal.alert("删除失败", "ERROR");
     }
@@ -9787,7 +9924,7 @@ window.submitForumPost = async function() {
         if (error) throw error;
         
         input.value = '';
-        loadForumData(); 
+        loadForumData(true); 
     } catch (err) {
         console.error(err);
         SysModal.alert('发送失败，请检查网络。', 'ERROR');
@@ -9816,7 +9953,7 @@ window.submitComment = async function(postId) {
         if (error) throw error;
         
         input.value = '';
-        loadForumData(); 
+        loadForumData(true); 
     } catch (err) {
         console.error(err);
         SysModal.alert('回复失败，请检查网络。', 'ERROR');
@@ -9830,7 +9967,7 @@ window.deleteForumPost = async function(postId) {
 
     try {
         await supabaseClient.from('forum_posts').delete().eq('id', postId);
-        loadForumData();
+        loadForumData(true);
     } catch (err) {
         SysModal.alert('删除失败。', 'ERROR');
     }
@@ -9875,25 +10012,45 @@ window.deleteForumPost = async function(postId) {
             }
         });
 
-        // 点击消息跳转至对应的频段 (这段保持不变)
-        window.gotoPost = function(channel) {
+        // 💥 点击消息跳转至对应的频段并定位到具体帖子
+        window.gotoPost = async function(channel, postId) {
             const dropdown = document.getElementById('notif-dropdown');
             if (dropdown) dropdown.style.display = 'none';
             
             const forumBtn = document.querySelector('.wiki-item-btn[data-target="forumView"]');
             if(forumBtn) forumBtn.click();
             
-            setTimeout(() => switchForumChannel(channel), 100);
+            // 切换频道并等待数据加载完毕
+            currentForumChannel = channel;
+            sessionStorage.setItem('tf141_forum_channel', channel);
+            await initForum(); 
+            
+            // 延迟一下等待 DOM 渲染，然后滚动到对应帖子
+            setTimeout(() => {
+                const postEl = document.getElementById(`forum-post-${postId}`);
+                if (postEl) {
+                    postEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // 闪烁高亮特效 (赛博黄锁定)
+                    postEl.style.transition = 'box-shadow 0.3s, border-color 0.3s';
+                    postEl.style.boxShadow = '0 0 30px #ffeb3b, inset 0 0 20px #ffeb3b';
+                    postEl.style.borderColor = '#ffeb3b';
+                    
+                    // 2秒后恢复原样
+                    setTimeout(() => {
+                        postEl.style.boxShadow = '';
+                        postEl.style.borderColor = '';
+                    }, 2000);
+                }
+            }, 300);
         };
 
-        // 检查被提及的新消息
+        // 💥 检查被提及的新消息 (增强版：支持楼内回复监听)
         window.checkNotifications = async function() {
             if (!currentUser || currentUser.role === 'guest') return;
             const dropdown = document.getElementById('notif-dropdown');
             
             const myChar = characterDB.find(c => c.owner_id === currentUser.id);
             if (!myChar) {
-                // 💥 修复：如果用户还没建卡，给个友好的提示，而不是什么都不显示
                 if (dropdown) dropdown.innerHTML = `<div style="color:#8bb9d6; font-size:12px; text-align:center; padding:15px;">[ 需要先录入公民档案，才能接收加密通讯 ]</div>`;
                 return;
             }
@@ -9901,24 +10058,31 @@ window.deleteForumPost = async function(postId) {
             const callsign = myChar.callsign;
             const hiddenCallsign = (myChar.has_hidden && myChar.hidden_callsign) ? myChar.hidden_callsign.trim() : null;
 
-            // 同时检索表身份和里身份的艾特
-            let query = `content.ilike.%@${callsign}%`;
-            if (hiddenCallsign) {
-                query += `,content.ilike.%@${hiddenCallsign}%`;
-            }
+            // 💥 新增：获取我发过的所有帖子 ID，用来接收“楼内直接回复”
+            const { data: myPosts } = await supabaseClient.from('forum_posts').select('id').eq('owner_id', currentUser.id);
+            const myPostIds = myPosts ? myPosts.map(p => p.id) : [];
+
+            // 评论查询：包含 @我的，或者 回复了我的帖子的
+            let commentQuery = `content.ilike.%@${callsign}%`;
+            if (hiddenCallsign) commentQuery += `,content.ilike.%@${hiddenCallsign}%`;
+            if (myPostIds.length > 0) commentQuery += `,post_id.in.(${myPostIds.join(',')})`;
+
+            // 帖子查询：只包含 @我的
+            let postQuery = `content.ilike.%@${callsign}%`;
+            if (hiddenCallsign) postQuery += `,content.ilike.%@${hiddenCallsign}%`;
 
             try {
                 const { data: comments, error: cErr } = await supabaseClient
                     .from('forum_comments')
                     .select('*, forum_posts(channel)')
-                    .or(query)
+                    .or(commentQuery)
                     .order('created_at', { ascending: false })
                     .limit(15);
                     
                 const { data: posts, error: pErr } = await supabaseClient
                     .from('forum_posts')
                     .select('*')
-                    .or(query)
+                    .or(postQuery)
                     .order('created_at', { ascending: false })
                     .limit(15);
 
@@ -9928,11 +10092,11 @@ window.deleteForumPost = async function(postId) {
                 if (comments) allMentions = allMentions.concat(comments.map(c => ({...c, is_post: false, chan: c.forum_posts?.channel})));
                 if (posts) allMentions = allMentions.concat(posts.map(p => ({...p, is_post: true, chan: p.channel})));
                 
-                // 排除自己艾特自己的情况
+                // 排除自己回复自己的情况
                 allMentions = allMentions.filter(m => m.owner_id !== currentUser.id);
                 
                 allMentions.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-                allMentions = allMentions.slice(0, 15); // 最多保留15条记录
+                allMentions = allMentions.slice(0, 15);
 
                 const lastReadTime = parseInt(localStorage.getItem(`tf141_notif_read_${currentUser.id}`) || '0', 10);
                 
@@ -9941,7 +10105,6 @@ window.deleteForumPost = async function(postId) {
 
                 const badge = document.getElementById('notif-badge');
                 
-                // 控制小红点显示
                 if (newMentions.length > 0) {
                     if (badge) {
                         badge.style.display = 'inline-block';
@@ -9951,7 +10114,6 @@ window.deleteForumPost = async function(postId) {
                     if (badge) badge.style.display = 'none';
                 }
 
-                // 渲染下拉面板
                 if (dropdown) {
                     let html = '';
                     
@@ -9962,14 +10124,24 @@ window.deleteForumPost = async function(postId) {
                         
                         const timeStr = new Date(item.created_at).toLocaleString();
                         const snippet = item.content.length > 25 ? item.content.substring(0, 25) + '...' : item.content;
-                        const actionStr = item.is_post ? "在全息广播中提到了你" : "在回复中提到了你";
                         
-                        // 新消息高亮，历史消息变暗
+                        // 💥 智能判断提示语：是@我，还是直接回复了我的帖子
+                        let actionStr = "";
+                        if (item.is_post) {
+                            actionStr = "在全息广播中提到了你";
+                        } else {
+                            const isMention = item.content.includes(`@${callsign}`) || (hiddenCallsign && item.content.includes(`@${hiddenCallsign}`));
+                            actionStr = isMention ? "在回复中提到了你" : "回复了你的广播";
+                        }
+                        
                         const borderStyle = isNew ? 'border:1px solid #12a8ff;' : 'border:1px solid rgba(18,168,255,0.3); opacity: 0.6;';
                         const titleColor = isNew ? '#e0f2fe' : '#8bb9d6';
                         
+                        // 💥 核心：传入目标帖子的 ID
+                        const targetPostId = item.is_post ? item.id : item.post_id;
+                        
                         return `
-                            <div style="background:rgba(0,5,10,0.8); ${borderStyle} padding:8px; border-radius:4px; cursor:pointer; transition:0.2s; margin-bottom:5px;" onmouseover="this.style.background='rgba(18,168,255,0.2)'; this.style.opacity='1';" onmouseout="this.style.background='rgba(0,5,10,0.8)'; this.style.opacity='${isNew ? 1 : 0.6}';" onclick="gotoPost('${item.chan}')">
+                            <div style="background:rgba(0,5,10,0.8); ${borderStyle} padding:8px; border-radius:4px; cursor:pointer; transition:0.2s; margin-bottom:5px;" onmouseover="this.style.background='rgba(18,168,255,0.2)'; this.style.opacity='1';" onmouseout="this.style.background='rgba(0,5,10,0.8)'; this.style.opacity='${isNew ? 1 : 0.6}';" onclick="gotoPost('${item.chan}', '${targetPostId}')">
                                 <div style="color:${titleColor}; font-size:12px; margin-bottom:4px;">
                                     ${isNew ? '<span style="color:#f44336; font-weight:bold; margin-right:4px;">[NEW]</span>' : ''}
                                     <strong>${authorName}</strong> ${actionStr}
@@ -9980,13 +10152,11 @@ window.deleteForumPost = async function(postId) {
                         `;
                     };
 
-                    // 渲染最新消息
                     if (newMentions.length > 0) {
                         html += `<div style="font-family:monospace; color:#12a8ff; font-weight:bold; border-bottom:1px dashed rgba(18,168,255,0.4); padding-bottom:5px; margin-bottom:5px;">[ 最新提及 MENTIONS ]</div>`;
                         newMentions.forEach(item => html += renderMentionItem(item, true));
                     }
                     
-                    // 渲染历史消息
                     if (historyMentions.length > 0) {
                         html += `<div style="font-family:monospace; color:#666; font-weight:bold; border-bottom:1px dashed rgba(255,255,255,0.2); padding-bottom:5px; margin-top:10px; margin-bottom:5px;">[ 历史消息 HISTORY ]</div>`;
                         historyMentions.forEach(item => html += renderMentionItem(item, false));
