@@ -61,11 +61,12 @@
             display: flex;
             justify-content: space-between; 
             align-items: flex-end; 
-            border-bottom: 2px solid rgba(18, 168, 255, 0.5); /* 保留这条发光的线 */
+            border-bottom: 2px solid rgba(18, 168, 255, 0.5);
             padding-bottom: 10px;
-            margin-bottom: 0; /* 💥 重点：改为 0，去掉多余的空白，让毛玻璃精准截断 */
+            margin-bottom: 0; 
         }
 
+        /* 这是电脑端的发光标题！千万不要删掉它的字体和发光特效 */
         .group-name {
             font-size: 24px;
             font-weight: bold;
@@ -3588,14 +3589,11 @@ textarea:-webkit-autofill:active {
         }
 
         /* =========================================
-           💥 终极修复：彻底锁死屏幕，防止向右拉伸撑破 💥
+           💥 终极修复：解除死锁，改用智能算法防拉伸 💥
            ========================================= */
-        /* 1. 修复：改用 clip 替代 hidden，既能防止横向拉伸，又不会破坏顶部导航栏的 sticky 吸顶效果 */
         body {
-            overflow-x: clip !important; 
-            width: 100% !important;
-            max-width: 100vw !important;
             position: relative;
+            width: 100%;
         }
 
         /* =========================================
@@ -3778,30 +3776,64 @@ textarea:-webkit-autofill:active {
         @media (max-width: 768px) {
             .viewport-container { display: none; }
 
-            /* 顶部导航栏网格重构 */
-            .top-nav-wrapper { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 10px; padding: 10px 15px; border-bottom: 1px solid rgba(18, 168, 255, 0.5); }
+            /* =====================================
+               手机端：大屏手机 (iPhone 11 等宽度充足) 
+               ===================================== */
+            .top-nav-wrapper { 
+                display: grid; 
+                grid-template-columns: auto minmax(0, 1fr) auto; 
+                align-items: center; 
+                gap: 12px; 
+                padding: 15px 20px; 
+                border-bottom: 1px solid rgba(18, 168, 255, 0.5); 
+            }
             .header { display: contents; }
             
             .floating-menu-btn {
                 grid-column: 1; grid-row: 1; position: static; width: auto; height: auto;
                 background: transparent; border: none; box-shadow: none; backdrop-filter: none;
-                font-size: 24px; padding: 0; color: #12a8ff; line-height: 1;
-                display: flex; align-items: center; justify-content: center; margin-top: 8px;
+                font-size: 26px; padding: 0; color: #12a8ff; line-height: 1;
+                display: flex; align-items: center; justify-content: center; margin: 0;
             }
-            .floating-menu-btn:hover { color: #fff; text-shadow: 0 0 10px #12a8ff; }
             
-            .group-name { grid-column: 2; grid-row: 1; font-size: 24px; white-space: nowrap; letter-spacing: 1px; line-height: 1; margin-bottom: 0; display: flex; align-items: center; margin-top: 8px; }
-            .header-right { grid-column: 3; grid-row: 1; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 5px; width: 100%; }
-            .lang-text { font-size: 12px; background: transparent; padding: 0; border: none; gap: 8px; line-height: 1; }
-            .hide-on-mobile { display: none; } 
-            .search-group { width: 95%; max-width: 140px; height: 20px; margin-top: 0; box-shadow: none; border: 1px solid #12a8ff; background: rgba(0, 5, 10, 0.6); }
+            /* 手机端的标题，使用自动计算缩放 */
+            .group-name { 
+                grid-column: 2; grid-row: 1; 
+                
+                /* 💥 核心黑科技：clamp(最小字号, 动态计算, 最大字号) */
+                /* 5.5vw 意味着屏幕越宽字越大。iPhone SE 是 17px，12 Pro 是 21px，大屏是 24px */
+                font-size: clamp(16px, 5.5vw, 24px); 
+                
+                letter-spacing: 0.5px; /* 稍微收紧一点字间距，腾出空间 */
+                line-height: 1; 
+                margin: 0; 
+                display: block; 
+                text-align: left; 
+                white-space: nowrap;
+                font-family: "Impact", sans-serif; 
+                text-shadow: none; 
+                
+                /* 加上防爆屏的最后底线，但平时不会触发 */
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
+            .header-right { 
+                grid-column: 3; grid-row: 1; 
+                display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 5px; 
+                min-width: 0; 
+            }
+            .lang-text { font-size: 11px; background: transparent; padding: 0; border: none; gap: 5px; line-height: 1; }
+            .hide-on-mobile { display: none !important; } 
+            
+            .search-group { width: 120px; max-width: 100%; height: 26px; margin-top: 0; box-shadow: none; border: 1px solid #12a8ff; background: rgba(0, 5, 10, 0.6); }
             .search-group:focus-within { box-shadow: 0 0 8px rgba(18,168,255,0.4); transform: none; }
             .search-prefix { display: none; }
-            .search-input { flex-grow: 1; width: 100%; font-size: 11px; padding: 0 6px; line-height: 24px; }
+            .search-input { flex-grow: 1; width: 100%; font-size: 12px; padding: 0 8px; line-height: 26px; }
             .search-input:focus { width: 100%; } 
-            .search-btn { padding: 0 8px; border-left: 1px solid rgba(18, 168, 255, 0.4); display: flex; align-items: center; justify-content: center; }
+            .search-btn { padding: 0 10px; border-left: 1px solid rgba(18, 168, 255, 0.4); display: flex; align-items: center; justify-content: center; }
             .search-btn svg { width: 12px; height: 12px; } 
-            .search-dropdown { width: 85vw; max-width: 320px; right: 0; } /* 💥修复：去掉 -5px，防止搜索框撑破屏幕 */
+            .search-dropdown { width: 85vw; max-width: 320px; right: 0; }
 
             /* 扁平化与间距收紧 */
             .hero-chip { font-size: 9px; padding: 2px 6px; border-width: 1px; box-shadow: none; letter-spacing: 1px; margin-bottom: 1rem; }
@@ -3926,13 +3958,12 @@ textarea:-webkit-autofill:active {
         }
 
        /* =========================================
-           💥 顶级赛博轴线展开动效 V9 (终极完美版) 💥
+           💥 顶级赛博轴线展开动效 V10 (真·自适应版) 💥
            ========================================= */
-        /* 1. 物理级锁死网页宽度，使用 clip 完美兼容 sticky 吸顶！ */
+        /* 1. 解除物理死锁，恢复原生滑动能力，依靠底层的边界探测算法防止拉伸 */
         html, body {
-            overflow-x: clip !important; 
-            width: 100% !important;
-            max-width: 100vw !important;
+            overflow-x: hidden; 
+            width: 100%;
         }
 
         @media (max-width: 900px) {
@@ -3962,6 +3993,7 @@ textarea:-webkit-autofill:active {
                 pointer-events: none;
                 transition: visibility 0s linear 0.6s !important;
                 z-index: 100;
+                transform: translateX(var(--menu-shift, 0px)); /* 💥 重点：接受 JS 传来的智能偏移量 */
             }
             .world-toc.open .toc-list {
                 visibility: visible;
@@ -3997,7 +4029,7 @@ textarea:-webkit-autofill:active {
 
             /* 左侧展开 */
             .world-toc.align-left .toc-list { left: 23px !important; right: auto !important; padding-left: 15px !important; align-items: flex-start !important; }
-            .world-toc.align-left .toc-list::before { left: 0; right: auto; }
+            .world-toc.align-left .toc-list::before { left: calc(0px - var(--menu-shift, 0px)); right: auto; } /* 💥 修复偏移 */
             .world-toc.align-left .toc-list > li { transform: translateX(-15px); }
             .world-toc.align-left .toc-btn { text-align: left !important; }
             .world-toc.align-left .sub-toc-list { align-items: flex-start !important; border-left: 2px solid rgba(18,168,255,0.3); border-right: none; padding-left: 10px !important; margin-left: 5px !important; }
@@ -4006,7 +4038,7 @@ textarea:-webkit-autofill:active {
 
             /* 右侧展开 */
             .world-toc:not(.align-left) .toc-list { right: 23px !important; left: auto !important; padding-right: 15px !important; align-items: flex-end !important; }
-            .world-toc:not(.align-left) .toc-list::before { right: 0; left: auto; }
+            .world-toc:not(.align-left) .toc-list::before { right: var(--menu-shift, 0px); left: auto; } /* 💥 修复偏移 */
             .world-toc:not(.align-left) .toc-list > li { transform: translateX(15px); }
             .world-toc:not(.align-left) .toc-btn { text-align: right !important; }
             .world-toc:not(.align-left) .sub-toc-list { align-items: flex-end !important; border-right: 2px solid rgba(18,168,255,0.3); border-left: none; padding-right: 10px !important; margin-right: 5px !important; }
@@ -9076,11 +9108,32 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                     }
 
                     // 判断左右：如果在屏幕右半部分，文字就靠右对齐；否则靠左对齐
+                    let isAlignLeft = false;
                     if (centerX > window.innerWidth / 2) {
                         worldToc.classList.add('align-right');
                     } else {
                         worldToc.classList.add('align-left');
+                        isAlignLeft = true;
                     }
+
+                    // 💥 DYNAMIC CLAMPING: 自动探测手机屏幕宽度，计算出安全边界！
+                    let offsetFix = 0;
+                    const menuWidth = 180; // 目录的固定宽度
+                    if (isAlignLeft) {
+                        // 靠左对齐时，目录向右展开。检查展开后右边缘是否会戳破屏幕
+                        const expectedRight = rect.left + 23 + menuWidth;
+                        if (expectedRight > window.innerWidth - 10) {
+                            offsetFix = (window.innerWidth - 10) - expectedRight; // 产生负值，强制向左推回屏幕内
+                        }
+                    } else {
+                        // 靠右对齐时，目录向左展开。检查展开后左边缘是否会戳破屏幕
+                        const expectedLeft = rect.right - 23 - menuWidth;
+                        if (expectedLeft < 10) {
+                            offsetFix = 10 - expectedLeft; // 产生正值，强制向右推回屏幕内
+                        }
+                    }
+                    // 把计算好的偏移量交给 CSS 去执行推移动作
+                    worldToc.style.setProperty('--menu-shift', `${offsetFix}px`);
 
                     // 切换菜单显示状态
                     worldToc.classList.toggle('open');
