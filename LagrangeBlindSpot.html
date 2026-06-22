@@ -2752,6 +2752,9 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
+    min-width: 0; /* 💥 核心修复：防止 Flex 子元素无限撑开 */
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* 频道切换按钮 */
@@ -2819,11 +2822,13 @@
 .post-card {
     background: rgba(0, 5, 10, 0.7);
     border: 1px solid rgba(18, 168, 255, 0.3);
-    padding: 20px;
+    padding: 0; /* 💥 核心修复：去掉父级 padding，彻底消灭负边距 */
     border-radius: 4px;
     position: relative;
     transition: all 0.3s;
-    box-sizing: border-box; /* 💥 修复：防止 padding 撑破容器 */
+    box-sizing: border-box;
+    width: 100%;
+    overflow: hidden; /* 💥 核心修复：切断一切溢出可能 */
 }
 
 .post-card.announcement {
@@ -2842,15 +2847,25 @@
     justify-content: space-between;
     align-items: flex-start;
     border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
-    padding-bottom: 10px;
-    margin-bottom: 15px;
+    padding: 20px 20px 10px 20px; /* 💥 边距移到这里 */
+    margin-bottom: 0;
+    box-sizing: border-box;
+    width: 100%;
 }
 
 .post-author {
     display: flex;
     align-items: center;
     gap: 10px;
+    min-width: 0; /* 💥 防止长名字撑破 */
+    flex: 1;
 }
+
+.post-info {
+    min-width: 0; /* 💥 防止长名字撑破 */
+    flex: 1;
+}
+
 
 .post-avatar {
     width: 40px;
@@ -2891,15 +2906,22 @@
     font-size: 14px;
     line-height: 1.6;
     white-space: pre-wrap;
-    margin-bottom: 15px;
+    padding: 15px 20px 20px 20px; /* 💥 边距移到这里 */
+    margin-bottom: 0;
+    word-break: break-word;
+    box-sizing: border-box;
+    width: 100%;
 }
+
 
 /* 评论区 */
 .comments-section {
     background: rgba(0, 0, 0, 0.4);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 15px;
-    margin: 0 -20px -20px -20px;
+    padding: 15px 20px; /* 💥 边距移到这里 */
+    margin: 0; /* 💥 核心修复：彻底干掉导致安卓错乱的负边距 (-20px) */
+    box-sizing: border-box;
+    width: 100%;
 }
 
 .comment-item {
@@ -3759,8 +3781,22 @@ textarea:-webkit-autofill:active {
         .comment-author-group { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
         .comment-time-text { font-family: monospace; color: #666; font-size: 10px; flex-shrink: 0; margin-top: 2px; }
         .comment-action-btn { cursor: pointer; font-size: 12px; }
-        .comment-input-wrapper { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
-        .comment-input-row { display: flex; gap: 8px; align-items: flex-end; }
+        .comment-input-wrapper { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 8px; 
+    margin-top: 15px; 
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.comment-input-row { 
+    display: flex; 
+    gap: 8px; 
+    align-items: flex-end; 
+    width: 100%;
+    box-sizing: border-box;
+}
 .comment-textarea {  flex: 1;  background: rgba(0,0,0,0.5);  border: 1px solid rgba(18, 168, 255, 0.3);  color: #fff;  padding: 8px 10px;  font-family: 'PingFang SC', sans-serif;  outline: none;  resize: none;  border-radius: 2px; 
     min-height: 34px; 
     max-height: 120px; 
