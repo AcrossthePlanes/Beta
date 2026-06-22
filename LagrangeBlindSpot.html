@@ -1982,26 +1982,140 @@
             text-shadow: 0 0 8px rgba(18,168,255,0.4); 
         }
 
-        /* 警告框样式 */
-        .world-warning-box { 
-            border: 1px solid #f44336; 
-            background: rgba(244, 67, 54, 0.05); 
-            padding: 20px; 
-            border-radius: 4px; 
-            color: #ffb4a9; 
-            line-height: 1.8; 
-            position: relative; 
-            overflow: hidden; 
-            margin-top: 20px;
+        /* =========================================
+           💥 赛博警戒卡片 V2 (硬核粗野主义升级版) 💥
+           ========================================= */
+        .cyber-warning-card {
+            position: relative;
+            background: rgba(15, 2, 2, 0.85); /* 极暗的血红色底 */
+            border: 1px solid #f44336;
+            border-left: 4px solid #f44336; /* 左侧加粗，硬核工业感 */
+            padding: 25px 25px 20px 25px;
+            
+            /* 💥 核心修改：限制最大宽度，并水平居中 */
+            width: 100%;
+            max-width: 750px; 
+            margin: 30px auto 0 auto; 
+            box-sizing: border-box;
+            
+            border-radius: 0; /* 绝对不要圆角 */
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(244, 67, 54, 0.2), inset 0 0 20px rgba(244, 67, 54, 0.1);
+            /* 右下角机械切角 */
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+            /* 电压不稳的故障闪烁动画 */
+            animation: warning-flicker 5s infinite;
         }
-        .world-warning-box::before { 
-            content: ''; 
-            position: absolute; 
-            top: 0; left: 0; 
-            width: 4px; height: 100%; 
-            background: #f44336; 
-            box-shadow: 0 0 10px #f44336; 
+
+        /* 背景巨大的幽灵警告水印 */
+        .cyber-warning-card::before {
+            content: 'WARNING';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: "Impact", sans-serif;
+            font-size: 100px;
+            color: rgba(244, 67, 54, 0.04);
+            pointer-events: none;
+            z-index: 0;
+            letter-spacing: 15px;
         }
+
+        /* 背景细密网格 */
+        .cyber-warning-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(244, 67, 54, 0.05) 2px, rgba(244, 67, 54, 0.05) 4px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* 💥 核心：极细、极密的工业警戒线 */
+        .hazard-stripes {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 4px; /* 从 12px 缩小到 4px，极其锐利 */
+            background: repeating-linear-gradient(
+                -45deg,
+                #f44336,
+                #f44336 6px,
+                #060b14 6px,
+                #060b14 12px
+            );
+            z-index: 1;
+            animation: hazard-scroll 0.5s linear infinite; /* 速度加快 */
+            box-shadow: 0 0 8px rgba(244, 67, 54, 0.8);
+        }
+        .hazard-stripes.top { top: 0; }
+        .hazard-stripes.bottom { bottom: 0; }
+
+        @keyframes hazard-scroll {
+            0% { background-position: 0 0; }
+            100% { background-position: 16.97px 0; } /* 完美无缝衔接的数学计算值 */
+        }
+
+        /* 💥 新增：全息红色扫描线 */
+        .warning-scanline {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: #f44336;
+            opacity: 0.8;
+            box-shadow: 0 0 15px #f44336, 0 0 30px #f44336;
+            z-index: 3;
+            animation: warning-scan 3s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes warning-scan {
+            0% { top: -10%; opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { top: 110%; opacity: 0; }
+        }
+
+        /* 接触不良的故障闪烁动画 */
+        @keyframes warning-flicker {
+            0%, 100% { box-shadow: 0 0 15px rgba(244, 67, 54, 0.2), inset 0 0 20px rgba(244, 67, 54, 0.1); opacity: 1; }
+            2% { opacity: 0.8; box-shadow: none; }
+            4% { opacity: 1; box-shadow: 0 0 30px rgba(244, 67, 54, 0.6), inset 0 0 40px rgba(244, 67, 54, 0.3); }
+            6% { opacity: 0.4; }
+            8% { opacity: 1; }
+            10% { opacity: 0.8; }
+            12% { opacity: 1; }
+            50% { box-shadow: 0 0 20px rgba(244, 67, 54, 0.3), inset 0 0 25px rgba(244, 67, 54, 0.15); }
+        }
+
+        /* 标题排版优化：缩小字号，不再头重脚轻 */
+        .warning-header-text {
+            position: relative;
+            z-index: 2;
+            color: #f44336;
+            font-family: "Impact", monospace;
+            font-size: 16px; /* 从 22px 缩小到 16px */
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-shadow: 0 0 8px rgba(244, 67, 54, 0.8);
+            border-bottom: 1px solid rgba(244, 67, 54, 0.3); /* 虚线改实线，更硬朗 */
+            padding-bottom: 8px;
+        }
+
+        /* 正文排版优化 */
+        .warning-content-text {
+            position: relative;
+            z-index: 2;
+            color: #ffb4a9;
+            font-size: 14px;
+            line-height: 1.8;
+            font-family: "PingFang SC", sans-serif;
+            text-shadow: 0 0 2px rgba(244, 67, 54, 0.3); /* 增加微弱发光，提升质感 */
+        }
+        .warning-content-text p { margin-bottom: 10px; }
+        .warning-content-text strong { color: #fff; text-shadow: 0 0 8px #f44336; }
 
         /* 阵营卡片网格 */
         .faction-grid { 
@@ -4392,11 +4506,10 @@ textarea:-webkit-autofill:active {
                                 <p>联盟、财团、外环居民、佣兵组织和无数独立势力彼此争斗、合作、背叛，在脆弱的平衡中维持着整个文明的运转；暗杀、暴动、海盗袭击、企业战争和情报渗透几乎每天都在发生，却没有任何一方能够真正摧毁自己的敌人。</p>
                                 <p>因为所有人都明白，他们共同生活在一艘正在缓慢渗水的船上。</p>
                                 <p>在这片广袤而混乱的深空之中，没有谁能真正统治谁。</p>
+                                <!-- 💥 动态渲染的系统警告卡片容器 -->
+                                <div id="dynamic-warning-container"></div>
+                            </br>
                                 <div class="glitch-text">欢迎来到深空边缘。</div>
-                                <div class="world-warning-box">
-                                    <strong style="color: #f44336; font-family: monospace; display: block; margin-bottom: 5px;">[ SYSTEM WARNING // 医疗警告 ]</strong>
-                                    开采是有代价的。原矿带有极强的神经毒性辐射，长期接触的底层矿工会患上不可逆的“星尘病”（器官纤维化与幻觉）。为了争夺这种沾满鲜血的能源，整个星系被撕裂成了三大阵营。
-                                </div>
                             </div>
                         </section>
 
@@ -4948,7 +5061,7 @@ textarea:-webkit-autofill:active {
                             </div>
                             <!-- 专属新建按钮 -->
                             <button class="submit-btn" style="margin: 0; padding: 8px 15px; font-size: 13px; color: #12a8ff; border-color: #12a8ff; background: rgba(18,168,255,0.1);" onclick="openAdminEditor('intel')">
-                                [ ➕ 新建情报 ]
+                                [ + 新建情报 ]
                             </button>
                         </div>
                     </div>
@@ -4992,6 +5105,23 @@ textarea:-webkit-autofill:active {
 </div>
                     </div>
                 </div>
+
+                <!-- 排列式分区 4：系统警告管理 -->
+<div style="margin-bottom: 50px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid rgba(244, 67, 54, 0.3); padding-bottom: 10px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+        <h3 style="color: #f44336; margin: 0; font-family: monospace; text-shadow: 0 0 8px rgba(244,67,54,0.4); letter-spacing: 1px;">
+            [ ⚠️ 系统警告管理 ]
+        </h3>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <button class="submit-btn" style="margin: 0; padding: 8px 15px; font-size: 13px; color: #f44336; border-color: #f44336; background: rgba(244,67,54,0.1);" onclick="openAdminEditor('warning')">
+                [ + 新建警告卡片 ]
+            </button>
+        </div>
+    </div>
+    <!-- 横向滑动网格 -->
+    <div class="intel-grid" id="admin-warning-grid" style="display: flex; overflow-x: auto; gap: 20px; padding-bottom: 15px; scrollbar-width: thin; scrollbar-color: #f44336 rgba(0,0,0,0.5);">
+    </div>
+</div>
 
                 <!-- 排列式分区 3：阵营与组织 -->
 <div style="margin-bottom: 50px;">
@@ -5082,6 +5212,7 @@ textarea:-webkit-autofill:active {
                                 <option value="org">组织档案 (Organization)</option>
                                 <option value="timeline">时间轴事件 (Timeline)</option>
                                 <option value="plot">主线剧情 (Story Plot)</option>
+                                <option value="warning">系统警告 (System Warning)</option>
                             </select>
                         </div>
                     </div>
@@ -9252,6 +9383,7 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
             if (defaultType === 'org') titleText = "[ 📝 新建下属组织 ]";
             if (defaultType === 'timeline') titleText = "[ 📝 新建时间轴事件 ]"; 
             if (defaultType === 'plot') titleText = "[ 📝 更新主线剧情 ]"; // 💥 顺便加上剧情的标题提示
+            if (defaultType === 'warning') titleText = "[ 📝 发布系统警告 ]"; // 👈 新增这一行
             
             document.getElementById('editor-main-title').innerText = titleText;
             document.getElementById('btn-publish-article').innerText = "[ UPLOAD TO DATABASE // 发布至数据库 ]";
@@ -9603,107 +9735,149 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
             }
         }
 
+        // 💥 动态渲染主页的系统警告卡片 (V2 硬核版)
+        window.renderSystemWarning = function() {
+            const container = document.getElementById('dynamic-warning-container');
+            if (!container) return;
+            
+            // 从数据库中筛选出 type 为 warning 的文章，按时间倒序（最新的在最前面）
+            const warnings = articlesDB.filter(a => a.type === 'warning').sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+            
+            // 默认的兜底文案
+            let warningTitle = "SYSTEM WARNING // 医疗警告";
+            let warningContent = "<p>开采是有代价的。原矿带有极强的神经毒性辐射，长期接触的底层矿工会患上不可逆的“星尘病”（器官纤维化与幻觉）。为了争夺这种沾满鲜血的能源，整个星系被撕裂成了三大阵营。</p>";
+            
+            // 如果数据库里有数据，就用数据库里最新的那条覆盖！
+            if (warnings.length > 0) {
+                warningTitle = warnings[0].title;
+                warningContent = warnings[0].content;
+            }
+            
+            container.innerHTML = `
+                <div class="cyber-warning-card">
+                    <div class="warning-scanline"></div> <!-- 💥 新增的扫描线 -->
+                    <div class="hazard-stripes top"></div>
+                    <div class="warning-header-text">
+                        <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: #f44336; animation: glitch-blink 2s infinite;"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                        ${warningTitle}
+                    </div>
+                    <div class="warning-content-text">
+                        ${warningContent}
+                    </div>
+                    <div class="hazard-stripes bottom"></div>
+                </div>
+            `;
+        };
+
         // 7. 后台专属：渲染管理员仪表盘
-function renderAdminDashboard() {
-    const intelGrid = document.getElementById('admin-intel-grid');
-    const factionGrid = document.getElementById('admin-faction-grid');
-    const orgGrid = document.getElementById('admin-org-grid'); // 💥 新增：组织专属网格
-    const timelineGrid = document.getElementById('admin-timeline-grid'); 
-    if (!intelGrid || !factionGrid || !timelineGrid || !orgGrid) return;
+        function renderAdminDashboard() {
+            const intelGrid = document.getElementById('admin-intel-grid');
+            const factionGrid = document.getElementById('admin-faction-grid');
+            const orgGrid = document.getElementById('admin-org-grid'); 
+            const timelineGrid = document.getElementById('admin-timeline-grid'); 
+            const warningGrid = document.getElementById('admin-warning-grid'); // 👈 新增：获取警告网格
 
-    intelGrid.innerHTML = '';
-    factionGrid.innerHTML = '';
-    orgGrid.innerHTML = ''; // 💥 清空组织网格
-    timelineGrid.innerHTML = '';
+            // 💥 修复：把 warningGrid 也加入判空，防止报错
+            if (!intelGrid || !factionGrid || !timelineGrid || !orgGrid || !warningGrid) return;
 
-    const intelQuery = (document.getElementById('admin-intel-search')?.value || '').trim().toLowerCase();
-    const factionQuery = (document.getElementById('admin-faction-search')?.value || '').trim().toLowerCase();
-    const timelineQuery = (document.getElementById('admin-timeline-search')?.value || '').trim().toLowerCase(); 
+            intelGrid.innerHTML = '';
+            factionGrid.innerHTML = '';
+            orgGrid.innerHTML = ''; 
+            timelineGrid.innerHTML = '';
+            warningGrid.innerHTML = ''; // 👈 新增：清空警告网格
 
-    let intelArticles = articlesDB.filter(a => a.type === 'intel');
-    if (intelQuery) intelArticles = intelArticles.filter(a => (a.title && a.title.toLowerCase().includes(intelQuery)) || (a.keywords && a.keywords.toLowerCase().includes(intelQuery)));
+            const intelQuery = (document.getElementById('admin-intel-search')?.value || '').trim().toLowerCase();
+            const factionQuery = (document.getElementById('admin-faction-search')?.value || '').trim().toLowerCase();
+            const timelineQuery = (document.getElementById('admin-timeline-search')?.value || '').trim().toLowerCase(); 
 
-    // 💥 拆分：分别过滤出阵营和组织
-    let factionArticles = articlesDB.filter(a => a.type === 'faction');
-    let orgArticles = articlesDB.filter(a => a.type === 'org');
+            let intelArticles = articlesDB.filter(a => a.type === 'intel');
+            if (intelQuery) intelArticles = intelArticles.filter(a => (a.title && a.title.toLowerCase().includes(intelQuery)) || (a.keywords && a.keywords.toLowerCase().includes(intelQuery)));
 
-    if (factionQuery) {
-        factionArticles = factionArticles.filter(a => (a.title && a.title.toLowerCase().includes(factionQuery)) || (a.keywords && a.keywords.toLowerCase().includes(factionQuery)));
-        orgArticles = orgArticles.filter(a => (a.title && a.title.toLowerCase().includes(factionQuery)) || (a.keywords && a.keywords.toLowerCase().includes(factionQuery)));
-    }
+            let factionArticles = articlesDB.filter(a => a.type === 'faction');
+            let orgArticles = articlesDB.filter(a => a.type === 'org');
 
-    let timelineArticles = articlesDB.filter(a => a.type === 'timeline');
-    
-    // 💥 修复：管理员面板的时间轴排序也用同样的逻辑
-    timelineArticles.sort((a, b) => {
-        const matchA = String(a.tag || '').match(/\d+/);
-        const matchB = String(b.tag || '').match(/\d+/);
-        const yearA = matchA ? parseInt(matchA[0], 10) : 0;
-        const yearB = matchB ? parseInt(matchB[0], 10) : 0;
-        return yearA - yearB; 
-    });
+            if (factionQuery) {
+                factionArticles = factionArticles.filter(a => (a.title && a.title.toLowerCase().includes(factionQuery)) || (a.keywords && a.keywords.toLowerCase().includes(factionQuery)));
+                orgArticles = orgArticles.filter(a => (a.title && a.title.toLowerCase().includes(factionQuery)) || (a.keywords && a.keywords.toLowerCase().includes(factionQuery)));
+            }
 
-    if (timelineQuery) timelineArticles = timelineArticles.filter(a => (a.title && a.title.toLowerCase().includes(timelineQuery)) || (a.tag && a.tag.toLowerCase().includes(timelineQuery)));
+            let timelineArticles = articlesDB.filter(a => a.type === 'timeline');
+            
+            timelineArticles.sort((a, b) => {
+                const matchA = String(a.tag || '').match(/\d+/);
+                const matchB = String(b.tag || '').match(/\d+/);
+                const yearA = matchA ? parseInt(matchA[0], 10) : 0;
+                const yearB = matchB ? parseInt(matchB[0], 10) : 0;
+                return yearA - yearB; 
+            });
 
-    const createAdminCard = (item, themeColor, isHorizontal = false) => {
-        const card = document.createElement('div');
-        card.className = 'intel-card';
-        card.style.borderColor = themeColor;
-        card.style.background = 'rgba(0,0,0,0.4)';
-        card.style.padding = '15px';
-        card.style.cursor = 'default';
-        card.style.display = 'flex';
-        card.style.flexDirection = 'column';
-        card.style.minHeight = '180px'; 
-        
-        if (isHorizontal) card.style.flex = '0 0 260px'; 
+            if (timelineQuery) timelineArticles = timelineArticles.filter(a => (a.title && a.title.toLowerCase().includes(timelineQuery)) || (a.tag && a.tag.toLowerCase().includes(timelineQuery)));
 
-        let typeLabel = 'INTEL';
-        if (item.type === 'faction') typeLabel = 'FACTION';
-        if (item.type === 'org') typeLabel = 'ORG';
-        if (item.type === 'timeline') typeLabel = 'TIMELINE'; 
+            const createAdminCard = (item, themeColor, isHorizontal = false) => {
+                const card = document.createElement('div');
+                card.className = 'intel-card';
+                card.style.borderColor = themeColor;
+                card.style.background = 'rgba(0,0,0,0.4)';
+                card.style.padding = '15px';
+                card.style.cursor = 'default';
+                card.style.display = 'flex';
+                card.style.flexDirection = 'column';
+                card.style.minHeight = '180px'; 
+                
+                if (isHorizontal) card.style.flex = '0 0 260px'; 
 
-        const tagDisplay = item.type === 'timeline' ? `YEAR: ${item.tag}` : `TAG: ${item.tag || 'N/A'}`;
+                let typeLabel = 'INTEL';
+                if (item.type === 'faction') typeLabel = 'FACTION';
+                if (item.type === 'org') typeLabel = 'ORG';
+                if (item.type === 'timeline') typeLabel = 'TIMELINE'; 
+                if (item.type === 'warning') typeLabel = 'WARNING'; // 👈 新增：警告标签
 
-        // 💥 修复：让组织卡片显示它属于哪个阵营
-        let parentDisplay = '';
-        if (item.type === 'org') {
-            const match = (item.keywords || '').match(/\[PARENT:(.+?)\]/);
-            if (match) parentDisplay = ` | PARENT: ${match[1]}`;
+                const tagDisplay = item.type === 'timeline' ? `YEAR: ${item.tag}` : `TAG: ${item.tag || 'N/A'}`;
+
+                let parentDisplay = '';
+                if (item.type === 'org') {
+                    const match = (item.keywords || '').match(/\[PARENT:(.+?)\]/);
+                    if (match) parentDisplay = ` | PARENT: ${match[1]}`;
+                }
+
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <span style="font-size: 20px;">${item.icon || '📁'}</span>
+                            <span style="font-family: monospace; color: ${themeColor}; font-size: 12px; border: 1px solid ${themeColor}; padding: 2px 6px; border-radius: 2px;">[ ${typeLabel} ]</span>
+                        </div>
+                        <div style="display: flex; gap: 5px;">
+                            <button onclick="editArticle('${item.id}')" style="background: rgba(255,235,59,0.1); border: 1px solid #ffeb3b; color: #ffeb3b; cursor: pointer; padding: 4px 8px; font-size: 12px; font-family: monospace; border-radius: 2px; transition: 0.2s;">[编辑]</button>
+                            <button onclick="deleteArticle('${item.id}')" style="background: rgba(244,67,54,0.1); border: 1px solid #f44336; color: #f44336; cursor: pointer; padding: 4px 8px; font-size: 12px; font-family: monospace; border-radius: 2px; transition: 0.2s;">[删除]</button>
+                        </div>
+                    </div>
+                    <h3 style="color: #fff; margin: 0 0 5px 0; font-size: 16px;">${item.title}</h3>
+                    <p style="color: #8bb9d6; font-size: 13px; margin: 0 0 10px 0; flex-grow: 1; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;">${item.summary || '暂无简介'}</p>
+                    <div style="font-family: monospace; font-size: 12px; color: #666; margin-top: auto;">${tagDisplay}${parentDisplay}</div>
+                `;
+                return card;
+            };
+
+            if (intelArticles.length === 0) intelGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace; padding: 20px 0;">[ 暂无记录 ]</div>';
+            else intelArticles.forEach(item => intelGrid.appendChild(createAdminCard(item, '#12a8ff', true)));
+
+            if (factionArticles.length === 0) factionGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace;">[ 暂无主阵营记录 ]</div>';
+            else factionArticles.forEach(item => factionGrid.appendChild(createAdminCard(item, '#4caf50', false)));
+
+            if (orgArticles.length === 0) orgGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace;">[ 暂无下属组织记录 ]</div>';
+            else orgArticles.forEach(item => orgGrid.appendChild(createAdminCard(item, '#8bc34a', false))); 
+
+            if (timelineArticles.length === 0) timelineGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace; padding: 20px 0;">[ 暂无记录 ]</div>';
+            else timelineArticles.forEach(item => timelineGrid.appendChild(createAdminCard(item, '#ffeb3b', true)));
+
+            // 👇 新增：渲染警告卡片网格
+            let warningArticles = articlesDB.filter(a => a.type === 'warning');
+            if (warningArticles.length === 0) {
+                warningGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace; padding: 20px 0;">[ 暂无警告卡片 ]</div>';
+            } else {
+                warningArticles.forEach(item => warningGrid.appendChild(createAdminCard(item, '#f44336', true)));
+            }
         }
-
-        card.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <span style="font-size: 20px;">${item.icon || '📁'}</span>
-                    <span style="font-family: monospace; color: ${themeColor}; font-size: 12px; border: 1px solid ${themeColor}; padding: 2px 6px; border-radius: 2px;">[ ${typeLabel} ]</span>
-                </div>
-                <div style="display: flex; gap: 5px;">
-                    <button onclick="editArticle('${item.id}')" style="background: rgba(255,235,59,0.1); border: 1px solid #ffeb3b; color: #ffeb3b; cursor: pointer; padding: 4px 8px; font-size: 12px; font-family: monospace; border-radius: 2px; transition: 0.2s;">[编辑]</button>
-                    <button onclick="deleteArticle('${item.id}')" style="background: rgba(244,67,54,0.1); border: 1px solid #f44336; color: #f44336; cursor: pointer; padding: 4px 8px; font-size: 12px; font-family: monospace; border-radius: 2px; transition: 0.2s;">[删除]</button>
-                </div>
-            </div>
-            <h3 style="color: #fff; margin: 0 0 5px 0; font-size: 16px;">${item.title}</h3>
-            <p style="color: #8bb9d6; font-size: 13px; margin: 0 0 10px 0; flex-grow: 1; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;">${item.summary || '暂无简介'}</p>
-            <div style="font-family: monospace; font-size: 12px; color: #666; margin-top: auto;">${tagDisplay}${parentDisplay}</div>
-        `;
-        return card;
-    };
-
-    if (intelArticles.length === 0) intelGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace; padding: 20px 0;">[ 暂无记录 ]</div>';
-    else intelArticles.forEach(item => intelGrid.appendChild(createAdminCard(item, '#12a8ff', true)));
-
-    // 💥 渲染阵营 Tab
-    if (factionArticles.length === 0) factionGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace;">[ 暂无主阵营记录 ]</div>';
-    else factionArticles.forEach(item => factionGrid.appendChild(createAdminCard(item, '#4caf50', false)));
-
-    // 💥 渲染组织 Tab
-    if (orgArticles.length === 0) orgGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace;">[ 暂无下属组织记录 ]</div>';
-    else orgArticles.forEach(item => orgGrid.appendChild(createAdminCard(item, '#8bc34a', false))); // 组织用稍微浅一点的绿色区分
-
-    if (timelineArticles.length === 0) timelineGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace; padding: 20px 0;">[ 暂无记录 ]</div>';
-    else timelineArticles.forEach(item => timelineGrid.appendChild(createAdminCard(item, '#ffeb3b', true)));
-}
 
         document.addEventListener('input', function(e) {
             if (e.target.id === 'admin-intel-search' || e.target.id === 'admin-faction-search' || e.target.id === 'admin-timeline-search') {
@@ -9928,6 +10102,7 @@ function renderAdminDashboard() {
                 if (a.type === 'plot') typeLabel = 'STORY // 主线';
                 if (a.type === 'solo_log') typeLabel = 'SOLO LOG // 自戏';
                 if (a.type === 'rp_log') typeLabel = 'RP LOG // 对戏';
+                if (a.type === 'warning') typeLabel = 'WARNING // 系统警告'; // 👈 新增这一行
 
                 window.searchIndex.push({
                     type: a.type,
@@ -10086,15 +10261,20 @@ function renderAdminDashboard() {
             if (!targetChar) { SysModal.alert("无法获取该用户的档案信息。"); return; }
             
             const isMe = targetOwnerId === currentUser.id;
+            const isAdmin = currentUser && ['admin', 'super_admin'].includes(currentUser.role);
             const modal = document.getElementById('forumProfileModal');
             const box = document.getElementById('forumProfileBox');
             const feed = document.getElementById('fp-feed');
             
+            // 💥 核心防掉皮修复：只有本人（或管理员）查看里身份时，才显示粉色特效。
+            // 其他普通群友看一律显示正常的蓝色，让他们以为这只是一个普通的公开用户！
+            const showAsHiddenTheme = viewAsHidden && (isMe || isAdmin);
+
             // 样式切换 (表/里)
-            if (viewAsHidden) box.classList.add('hidden-mode');
+            if (showAsHiddenTheme) box.classList.add('hidden-mode');
             else box.classList.remove('hidden-mode');
 
-            // 头部信息渲染
+            // 头部信息渲染 (数据依然拉取里身份的数据，只是颜色变了)
             const displayName = viewAsHidden ? (targetChar.hidden_forum_name || targetChar.hidden_callsign) : (targetChar.forum_name || targetChar.callsign);
             const officialName = viewAsHidden ? targetChar.hidden_callsign : targetChar.callsign;
             const faction = viewAsHidden ? targetChar.hidden_faction : targetChar.faction;
@@ -10130,7 +10310,7 @@ function renderAdminDashboard() {
             
             let editBtnHtml = '';
             if (isMe) {
-                const btnColor = viewAsHidden ? '#e91e63' : '#12a8ff';
+                const btnColor = showAsHiddenTheme ? '#e91e63' : '#12a8ff';
                 // 💥 核心修复：加上 fp-edit-btn 类名，交由 CSS 智能控制边距
                 editBtnHtml = `<button class="sys-modal-btn confirm fp-edit-btn" style="padding: 2px 8px; font-size: 12px; border-color: ${btnColor}; color: ${btnColor};" onclick="editForumName(${viewAsHidden})">[ 修改昵称 ]</button>`;
             }
@@ -10140,7 +10320,7 @@ function renderAdminDashboard() {
             document.getElementById('fp-desc').innerText = `官方代号: ${officialName} | 阵营: ${faction}`;
 
             // 💥 核心 1：先弹出窗口，并显示科幻加载动画
-            feed.innerHTML = window.getCyberLoaderHTML('正在跨频段检索通讯记录...', viewAsHidden ? '#e91e63' : '#12a8ff');
+            feed.innerHTML = window.getCyberLoaderHTML('正在跨频段检索通讯记录...', showAsHiddenTheme ? '#e91e63' : '#12a8ff');
             modal.classList.add('active');
 
             // 💥 核心 2：直接向云端数据库发起跨频道查询
@@ -10169,8 +10349,10 @@ function renderAdminDashboard() {
                 } else {
                     feed.innerHTML = targetPosts.map(post => {
                         const timeStr = new Date(post.created_at).toLocaleString();
-                        const borderColor = viewAsHidden ? 'rgba(233,30,99,0.3)' : 'rgba(18,168,255,0.3)';
-                        const titleColor = viewAsHidden ? '#ff80ab' : '#12a8ff';
+                        
+                        // 💥 核心防掉皮：帖子边框和标题颜色也受 showAsHiddenTheme 控制
+                        const borderColor = showAsHiddenTheme ? 'rgba(233,30,99,0.3)' : 'rgba(18,168,255,0.3)';
+                        const titleColor = showAsHiddenTheme ? '#ff80ab' : '#12a8ff';
                         
                         const postName = getForumDisplayName(targetChar, post.channel, viewAsHidden);
 
@@ -11858,6 +12040,7 @@ window.deleteForumPost = async function(postId) {
         updateDropdowns(); // 更新填表下拉框
         renderQueue();     // 刷新办事大厅的队列
         renderProfile();   // 刷新个人终端
+        renderSystemWarning(); // 👈 新增这一行：渲染警告卡片
         
         if (typeof renderStoryView === 'function') renderStoryView(); // 刷新剧情与日志页
         
