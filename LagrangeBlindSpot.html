@@ -362,6 +362,81 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* 🔷 科幻解密加载动画 */
+@keyframes scanline {
+    0% { top: -10%; }
+    100% { top: 110%; }
+}
+@keyframes glitch-flash {
+    0%, 100% { opacity: 1; clip-path: none; }
+    20% { opacity: 0.7; clip-path: inset(30% 0 50% 0); transform: translateX(-4px); }
+    40% { opacity: 0.9; clip-path: inset(60% 0 10% 0); transform: translateX(4px); }
+    60% { opacity: 0.6; clip-path: inset(10% 0 70% 0); transform: translateX(-2px); }
+    80% { opacity: 1; clip-path: none; transform: translateX(0); }
+}
+@keyframes decode-in {
+    0%   { opacity: 0; transform: translateY(18px) scaleY(1.04); filter: blur(6px) brightness(2); }
+    40%  { opacity: 0.7; filter: blur(1px) brightness(1.3); }
+    100% { opacity: 1; transform: translateY(0) scaleY(1); filter: blur(0) brightness(1); }
+}
+#article-decode-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: #060b14;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+#article-decode-overlay.visible {
+    opacity: 1;
+    pointer-events: all;
+}
+#article-decode-overlay .decode-bar {
+    width: 280px;
+    height: 2px;
+    background: rgba(18,168,255,0.15);
+    margin-top: 28px;
+    position: relative;
+    overflow: hidden;
+}
+#article-decode-overlay .decode-bar::after {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; height: 100%;
+    width: 60%;
+    background: linear-gradient(90deg, transparent, #12a8ff, transparent);
+    animation: ticker-scroll 0.9s linear infinite;
+}
+#article-decode-overlay .decode-label {
+    font-family: monospace;
+    font-size: 13px;
+    color: #12a8ff;
+    letter-spacing: 3px;
+    margin-top: 16px;
+    animation: blink 1s step-end infinite;
+}
+#article-decode-overlay .decode-title-ghost {
+    font-family: "Impact", sans-serif;
+    font-size: clamp(1.5rem, 4vw, 2.8rem);
+    color: #12a8ff;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-shadow: 0 0 20px #12a8ff;
+    animation: glitch-flash 0.6s steps(1) infinite;
+    max-width: 80vw;
+    text-align: center;
+    word-break: break-all;
+}
+#articleView.active .article-page-content,
+#logReaderView.active #logReaderContent {
+    animation: decode-in 0.5s cubic-bezier(0.22,1,0.36,1) both;
+}
+
        /* 统一所有视图面板的布局，防止内部元素（如3D隧道）被挤压 */
         .view-panel.active {
             display: block; 
@@ -1986,137 +2061,210 @@
         /* =========================================
            💥 赛博警戒卡片 V2 (硬核粗野主义升级版) 💥
            ========================================= */
-        .cyber-warning-card {
-            position: relative;
-            background: rgba(15, 2, 2, 0.85); /* 极暗的血红色底 */
-            border: 1px solid #f44336;
-            border-left: 4px solid #f44336; /* 左侧加粗，硬核工业感 */
-            padding: 25px 25px 20px 25px;
-            
-            /* 💥 核心修改：限制最大宽度，并水平居中 */
-            width: 100%;
-            max-width: 750px; 
-            margin: 30px auto 0 auto; 
-            box-sizing: border-box;
-            
-            border-radius: 0; /* 绝对不要圆角 */
-            overflow: hidden;
-            box-shadow: 0 0 15px rgba(244, 67, 54, 0.2), inset 0 0 20px rgba(244, 67, 54, 0.1);
-            /* 右下角机械切角 */
-            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
-            /* 电压不稳的故障闪烁动画 */
-            animation: warning-flicker 5s infinite;
-        }
+        /* ── 警告卡片主体 ── */
+.cyber-warning-card {
+    position: relative;
+    background: rgba(15, 2, 2, 0.92);
+    border: 1px solid #f44336;
+    border-left: 5px solid #f44336;
+    padding: 0;
+    width: 100%;
+    max-width: 750px;
+    margin: 30px auto 0 auto;
+    box-sizing: border-box;
+    border-radius: 0;
+    overflow: hidden;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+    animation: warning-flicker 4s infinite, warning-glitch-shift 7s infinite;
+    box-shadow: 0 0 25px rgba(244,67,54,0.35), inset 0 0 30px rgba(244,67,54,0.08);
+}
 
-        /* 背景巨大的幽灵警告水印 */
-        .cyber-warning-card::before {
-            content: 'WARNING';
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            font-family: "Impact", sans-serif;
-            font-size: 100px;
-            color: rgba(244, 67, 54, 0.04);
-            pointer-events: none;
-            z-index: 0;
-            letter-spacing: 15px;
-        }
+/* 幽灵水印 WARNING */
+.cyber-warning-card::before {
+    content: 'WARNING';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: "Impact", sans-serif;
+    font-size: 110px;
+    color: rgba(244, 67, 54, 0.05);
+    pointer-events: none;
+    z-index: 0;
+    letter-spacing: 15px;
+    animation: warning-glitch-shift 3s infinite;
+}
 
-        /* 背景细密网格 */
-        .cyber-warning-card::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(244, 67, 54, 0.05) 2px, rgba(244, 67, 54, 0.05) 4px);
-            pointer-events: none;
-            z-index: 0;
-        }
+/* 背景横线网格 */
+.cyber-warning-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: repeating-linear-gradient(
+        0deg, transparent, transparent 3px,
+        rgba(244,67,54,0.04) 3px, rgba(244,67,54,0.04) 4px
+    );
+    pointer-events: none;
+    z-index: 0;
+}
 
-        /* 💥 核心：极细、极密的工业警戒线 */
-        .hazard-stripes {
-            position: absolute;
-            left: 0;
-            width: 100%;
-            height: 4px; /* 从 12px 缩小到 4px，极其锐利 */
-            background: repeating-linear-gradient(
-                -45deg,
-                #f44336,
-                #f44336 6px,
-                #060b14 6px,
-                #060b14 12px
-            );
-            z-index: 1;
-            animation: hazard-scroll 0.5s linear infinite; /* 速度加快 */
-            box-shadow: 0 0 8px rgba(244, 67, 54, 0.8);
-        }
-        .hazard-stripes.top { top: 0; }
-        .hazard-stripes.bottom { bottom: 0; }
+/* 警戒斜线 */
+.hazard-stripes {
+    position: absolute;
+    left: 0; width: 100%; height: 5px;
+    background: repeating-linear-gradient(
+        -45deg,
+        #f44336, #f44336 6px,
+        #1a0000 6px, #1a0000 12px
+    );
+    z-index: 5;
+    animation: hazard-scroll 0.4s linear infinite;
+    box-shadow: 0 0 10px rgba(244,67,54,0.9);
+}
+.hazard-stripes.top { top: 0; }
+.hazard-stripes.bottom { bottom: 0; }
 
-        @keyframes hazard-scroll {
-            0% { background-position: 0 0; }
-            100% { background-position: 16.97px 0; } /* 完美无缝衔接的数学计算值 */
-        }
+@keyframes hazard-scroll {
+    0%   { background-position: 0 0; }
+    100% { background-position: 16.97px 0; }
+}
 
-        /* 💥 新增：全息红色扫描线 */
-        .warning-scanline {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 2px;
-            background: #f44336;
-            opacity: 0.8;
-            box-shadow: 0 0 15px #f44336, 0 0 30px #f44336;
-            z-index: 3;
-            animation: warning-scan 3s linear infinite;
-            pointer-events: none;
-        }
+/* 扫描线 */
+.warning-scanline {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, #f44336 40%, #ff6b6b 50%, #f44336 60%, transparent);
+    opacity: 0;
+    z-index: 6;
+    animation: warning-scan 2.5s linear infinite;
+    pointer-events: none;
+    box-shadow: 0 0 12px #f44336, 0 0 25px #f44336;
+}
+@keyframes warning-scan {
+    0%   { top: 5px;  opacity: 0; }
+    5%   { opacity: 1; }
+    95%  { opacity: 1; }
+    100% { top: calc(100% - 5px); opacity: 0; }
+}
 
-        @keyframes warning-scan {
-            0% { top: -10%; opacity: 0; }
-            10% { opacity: 0.8; }
-            90% { opacity: 0.8; }
-            100% { top: 110%; opacity: 0; }
-        }
+/* 故障位移 */
+@keyframes warning-glitch-shift {
+    0%, 89%, 100% { transform: none; clip-path: none; }
+    90%  { transform: translateX(-3px); clip-path: inset(20% 0 60% 0); }
+    91%  { transform: translateX(3px);  clip-path: inset(60% 0 10% 0); }
+    92%  { transform: translateX(-2px); clip-path: inset(40% 0 40% 0); }
+    93%  { transform: none; clip-path: none; }
+}
 
-        /* 接触不良的故障闪烁动画 */
-        @keyframes warning-flicker {
-            0%, 100% { box-shadow: 0 0 15px rgba(244, 67, 54, 0.2), inset 0 0 20px rgba(244, 67, 54, 0.1); opacity: 1; }
-            2% { opacity: 0.8; box-shadow: none; }
-            4% { opacity: 1; box-shadow: 0 0 30px rgba(244, 67, 54, 0.6), inset 0 0 40px rgba(244, 67, 54, 0.3); }
-            6% { opacity: 0.4; }
-            8% { opacity: 1; }
-            10% { opacity: 0.8; }
-            12% { opacity: 1; }
-            50% { box-shadow: 0 0 20px rgba(244, 67, 54, 0.3), inset 0 0 25px rgba(244, 67, 54, 0.15); }
-        }
+/* 整体闪烁 */
+@keyframes warning-flicker {
+    0%,100% { opacity:1; box-shadow: 0 0 25px rgba(244,67,54,0.35), inset 0 0 30px rgba(244,67,54,0.08); }
+    2%  { opacity: 0.6; box-shadow: none; }
+    3%  { opacity: 1; box-shadow: 0 0 50px rgba(244,67,54,0.8), inset 0 0 50px rgba(244,67,54,0.3); }
+    4%  { opacity: 0.3; }
+    5%  { opacity: 1; }
+    60% { box-shadow: 0 0 30px rgba(244,67,54,0.4); }
+}
 
-        /* 标题排版优化：缩小字号，不再头重脚轻 */
-        .warning-header-text {
-            position: relative;
-            z-index: 2;
-            color: #f44336;
-            font-family: "Impact", monospace;
-            font-size: 16px; /* 从 22px 缩小到 16px */
-            letter-spacing: 2px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-shadow: 0 0 8px rgba(244, 67, 54, 0.8);
-            border-bottom: 1px solid rgba(244, 67, 54, 0.3); /* 虚线改实线，更硬朗 */
-            padding-bottom: 8px;
-        }
+/* ── 头部区域（含倒计时栏）── */
+.warning-top-bar {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 20px;
+    background: rgba(244,67,54,0.12);
+    border-bottom: 1px solid rgba(244,67,54,0.4);
+    margin-top: 5px;
+}
 
-        /* 正文排版优化 */
-        .warning-content-text {
-            position: relative;
-            z-index: 2;
-            color: #ffb4a9;
-            font-size: 14px;
-            line-height: 1.8;
-            font-family: "PingFang SC", sans-serif;
-            text-shadow: 0 0 2px rgba(244, 67, 54, 0.3); /* 增加微弱发光，提升质感 */
-        }
-        .warning-content-text p { margin-bottom: 10px; }
-        .warning-content-text strong { color: #fff; text-shadow: 0 0 8px #f44336; }
+.warning-header-text {
+    position: relative;
+    z-index: 2;
+    color: #f44336;
+    font-family: "Impact", monospace;
+    font-size: 15px;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-shadow: 0 0 10px rgba(244,67,54,1), 0 0 20px rgba(244,67,54,0.5);
+}
+
+/* 倒计时 */
+.warning-countdown {
+    font-family: monospace;
+    font-size: 13px;
+    color: #ff6b6b;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-shadow: 0 0 8px #f44336;
+    animation: warning-flicker 1.5s infinite;
+}
+.warning-countdown-digits {
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 10px #f44336, 0 0 20px #f44336;
+    min-width: 70px;
+    text-align: right;
+}
+
+/* 数字滚动条 */
+.warning-stats-bar {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid rgba(244,67,54,0.25);
+}
+.warning-stat {
+    flex: 1;
+    padding: 7px 14px;
+    border-right: 1px solid rgba(244,67,54,0.2);
+    font-family: monospace;
+    font-size: 11px;
+    color: rgba(244,67,54,0.7);
+    letter-spacing: 1px;
+}
+.warning-stat:last-child { border-right: none; }
+.warning-stat-val {
+    display: block;
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 8px #f44336;
+    letter-spacing: 2px;
+    animation: val-glitch 6s infinite;
+}
+@keyframes val-glitch {
+    0%,88%,100% { opacity:1; transform:none; }
+    89% { opacity:0.4; transform: translateX(2px); }
+    90% { opacity:1; transform: none; }
+    91% { opacity:0.6; transform: translateX(-2px); }
+    92% { opacity:1; }
+}
+
+/* ── 正文区域 ── */
+.warning-body {
+    position: relative;
+    z-index: 2;
+    padding: 18px 22px 20px 22px;
+}
+.warning-content-text {
+    position: relative;
+    z-index: 2;
+    color: #ffb4a9;
+    font-size: 14px;
+    line-height: 1.85;
+    font-family: "PingFang SC", sans-serif;
+    text-shadow: 0 0 2px rgba(244,67,54,0.3);
+}
+.warning-content-text p { margin-bottom: 10px; }
+.warning-content-text p:last-child { margin-bottom: 0; }
+.warning-content-text strong { color: #fff; text-shadow: 0 0 8px #f44336; }
 
         /* 阵营卡片网格 */
         .faction-grid { 
@@ -5947,6 +6095,13 @@ textarea:-webkit-autofill:active {
             </div>
         </div>
 
+        <!-- 🔷 科幻解密过渡遮罩 -->
+<div id="article-decode-overlay">
+    <div class="decode-title-ghost" id="decode-title-ghost">ACCESSING...</div>
+    <div class="decode-bar"></div>
+    <div class="decode-label">DECRYPTING FILE...</div>
+</div>
+
 
      <!-- 💥 新增：全屏文章阅读视图 (Article View) 💥 -->
         <div class="view-panel" id="articleView">
@@ -6699,7 +6854,7 @@ window.triggerConflictRejection = async function(charDraft) {
                 
                 document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
                 document.getElementById('logReaderView').classList.add('active');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                window.scrollTo({ top: 0, behavior: 'instant' });
                 
             } else {
                 // ==========================================
@@ -6795,9 +6950,19 @@ window.triggerConflictRejection = async function(charDraft) {
                     previousViewId = currentActivePanel.id;
                 }
                 
-                document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
-                articleView.classList.add('active');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                // 🔷 科幻解密动画
+const overlay = document.getElementById('article-decode-overlay');
+document.getElementById('decode-title-ghost').innerText = item.title || 'ACCESSING...';
+window.lastScrollY = window.scrollY || window.pageYOffset;
+overlay.classList.add('visible');
+setTimeout(() => {
+    document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+    sessionStorage.setItem('tf141_current_view', 'articleView');
+sessionStorage.setItem('tf141_last_article_id', item.id);
+    articleView.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    overlay.classList.remove('visible');
+}, 600);
             }
 
             if(typeof searchDropdown !== 'undefined') searchDropdown.classList.remove('active');
@@ -8205,7 +8370,7 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
             document.getElementById('queue-detail').style.display = 'none';
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
             document.getElementById('createView').classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, behavior: 'instant' });
             
             await SysModal.alert("旧档案数据已成功载入，请直接在表单上进行修改。", "调取成功");
         };
@@ -9443,7 +9608,7 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
 
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
             document.getElementById('adminEditorView').classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, behavior: 'instant' });
         };
 
         // 2. 关闭全屏编辑器 (智能返回版)
@@ -9800,19 +9965,73 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
             }
             
             container.innerHTML = `
-                <div class="cyber-warning-card">
-                    <div class="warning-scanline"></div> <!-- 💥 新增的扫描线 -->
-                    <div class="hazard-stripes top"></div>
-                    <div class="warning-header-text">
-                        <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: #f44336; animation: glitch-blink 2s infinite;"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
-                        ${warningTitle}
-                    </div>
-                    <div class="warning-content-text">
-                        ${warningContent}
-                    </div>
-                    <div class="hazard-stripes bottom"></div>
-                </div>
-            `;
+    <div class="cyber-warning-card">
+        <div class="warning-scanline"></div>
+        <div class="hazard-stripes top"></div>
+
+        <div class="warning-top-bar">
+            <div class="warning-header-text">
+                <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:#f44336;flex-shrink:0;"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                ${warningTitle}
+            </div>
+            <div class="warning-countdown">
+                NEXT ALERT IN&nbsp;<span class="warning-countdown-digits" id="warning-cd">00:00:00</span>
+            </div>
+        </div>
+
+        <div class="warning-stats-bar">
+            <div class="warning-stat">INFECTED<span class="warning-stat-val" id="wstat-a">──</span></div>
+            <div class="warning-stat">FATALITY RATE<span class="warning-stat-val" id="wstat-b">──</span></div>
+            <div class="warning-stat">ALERT LEVEL<span class="warning-stat-val" id="wstat-c">──</span></div>
+            <div class="warning-stat">SECTORS AT RISK<span class="warning-stat-val" id="wstat-d">──</span></div>
+        </div>
+
+        <div class="warning-body">
+            <div class="warning-content-text">${warningContent}</div>
+        </div>
+
+        <div class="hazard-stripes bottom"></div>
+    </div>
+`;
+
+/* 数字滚动上去的动画 */
+function animateVal(id, target, suffix = '') {
+    const el = document.getElementById(id);
+    if (!el) return;
+    let start = 0;
+    const duration = 1200;
+    const startTime = performance.now();
+    function step(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = Math.floor(eased * target).toLocaleString() + suffix;
+        if (progress < 1) requestAnimationFrame(step);
+        else el.textContent = target.toLocaleString() + suffix;
+    }
+    requestAnimationFrame(step);
+}
+setTimeout(() => {
+    animateVal('wstat-a', 84291, '+');
+    animateVal('wstat-b', 37, '%');
+    animateVal('wstat-c', 9, '/10');
+    animateVal('wstat-d', 14, '');
+}, 300);
+
+/* 倒计时 */
+function updateWarningCountdown() {
+    const el = document.getElementById('warning-cd');
+    if (!el) return;
+    const now = new Date();
+    const next = new Date(now);
+    next.setHours(next.getHours() + 1, 0, 0, 0);
+    const diff = next - now;
+    const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
+    const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+    const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+    el.textContent = `${h}:${m}:${s}`;
+}
+updateWarningCountdown();
+setInterval(updateWarningCountdown, 1000);
         };
 
         // 7. 后台专属：渲染管理员仪表盘
@@ -10128,7 +10347,7 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
             const editorView = document.getElementById('adminEditorView');
             if (editorView) {
                 editorView.classList.add('active');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                window.scrollTo({ top: 0, behavior: 'instant' });
             }
         };
 
@@ -11732,7 +11951,10 @@ window.deleteForumPost = async function(postId) {
         }
         if (targetId === 'storyView') {
             if (typeof renderStoryView === 'function') renderStoryView();
+            
         }
+
+        
 
         // 4. 切换视图面板
         viewPanels.forEach(panel => { panel.classList.remove('active'); });
@@ -11846,7 +12068,7 @@ window.deleteForumPost = async function(postId) {
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
             document.getElementById('timelineView').classList.add('active');
             sessionStorage.setItem('tf141_current_view', 'timelineView');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, behavior: 'instant' });
         };
 
         window.backToWorldView = function() {
@@ -11876,7 +12098,7 @@ window.deleteForumPost = async function(postId) {
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
             document.getElementById('historyIntelView').classList.add('active');
             sessionStorage.setItem('tf141_current_view', 'historyIntelView');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, behavior: 'instant' });
         };
 
         window.backToMainFromHistory = function() {
@@ -12048,7 +12270,7 @@ window.deleteForumPost = async function(postId) {
             if (targetPanel) { 
                 targetPanel.classList.add('active'); 
                 sessionStorage.setItem('tf141_current_view', targetId);
-                window.scrollTo({ top: 0, behavior: 'smooth' }); // 进入新页面时回到顶部
+                window.scrollTo({ top: 0, behavior: 'instant' }); // 进入新页面时回到顶部
             }
         };
 
@@ -12089,6 +12311,12 @@ window.deleteForumPost = async function(postId) {
         renderSystemWarning(); // 👈 新增这一行：渲染警告卡片
         
         if (typeof renderStoryView === 'function') renderStoryView(); // 刷新剧情与日志页
+        // 💥 刷新恢复：如果刷新前停留在文章页，数据加载完后自动重新打开
+const _savedArticleId = sessionStorage.getItem('tf141_last_article_id');
+if (_savedArticleId && sessionStorage.getItem('tf141_current_view') === 'articleView') {
+    const _savedArticle = articlesDB.find(a => String(a.id) === String(_savedArticleId));
+    if (_savedArticle) openArticle(_savedArticle);
+}
         
         // 3. 权限相关渲染
         if (currentUser && ['admin', 'super_admin'].includes(currentUser.role)) {
@@ -12677,7 +12905,7 @@ if(!title || !parentFaction || !content) {
 
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
             document.getElementById('logEditorView').classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, behavior: 'instant' });
         };
 
         window.closeLogEditor = function() {
