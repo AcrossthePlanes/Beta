@@ -486,64 +486,143 @@
 
         /* --- 侧边栏 Wiki 列表样式 --- */
         .sidebar {
-            position: fixed;
-            top: 0;
-            right: -280px; 
-            width: 280px;
-            height: 100%;
-            background-color: rgba(6, 11, 20, 0.95);
-            backdrop-filter: blur(8px);
-            border-left: 1px solid rgba(18, 168, 255, 0.5);
-            box-shadow: -5px 0 20px rgba(0,0,0,0.8), -2px 0 15px rgba(18,168,255,0.2);
-            z-index: 100; 
-            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            padding: 20px;
-            box-sizing: border-box;
-        }
+    position: fixed;
+    top: 0;
+    right: -340;
+    width: 340px;
+    height: 100%;
+    background-color: rgba(6, 11, 20, 0);
+    border-left: 1px solid rgba(18,168,255,0);
+    box-shadow: none;
+    z-index: 100;
+    transition:
+        right 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        background-color 0.45s ease,
+        backdrop-filter 0.45s ease,
+        -webkit-backdrop-filter 0.45s ease,
+        border-color 0.4s ease,
+        box-shadow 0.4s ease;
+    padding: 20px;
+    box-sizing: border-box;
+}
 
-        .sidebar.open {
-            right: 0;
-        }
+.sidebar.open {
+    right: 0;
+    background-color: rgba(6, 11, 20, 0.95);
+    border-left: 1px solid rgba(18,168,255,0.5);
+    box-shadow: -5px 0 20px rgba(0,0,0,0.8), -2px 0 15px rgba(18,168,255,0.2);
+}
 
-        .sidebar-close {
-            text-align: left;
-            font-size: 24px;
-            cursor: pointer;
-            margin-bottom: 30px;
-            color: #12a8ff;
-            text-shadow: 0 0 5px rgba(18,168,255,0.5);
-        }
+/* 毛玻璃层——通过 opacity 过渡模拟 blur 渐入 */
+.sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+    z-index: 0;
+}
+.sidebar.open::before {
+    opacity: 1;
+}
 
-        .wiki-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+.sidebar-inner {
+    position: relative;
+    z-index: 1;
+    padding: 28px 20px 20px 20px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    transform: translateX(12px);
+    transition: opacity 0.3s ease 0.15s, transform 0.3s ease 0.15s;
+}
+.sidebar.open .sidebar-inner {
+    opacity: 1;
+    transform: translateX(0);
+}
 
-        .wiki-item-btn {
-            background: rgba(18,168,255,0.05);
-            border: 1px solid rgba(18, 168, 255, 0.4);
-            color: #12a8ff;
-            padding: 12px 15px;
-            text-align: left;
-            font-size: 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-            width: 100%;
-            font-family: "PingFang SC", sans-serif;
-            letter-spacing: 1px;
-        }
+.sidebar-close {
+    font-family: monospace;
+    font-size: 12px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    color: rgba(18,168,255,0.5);
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(18,168,255,0.1);
+    transition: color 0.2s, text-shadow 0.2s;
+    text-align: left;
+}
+.sidebar-close:hover {
+    color: #12a8ff;
+    text-shadow: 0 0 8px rgba(18,168,255,0.8);
+}
 
-        .wiki-item-btn:hover {
-            background-color: rgba(18,168,255,0.2);
-            box-shadow: 0 0 10px rgba(18,168,255,0.4);
-            border-color: #12a8ff;
-            text-shadow: 0 0 5px rgba(18,168,255,0.8);
-        }
+.wiki-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* 统一按钮基础样式 */
+.wiki-item-btn {
+    background: rgba(18,168,255,0.05);
+    border: 1px solid rgba(18,168,255,0.4);
+    color: #12a8ff;
+    padding: 12px 15px;
+    text-align: left;
+    font-size: 20px;
+    border-radius: 0;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    width: 100%;
+    font-family: "PingFang SC", sans-serif;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+}
+.wiki-item-btn::after {
+    content: '';
+    position: absolute;
+    left: 0; top: 0;
+    width: 0; height: 100%;
+    background: rgba(18,168,255,0.08);
+    transition: width 0.3s ease;
+    z-index: 0;
+}
+.wiki-item-btn:hover::after { width: 100%; }
+.wiki-item-btn:hover {
+    background-color: rgba(18,168,255,0.15);
+    box-shadow: 0 0 12px rgba(18,168,255,0.4), inset 0 0 8px rgba(18,168,255,0.05);
+    border-color: #12a8ff;
+    text-shadow: 0 0 8px rgba(18,168,255,0.9);
+    letter-spacing: 2px;
+}
+
+/* 各导航项颜色主题 */
+.wiki-item-btn[data-target="mainView"]    { --nav-color: #12a8ff; }
+.wiki-item-btn[data-target="worldView"]   { --nav-color: #12a8ff; }
+.wiki-item-btn[data-target="storyView"]   { --nav-color: #e040fb; }
+.wiki-item-btn[data-target="queueView"]   { --nav-color: #ffeb3b; }
+.wiki-item-btn[data-target="logView"]     { --nav-color: #12a8ff; }
+.wiki-item-btn[data-target="profileView"] { --nav-color: #00e5ff; }
+.wiki-item-btn[data-target="forumView"]   { --nav-color: #4caf50; }
+.wiki-item-btn[data-target="adminView"]   { --nav-color: #f44336; }
+
+
+/* 管理员按钮顶部分隔 */
+#adminMenuWrapper {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(244,67,54,0.2);
+}
 
         .overlay {
             position: fixed;
@@ -894,7 +973,7 @@
             background: rgba(0, 5, 10, 0.85); /* 给文字加个深色底，防止看不清 */
             padding: 4px 10px;
             border: 1px solid #12a8ff;
-            font-size: 12px;
+            font-size: 14px;
             letter-spacing: 1px;
             box-shadow: 2px 2px 0 rgba(18, 168, 255, 0.2); /* 粗野主义小阴影 */
             transition: all 0.3s ease;
@@ -2077,6 +2156,7 @@
     clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
     animation: warning-flicker 4s infinite, warning-glitch-shift 7s infinite;
     box-shadow: 0 0 25px rgba(244,67,54,0.35), inset 0 0 30px rgba(244,67,54,0.08);
+    overflow-anchor: none; /* 💥 新增：禁止浏览器自动干预滚动条，交由我们的 JS 精准控制 */
 }
 
 /* 幽灵水印 WARNING */
@@ -2245,6 +2325,73 @@
     90% { opacity:1; transform: none; }
     91% { opacity:0.6; transform: translateX(-2px); }
     92% { opacity:1; }
+}
+
+/* 滚动展开动画 */
+.cyber-warning-card {
+    --expand-duration: 0.6s;
+}
+.warning-expandable {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--expand-duration) cubic-bezier(0.22, 1, 0.36, 1);
+}
+.warning-expandable-inner {
+    overflow: hidden;
+}
+.cyber-warning-card.expanded .warning-expandable {
+    grid-template-rows: 1fr;
+}
+/* 展开前只显示顶部标题栏，高度收起 */
+.cyber-warning-card:not(.expanded) .hazard-stripes.bottom {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .cyber-warning-card {
+        margin: 16px 0 0 0;
+        clip-path: none;
+    }
+    .warning-top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        padding: 10px 14px;
+    }
+    .warning-countdown {
+        font-size: 11px;
+    }
+    .warning-countdown-digits {
+        font-size: 13px;
+    }
+    .warning-stats-bar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+    .warning-stat {
+        padding: 8px 12px;
+        font-size: 10px;
+        border-right: 1px solid rgba(244,67,54,0.2);
+        border-bottom: 1px solid rgba(244,67,54,0.2);
+    }
+    .warning-stat:nth-child(2),
+    .warning-stat:nth-child(4) {
+        border-right: none;
+    }
+    .warning-stat:nth-child(3),
+    .warning-stat:nth-child(4) {
+        border-bottom: none;
+    }
+    .warning-stat-val {
+        font-size: 15px;
+    }
+    .warning-body {
+        padding: 14px 14px 16px 14px;
+    }
+    .warning-content-text {
+        font-size: 13px;
+        line-height: 1.75;
+    }
 }
 
 /* ── 正文区域 ── */
@@ -4533,25 +4680,22 @@ textarea:-webkit-autofill:active {
     <div class="overlay" id="overlay"></div>
 
     <div class="sidebar" id="sidebar">
-        <div class="sidebar-close" id="closeBtn">✕ [关闭]</div>
+    <div class="sidebar-inner">
+        <div class="sidebar-close" id="closeBtn">✕ 关闭</div>
         <ul class="wiki-list">
             <li><button class="wiki-item-btn" data-target="mainView">主界面</button></li>
             <li><button class="wiki-item-btn" data-target="worldView">世界观设定</button></li>
-            <!-- 👇 新增：剧情进度入口 👇 -->
-            <li><button class="wiki-item-btn" data-target="storyView" style="color: #e040fb; border-color: rgba(224, 64, 251, 0.4);">剧情与日志</button></li>
-            <!-- 💥 新增：战术等候室入口 -->
-            <li><button class="wiki-item-btn" data-target="queueView" style="color: #ffeb3b; border-color: rgba(255,235,59,0.4);">办事大厅</button></li>
+            <li><button class="wiki-item-btn" data-target="storyView">剧情与日志</button></li>
+            <li><button class="wiki-item-btn" data-target="queueView">办事大厅</button></li>
             <li><button class="wiki-item-btn" data-target="logView">人设库</button></li>
-            <li><button class="wiki-item-btn" data-target="profileView" style="color: #00e5ff; border-color: rgba(0,229,255,0.4);">个人终端</button></li>
-            <li><button class="wiki-item-btn" data-target="forumView" style="color: #4caf50; border-color: rgba(76, 175, 80, 0.4);">深空论坛</button></li>
-            <!-- 💥 新增：管理员专属后台入口 (默认隐藏) -->
+            <li><button class="wiki-item-btn" data-target="profileView">个人终端</button></li>
+            <li><button class="wiki-item-btn" data-target="forumView">深空论坛</button></li>
             <li id="adminMenuWrapper" style="display: none;">
-                <button class="wiki-item-btn" data-target="adminView" style="color: #f44336; border-color: rgba(244,67,54,0.4); margin-top: 20px;">
-                    [ ⚙️ 管理员控制台 ]
-                </button>
+                <button class="wiki-item-btn" data-target="adminView">[ ⚙ 管理员控制台 ]</button>
             </li>
         </ul>
     </div>
+</div>
 
     <div class="page-container">
         
@@ -9965,40 +10109,40 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
             }
             
             container.innerHTML = `
-    <div class="cyber-warning-card">
-        <div class="warning-scanline"></div>
-        <div class="hazard-stripes top"></div>
+    <div class="cyber-warning-card" id="warning-card-main">
+    <div class="warning-scanline"></div>
+    <div class="hazard-stripes top"></div>
 
-        <div class="warning-top-bar">
-            <div class="warning-header-text">
-                <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:#f44336;flex-shrink:0;"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
-                ${warningTitle}
-            </div>
-            <div class="warning-countdown">
-                NEXT ALERT IN&nbsp;<span class="warning-countdown-digits" id="warning-cd">00:00:00</span>
-            </div>
+    <div class="warning-top-bar">
+        <div class="warning-header-text">
+            <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:#f44336;flex-shrink:0;"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+            ${warningTitle}
         </div>
-
-        <div class="warning-stats-bar">
-            <div class="warning-stat">INFECTED<span class="warning-stat-val" id="wstat-a">──</span></div>
-            <div class="warning-stat">FATALITY RATE<span class="warning-stat-val" id="wstat-b">──</span></div>
-            <div class="warning-stat">ALERT LEVEL<span class="warning-stat-val" id="wstat-c">──</span></div>
-            <div class="warning-stat">SECTORS AT RISK<span class="warning-stat-val" id="wstat-d">──</span></div>
+        <div class="warning-countdown">
+            NEXT ALERT IN&nbsp;<span class="warning-countdown-digits" id="warning-cd">00:00:00</span>
         </div>
-
-        <div class="warning-body">
-            <div class="warning-content-text">${warningContent}</div>
-        </div>
-
-        <div class="hazard-stripes bottom"></div>
     </div>
+
+    <div class="warning-expandable">
+        <div class="warning-expandable-inner">
+            <div class="warning-stats-bar">
+                <div class="warning-stat">INFECTED<span class="warning-stat-val" id="wstat-a">──</span></div>
+                <div class="warning-stat">FATALITY RATE<span class="warning-stat-val" id="wstat-b">──</span></div>
+                <div class="warning-stat">ALERT LEVEL<span class="warning-stat-val" id="wstat-c">──</span></div>
+                <div class="warning-stat">SECTORS AT RISK<span class="warning-stat-val" id="wstat-d">──</span></div>
+            </div>
+            <div class="warning-body">
+                <div class="warning-content-text">${warningContent}</div>
+            </div>
+            <div class="hazard-stripes bottom"></div>
+        </div>
+    </div>
+</div>
 `;
 
-/* 数字滚动上去的动画 */
 function animateVal(id, target, suffix = '') {
     const el = document.getElementById(id);
     if (!el) return;
-    let start = 0;
     const duration = 1200;
     const startTime = performance.now();
     function step(now) {
@@ -10010,12 +10154,75 @@ function animateVal(id, target, suffix = '') {
     }
     requestAnimationFrame(step);
 }
+
+function resetWarningStats() {
+    ['wstat-a','wstat-b','wstat-c','wstat-d'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '──';
+    });
+}
+
 setTimeout(() => {
-    animateVal('wstat-a', 84291, '+');
-    animateVal('wstat-b', 37, '%');
-    animateVal('wstat-c', 9, '/10');
-    animateVal('wstat-d', 14, '');
-}, 300);
+    const card = document.getElementById('warning-card-main');
+    if (!card) return;
+
+    let isExpanded = false;
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !isExpanded) {
+                isExpanded = true;
+                card.classList.add('expanded');
+                setTimeout(() => {
+                    animateVal('wstat-a', 84291, '+');
+                    animateVal('wstat-b', 37, '%');
+                    animateVal('wstat-c', 9, '/10');
+                    animateVal('wstat-d', 14, '');
+                }, 400);
+            } else if (!entry.isIntersecting && isExpanded) {
+                isExpanded = false;
+                const rect = card.getBoundingClientRect();
+                const isAbove = rect.top < 0;
+
+                if (isAbove) {
+                    // 往下滚离开：卡片在上方收起
+                    // 💥 核心修复：卡片在上方收起时，高度减小会把下面的内容往上拉，导致阅读位置跳动。
+                    // 我们需要在动画期间实时补偿滚动条的高度，保持阅读位置绝对静止。
+                    const scrollEl = document.scrollingElement || document.documentElement;
+                    let animating = true;
+                    let previousHeight = card.getBoundingClientRect().height;
+
+                    card.classList.remove('expanded');
+                    resetWarningStats();
+
+                    function compensateScroll() {
+                        if (!animating) return;
+                        const currentHeight = card.getBoundingClientRect().height;
+                        const diff = previousHeight - currentHeight;
+                        
+                        // 当高度发生缩小变化时，同步减少 scrollTop
+                        if (diff > 0) {
+                            scrollEl.scrollTop -= diff;
+                            previousHeight = currentHeight;
+                        }
+                        requestAnimationFrame(compensateScroll);
+                    }
+                    requestAnimationFrame(compensateScroll);
+
+                    // 动画结束后停止补偿 (CSS 动画时间是 0.6s，给 650ms 确保覆盖)
+                    setTimeout(() => { animating = false; }, 650);
+                } else {
+                    // 往上滚离开：卡片在下方收起
+                    // 卡片在下方收起不会影响上方的排版和阅读位置，直接收起即可
+                    card.classList.remove('expanded');
+                    resetWarningStats();
+                }
+            }
+        });
+    }, { threshold: 0.15 });
+
+    observer.observe(card);
+}, 500);
 
 /* 倒计时 */
 function updateWarningCountdown() {
@@ -13391,8 +13598,8 @@ if(!title || !parentFaction || !content) {
                 // 探测 A：视窗挤压探测 (检测停靠在浏览器边缘的控制台)
                 // 💥 手机端浏览器导航栏收缩会导致高度剧变，且手机端无控制台，因此在手机端直接跳过此检测！
                 if (!isMobile) {
-                    const widthDiff = window.outerWidth - window.innerWidth > 160;
-                    const heightDiff = window.outerHeight - window.innerHeight > 160;
+                    const widthDiff = window.outerWidth - window.innerWidth > 300;
+                    const heightDiff = window.outerHeight - window.innerHeight > 300;
                     
                     if (widthDiff || heightDiff) {
                         triggerRedScreen();
