@@ -12,15 +12,10 @@
 
     <style>
         /* 基础页面设置（加入了科幻网格和径向渐变微光背景） */
+        /* 基础页面设置 */
         body {
-            background-color: #060b14; /* 极暗的深蓝底色 */
-            background-image: 
-                radial-gradient(circle at 50% 50%, rgba(18, 168, 255, 0.15) 0%, transparent 60%),
-                linear-gradient(rgba(18, 168, 255, 0.06) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(18, 168, 255, 0.06) 1px, transparent 1px);
-            background-size: 100vw 100vh, 30px 30px, 30px 30px;
-            background-attachment: fixed;
-            background-position: center center;
+            background-color: #060b14; /* 极暗的深蓝兜底色 */
+            /* 💥 删除了原本僵硬的线形网格背景 */
             
             color: #ffffff;
             font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -31,7 +26,6 @@
             position: relative;
             overflow-x: hidden; 
         }
-
         /* 💥 修复：限制右上角名字的最大宽度，防止挤破容器 */
         .nav-nickname {
             display: inline-block;
@@ -45,6 +39,68 @@
             .nav-nickname {
                 max-width: 50px; /* 💥 手机端从 80px 缩小到 50px，大约只显示 3 个中文字符 */
             }
+        }
+
+        /* =========================================
+           💥 全局动态弥散背景 (Pure CSS GPU Accelerated)
+           ========================================= */
+        .cyber-diffuse-bg {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -10; /* 沉在最底层 */
+            pointer-events: none; /* 防止阻挡点击 */
+            overflow: hidden;
+            background-color: #060b14; 
+        }
+
+        /* 弥散光球 1：赛博蓝 (左上角游走) */
+        .cyber-diffuse-bg::before {
+            content: '';
+            position: absolute;
+            top: -20%; left: -20%;
+            width: 80vmax; height: 80vmax;
+            /* 💥 亮度下调：0.15 -> 0.08，边缘收窄：60% -> 50% */
+            background: radial-gradient(circle, rgba(18, 168, 255, 0.08) 0%, transparent 50%);
+            animation: diffuse-float 8s ease-in-out infinite alternate;
+        }
+
+        /* 弥散光球 2：霓虹紫 (右下角游走) */
+        .cyber-diffuse-bg::after {
+            content: '';
+            position: absolute;
+            bottom: -20%; right: -20%;
+            width: 90vmax; height: 90vmax;
+            /* 💥 亮度下调：0.12 -> 0.06，边缘收窄：60% -> 50% */
+            background: radial-gradient(circle, rgba(224, 64, 251, 0.06) 0%, transparent 50%);
+            animation: diffuse-float-reverse 10s ease-in-out infinite alternate;
+        }
+
+        /* 弥散光球 3：警告红 (右上角游走) */
+        .cyber-diffuse-orb {
+            position: absolute;
+            top: 10%; right: -10%;
+            width: 70vmax; height: 70vmax;
+            /* 💥 亮度下调：0.08 -> 0.04，边缘收窄：60% -> 50% */
+            background: radial-gradient(circle, rgba(244, 67, 54, 0.04) 0%, transparent 50%);
+            animation: diffuse-float-3 12s ease-in-out infinite alternate;
+        }
+
+        /* --- 💥 加速与大范围漂浮动画 --- */
+        @keyframes diffuse-float {
+            0% { transform: translate(0, 0) scale(1); }
+            /* 扩大了 vw 和 vh 的位移距离，并且放大了 scale 缩放 */
+            50% { transform: translate(25vw, 15vh) scale(1.3); }
+            100% { transform: translate(-10vw, 30vh) scale(0.9); }
+        }
+        @keyframes diffuse-float-reverse {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-30vw, -15vh) scale(1.2); }
+            100% { transform: translate(20vw, -25vh) scale(1.4); }
+        }
+        @keyframes diffuse-float-3 {
+            0% { transform: translate(0, 0) scale(0.8); }
+            50% { transform: translate(-40vw, 30vh) scale(1.5); }
+            100% { transform: translate(-15vw, -20vh) scale(1.1); }
         }
 
 
@@ -1315,32 +1371,58 @@
             z-index: 1;
         }
 
-        /* 2. 背景悬浮粒子 (类似下雪) */
-        .particle-field {
+
+        /* =========================================
+           💥 视差像素星空背景 (深空防晕调校版)
+           ========================================= */
+        #stars-container {
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -5; /* 漂浮在弥散光球（-10）之上，UI之下 */
             pointer-events: none;
-            z-index: 0;
             overflow: hidden;
         }
-        
-        .particle {
+
+        .star-layer {
+            background: transparent;
             position: absolute;
-            background: rgba(18, 168, 255, 0.6);
-            border-radius: 50%;
-            box-shadow: 0 0 8px rgba(18, 168, 255, 0.8);
-            top: -10px;
-            animation: fall linear infinite;
-        }
-        
-        @keyframes fall {
-            0% { transform: translateY(-10px) translateX(0); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { transform: translateY(105vh) translateX(30px); opacity: 0; }
+            top: 0; left: 0;
         }
 
+        /* 伪元素用于无缝循环衔接 */
+        .star-layer::after {
+            content: " ";
+            position: absolute;
+            top: 2000px;
+            left: 0;
+            background: transparent;
+        }
+
+        /* 远层小星尘 (最暗、最慢) */
+        #stars-small {
+            width: 1px; height: 1px;
+            animation: animStar 300s linear infinite; 
+            opacity: 0.4; 
+        }
+        /* 中层蓝星 */
+        #stars-medium {
+            width: 2px; height: 2px;
+            animation: animStar 200s linear infinite;
+            opacity: 0.6;
+        }
+        /* 近层大星 (最亮、稍微快一点点) */
+        #stars-big {
+            width: 3px; height: 3px;
+            animation: animStar 150s linear infinite;
+            opacity: 0.8;
+        }
+
+        /* 极慢的上升漂浮动画 */
+        @keyframes animStar {
+            from { transform: translateY(0px); }
+            to { transform: translateY(-2000px); }
+        }
+        
         /* 3. 点击产生的雷达涟漪 */
         .radar-ping {
             position: absolute;
@@ -4465,7 +4547,7 @@ textarea:-webkit-autofill:active {
         }
 
         /* =========================================
-           💥 1. 主界面：3D 后推景深动画 (Push Back)
+           💥 1. 主界面：3D 后推景深动画 (解绑抬头)
            ========================================= */
         .page-container {
             padding: 20px;
@@ -4473,78 +4555,78 @@ textarea:-webkit-autofill:active {
             flex-direction: column;
             min-height: 100vh;
             box-sizing: border-box;
-            /* 删除了这里的 transition，让包括顶部导航栏在内的外框保持不动 */
+            /* 删除了这里的 transition，让包括顶部导航栏在内的外框彻底保持不动 */
         }
 
-        /* 赋予内部所有视图面板(界面)动画能力 */
+        /* 赋予内部所有独立视图面板(界面)动画能力 */
         .view-panel {
+            /* 整合你原有的 fadeIn 动画，并加入景深 transition */
+            animation: fadeIn 0.3s ease-in-out;
             transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease, filter 0.5s ease;
-            transform-origin: top center; /* 以顶部为基准点缩小，避免和导航栏脱节 */
+            transform-origin: top center; /* 💥 核心：以顶部为锚点缩小，防止和上方的导航栏脱节！ */
         }
 
-        /* 当侧边栏打开时，只让当前显示的界面缩小、左移并模糊，抬头(导航栏)不动！ */
+        /* 当侧边栏打开时，只让当前显示的界面缩小、左移并模糊，抬头(导航栏)一动不动！ */
         body.sidebar-open .view-panel.active {
             transform: scale(0.95) translateX(-15px);
             opacity: 0.6;
             filter: blur(3px);
-            pointer-events: none; /* 防止后推时误触界面按钮 */
+            pointer-events: none; /* 防止后推时误触 */
         }
 
-        /* =========================================
-           💥 2. 全局遮罩：长虹压花玻璃特效 (Ribbed Acrylic Glass)
+       /* =========================================
+           💥 2. 全局遮罩：极致 iOS 液态毛玻璃 + 超细微噪点
            ========================================= */
         .overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: 90;
             
-            /* 底层：深色高斯模糊，模拟厚玻璃的物理质感 */
-            background-color: rgba(4, 8, 16, 0.4);
-            backdrop-filter: blur(25px) saturate(120%);
-            -webkit-backdrop-filter: blur(25px) saturate(120%);
+            /* 1. 基础色彩与折射：saturate(180%) 是灵魂，能让背后的星空和弥散光色彩爆发出液态质感 */
+            background-color: rgba(6, 11, 20, 0.35);
+            backdrop-filter: blur(35px) saturate(180%);
+            -webkit-backdrop-filter: blur(35px) saturate(180%);
+            
+            /* 2. 物理边缘厚度：模拟真实玻璃的切面反光 */
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
             
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.5s;
         }
 
-        /* 中层：色彩弥散与垂直涂抹 (Pastel color diffusion) */
+        /* 3. 液态流光模拟：在玻璃内部增加柔和的色彩折射 */
         .overlay::before {
             content: '';
             position: absolute; inset: 0;
             background-image: 
-                /* 用椭圆渐变模拟光线在垂直玻璃纹理中的上下拉伸晕染 */
-                radial-gradient(ellipse 80% 150% at 20% 40%, rgba(18, 168, 255, 0.15) 0%, transparent 60%),
-                radial-gradient(ellipse 80% 150% at 80% 60%, rgba(224, 64, 251, 0.1) 0%, transparent 60%);
-            filter: blur(30px);
+                radial-gradient(ellipse 100% 150% at 0% 50%, rgba(18, 168, 255, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse 100% 150% at 100% 50%, rgba(224, 64, 251, 0.1) 0%, transparent 50%);
+            filter: blur(40px);
             opacity: 0;
             transition: opacity 0.6s ease;
             pointer-events: none;
         }
 
-        /* 表层：马赛克方块纹理 + 细微噪点 (Mosaic Glass + fine grain) */
+        /* 4. 电影级微噪点：大幅缩小尺寸，提升细腻度，消除粗糙颗粒感 */
         .overlay::after {
             content: '';
             position: absolute; inset: 0;
-            background-image: 
-                /* 1. 交错的马赛克方格纹理 */
-                linear-gradient(45deg, rgba(255, 255, 255, 0.04) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.04) 75%, rgba(255, 255, 255, 0.04)),
-                linear-gradient(45deg, rgba(255, 255, 255, 0.04) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.04) 75%, rgba(255, 255, 255, 0.04)),
-                /* 2. 细微噪点：保留真实的玻璃物理磨砂质感 */
-                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
-            
-            /* 控制马赛克格子的大小，这里设定为 10px 的方格 */
-            background-size: 10px 10px, 10px 10px, 150px 150px;
-            background-position: 0 0, 5px 5px, 0 0;
-            mix-blend-mode: overlay;
+            /* 调高了 baseFrequency 到 1.5，让噪点生成得极细 */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
+            /* 密铺，让颗粒感变得肉眼难以分辨的微小 */
+            background-size: 50px 50px;
+            background-repeat: repeat;
             opacity: 0;
+            mix-blend-mode: overlay;
             transition: opacity 0.5s ease 0.1s;
             pointer-events: none;
         }
 
         .overlay.show { opacity: 1; visibility: visible; }
         .overlay.show::before { opacity: 1; }
-        .overlay.show::after { opacity: 1; }
+        /* 极致克制的噪点透明度，0.06 恰到好处 */
+        .overlay.show::after { opacity: 0.06; }
 
         /* =========================================
            💥 3. 侧边栏：抽屉式滑出动画
@@ -4644,6 +4726,28 @@ textarea:-webkit-autofill:active {
     </script>
 
 <body class="secure-no-select">
+    
+    <!-- 💥 新增：iOS 液态折射毛玻璃 SVG 滤镜 -->
+    <svg style="position:absolute; width:0; height:0;" aria-hidden="true">
+    </svg>
+
+    <!-- 💥 新增：挂载全局动态弥散背景 -->
+    <div class="cyber-diffuse-bg">
+        <div class="cyber-diffuse-orb"></div>
+    </div>
+
+    <!-- 挂载全局动态弥散背景 -->
+    <div class="cyber-diffuse-bg">
+        <div class="cyber-diffuse-orb"></div>
+    </div>
+
+    <!-- 💥 新增：视差像素星空容器 -->
+    <div id="stars-container">
+        <div id="stars-small" class="star-layer"></div>
+        <div id="stars-medium" class="star-layer"></div>
+        <div id="stars-big" class="star-layer"></div>
+    </div>
+
     <!-- 💥 独家定制的科幻终端弹窗 -->
     <div class="sys-modal-overlay" id="sysModalOverlay">
         <div class="sys-modal-box">
@@ -6977,24 +7081,38 @@ window.triggerConflictRejection = async function(charDraft) {
             setTimeout(() => ping.remove(), 1000);
         });
 
-        function createParticleField() {
-            const field = document.createElement('div');
-            field.className = 'particle-field';
-            document.body.appendChild(field);
-            for (let i = 0; i < 50; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                particle.style.left = `${Math.random() * 100}%`;
-                particle.style.animationDuration = `${Math.random() * 10 + 5}s`;
-                particle.style.animationDelay = `${Math.random() * 10}s`;
-                particle.style.opacity = Math.random() * 0.5 + 0.2;
-                const size = Math.random() * 2 + 1;
-                particle.style.width = `${size}px`;
-                particle.style.height = `${size}px`;
-                field.appendChild(particle);
+        /* =========================================================
+           💥 视差星空生成引擎 (密度加倍 & 亮度拉满)
+           ========================================================= */
+        function createParallaxStars() {
+            function generateBoxShadow(count, color) {
+                let shadows = [];
+                for (let i = 0; i < count; i++) {
+                    const x = Math.floor(Math.random() * 3000);
+                    const y = Math.floor(Math.random() * 2000);
+                    shadows.push(`${x}px ${y}px ${color}`);
+                }
+                return shadows.join(', ');
             }
+
+            // 💥 数量超级加倍，颜色全面调亮！
+            const shadowSmall = generateBoxShadow(1200, 'rgba(255, 255, 255, 0.4)'); // 1200颗微星
+            const shadowMedium = generateBoxShadow(500, 'rgba(18, 168, 255, 0.7)');  // 500颗赛博蓝
+            const shadowBig = generateBoxShadow(150, 'rgba(224, 242, 254, 1)');      // 150颗冰白亮星
+
+            const style = document.createElement('style');
+            style.innerHTML = `
+                /* 💥 强制提高三个图层的透明度，让星星更显眼 */
+                #stars-small { box-shadow: ${shadowSmall}; opacity: 0.8; }
+                #stars-small::after { box-shadow: ${shadowSmall}; }
+                #stars-medium { box-shadow: ${shadowMedium}; opacity: 0.9; }
+                #stars-medium::after { box-shadow: ${shadowMedium}; }
+                #stars-big { box-shadow: ${shadowBig}; opacity: 1; }
+                #stars-big::after { box-shadow: ${shadowBig}; }
+            `;
+            document.head.appendChild(style);
         }
-        createParticleField();
+        createParallaxStars();
 
         /* =========================================================
            5. 战术终端搜索与全屏文章阅读系统
