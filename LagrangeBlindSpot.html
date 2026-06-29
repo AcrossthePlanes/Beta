@@ -4473,17 +4473,21 @@ textarea:-webkit-autofill:active {
             flex-direction: column;
             min-height: 100vh;
             box-sizing: border-box;
-            /* 赋予主容器动画能力 */
-            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease, filter 0.5s ease;
-            transform-origin: center center;
+            /* 删除了这里的 transition，让包括顶部导航栏在内的外框保持不动 */
         }
 
-        /* 当侧边栏打开时，主界面缩小、左移、变暗并轻微模糊 */
-        body.sidebar-open .page-container {
+        /* 赋予内部所有视图面板(界面)动画能力 */
+        .view-panel {
+            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease, filter 0.5s ease;
+            transform-origin: top center; /* 以顶部为基准点缩小，避免和导航栏脱节 */
+        }
+
+        /* 当侧边栏打开时，只让当前显示的界面缩小、左移并模糊，抬头(导航栏)不动！ */
+        body.sidebar-open .view-panel.active {
             transform: scale(0.95) translateX(-15px);
             opacity: 0.6;
             filter: blur(3px);
-            pointer-events: none; /* 防止后推时误触主界面按钮 */
+            pointer-events: none; /* 防止后推时误触界面按钮 */
         }
 
         /* =========================================
@@ -4518,23 +4522,20 @@ textarea:-webkit-autofill:active {
             pointer-events: none;
         }
 
-        /* 表层：垂直长虹玻璃纹理 + 细微噪点 (Vertical ribbed acrylic + fine grain) */
+        /* 表层：马赛克方块纹理 + 细微噪点 (Mosaic Glass + fine grain) */
         .overlay::after {
             content: '';
             position: absolute; inset: 0;
             background-image: 
-                /* 1. 压花玻璃的柱状凸起：通过 8px 宽度的阴影-高光-阴影循环，完美模拟圆柱形玻璃条的立体折射感 */
-                repeating-linear-gradient(
-                    to right,
-                    rgba(0, 0, 0, 0.2) 0px,
-                    rgba(255, 255, 255, 0.0) 2px,
-                    rgba(255, 255, 255, 0.12) 4px,
-                    rgba(255, 255, 255, 0.0) 6px,
-                    rgba(0, 0, 0, 0.2) 8px
-                ),
-                /* 2. 细微噪点：增加真实物理材质感 */
+                /* 1. 交错的马赛克方格纹理 */
+                linear-gradient(45deg, rgba(255, 255, 255, 0.04) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.04) 75%, rgba(255, 255, 255, 0.04)),
+                linear-gradient(45deg, rgba(255, 255, 255, 0.04) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.04) 75%, rgba(255, 255, 255, 0.04)),
+                /* 2. 细微噪点：保留真实的玻璃物理磨砂质感 */
                 url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
-            background-size: 100% 100%, 150px 150px;
+            
+            /* 控制马赛克格子的大小，这里设定为 10px 的方格 */
+            background-size: 10px 10px, 10px 10px, 150px 150px;
+            background-position: 0 0, 5px 5px, 0 0;
             mix-blend-mode: overlay;
             opacity: 0;
             transition: opacity 0.5s ease 0.1s;
@@ -10266,32 +10267,19 @@ setTimeout(() => {
             } 
             // 2. 收起：当卡片【100% 完全】离开屏幕时触发 (0%)
             else if (entry.intersectionRatio === 0 && isExpanded) {
-                isExpanded = false;
                 const rect = card.getBoundingClientRect();
                 const isAbove = rect.top < 0;
-                const expandable = card.querySelector('.warning-expandable');
 
                 if (isAbove) {
-                    // 💥 终极黑科技：视野外瞬间收起 + 同步补偿
-                    // 因为是瞬间完成的，绝对不会和你的手指滑动产生拉扯感！
-                    const scrollEl = document.scrollingElement || document.documentElement;
-                    const heightBefore = card.getBoundingClientRect().height;
-                    
-                    if (expandable) expandable.style.transition = 'none'; // 瞬间关掉动画
-                    card.classList.remove('expanded');
-                    resetWarningStats();
-                    
-                    const heightAfter = card.getBoundingClientRect().height;
-                    const diff = heightBefore - heightAfter;
-                    
-                    // 瞬间把滚动条往上推，完美抵消掉卡片收起丢失的高度
-                    scrollEl.scrollTop -= diff;
-                    
-                    // 强制浏览器重绘，然后恢复动画，为下次展开做准备
-                    void card.offsetWidth;
-                    if (expandable) expandable.style.transition = '';
+                    // 💥 手机端防卡顿终极修复：
+                    // 当卡片从屏幕上方离开（用户向下划）时，什么都不做！
+                    // 彻底干掉以前那种“瞬间收起+计算高度差+强推滚动条”的逻辑。
+                    // 只要它在上面保持展开，就不会产生任何高度突变，完全不会打断手机的惯性滚动！
+                    return; 
                 } else {
-                    // 卡片在屏幕下方离开，直接收起即可，不影响上方排版
+                    // 当卡片从屏幕下方离开（用户向上划回页面最顶部）时，默默收起
+                    // 因为卡片在你的视线下方，它的高度塌陷绝对不会影响你当前的滚动条位置
+                    isExpanded = false;
                     card.classList.remove('expanded');
                     resetWarningStats();
                 }
