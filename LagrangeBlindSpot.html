@@ -47,14 +47,7 @@
             }
         }
 
-        /* 统一的页面容器，给内容留出边距 */
-        .page-container {
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            box-sizing: border-box;
-        }
+
 
         /* 💥 2. 修改：原本的 header */
         .header {
@@ -484,83 +477,7 @@
             font-size: 14px;
         }
 
-        /* --- 侧边栏 Wiki 列表样式 --- */
-        .sidebar {
-    position: fixed;
-    top: 0;
-    right: -340;
-    width: 340px;
-    height: 100%;
-    background-color: rgba(6, 11, 20, 0);
-    border-left: 1px solid rgba(18,168,255,0);
-    box-shadow: none;
-    z-index: 100;
-    transition:
-        right 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-        background-color 0.45s ease,
-        backdrop-filter 0.45s ease,
-        -webkit-backdrop-filter 0.45s ease,
-        border-color 0.4s ease,
-        box-shadow 0.4s ease;
-    padding: 20px;
-    box-sizing: border-box;
-}
-
-.sidebar.open {
-    right: 0;
-    background-color: rgba(6, 11, 20, 0.95);
-    border-left: 1px solid rgba(18,168,255,0.5);
-    box-shadow: -5px 0 20px rgba(0,0,0,0.8), -2px 0 15px rgba(18,168,255,0.2);
-}
-
-/* 毛玻璃层——通过 opacity 过渡模拟 blur 渐入 */
-.sidebar::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    opacity: 0;
-    transition: opacity 0.5s ease;
-    pointer-events: none;
-    z-index: 0;
-}
-.sidebar.open::before {
-    opacity: 1;
-}
-
-.sidebar-inner {
-    position: relative;
-    z-index: 1;
-    padding: 28px 20px 20px 20px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    opacity: 0;
-    transform: translateX(12px);
-    transition: opacity 0.3s ease 0.15s, transform 0.3s ease 0.15s;
-}
-.sidebar.open .sidebar-inner {
-    opacity: 1;
-    transform: translateX(0);
-}
-
-.sidebar-close {
-    font-family: monospace;
-    font-size: 12px;
-    letter-spacing: 3px;
-    cursor: pointer;
-    color: rgba(18,168,255,0.5);
-    margin-bottom: 32px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid rgba(18,168,255,0.1);
-    transition: color 0.2s, text-shadow 0.2s;
-    text-align: left;
-}
-.sidebar-close:hover {
-    color: #12a8ff;
-    text-shadow: 0 0 8px rgba(18,168,255,0.8);
-}
+        
 
 .wiki-list {
     list-style: none;
@@ -623,21 +540,6 @@
     padding-top: 16px;
     border-top: 1px solid rgba(244,67,54,0.2);
 }
-
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 90;
-            display: none;
-        }
-
-        .overlay.show {
-            display: block;
-        }
 
         /* =========================================
            新版主界面 (赛博粗野主义风格参考 CLAY CLUB)
@@ -2328,13 +2230,33 @@
 }
 
 /* 滚动展开动画 */
+/* ── 警告卡片主体 ── */
 .cyber-warning-card {
-    --expand-duration: 0.6s;
+    position: relative;
+    background: rgba(15, 2, 2, 0.92);
+    border: 1px solid #f44336;
+    border-left: 5px solid #f44336;
+    padding: 0;
+    width: 100%;
+    max-width: 750px;
+    margin: 30px auto 0 auto;
+    box-sizing: border-box;
+    border-radius: 0;
+    overflow: hidden;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+    animation: warning-flicker 4s infinite, warning-glitch-shift 7s infinite;
+    box-shadow: 0 0 25px rgba(244,67,54,0.35), inset 0 0 30px rgba(244,67,54,0.08);
+    
+    /* 💥 修复：将动画时间从 0.6s 延长到 1.2s，让展开变得从容 */
+    --expand-duration: 1.2s; 
 }
+
+/* 滚动展开动画 */
 .warning-expandable {
     display: grid;
     grid-template-rows: 0fr;
-    transition: grid-template-rows var(--expand-duration) cubic-bezier(0.22, 1, 0.36, 1);
+    /* 💥 修复：换用更平滑的缓动曲线，消除突然弹开的突兀感 */
+    transition: grid-template-rows var(--expand-duration) cubic-bezier(0.25, 1, 0.5, 1);
 }
 .warning-expandable-inner {
     overflow: hidden;
@@ -4031,16 +3953,6 @@ textarea:-webkit-autofill:active {
             width: 100%;
         }
 
-        /* =========================================
-           💥 终极修复：目录球层级与全屏毛玻璃 💥
-           ========================================= */
-        /* 1. 升级全局遮罩，加入高级赛博毛玻璃特效 */
-        .overlay {
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            background: rgba(0, 5, 10, 0.6) !important; /* 稍微调浅一点底色，透出毛玻璃质感 */
-            transition: opacity 0.3s ease; /* 增加渐隐渐显动画 */
-        }
 
         /* ==========================================================================
            🛠️ 组件化样式提取 (Component Classes) - 替代 JS 内联样式
@@ -4550,6 +4462,158 @@ textarea:-webkit-autofill:active {
             .world-toc .sub-toc-list.open > li:nth-child(2) { transition-delay: 0.15s; }
             .world-toc .sub-toc-list.open > li:nth-child(3) { transition-delay: 0.2s; }
             .world-toc .sub-toc-list.open > li:nth-child(4) { transition-delay: 0.25s; }
+        }
+
+        /* =========================================
+           💥 1. 主界面：3D 后推景深动画 (Push Back)
+           ========================================= */
+        .page-container {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            box-sizing: border-box;
+            /* 赋予主容器动画能力 */
+            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease, filter 0.5s ease;
+            transform-origin: center center;
+        }
+
+        /* 当侧边栏打开时，主界面缩小、左移、变暗并轻微模糊 */
+        body.sidebar-open .page-container {
+            transform: scale(0.95) translateX(-15px);
+            opacity: 0.6;
+            filter: blur(3px);
+            pointer-events: none; /* 防止后推时误触主界面按钮 */
+        }
+
+        /* =========================================
+           💥 2. 全局遮罩：长虹压花玻璃特效 (Ribbed Acrylic Glass)
+           ========================================= */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 90;
+            
+            /* 底层：深色高斯模糊，模拟厚玻璃的物理质感 */
+            background-color: rgba(4, 8, 16, 0.4);
+            backdrop-filter: blur(25px) saturate(120%);
+            -webkit-backdrop-filter: blur(25px) saturate(120%);
+            
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.5s;
+        }
+
+        /* 中层：色彩弥散与垂直涂抹 (Pastel color diffusion) */
+        .overlay::before {
+            content: '';
+            position: absolute; inset: 0;
+            background-image: 
+                /* 用椭圆渐变模拟光线在垂直玻璃纹理中的上下拉伸晕染 */
+                radial-gradient(ellipse 80% 150% at 20% 40%, rgba(18, 168, 255, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse 80% 150% at 80% 60%, rgba(224, 64, 251, 0.1) 0%, transparent 60%);
+            filter: blur(30px);
+            opacity: 0;
+            transition: opacity 0.6s ease;
+            pointer-events: none;
+        }
+
+        /* 表层：垂直长虹玻璃纹理 + 细微噪点 (Vertical ribbed acrylic + fine grain) */
+        .overlay::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image: 
+                /* 1. 压花玻璃的柱状凸起：通过 8px 宽度的阴影-高光-阴影循环，完美模拟圆柱形玻璃条的立体折射感 */
+                repeating-linear-gradient(
+                    to right,
+                    rgba(0, 0, 0, 0.2) 0px,
+                    rgba(255, 255, 255, 0.0) 2px,
+                    rgba(255, 255, 255, 0.12) 4px,
+                    rgba(255, 255, 255, 0.0) 6px,
+                    rgba(0, 0, 0, 0.2) 8px
+                ),
+                /* 2. 细微噪点：增加真实物理材质感 */
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+            background-size: 100% 100%, 150px 150px;
+            mix-blend-mode: overlay;
+            opacity: 0;
+            transition: opacity 0.5s ease 0.1s;
+            pointer-events: none;
+        }
+
+        .overlay.show { opacity: 1; visibility: visible; }
+        .overlay.show::before { opacity: 1; }
+        .overlay.show::after { opacity: 1; }
+
+        /* =========================================
+           💥 3. 侧边栏：抽屉式滑出动画
+           ========================================= */
+        .sidebar {
+            position: fixed;
+            top: 0; right: 0; 
+            width: 340px; height: 100%;
+            z-index: 100;
+            padding: 20px; box-sizing: border-box;
+            
+            /* 保持你原本的深色半透明质感 */
+            background-color: rgba(6, 11, 20, 0.95);
+            border-left: 1px solid rgba(18,168,255,0.5);
+            box-shadow: -5px 0 20px rgba(0,0,0,0.8), -2px 0 15px rgba(18,168,255,0.2);
+            
+            /* 抽屉式滑出动画 (默认藏在屏幕右侧外) */
+            transform: translateX(100%);
+            transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        /* 内部毛玻璃 */
+        .sidebar::before {
+            content: '';
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            pointer-events: none; z-index: 0;
+        }
+
+        .sidebar.open { transform: translateX(0); /* 滑入屏幕 */ }
+
+        /* 内部元素的延迟滑入动画，增加层次感 */
+        .sidebar-inner {
+            position: relative; z-index: 1;
+            padding: 28px 20px 20px 20px; height: 100%;
+            display: flex; flex-direction: column;
+            opacity: 0; transform: translateX(15px);
+            transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        
+        .sidebar.open .sidebar-inner {
+            opacity: 1; transform: translateX(0); transition-delay: 0.15s;
+        }
+
+        /* 侧边栏内部按钮样式恢复 */
+        .sidebar-close {
+            font-family: monospace; font-size: 12px; letter-spacing: 3px;
+            cursor: pointer; color: rgba(18,168,255,0.5);
+            margin-bottom: 32px; padding-bottom: 16px;
+            border-bottom: 1px solid rgba(18,168,255,0.1);
+            transition: color 0.2s, text-shadow 0.2s; text-align: left;
+        }
+        .sidebar-close:hover { color: #12a8ff; text-shadow: 0 0 8px rgba(18,168,255,0.8); }
+        .wiki-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+        .wiki-item-btn {
+            background: rgba(18,168,255,0.05); border: 1px solid rgba(18,168,255,0.4);
+            color: #12a8ff; padding: 12px 15px; text-align: left; font-size: 20px;
+            border-radius: 0; cursor: pointer; transition: all 0.25s ease;
+            width: 100%; font-family: "PingFang SC", sans-serif; letter-spacing: 1px;
+            position: relative; overflow: hidden;
+        }
+        .wiki-item-btn::after {
+            content: ''; position: absolute; left: 0; top: 0; width: 0; height: 100%;
+            background: rgba(18,168,255,0.08); transition: width 0.3s ease; z-index: 0;
+        }
+        .wiki-item-btn:hover::after { width: 100%; }
+        .wiki-item-btn:hover {
+            background-color: rgba(18,168,255,0.15);
+            box-shadow: 0 0 12px rgba(18,168,255,0.4), inset 0 0 8px rgba(18,168,255,0.05);
+            border-color: #12a8ff; text-shadow: 0 0 8px rgba(18,168,255,0.9); letter-spacing: 2px;
         }
 
     </style>
@@ -6863,16 +6927,32 @@ window.triggerConflictRejection = async function(charDraft) {
         const wikiButtons = document.querySelectorAll('.wiki-item-btn');
         const viewPanels = document.querySelectorAll('.view-panel');
 
-        menuBtn.addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('show'); });
-        function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('show'); }
+        // 💥 打开侧边栏：触发抽屉滑出、长虹玻璃弥散、主界面后推
+        menuBtn.addEventListener('click', () => { 
+            sidebar.classList.add('open'); 
+            overlay.classList.add('show'); 
+            document.body.classList.add('sidebar-open'); // 触发主界面后推
+        });
+
+        // 💥 关闭侧边栏：全部恢复原状
+        function closeSidebar() { 
+            sidebar.classList.remove('open'); 
+            overlay.classList.remove('show'); 
+            document.body.classList.remove('sidebar-open'); // 恢复主界面
+        }
+        
         closeBtn.addEventListener('click', closeSidebar);
+        
+        // 点击遮罩层关闭
         overlay.addEventListener('click', () => {
-            closeSidebar(); // 关闭侧边栏
-            // 💥 联动：点击毛玻璃时，也同时收起目录球
+            closeSidebar(); 
+            
+            // 联动：如果点的是目录球的遮罩，也一并收起
             const toc = document.querySelector('.world-toc');
             if (toc && toc.classList.contains('open')) {
                 toc.classList.remove('open');
                 overlay.classList.remove('show');
+                document.body.classList.remove('sidebar-open'); 
             }
         });
 
@@ -10170,56 +10250,54 @@ setTimeout(() => {
 
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            if (entry.isIntersecting && !isExpanded) {
+            // 1. 展开：当卡片露出 15% 时触发
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.15 && !isExpanded) {
                 isExpanded = true;
+                const expandable = card.querySelector('.warning-expandable');
+                if (expandable) expandable.style.transition = ''; // 确保动画开启
                 card.classList.add('expanded');
+                
                 setTimeout(() => {
                     animateVal('wstat-a', 84291, '+');
                     animateVal('wstat-b', 37, '%');
                     animateVal('wstat-c', 9, '/10');
                     animateVal('wstat-d', 14, '');
-                }, 400);
-            } else if (!entry.isIntersecting && isExpanded) {
+                }, 600);
+            } 
+            // 2. 收起：当卡片【100% 完全】离开屏幕时触发 (0%)
+            else if (entry.intersectionRatio === 0 && isExpanded) {
                 isExpanded = false;
                 const rect = card.getBoundingClientRect();
                 const isAbove = rect.top < 0;
+                const expandable = card.querySelector('.warning-expandable');
 
                 if (isAbove) {
-                    // 往下滚离开：卡片在上方收起
-                    // 💥 核心修复：卡片在上方收起时，高度减小会把下面的内容往上拉，导致阅读位置跳动。
-                    // 我们需要在动画期间实时补偿滚动条的高度，保持阅读位置绝对静止。
+                    // 💥 终极黑科技：视野外瞬间收起 + 同步补偿
+                    // 因为是瞬间完成的，绝对不会和你的手指滑动产生拉扯感！
                     const scrollEl = document.scrollingElement || document.documentElement;
-                    let animating = true;
-                    let previousHeight = card.getBoundingClientRect().height;
-
+                    const heightBefore = card.getBoundingClientRect().height;
+                    
+                    if (expandable) expandable.style.transition = 'none'; // 瞬间关掉动画
                     card.classList.remove('expanded');
                     resetWarningStats();
-
-                    function compensateScroll() {
-                        if (!animating) return;
-                        const currentHeight = card.getBoundingClientRect().height;
-                        const diff = previousHeight - currentHeight;
-                        
-                        // 当高度发生缩小变化时，同步减少 scrollTop
-                        if (diff > 0) {
-                            scrollEl.scrollTop -= diff;
-                            previousHeight = currentHeight;
-                        }
-                        requestAnimationFrame(compensateScroll);
-                    }
-                    requestAnimationFrame(compensateScroll);
-
-                    // 动画结束后停止补偿 (CSS 动画时间是 0.6s，给 650ms 确保覆盖)
-                    setTimeout(() => { animating = false; }, 650);
+                    
+                    const heightAfter = card.getBoundingClientRect().height;
+                    const diff = heightBefore - heightAfter;
+                    
+                    // 瞬间把滚动条往上推，完美抵消掉卡片收起丢失的高度
+                    scrollEl.scrollTop -= diff;
+                    
+                    // 强制浏览器重绘，然后恢复动画，为下次展开做准备
+                    void card.offsetWidth;
+                    if (expandable) expandable.style.transition = '';
                 } else {
-                    // 往上滚离开：卡片在下方收起
-                    // 卡片在下方收起不会影响上方的排版和阅读位置，直接收起即可
+                    // 卡片在屏幕下方离开，直接收起即可，不影响上方排版
                     card.classList.remove('expanded');
                     resetWarningStats();
                 }
             }
         });
-    }, { threshold: 0.15 });
+    }, { threshold: [0, 0.15] }); // 💥 核心：设置两个阈值，0用来判断完全离开，0.15用来判断进入
 
     observer.observe(card);
 }, 500);
