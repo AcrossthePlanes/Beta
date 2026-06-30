@@ -618,20 +618,6 @@
             overflow: hidden;
         }
 
-        .ghost-bg {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-family: "Impact", sans-serif;
-            font-size: clamp(8rem, 25vw, 25rem);
-            font-weight: 900;
-            color: rgba(18, 168, 255, 0.03);
-            white-space: nowrap;
-            pointer-events: none;
-            z-index: 0;
-        }
-
         .hero-content {
             position: relative;
             z-index: 3;
@@ -1378,9 +1364,9 @@
         #stars-container {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -5; /* 漂浮在弥散光球（-10）之上，UI之下 */
+            z-index: -5; 
             pointer-events: none;
-            overflow: hidden;
+            /* 💥 删掉这里的 overflow: hidden; 释放星空的边界 */
         }
 
         .star-layer {
@@ -2905,7 +2891,24 @@
             position: relative;
         }
 
-        /* 背景巨大的幽灵年份 */
+        /* 1. 主页 Hero 区域幽灵文字 */
+        .ghost-bg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            /* 💥 加入 var(--parallax-y) 接收 JS 传来的视差偏移量 */
+            transform: translate(-50%, calc(-50% + var(--parallax-y, 0px)));
+            font-family: "Impact", sans-serif;
+            font-size: clamp(8rem, 25vw, 25rem);
+            font-weight: 900;
+            color: rgba(18, 168, 255, 0.03);
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 0;
+            will-change: transform; /* 启用硬件加速 */
+        }
+
+        /* 2. 时间线区域背景巨型年份 */
         .timeline-section h2 {
             font-size: clamp(6rem, 15vw, 12rem);
             font-family: 'Impact', sans-serif;
@@ -2913,9 +2916,11 @@
             margin: 0;
             position: absolute;
             top: 50%;
-            transform: translateY(-50%);
+            /* 💥 同样加入视差变量 */
+            transform: translateY(calc(-50% + var(--parallax-y, 0px)));
             z-index: 0;
             pointer-events: none;
+            will-change: transform; 
         }
 
         .timeline-section .content-box {
@@ -4560,18 +4565,22 @@ textarea:-webkit-autofill:active {
 
         /* 赋予内部所有独立视图面板(界面)动画能力 */
         .view-panel {
-            /* 整合你原有的 fadeIn 动画，并加入景深 transition */
             animation: fadeIn 0.3s ease-in-out;
-            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease, filter 0.5s ease;
-            transform-origin: top center; /* 💥 核心：以顶部为锚点缩小，防止和上方的导航栏脱节！ */
+            /* 💥 优化 1：删掉 filter 的过渡，减轻 GPU 负担 */
+            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease;
+            transform-origin: top center; 
+            /* 💥 优化 2：开启硬件加速预警，让浏览器提前把这个图层交给 GPU 处理 */
+            will-change: transform, opacity;
         }
 
-        /* 当侧边栏打开时，只让当前显示的界面缩小、左移并模糊，抬头(导航栏)一动不动！ */
+        /* 当侧边栏打开时，只让当前显示的界面缩小、左移，抬头(导航栏)一动不动！ */
         body.sidebar-open .view-panel.active {
-            transform: scale(0.95) translateX(-15px);
+            /* 💥 优化 3：使用 translate3d 强制开启 3D 硬件加速 */
+            transform: scale(0.95) translate3d(-15px, 0, 0);
             opacity: 0.6;
-            filter: blur(3px);
-            pointer-events: none; /* 防止后推时误触 */
+            /* 💥 优化 4：彻底删掉 filter: blur(3px); 
+               因为上面的 overlay 遮罩已经有强大的毛玻璃了，双重模糊会导致严重掉帧卡顿！ */
+            pointer-events: none; 
         }
 
        /* =========================================
@@ -4898,7 +4907,7 @@ textarea:-webkit-autofill:active {
             <!-- 1. 英雄视觉区 (Hero Section) -->
             <section class="hero-section" id="main-hero">
                 <!-- 背景幽灵文字 -->
-                <div class="ghost-bg">C-62</div>
+                <div class="ghost-bg parallax-ghost" data-speed="0.25">C-62</div>
 
                 <div class="hero-content">
                     <div class="hero-chip">✦ P.S.C SECURE UPLINK ESTABLISHED</div>
@@ -5298,7 +5307,7 @@ textarea:-webkit-autofill:active {
 
                 <!-- 导言横幅 (Hero Banner) -->
                 <div style="background: rgba(0, 5, 10, 0.6); border: 1px solid #12a8ff; padding: 40px; margin-bottom: 50px; position: relative; overflow: hidden; box-shadow: inset 0 0 30px rgba(18,168,255,0.1);">
-                    <div style="position: absolute; top: -30px; right: -20px; font-size: 180px; opacity: 0.03; font-family: 'Impact', sans-serif; pointer-events: none;">2240</div>
+                    <div class="parallax-ghost" data-speed="0.15" style="position: absolute; top: -30px; right: -20px; font-size: 180px; opacity: 0.03; font-family: 'Impact', sans-serif; pointer-events: none; transform: translateY(var(--parallax-y, 0px)); will-change: transform;">2240</div>
                     <h3 style="color: #e0f2fe; font-size: 28px; margin-top: 0; margin-bottom: 20px; text-shadow: 0 0 15px rgba(18,168,255,0.6); letter-spacing: 2px;">深空边缘：纪元 2240</h3>
                     <p style="color: #8bb9d6; line-height: 1.9; font-size: 16px; max-width: 900px; position: relative; z-index: 2;">
                         在人类走出太阳系后的第一个世纪，文明并没有迎来真正的黄金时代。高能同位素矿物 <strong style="color:#12a8ff;">C-62（黑血）</strong> 的发现，让人类文明得以飞速发展，也让整个星系陷入漫长的资源战争。<br><br>
@@ -5319,18 +5328,26 @@ textarea:-webkit-autofill:active {
 
                 <div style="background: rgba(0, 5, 10, 0.6); border: 1px solid rgba(18, 168, 255, 0.3); padding: 35px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 30px; margin-bottom: 60px; box-shadow: inset 0 0 30px rgba(18,168,255,0.05); position: relative; overflow: hidden;">
                     
-                    <!-- 背景装饰线 -->
-                    <div style="position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: repeating-linear-gradient(90deg, rgba(18,168,255,0.2) 0, rgba(18,168,255,0.2) 10px, transparent 10px, transparent 20px); z-index: 0; pointer-events: none;"></div>
+                    <!-- 💥 修复：用一个 div 把左侧内容包裹起来，防止 flex 布局错乱 -->
+                    <div style="flex: 1; min-width: 280px; position: relative;">
+                        <h3 id="timeline-preview-title" style="color: #e0f2fe; font-size: 24px; margin-top: 0; margin-bottom: 15px; text-shadow: 0 0 10px rgba(18,168,255,0.5); letter-spacing: 1px;">星历 2190 - 2240</h3>
+                        <p style="color: #8bb9d6; line-height: 1.8; font-size: 15px; margin: 0; max-width: 600px;">
+                            从“远望者-7”首次发现 C-62 黑血，到星尘病爆发、泛星联盟成立，再到外环大罢工与碎星事件。查阅过去半个世纪的重大历史节点，了解深空边缘的动荡始末。
+                        </p>
 
-                    <h3 id="timeline-preview-title" style="color: #e0f2fe; font-size: 24px; margin-top: 0; margin-bottom: 15px; text-shadow: 0 0 10px rgba(18,168,255,0.5); letter-spacing: 1px;">星历 2190 - 2240</h3>
-<p style="color: #8bb9d6; line-height: 1.8; font-size: 15px; margin: 0; max-width: 600px;">
-    从“远望者-7”首次发现 C-62 黑血，到星尘病爆发、泛星联盟成立，再到外环大罢工与碎星事件。查阅过去半个世纪的重大历史节点，了解深空边缘的动荡始末。
-</p>
-
-<!-- 微缩时间线视觉元素 -->
-<div id="timeline-preview-nodes" style="display: flex; gap: 15px; color: #12a8ff; font-family: monospace; opacity: 0.6; margin-top: 20px; font-size: 13px; font-weight: bold;">
-    <span>2190</span> <span>→</span> <span>2240</span>
-</div>
+                        <!-- 微缩时间线视觉元素包裹器 -->
+                        <div style="position: relative; margin-top: 25px; padding-top: 20px;">
+                            <!-- 💥 修复：将背景装饰线移到这里！
+                                 它现在固定在数字上方 20px 处。
+                                 width: 2000px 保证它向右无限延伸贯穿卡片，
+                                 left: -35px 保证它向左抵消掉卡片的 padding 贴紧左边缘。 -->
+                            <div style="position: absolute; top: 0; left: -35px; width: 2000px; height: 1px; background: repeating-linear-gradient(90deg, rgba(18,168,255,0.2) 0, rgba(18,168,255,0.2) 10px, transparent 10px, transparent 20px); z-index: 0; pointer-events: none;"></div>
+                            
+                            <div id="timeline-preview-nodes" style="display: flex; gap: 15px; color: #12a8ff; font-family: monospace; opacity: 0.6; font-size: 13px; font-weight: bold; position: relative; z-index: 1;">
+                                <span>2190</span> <span>→</span> <span>2240</span>
+                            </div>
+                        </div>
+                    </div>
 
                     <button class="btn-primary" style="padding: 15px 30px; font-size: 16px; white-space: nowrap; position: relative; z-index: 1;" onclick="openTimelineView()">
                         ACCESS TIMELINE →
@@ -10254,7 +10271,7 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                 sec.className = 'timeline-section';
                 sec.id = id;
                 sec.innerHTML = `
-                    <h2>${item.tag || '0000'}</h2>
+                    <h2 class="parallax-ghost" data-speed="0.2">${item.tag || '0000'}</h2>
                     <div class="content-box">
                         <!-- 💥 手机端专属头部：显示年份、标题和简介 -->
                         <div class="timeline-mobile-header">
@@ -13800,7 +13817,59 @@ if(!title || !parentFaction || !content) {
                     triggerRedScreen();
                 }
             }, 1000);
+        
+        /* =========================================================
+           💥 视差滚动引擎 (GPU 硬件加速版)
+           ========================================================= */
+        (function initParallaxEngine() {
+            let ticking = false;
+            // 实时收集所有带 parallax-ghost 的元素 (包含后续 JS 动态生成的)
+            const parallaxGhosts = document.getElementsByClassName('parallax-ghost');
+            
+            function renderParallax() {
+                const scrollY = window.scrollY || window.pageYOffset;
+                
+                // 1. 星空背景深远视差 (加入无限循环算法)
+                const stars = document.getElementById('stars-container');
+                if (stars && window.innerWidth > 768) { 
+                    // 💥 核心修复：加入 % 2000。
+                    // 因为我们的星星是每 2000px 重复一次的，这样算能让它在滑动时无限无缝衔接，永远滑不到头！
+                    stars.style.transform = `translate3d(0, ${(scrollY * -0.15) % 2000}px, 0)`;
+                }
+
+                // 2. 巨型幽灵文字动态视差
+                for (let i = 0; i < parallaxGhosts.length; i++) {
+                    const el = parallaxGhosts[i];
+                    const rect = el.parentElement.getBoundingClientRect();
+                    
+                    // 极致省流：只有当该元素的父容器进入屏幕视野时，才进行计算
+                    if (rect.top < window.innerHeight && rect.bottom > 0) {
+                        const speed = parseFloat(el.getAttribute('data-speed')) || 0.2;
+                        
+                        // 核心算法：计算父容器中心点偏离屏幕中心的距离
+                        // 这样当元素滚动到屏幕正中央时，偏移恰好为 0，完美对齐
+                        const offset = (window.innerHeight / 2 - (rect.top + rect.height / 2)) * speed;
+                        
+                        // 将算好的偏移量传给 CSS
+                        el.style.setProperty('--parallax-y', `${offset}px`);
+                    }
+                }
+                ticking = false;
+            }
+
+            // 绑定滚动事件 (使用 requestAnimationFrame 确保动画与屏幕刷新率 120Hz 完美同步)
+            window.addEventListener('scroll', () => {
+                if (!ticking) {
+                    window.requestAnimationFrame(renderParallax);
+                    ticking = true;
+                }
+            }, { passive: true });
         })();
+        
+        
+        })();
+
+
 
     </script>
 
