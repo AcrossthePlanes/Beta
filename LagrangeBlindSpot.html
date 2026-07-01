@@ -2712,14 +2712,20 @@
             position: relative;
             min-height: 100vh;
             display: flex;
-            background: #060b14;
+            /* 💥 核心修复 1：必须加上 align-items: flex-start，否则 sticky 无法生效 */
+            align-items: flex-start; 
+            /* 💥 顺便把背景改成透明，让刚才加的弥散光和星空透过来！ */
+            background: transparent; 
         }
 
         /* 左侧固定导航栏容器 */
         .timeline-nav__wrapper {
-            position: fixed;
+            /* 💥 核心修复 2：从 fixed 升级为 sticky */
+            position: sticky; 
             top: 0; left: 0;
             width: 400px; 
+            /* 💥 核心修复 3：防止被右侧内容挤压变形 */
+            flex-shrink: 0; 
             height: 100vh;
             z-index: 10;
             pointer-events: none; 
@@ -2877,8 +2883,11 @@
 
         /* 右侧内容区 */
         .timeline-content {
-            margin-left: 450px; 
-            width: calc(100% - 450px);
+            /* 💥 核心修复 4：因为左侧导航现在占据了真实的物理空间(400px)，
+               所以右侧只需要留 50px 的间距，并自动占满剩余空间即可 */
+            margin-left: 50px; 
+            flex-grow: 1;
+            min-width: 0;
         }
 
         .timeline-section {
@@ -4566,11 +4575,11 @@ textarea:-webkit-autofill:active {
         /* 赋予内部所有独立视图面板(界面)动画能力 */
         .view-panel {
             animation: fadeIn 0.3s ease-in-out;
-            /* 💥 优化 1：删掉 filter 的过渡，减轻 GPU 负担 */
             transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease;
             transform-origin: top center; 
-            /* 💥 优化 2：开启硬件加速预警，让浏览器提前把这个图层交给 GPU 处理 */
-            will-change: transform, opacity;
+            
+            /* 💥 核心修复：删掉这里的 will-change: transform, opacity; 
+               解除层叠上下文封印，让手机端的悬浮球能够突破结界浮在毛玻璃之上！ */
         }
 
         /* 当侧边栏打开时，只让当前显示的界面缩小、左移，抬头(导航栏)一动不动！ */
