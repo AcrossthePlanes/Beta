@@ -4824,7 +4824,7 @@ textarea:-webkit-autofill:active {
 <!-- 💥 终端子目录状态重置引擎 💥 -->
     <script>
 /* =========================================================
-   💥 极致性能：Canvas 硬件加速视差星空
+   💥 极致性能：Canvas 硬件加速视差星空 (智能密度适配版)
    ========================================================= */
 function initCanvasStars() {
     const canvas = document.createElement('canvas');
@@ -4848,8 +4848,13 @@ function initCanvasStars() {
     window.addEventListener('resize', resize);
     resize();
 
-    // 生成 800 颗高性能星星
-    for (let i = 0; i < 800; i++) {
+    // 💥 核心修复：根据屏幕宽度动态决定星星数量
+    // 如果屏幕宽度小于等于 768px (手机)，只生成 200 颗；否则生成 800 颗
+    const isMobile = window.innerWidth <= 768;
+    const starCount = isMobile ? 200 : 800;
+
+    // 生成星星
+    for (let i = 0; i < starCount; i++) {
         stars.push({
             x: Math.random() * width,
             y: Math.random() * height,
