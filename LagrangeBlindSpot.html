@@ -2905,16 +2905,21 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            /* 💥 加入 var(--parallax-y) 接收 JS 传来的视差偏移量 */
             transform: translate(-50%, calc(-50% + var(--parallax-y, 0px)));
             font-family: "Impact", sans-serif;
             font-size: clamp(8rem, 25vw, 25rem);
             font-weight: 900;
-            color: rgba(18, 168, 255, 0.03);
+            
+            /* 💥 修复 1：把透明度从 0.03 提高到了 0.08，让它更清晰 */
+            color: rgba(18, 168, 255, 0.08); 
+            
+            /* 💥 修复 2：加了一层极弱的蓝色光晕，增加全息投影的质感 */
+            text-shadow: 0 0 30px rgba(18, 168, 255, 0.15);
+            
             white-space: nowrap;
             pointer-events: none;
             z-index: 0;
-            will-change: transform; /* 启用硬件加速 */
+            will-change: transform; 
         }
 
         /* 2. 时间线区域背景巨型年份 */
@@ -4626,21 +4631,19 @@ textarea:-webkit-autofill:active {
             pointer-events: none;
         }
 
-        /* 4. 电影级微噪点：大幅缩小尺寸，提升细腻度，消除粗糙颗粒感 */
+        /* 4. 电影级微噪点：降维提速版 */
         .overlay::after {
             content: '';
             position: absolute; inset: 0;
-            /* 调高了 baseFrequency 到 1.5，让噪点生成得极细 */
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
-            /* 密铺，让颗粒感变得肉眼难以分辨的微小 */
+            /* 💥 修复：只计算 1 次 (numOctaves='1')，显卡开销暴降，且保留完美透明度 */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
             background-size: 50px 50px;
-            background-repeat: repeat;
             opacity: 0;
-            mix-blend-mode: overlay;
+            mix-blend-mode: overlay; /* 恢复混合模式，让噪点融入背景 */
             transition: opacity 0.5s ease 0.1s;
             pointer-events: none;
         }
-
+        
         .overlay.show { opacity: 1; visibility: visible; }
         .overlay.show::before { opacity: 1; }
         /* 极致克制的噪点透明度，0.06 恰到好处 */
@@ -4717,11 +4720,175 @@ textarea:-webkit-autofill:active {
             border-color: #12a8ff; text-shadow: 0 0 8px rgba(18,168,255,0.9); letter-spacing: 2px;
         }
 
+        /* =========================================================
+   💥 终极定制版：50%透明度 + 直角粗野悬停 + 追逐线边框 (CodePen 移植)
+   ========================================================= */
+
+/* 1. 基础卡片外观 (50%通透毛玻璃、强制直角、内置噪点) */
+.intel-card, .faction-card, .plot-card, .my-org-card {
+    background: 
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E"),
+        rgba(6, 11, 20, 0.5) !important;
+    
+    backdrop-filter: blur(12px) !important; 
+    -webkit-backdrop-filter: blur(12px) !important;
+    
+    border: 1px solid rgba(255, 255, 255, 0.1) !important; /* 极细基础边框 */
+    border-radius: 0 !important; /* 💥 强制直角 */
+    box-shadow: none !important; /* 默认状态隐藏阴影 */
+    
+    position: relative;
+    /* 💥 必须去掉 overflow: hidden，否则外围的发光线条会被切掉 */
+    overflow: visible !important; 
+    transition: transform 0.2s cubic-bezier(0.2, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease !important;
+    
+    /* 默认光效颜色 (赛博蓝) */
+    --theme-color: #12a8ff;
+    --theme-shadow: rgba(18, 168, 255, 0.4);
+    --path-width: 2px; /* 跑马灯线条的粗细 */
+}
+
+/* 2. 匹配势力的专属颜色管线 */
+.faction-card.psc { --theme-color: #12a8ff; --theme-shadow: rgba(18, 168, 255, 0.5); }
+.faction-card.frontier { --theme-color: #f44336; --theme-shadow: rgba(244, 67, 54, 0.5); }
+.faction-card.pmc { --theme-color: #4caf50; --theme-shadow: rgba(76, 175, 80, 0.5); }
+.faction-card.freeport { --theme-color: #ffeb3b; --theme-shadow: rgba(255, 235, 59, 0.5); }
+
+/* 3. 悬停效果：保留原版的物理错位感 */
+.intel-card:hover, .faction-card:hover, .plot-card:hover, .my-org-card:hover {
+    transform: translate(-4px, -4px) !important; 
+    /* 恢复右下角的实体粗野主义阴影，同时内发光使用阵营专属色 */
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.6), inset 0 0 20px var(--theme-shadow) !important;
+    border-color: transparent !important; /* 悬停时隐藏基础边框，让跑马灯更明显 */
+    z-index: 10;
+}
+
+/* 4. 核心黑科技：CodePen 移植的追逐线边框 (使用 clip-path 完美适配响应式) */
+@keyframes clipMe {
+    0%, 100% { clip-path: inset(0 0 calc(100% - var(--path-width)) 0); } /* 顶部线条 */
+    25% { clip-path: inset(0 calc(100% - var(--path-width)) 0 0); } /* 左侧线条 */
+    50% { clip-path: inset(calc(100% - var(--path-width)) 0 0 0); } /* 底部线条 */
+    75% { clip-path: inset(0 0 0 calc(100% - var(--path-width))); } /* 右侧线条 */
+}
+
+.intel-card::before, .intel-card::after,
+.faction-card::before, .faction-card::after,
+.plot-card::before, .plot-card::after,
+.my-org-card::before, .my-org-card::after {
+    content: '';
+    position: absolute;
+    inset: -1px; /* 稍微比卡片大一点点，盖住原本的边框 */
+    z-index: 20;
+    box-shadow: inset 0 0 0 var(--path-width) var(--theme-color);
+    animation: clipMe 4s linear infinite;
+    pointer-events: none;
+    opacity: 0; /* 默认隐藏 */
+    transition: opacity 0.3s ease;
+    /* 利用 drop-shadow 让线条在 clip-path 裁剪后依然能向外发光 */
+    filter: drop-shadow(0 0 6px var(--theme-color));
+}
+
+.intel-card::before, .faction-card::before, .plot-card::before, .my-org-card::before {
+    animation-delay: -2s; /* 错开一半的时间，形成两条线互相追逐 */
+}
+
+/* 悬停时显示追逐线 */
+.intel-card:hover::before, .intel-card:hover::after,
+.faction-card:hover::before, .faction-card:hover::after,
+.plot-card:hover::before, .plot-card:hover::after,
+.my-org-card:hover::before, .my-org-card:hover::after {
+    opacity: 1;
+}
+
+/* 5. 内容层级保护 */
+.intel-card > *, .faction-card > *, .plot-card > *, .my-org-card > * {
+    position: relative;
+    z-index: 10;
+}
+
+/* =========================================================
+   💥 修复：手机端悬浮目录展开时字体变小的问题
+   ========================================================= */
+@media (max-width: 900px) {
+    .world-toc.open {
+        /* 强制保持 100% 原始大小，干掉原本的 scale(0.95) 缩小特效 */
+        transform: scale(1) !important; 
+    }
+}
+
+
+
     </style>
 </head>
 
 <!-- 💥 终端子目录状态重置引擎 💥 -->
     <script>
+/* =========================================================
+   💥 极致性能：Canvas 硬件加速视差星空
+   ========================================================= */
+function initCanvasStars() {
+    const canvas = document.createElement('canvas');
+    canvas.style.position = 'fixed';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.width = '100vw';
+    canvas.style.height = '100vh';
+    canvas.style.zIndex = '-5'; // 沉在底层
+    canvas.style.pointerEvents = 'none';
+    document.body.appendChild(canvas);
+
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let stars = [];
+
+    function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // 生成 800 颗高性能星星
+    for (let i = 0; i < 800; i++) {
+        stars.push({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            radius: Math.random() * 1.5,
+            speed: Math.random() * 0.5 + 0.1,
+            color: Math.random() > 0.8 ? '#12a8ff' : '#ffffff'
+        });
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, width, height); 
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        
+        stars.forEach(star => {
+            ctx.beginPath();
+            ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+            ctx.fillStyle = star.color;
+            ctx.fill();
+
+            star.y -= star.speed;
+            if (star.y < 0) {
+                star.y = height;
+                star.x = Math.random() * width;
+            }
+        });
+        requestAnimationFrame(draw);
+    }
+    draw();
+}
+
+// 💥 修复重点：用 DOMContentLoaded 包裹起来
+// 意思是：“等网页的 body 完全加载出来了，再执行 initCanvasStars 画星星”
+document.addEventListener('DOMContentLoaded', function() {
+    initCanvasStars();
+});
+
+
+
+
         document.addEventListener('DOMContentLoaded', () => {
             const toc = document.querySelector('.world-toc');
             if (!toc) return;
@@ -4757,13 +4924,6 @@ textarea:-webkit-autofill:active {
     <!-- 挂载全局动态弥散背景 -->
     <div class="cyber-diffuse-bg">
         <div class="cyber-diffuse-orb"></div>
-    </div>
-
-    <!-- 💥 新增：视差像素星空容器 -->
-    <div id="stars-container">
-        <div id="stars-small" class="star-layer"></div>
-        <div id="stars-medium" class="star-layer"></div>
-        <div id="stars-big" class="star-layer"></div>
     </div>
 
     <!-- 💥 独家定制的科幻终端弹窗 -->
@@ -4916,7 +5076,7 @@ textarea:-webkit-autofill:active {
             <!-- 1. 英雄视觉区 (Hero Section) -->
             <section class="hero-section" id="main-hero">
                 <!-- 背景幽灵文字 -->
-                <div class="ghost-bg parallax-ghost" data-speed="0.25">C-62</div>
+                <div class="ghost-bg parallax-ghost" data-speed="0.25">2240</div>
 
                 <div class="hero-content">
                     <div class="hero-chip">✦ P.S.C SECURE UPLINK ESTABLISHED</div>
@@ -7107,38 +7267,6 @@ window.triggerConflictRejection = async function(charDraft) {
             setTimeout(() => ping.remove(), 1000);
         });
 
-        /* =========================================================
-           💥 视差星空生成引擎 (密度加倍 & 亮度拉满)
-           ========================================================= */
-        function createParallaxStars() {
-            function generateBoxShadow(count, color) {
-                let shadows = [];
-                for (let i = 0; i < count; i++) {
-                    const x = Math.floor(Math.random() * 3000);
-                    const y = Math.floor(Math.random() * 2000);
-                    shadows.push(`${x}px ${y}px ${color}`);
-                }
-                return shadows.join(', ');
-            }
-
-            // 💥 数量超级加倍，颜色全面调亮！
-            const shadowSmall = generateBoxShadow(1200, 'rgba(255, 255, 255, 0.4)'); // 1200颗微星
-            const shadowMedium = generateBoxShadow(500, 'rgba(18, 168, 255, 0.7)');  // 500颗赛博蓝
-            const shadowBig = generateBoxShadow(150, 'rgba(224, 242, 254, 1)');      // 150颗冰白亮星
-
-            const style = document.createElement('style');
-            style.innerHTML = `
-                /* 💥 强制提高三个图层的透明度，让星星更显眼 */
-                #stars-small { box-shadow: ${shadowSmall}; opacity: 0.8; }
-                #stars-small::after { box-shadow: ${shadowSmall}; }
-                #stars-medium { box-shadow: ${shadowMedium}; opacity: 0.9; }
-                #stars-medium::after { box-shadow: ${shadowMedium}; }
-                #stars-big { box-shadow: ${shadowBig}; opacity: 1; }
-                #stars-big::after { box-shadow: ${shadowBig}; }
-            `;
-            document.head.appendChild(style);
-        }
-        createParallaxStars();
 
         /* =========================================================
            5. 战术终端搜索与全屏文章阅读系统
@@ -13883,6 +14011,80 @@ if(!title || !parentFaction || !content) {
     </script>
 
 
+
+<!-- 1. 引入 GSAP 核心库 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+<!-- 2. 霓虹亮灯 + 全息启动 + 幽灵浮现 动效 -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 0. 开启 3D 透视
+        gsap.set(".hero-title", { perspective: 1000 });
+
+        const tl = gsap.timeline();
+
+        // 💥 分镜 0：幽灵数字深空浮现 (缓慢、压迫感)
+        // 放在时间轴的最开头，从极度模糊中慢慢清晰
+        tl.from(".ghost-bg", {
+            opacity: 0,
+            filter: "blur(30px)", 
+            duration: 3,            // 耗时 3 秒，非常缓慢
+            ease: "power2.out"
+        }, 0) // 这里的 0 表示强制在时间轴的第 0 秒开始播放
+
+        // 分镜 1：顶部小标签（系统通电，微弱闪烁）
+        .fromTo(".hero-chip",
+            { opacity: 0, filter: "brightness(0)" },
+            { opacity: 1, filter: "brightness(1)", duration: 0.4, ease: "steps(3)" },
+            0.5 // 在第 0.5 秒时开始通电
+        )
+
+        // 分镜 2：核心大标题（物理机械展开）
+        .from(".hero-title span", {
+            rotateX: -80,
+            y: 60,
+            z: -100,
+            duration: 1.5,
+            stagger: 0.2,
+            ease: "expo.out"
+        }, "-=0.2")
+
+        // 分镜 3：核心大标题（霓虹灯管点亮闪烁）
+        .fromTo(".hero-title span",
+            { opacity: 0, filter: "brightness(0) blur(10px)" }, 
+            {
+                keyframes: [
+                    { opacity: 1, filter: "brightness(3) blur(4px)", duration: 0.05 },
+                    { opacity: 0.1, filter: "brightness(0.2) blur(0px)", duration: 0.05 },
+                    { opacity: 1, filter: "brightness(4) blur(8px)", duration: 0.05 },
+                    { opacity: 0.4, filter: "brightness(0.8) blur(0px)", duration: 0.05 },
+                    { opacity: 1, filter: "brightness(1) blur(0px)", duration: 0.5 }
+                ],
+                stagger: 0.2, 
+                ease: "none"
+            },
+            "<" // 与机械展开同步
+        )
+
+        // 分镜 4：副标题（数据流光擦除）
+        .from(".hero-sub", {
+            clipPath: "inset(0 100% 0 0)",
+            x: -20,
+            opacity: 0,
+            duration: 1.2,
+            ease: "power3.inOut"
+        }, "-=1.0")
+
+        // 分镜 5：底部按钮（通电显现，带一点点回弹）
+        .from(".hero-actions button", {
+            y: 20,
+            opacity: 0,
+            duration: 0.5,
+            stagger: 0.1,
+            ease: "back.out(2)"
+        }, "-=0.8");
+    });
+</script>
 
 </body>
 </html>
