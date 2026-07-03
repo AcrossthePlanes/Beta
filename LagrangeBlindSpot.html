@@ -4519,26 +4519,27 @@ textarea:-webkit-autofill:active {
             .world-toc:not(.align-left) .toc-arrow { transform: rotate(180deg); } 
             .world-toc.open:not(.align-left) .toc-arrow.open { transform: rotate(-90deg) !important; } 
 
-            /* 6. 💥 节点滑出与收回动画 (高性能 3D 加速版) */
+            /* 6. 💥 节点滑出与收回动画 */
             .world-toc .toc-list > li {
                 opacity: 0;
                 position: relative;
                 z-index: 102;
-                /* 💥 优化 2：提前告诉手机 GPU 准备好显存 */
-                will-change: transform, opacity;
                 transition: opacity 0.2s ease 0s, transform 0.2s ease 0s !important;
             }
-            
             .world-toc.open .toc-list > li {
                 opacity: 1;
-                /* 💥 优化 3：使用 translate3d 强制开启 GPU 硬件加速 */
-                transform: translate3d(0, 0, 0) !important;
+                transform: translateX(0) !important;
                 transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) !important; 
             }
 
-            /* 💥 配合 translate3d 修改左右对齐的初始偏移状态 */
-            .world-toc.align-left .toc-list > li { transform: translate3d(-15px, 0, 0); }
-            .world-toc:not(.align-left) .toc-list > li { transform: translate3d(15px, 0, 0); }
+            .world-toc.open .toc-list > li:nth-child(1) { transition-delay: 0.15s !important; }
+            .world-toc.open .toc-list > li:nth-child(2) { transition-delay: 0.20s !important; }
+            .world-toc.open .toc-list > li:nth-child(3) { transition-delay: 0.25s !important; }
+            .world-toc.open .toc-list > li:nth-child(4) { transition-delay: 0.30s !important; }
+            .world-toc.open .toc-list > li:nth-child(5) { transition-delay: 0.35s !important; }
+            .world-toc.open .toc-list > li:nth-child(6) { transition-delay: 0.40s !important; }
+            .world-toc.open .toc-list > li:nth-child(7) { transition-delay: 0.45s !important; }
+            .world-toc.open .toc-list > li:nth-child(8) { transition-delay: 0.50s !important; }
 
             /* 7. 💥 子目录丝滑展开动画 */
             .world-toc .sub-toc-list {
@@ -4840,13 +4841,19 @@ textarea:-webkit-autofill:active {
 }
 
 /* =========================================
-           💥 手机端专属性能降级：减轻 GPU 负担
+           💥 手机端专属性能拯救：只降低毛玻璃负担，不碰任何动画！
            ========================================= */
         @media (max-width: 768px) {
             .overlay {
-                /* 手机端将模糊度降至 6px，极大提升菜单展开时的丝滑度 */
-                backdrop-filter: blur(6px) saturate(150%);
-                -webkit-backdrop-filter: blur(6px) saturate(150%);
+                /* 电脑端是 blur(35px)，手机端强行降到 blur(8px) */
+                /* 8px 依然有很好看的毛玻璃质感，但手机显卡的计算量暴降了 80% */
+                backdrop-filter: blur(8px) saturate(150%) !important;
+                -webkit-backdrop-filter: blur(8px) saturate(150%) !important;
+            }
+            
+            /* 提前告诉手机显卡准备好菜单的动画，防止掉帧 */
+            .world-toc .toc-list > li {
+                will-change: transform, opacity;
             }
         }
 
@@ -9963,10 +9970,10 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                     // 💥 核心修复：如果点到的是展开的菜单内部（包括文字和下拉箭头），直接放行，不要触发圆球的收起逻辑！
                     if (e.target.closest('.toc-list')) return;
 
-                    // 💥 优化 1：删掉下面这三行！它们是导致展开瞬间卡顿的罪魁祸首！
-                    // worldToc.classList.remove('wobble');
-                    // void worldToc.offsetWidth; // 触发重绘，重置动画
-                    // worldToc.classList.add('wobble');
+                    // 触发按钮本体的上下弹动动画
+                    worldToc.classList.remove('wobble');
+                    void worldToc.offsetWidth; // 触发重绘，重置动画
+                    worldToc.classList.add('wobble');
 
                     // 💥 智能边缘检测逻辑 💥
                     const rect = worldToc.getBoundingClientRect();
