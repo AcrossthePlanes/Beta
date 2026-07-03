@@ -405,10 +405,13 @@
             display: none; 
             flex-grow: 1;
             animation: fadeIn 0.3s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            
+            /* 侧边栏打开时的后推过渡动画 */
+            transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease;
+            transform-origin: top center; 
+            
+            /* 💥 修复：删掉 backface-visibility 和 transform-style */
+            /* 彻底解除层叠上下文结界，让手机端悬浮球逃出来！ */
         }
 
         /* 🔷 科幻解密加载动画 */
@@ -4516,27 +4519,26 @@ textarea:-webkit-autofill:active {
             .world-toc:not(.align-left) .toc-arrow { transform: rotate(180deg); } 
             .world-toc.open:not(.align-left) .toc-arrow.open { transform: rotate(-90deg) !important; } 
 
-            /* 6. 💥 节点滑出与收回动画 */
+            /* 6. 💥 节点滑出与收回动画 (高性能 3D 加速版) */
             .world-toc .toc-list > li {
                 opacity: 0;
                 position: relative;
                 z-index: 102;
+                /* 💥 优化 2：提前告诉手机 GPU 准备好显存 */
+                will-change: transform, opacity;
                 transition: opacity 0.2s ease 0s, transform 0.2s ease 0s !important;
             }
+            
             .world-toc.open .toc-list > li {
                 opacity: 1;
-                transform: translateX(0) !important;
+                /* 💥 优化 3：使用 translate3d 强制开启 GPU 硬件加速 */
+                transform: translate3d(0, 0, 0) !important;
                 transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) !important; 
             }
 
-            .world-toc.open .toc-list > li:nth-child(1) { transition-delay: 0.15s !important; }
-            .world-toc.open .toc-list > li:nth-child(2) { transition-delay: 0.20s !important; }
-            .world-toc.open .toc-list > li:nth-child(3) { transition-delay: 0.25s !important; }
-            .world-toc.open .toc-list > li:nth-child(4) { transition-delay: 0.30s !important; }
-            .world-toc.open .toc-list > li:nth-child(5) { transition-delay: 0.35s !important; }
-            .world-toc.open .toc-list > li:nth-child(6) { transition-delay: 0.40s !important; }
-            .world-toc.open .toc-list > li:nth-child(7) { transition-delay: 0.45s !important; }
-            .world-toc.open .toc-list > li:nth-child(8) { transition-delay: 0.50s !important; }
+            /* 💥 配合 translate3d 修改左右对齐的初始偏移状态 */
+            .world-toc.align-left .toc-list > li { transform: translate3d(-15px, 0, 0); }
+            .world-toc:not(.align-left) .toc-list > li { transform: translate3d(15px, 0, 0); }
 
             /* 7. 💥 子目录丝滑展开动画 */
             .world-toc .sub-toc-list {
@@ -4598,24 +4600,30 @@ textarea:-webkit-autofill:active {
         }
 
        /* =========================================
-           💥 2. 全局遮罩：极致 iOS 液态毛玻璃 + 超细微噪点
+           💥 2. 全局遮罩：极致 iOS 液态毛玻璃 (高性能版)
            ========================================= */
         .overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: 90;
             
-            /* 1. 基础色彩与折射：saturate(180%) 是灵魂，能让背后的星空和弥散光色彩爆发出液态质感 */
             background-color: rgba(6, 11, 20, 0.35);
-            backdrop-filter: blur(35px) saturate(180%);
-            -webkit-backdrop-filter: blur(35px) saturate(180%);
             
-            /* 2. 物理边缘厚度：模拟真实玻璃的切面反光 */
+            /* 💥 性能优化 1：将 blur(35px) 降为 blur(12px) */
+            /* 12px 已经足够产生高级的毛玻璃质感，但计算量暴降了 80% */
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            
             box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
             
             opacity: 0;
             visibility: hidden;
-            transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.5s;
+            
+            /* 💥 性能优化 2：提前告诉浏览器我们要改变透明度，让它准备好显存 */
+            will-change: opacity;
+            
+            /* 💥 性能优化 3：稍微加快一点点动画速度，减少 GPU 处于高负载的时间 */
+            transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.4s;
         }
 
         /* 3. 液态流光模拟：在玻璃内部增加柔和的色彩折射 */
@@ -4754,56 +4762,71 @@ textarea:-webkit-autofill:active {
 .faction-card.pmc { --theme-color: #4caf50; --theme-shadow: rgba(76, 175, 80, 0.5); }
 .faction-card.freeport { --theme-color: #ffeb3b; --theme-shadow: rgba(255, 235, 59, 0.5); }
 
-/* 3. 悬停效果：保留原版的物理错位感 */
+/* 3. 全局悬停效果：保留物理错位感和内发光 (所有卡片通用) */
 .intel-card:hover, .faction-card:hover, .plot-card:hover, .my-org-card:hover {
     transform: translate(-4px, -4px) !important; 
-    /* 恢复右下角的实体粗野主义阴影，同时内发光使用阵营专属色 */
     box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.6), inset 0 0 20px var(--theme-shadow) !important;
-    border-color: transparent !important; /* 悬停时隐藏基础边框，让跑马灯更明显 */
     z-index: 10;
 }
 
-/* 4. 核心黑科技：CodePen 移植的追逐线边框 (使用 clip-path 完美适配响应式) */
-@keyframes clipMe {
-    0%, 100% { clip-path: inset(0 0 calc(100% - var(--path-width)) 0); } /* 顶部线条 */
-    25% { clip-path: inset(0 calc(100% - var(--path-width)) 0 0); } /* 左侧线条 */
-    50% { clip-path: inset(calc(100% - var(--path-width)) 0 0 0); } /* 底部线条 */
-    75% { clip-path: inset(0 0 0 calc(100% - var(--path-width))); } /* 右侧线条 */
+/* =========================================================
+   💥 4. 核心黑科技：高性能 GPU 流光边框 (仅限主界面)
+   ========================================================= */
+
+/* 定义一个允许被动画驱动的 CSS 角度变量 */
+@property --angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
 }
 
-.intel-card::before, .intel-card::after,
-.faction-card::before, .faction-card::after,
-.plot-card::before, .plot-card::after,
-.my-org-card::before, .my-org-card::after {
+@keyframes spinLight {
+    to { --angle: 360deg; }
+}
+
+/* 💥 专属设定：主界面的卡片悬停时，隐藏原本的边框，给流光让路 */
+#mainView .intel-card:hover, 
+#mainView .faction-card:hover {
+    border-color: transparent !important; 
+}
+
+/* 统一设置伪元素基础属性 (加上 #mainView 限制) */
+#mainView .intel-card::before, #mainView .intel-card::after,
+#mainView .faction-card::before, #mainView .faction-card::after {
     content: '';
     position: absolute;
-    inset: -1px; /* 稍微比卡片大一点点，盖住原本的边框 */
+    inset: -1px; /* 覆盖原本的边框 */
     z-index: 20;
-    box-shadow: inset 0 0 0 var(--path-width) var(--theme-color);
-    animation: clipMe 4s linear infinite;
+    border-radius: inherit;
     pointer-events: none;
     opacity: 0; /* 默认隐藏 */
     transition: opacity 0.3s ease;
-    /* 利用 drop-shadow 让线条在 clip-path 裁剪后依然能向外发光 */
-    filter: drop-shadow(0 0 6px var(--theme-color));
+
+    /* 圆锥渐变，画出一个带有拖尾的彗星光束 */
+    background: conic-gradient(
+        from var(--angle), 
+        transparent 60%, 
+        var(--theme-color) 100%
+    );
+
+    /* 遮罩镂空。把中间掏空，只留下边缘 2px 的线 */
+    padding: var(--path-width); 
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
 }
 
-.intel-card::before, .faction-card::before, .plot-card::before, .my-org-card::before {
-    animation-delay: -2s; /* 错开一半的时间，形成两条线互相追逐 */
+/* 利用 ::after 制造外发光 */
+#mainView .intel-card::after,
+#mainView .faction-card::after {
+    filter: blur(6px);
 }
 
-/* 悬停时显示追逐线 */
-.intel-card:hover::before, .intel-card:hover::after,
-.faction-card:hover::before, .faction-card:hover::after,
-.plot-card:hover::before, .plot-card:hover::after,
-.my-org-card:hover::before, .my-org-card:hover::after {
+/* 悬停时：显示流光，并启动旋转动画 */
+#mainView .intel-card:hover::before, #mainView .intel-card:hover::after,
+#mainView .faction-card:hover::before, #mainView .faction-card:hover::after {
     opacity: 1;
-}
-
-/* 5. 内容层级保护 */
-.intel-card > *, .faction-card > *, .plot-card > *, .my-org-card > * {
-    position: relative;
-    z-index: 10;
+    animation: spinLight 3s linear infinite;
 }
 
 /* =========================================================
@@ -4816,7 +4839,16 @@ textarea:-webkit-autofill:active {
     }
 }
 
-
+/* =========================================
+           💥 手机端专属性能降级：减轻 GPU 负担
+           ========================================= */
+        @media (max-width: 768px) {
+            .overlay {
+                /* 手机端将模糊度降至 6px，极大提升菜单展开时的丝滑度 */
+                backdrop-filter: blur(6px) saturate(150%);
+                -webkit-backdrop-filter: blur(6px) saturate(150%);
+            }
+        }
 
     </style>
 </head>
@@ -9931,10 +9963,10 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                     // 💥 核心修复：如果点到的是展开的菜单内部（包括文字和下拉箭头），直接放行，不要触发圆球的收起逻辑！
                     if (e.target.closest('.toc-list')) return;
 
-                    // 触发按钮本体的上下弹动动画
-                    worldToc.classList.remove('wobble');
-                    void worldToc.offsetWidth; // 触发重绘，重置动画
-                    worldToc.classList.add('wobble');
+                    // 💥 优化 1：删掉下面这三行！它们是导致展开瞬间卡顿的罪魁祸首！
+                    // worldToc.classList.remove('wobble');
+                    // void worldToc.offsetWidth; // 触发重绘，重置动画
+                    // worldToc.classList.add('wobble');
 
                     // 💥 智能边缘检测逻辑 💥
                     const rect = worldToc.getBoundingClientRect();
