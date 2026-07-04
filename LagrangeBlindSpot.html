@@ -4857,6 +4857,70 @@ textarea:-webkit-autofill:active {
             }
         }
 
+        /* =========================================
+   💥 AR 星图专属样式 (Aperture Cartography)
+   ========================================= */
+#glass-effects {
+    position: absolute; inset: 0; z-index: 10; pointer-events: none;
+    opacity: 0; transition: opacity 1.5s ease;
+    background: radial-gradient(circle at center, rgba(0,0,0,0.2) 10%, rgba(2, 6, 12, 0.9) 100%);
+}
+#glass-effects.active { opacity: 1; }
+
+.glass-grid {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image: linear-gradient(rgba(0, 229, 255, 0.4) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(0, 229, 255, 0.4) 1px, transparent 1px);
+    background-size: 100px 100px; opacity: 0.05; transform: perspective(1000px) translateZ(-50px);
+}
+
+.scanline {
+    position: absolute; width: 100%; height: 3px; background: rgba(0, 229, 255, 0.2);
+    top: 0; opacity: 0; z-index: 11;
+}
+#glass-effects.active .scanline { animation: ar-scan 6s linear infinite; opacity: 1; }
+@keyframes ar-scan { 0% { top: -10%; } 100% { top: 110%; } }
+
+#ar-reticle {
+    display: none !important; /* 💥 隐藏画面中央的巨大准星 */
+    position: absolute; top: 50%; left: 50%; width: 600px; height: 600px; transform: translate(-50%, -50%);
+    border: 1px dashed rgba(0, 229, 255, 0.15); border-radius: 50%; z-index: 15; pointer-events: none; opacity: 0; transition: opacity 1.5s ease;
+    justify-content: center; align-items: center;
+}
+#ar-reticle.active { opacity: 1; }
+#ar-reticle::before { content: ''; position: absolute; width: 300px; height: 300px; border: 1px solid rgba(0, 229, 255, 0.1); border-radius: 50%; }
+#ar-reticle::after { content: ''; position: absolute; width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.3), transparent); }
+
+#map-canvas.active { opacity: 1; }
+
+#hud-overlay {
+    position: absolute; bottom: 30px; left: 30px; z-index: 40; opacity: 0; transform: translateX(-20px); transition: all 1s ease;
+    background: rgba(2, 6, 12, 0.85); border-left: 3px solid #00e5ff; padding: 15px 20px; font-size: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.9);
+    font-family: monospace;
+}
+#hud-overlay.active { opacity: 1; transform: translateX(0); }
+.hud-title { font-size: 14px; letter-spacing: 2px; color: #fff; margin-bottom: 5px; font-weight: bold; }
+.hud-data { color: rgba(0, 229, 255, 0.8); letter-spacing: 1px; margin-bottom: 3px;}
+#nav-status { margin-top: 10px; color: #ffb700; font-weight: bold; border-top: 1px dashed rgba(255, 183, 0, 0.3); padding-top: 5px; }
+.nav-hint { font-size: 10px; color: #888; margin-top: 5px; }
+
+#center-status {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 50; text-align: center;
+    letter-spacing: 5px; color: #00e5ff; text-shadow: 0 0 15px #00e5ff; transition: opacity 0.5s ease; font-weight: bold; font-size: 18px;
+}
+
+#tactical-tooltip {
+    position: absolute; display: none; pointer-events: none; background: rgba(2, 6, 12, 0.95); border: 1px solid #00e5ff;
+    padding: 15px; font-size: 11px; color: #a9c2c2; z-index: 60; min-width: 220px; box-shadow: 0 0 20px rgba(0,0,0,0.8), inset 0 0 10px rgba(0, 229, 255, 0.1);
+}
+#tactical-tooltip.in-route { border-color: #ffb700; box-shadow: 0 0 20px rgba(0,0,0,0.8), inset 0 0 10px rgba(255, 183, 0, 0.3); }
+#tactical-tooltip h3 { margin: 0 0 10px 0; color: #fff; font-size: 14px; letter-spacing: 2px; }
+.data-row { margin-bottom: 5px; display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 3px;}
+.data-label { color: #00e5ff; font-weight: bold; }
+.in-route .data-label { color: #ffb700; }
+
+#planet-detail-panel.active { transform: translateX(0) !important; }
+
     </style>
 </head>
 
@@ -5064,6 +5128,79 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="fp-feed" id="fp-feed">
                 <!-- 帖子流 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 💥 全息星图系统 (Aperture AR Cartography) 💥 -->
+    <div class="sys-modal-overlay" id="starMapModal" style="z-index: 9999999; background: rgba(0, 0, 0, 1);">
+        <div style="width: 100%; height: 100%; display: flex; flex-direction: column; position: relative; overflow: hidden;">
+            
+            <!-- 顶部控制栏 -->
+            <div style="padding: 20px; border-bottom: 1px solid rgba(0, 229, 255, 0.3); display: flex; justify-content: space-between; align-items: center; background: rgba(2,6,12,0.8); z-index: 100;">
+                <div style="color: #00e5ff; font-family: 'Impact', sans-serif; font-size: 24px; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0,229,255,0.5);">
+                    [ 🌐 ASTRAL CARTOGRAPHY // 战术星图导航 ]
+                </div>
+                <button class="btn-ghost" style="padding: 6px 15px; font-size: 14px; border-color: #00e5ff; color: #00e5ff;" onclick="closeStarMap()">[X] 关闭星图</button>
+            </div>
+
+            <!-- 星图主体区域 -->
+            <div id="ar-map-container" style="flex: 1; position: relative; overflow: hidden; background: #000;">
+                
+                <!-- 启动序列画布 -->
+                <canvas id="transit-canvas" style="position: absolute; inset: 0; z-index: 1; pointer-events: none;"></canvas>
+                <canvas id="binary-canvas" style="position: absolute; inset: 0; z-index: 2; pointer-events: none; mix-blend-mode: screen;"></canvas>
+
+                <!-- 玻璃反光与扫描线 -->
+                <div id="glass-effects">
+                    <div class="glass-grid"></div>
+                    <div class="scanline"></div>
+                </div>
+
+                <!-- AR 准星 -->
+                <div id="ar-reticle"></div>
+                
+                <!-- 核心交互地图 -->
+                <canvas id="map-canvas" style="position: absolute; inset: 0; z-index: 20; opacity: 0; transition: opacity 1.5s ease; cursor: grab;"></canvas>
+
+                <!-- 屏幕中央状态字 -->
+                <div id="center-status">SYS.NAVI // INITIATING JUMP...</div>
+
+                <!-- 左下角 HUD -->
+                <div id="hud-overlay">
+                    <div class="hud-title">APERTURE AR :: v9.5</div>
+                    <div class="hud-data" id="hud-coords">SYS.X: 000.00 // SYS.Y: 000.00</div>
+                    <div class="hud-data" id="hud-zoom">ZOOM: 1.00x</div>
+                    <div id="nav-status">NAV: STANDBY</div>
+                    <div class="nav-hint">L-CLICK: SELECT PLANET // R-CLICK: CLEAR ROUTE</div>
+                </div>
+
+                <!-- 鼠标悬停提示框 -->
+                <div id="tactical-tooltip">
+                    <h3 id="tt-name">SYS_UNKNOWN</h3>
+                    <div class="data-row"><span class="data-label">FACTION</span><span id="tt-class">N/A</span></div>
+                    <div class="data-row"><span class="data-label">ORBITALS</span><span id="tt-planets">0</span></div>
+                    <div class="data-row"><span class="data-label">STATUS</span><span id="tt-status" style="color:#0f0;">STABLE</span></div>
+                </div>
+
+                <!-- 右侧：星球详情面板 (默认隐藏在右侧) -->
+                <div id="planet-detail-panel" style="width: 320px; background: rgba(2, 6, 12, 0.95); border-left: 2px solid #00e5ff; padding: 20px; box-sizing: border-box; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.2, 1, 0.3, 1); position: absolute; right: 0; top: 0; height: 100%; z-index: 50; box-shadow: -10px 0 30px rgba(0,0,0,0.9);">
+                    <div style="color: #8bb9d6; font-family: monospace; font-size: 12px; margin-bottom: 5px;" id="planet-faction">FACTION</div>
+                    <h2 id="planet-name" style="color: #fff; margin: 0 0 15px 0; font-size: 28px; text-shadow: 0 0 10px rgba(0,229,255,0.5);">PLANET_NAME</h2>
+                    
+                    <div style="width: 100%; height: 120px; border: 1px solid rgba(0,229,255,0.3); margin-bottom: 15px; background: rgba(0,229,255,0.05); display: flex; justify-content: center; align-items: center; font-family: monospace; color: #00e5ff; font-size: 12px;" id="planet-image">
+                        [ SATELLITE IMAGE ]
+                    </div>
+
+                    <div style="color: #e0f2fe; font-size: 13px; line-height: 1.8; margin-bottom: 20px; height: 200px; overflow-y: auto;" id="planet-desc">
+                        星球详细描述...
+                    </div>
+
+                    <button class="submit-btn" style="width: 100%; font-size: 16px; padding: 12px; border-color: #00e5ff; color: #00e5ff; background: rgba(0,229,255,0.1);" id="btn-set-hometown">
+                        [ 📍 设为我的籍贯 ]
+                    </button>
+                </div>
+
             </div>
         </div>
     </div>
@@ -5528,9 +5665,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     </p>
                     <!-- 💥 新增：跳转到时间线的按钮 -->
                     <!-- 💥 替换为未解锁的占位模块 💥 -->
-                    <button class="btn-primary" style="margin-top: 20px; position: relative; z-index: 2;" onclick="SysModal.alert('该扇区正在编辑中中，敬请期待。', 'SYSTEM NOTE // 模块未解锁')">
-                        全息星图系统 [开发中] →
-                    </button>
+                    <button class="btn-primary" style="margin-top: 20px; position: relative; z-index: 2;" onclick="openStarMap()">
+    [ 启动全息星图系统 ] →
+</button>
                 </div>
 
                 <!-- 💥 新增：历史时间线预览区 💥 -->
@@ -13398,6 +13535,813 @@ if(!title || !parentFaction || !content) {
     rpLogs.forEach(log => rpGrid.appendChild(createLogCard(log, true)));
 };
 
+/* =========================================================
+           💥 AR 星图系统数据与逻辑引擎 (Aperture Cartography)
+           ========================================================= */
+        
+        // 1. 星球数据库 (x, y 是百分比位置，50,50 是正中心)
+        const planetsDB = [
+            { id: "earth", name: "地球 (Earth)", faction: "泛星联盟 (P.S.C)", color: "#00e5ff", rgb: "0, 229, 255", x: 50, y: 50, desc: "人类的摇篮，如今是泛星联盟的最高议会所在地。表面被巨大的都市带覆盖，拥有最顶级的医疗和科技。" },
+            { id: "mars", name: "火星工业区 (Mars)", faction: "泛星联盟 (P.S.C)", color: "#00e5ff", rgb: "0, 229, 255", x: 40, y: 35, desc: "联盟最大的重工业基地与舰队造船厂。空气中常年弥漫着铁锈味。" },
+            { id: "ceres", name: "谷神星矿区 (Ceres)", faction: "外环 (Frontier)", color: "#f44336", rgb: "244, 67, 54", x: 75, y: 20, desc: "外环最大的 C-62 黑血原矿开采地之一。环境恶劣，治安混乱，星尘病感染率极高。" },
+            { id: "acheron", name: "阿刻戎自由港 (Acheron)", faction: "自治空间站", color: "#ffeb3b", rgb: "255, 235, 59", x: 20, y: 70, desc: "游离于联盟管辖之外的巨型空间站。这里是全星系最大的黑市，情报贩子、赏金猎人的天堂。" },
+            { id: "titan", name: "泰坦星脉基地 (Titan)", faction: "独立防务承包商", color: "#4caf50", rgb: "76, 175, 80", x: 85, y: 80, desc: "被巨型财团和 PMC 买下的卫星。表面是合法的安保公司训练营，暗地里进行着各种非法的实验。" },
+            { id: "drifter", name: "游荡者舰队 (Drifter Fleet)", faction: "无阵营 / 独立势力", color: "#9e9e9e", rgb: "158, 158, 158", x: 15, y: 25, desc: "没有固定坐标的庞大拾荒者船队。他们拒绝在任何星球定居，靠打捞星际战争的残骸为生。" }
+        ];
+
+        let currentSelectedPlanet = null;
+        let arEngine = null;
+
+        // 2. 打开星图 (修复尺寸塌陷问题)
+        window.openStarMap = function() {
+            const modal = document.getElementById('starMapModal');
+            document.getElementById('planet-detail-panel').classList.remove('active');
+            
+            // 💥 核心修复 1：强制先让弹窗显示出来，让浏览器计算出真实的宽高
+            modal.style.display = 'flex';
+            modal.classList.add('active');
+            
+            // 💥 核心修复 2：延迟 100 毫秒，等容器有了真实的宽高后再启动引擎
+            setTimeout(() => {
+                if (!arEngine) arEngine = new ARMapEngine();
+                arEngine.boot();
+            }, 100);
+        };
+
+        // 3. 关闭星图
+        window.closeStarMap = function() {
+            const modal = document.getElementById('starMapModal');
+            modal.classList.remove('active');
+            document.getElementById('planet-detail-panel').classList.remove('active');
+            
+            // 延迟隐藏，等待 CSS 动画结束
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
+            
+            if (arEngine) arEngine.shutdown();
+        };
+
+        // 4. 显示星球详情
+        window.showPlanetDetail = function(planet) {
+            currentSelectedPlanet = planet;
+            document.getElementById('planet-name').innerText = planet.name;
+            document.getElementById('planet-name').style.textShadow = `0 0 10px ${planet.color}`;
+            document.getElementById('planet-faction').innerText = `[ 归属: ${planet.faction} ]`;
+            document.getElementById('planet-faction').style.color = planet.color;
+            document.getElementById('planet-desc').innerText = planet.desc;
+            
+            const btn = document.getElementById('btn-set-hometown');
+            btn.style.background = `rgba(${hexToRgb(planet.color)}, 0.1)`;
+            btn.style.borderColor = planet.color;
+            btn.style.color = planet.color;
+
+            document.getElementById('planet-detail-panel').classList.add('active');
+        };
+
+        // 5. 设为籍贯按钮逻辑
+        document.getElementById('btn-set-hometown').addEventListener('click', () => {
+            if (currentSelectedPlanet) {
+                const hometownInput = document.getElementById('f-hometown');
+                if (hometownInput) {
+                    hometownInput.value = currentSelectedPlanet.name;
+                    hometownInput.style.height = 'auto';
+                    hometownInput.style.height = hometownInput.scrollHeight + 'px';
+                    const factionSelect = document.getElementById('f-faction');
+                    if (factionSelect && factionSelect.value === "") {
+                        for (let i = 0; i < factionSelect.options.length; i++) {
+                            if (factionSelect.options[i].value.includes(currentSelectedPlanet.faction.split(' ')[0])) {
+                                factionSelect.value = factionSelect.options[i].value;
+                                factionSelect.dispatchEvent(new Event('change')); break;
+                            }
+                        }
+                    }
+                }
+                closeStarMap();
+                SysModal.alert(`已将您的籍贯设定为：【${currentSelectedPlanet.name}】`, "📍 导航坐标已锁定");
+            }
+        });
+
+        function hexToRgb(hex) {
+            let r = 0, g = 0, b = 0;
+            if (hex.length == 4) { r = "0x" + hex[1] + hex[1]; g = "0x" + hex[2] + hex[2]; b = "0x" + hex[3] + hex[3]; } 
+            else if (hex.length == 7) { r = "0x" + hex[1] + hex[2]; g = "0x" + hex[3] + hex[4]; b = "0x" + hex[5] + hex[6]; }
+            return +(r) + "," + +(g) + "," + +(b);
+        }
+
+        // ==========================================
+        // 💥 AR 引擎核心类 (封装了所有的 Canvas 渲染)
+        // ==========================================
+        class ARMapEngine {
+            constructor() {
+                this.container = document.getElementById('ar-map-container');
+                this.tCanvas = document.getElementById('transit-canvas');
+                this.bCanvas = document.getElementById('binary-canvas');
+                this.mCanvas = document.getElementById('map-canvas');
+                this.tCtx = this.tCanvas.getContext('2d');
+                this.bCtx = this.bCanvas.getContext('2d');
+                this.mCtx = this.mCanvas.getContext('2d', { alpha: true }); // 💥 开启透明通道
+                
+                this.bootComplete = false;
+                this.transitAnimId = null;
+                this.binaryAnimId = null;
+                this.mapAnimId = null;
+                
+                this.WORLD_SIZE = 6000;
+                this.tacticalNodes = [];
+                this.telemetryLines = [];
+                this.organicClouds = [];
+                this.dustBuckets = [[], [], []];
+                this.bucketAlphas = [0.2, 0.4, 0.6];
+                
+                this.cam = { x: 0, y: 0, zoom: 0.8 };
+                this.vel = { x: 0, y: 0 };
+                this.isDragging = false;
+                this.lastMouse = { x: 0, y: 0 };
+                this.clickStartPos = { x: 0, y: 0 };
+                this.hoveredNode = null;
+                this.activeRoute = [];
+                this.globalMouseWorldX = 0;
+                this.globalMouseWorldY = 0;
+
+                this.spriteCanvas = document.createElement('canvas');
+                this.generateSprites();
+                this.generateUniverse();
+                this.bindEvents();
+            }
+
+            resize() {
+                // 💥 核心修复 3：加入兜底机制，如果容器宽度为 0，则使用屏幕宽度
+                const w = this.container.clientWidth || window.innerWidth;
+                const h = this.container.clientHeight || window.innerHeight;
+                this.tCanvas.width = this.bCanvas.width = this.mCanvas.width = w;
+                this.tCanvas.height = this.bCanvas.height = this.mCanvas.height = h;
+            }
+
+            boot() {
+                this.resize();
+                this.bootComplete = false;
+                this.activeRoute = [];
+                this.cam = { x: 0, y: 0, zoom: 0.8 };
+                
+                // Reset UI
+                document.getElementById('center-status').innerText = "SYS.NAVI // INITIATING JUMP...";
+                document.getElementById('center-status').style.opacity = 1;
+                document.getElementById('glass-effects').classList.remove('active');
+                document.getElementById('ar-reticle').classList.remove('active');
+                document.getElementById('hud-overlay').classList.remove('active');
+                
+                // 💥 终极修复：直接操作 style.opacity，无视 HTML 里的内联样式死锁！
+                this.mCanvas.style.opacity = 0; 
+                this.tCanvas.style.opacity = 1;
+                this.bCanvas.style.opacity = 1;
+
+                // 1. Start Hyperspace
+                this.initTransit();
+                this.renderTransit();
+
+                // 2. Choreography
+                setTimeout(() => { this.isDecelerating = true; }, 500); 
+                
+                setTimeout(() => {
+                    document.getElementById('center-status').innerText = "INITIALIZING AR MAP...";
+                    this.binaryActive = true;
+                    this.renderBinary();
+                    document.getElementById('glass-effects').classList.add('active');
+                }, 1200); 
+
+                setTimeout(() => {
+                    // 💥 终极修复：直接操作 style.opacity = 1，强制让画布显形！
+                    this.mCanvas.style.opacity = 1;
+                    this.tCanvas.style.opacity = 0;
+                }, 1800); 
+
+                setTimeout(() => {
+                    document.getElementById('center-status').style.opacity = 0;
+                    this.bCanvas.style.opacity = 0;
+                    document.getElementById('hud-overlay').classList.add('active');
+                    document.getElementById('ar-reticle').classList.add('active');
+                }, 2500); 
+
+                setTimeout(() => {
+                    this.bootComplete = true;
+                    cancelAnimationFrame(this.transitAnimId);
+                    this.binaryActive = false;
+                    cancelAnimationFrame(this.binaryAnimId);
+                    this.renderMap(); // Start map loop
+                }, 3500);
+            }
+
+            shutdown() {
+                cancelAnimationFrame(this.transitAnimId);
+                cancelAnimationFrame(this.binaryAnimId);
+                cancelAnimationFrame(this.mapAnimId);
+                this.bootComplete = false;
+            }
+
+            initTransit() {
+                this.transitStars = [];
+                this.warpMultiplier = 150;
+                this.isDecelerating = false;
+                const w = this.tCanvas.width; const h = this.tCanvas.height;
+                for (let i = 0; i < Math.floor(w * h / 2500); i++) {
+                    this.transitStars.push({ 
+                        x: Math.random() * w, y: Math.random() * h, 
+                        r: Math.random() * 1.5, a: Math.random(), 
+                        speed: 0.001 + Math.random() * 0.002, phase: Math.random() * Math.PI * 2 
+                    });
+                }
+                
+                const fontSize = 24;
+                this.drops = [];
+                for(let x = 0; x < Math.floor(w / fontSize); x++) this.drops[x] = Math.random() * -100;
+            }
+
+            renderTransit() {
+                if (this.bootComplete) return;
+                this.transitAnimId = requestAnimationFrame(() => this.renderTransit());
+                const w = this.tCanvas.width; const h = this.tCanvas.height;
+                this.tCtx.clearRect(0, 0, w, h);
+                
+                if (this.isDecelerating && this.warpMultiplier > 1) {
+                    this.warpMultiplier -= (this.warpMultiplier - 1) * 0.08; 
+                    if (this.warpMultiplier < 1.05) this.warpMultiplier = 1;
+                }
+
+                const t = Date.now();
+                for (const s of this.transitStars) {
+                    const alpha = s.a * (0.3 + 0.7 * Math.sin(t * s.speed + s.phase));
+                    const currentSpeed = s.speed * 80 * this.warpMultiplier;
+                    
+                    if (this.warpMultiplier > 2) {
+                        this.tCtx.beginPath(); this.tCtx.moveTo(s.x, s.y); this.tCtx.lineTo(s.x + currentSpeed * 5, s.y); 
+                        this.tCtx.strokeStyle = `rgba(163, 217, 255, ${alpha})`; this.tCtx.lineWidth = s.r; this.tCtx.stroke();
+                    } else {
+                        this.tCtx.beginPath(); this.tCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                        this.tCtx.fillStyle = `rgba(255, 255, 255, ${alpha})`; this.tCtx.fill();
+                    }
+                    s.x -= currentSpeed;
+                    if (s.x < 0) { s.x = w + Math.random() * 100; s.y = Math.random() * h; }
+                }
+            }
+
+            renderBinary() {
+                if (!this.binaryActive) return;
+                this.binaryAnimId = requestAnimationFrame(() => this.renderBinary());
+                const w = this.bCanvas.width; const h = this.bCanvas.height;
+                const fontSize = 24;
+                
+                this.bCtx.clearRect(0, 0, w, h); // 💥 修复：使用 clearRect 保持透明
+                this.bCtx.fillStyle = '#00e5ff';
+                this.bCtx.font = fontSize + "px 'JetBrains Mono', monospace";
+                this.bCtx.textAlign = 'center';
+
+                for(let i = 0; i < this.drops.length; i++) {
+                    const text = Math.random() > 0.5 ? "1" : "0";
+                    this.bCtx.fillText(text, i * fontSize, this.drops[i] * fontSize);
+                    if(this.drops[i] * fontSize > h && Math.random() > 0.9 && !this.bootComplete) this.drops[i] = 0;
+                    this.drops[i]++;
+                }
+            }
+
+            generateSprites() {
+                this.spriteCanvas.width = 2048; this.spriteCanvas.height = 256; 
+                const sCtx = this.spriteCanvas.getContext('2d', { alpha: true });
+
+                // 💥 升级：更丰富的星云色彩（青蓝、深紫、洋红、翠绿）
+                const nebulaColors =[ {r:0,g:150,b:255}, {r:120,g:50,b:255}, {r:255,g:50,b:150}, {r:0,g:255,b:100} ];
+                nebulaColors.forEach((c, i) => {
+                    let cx = (i * 256) + 128; let cy = 128;
+                    for(let puff=0; puff<4; puff++) {
+                        let px = cx + (Math.random()*80 - 40); let py = cy + (Math.random()*80 - 40);
+                        let grad = sCtx.createRadialGradient(px, py, 0, px, py, 120);
+                        // 💥 升级：更柔和的多级渐变，模拟气体层次
+                        grad.addColorStop(0, `rgba(${c.r}, ${c.g}, ${c.b}, 0.5)`);
+                        grad.addColorStop(0.4, `rgba(${c.r}, ${c.g}, ${c.b}, 0.15)`);
+                        grad.addColorStop(1, 'transparent'); 
+                        sCtx.fillStyle = grad; sCtx.beginPath(); sCtx.arc(px, py, 120, 0, Math.PI*2); sCtx.fill();
+                    }
+                });
+
+                this.starClasses = [
+                    { class: 'O [BLUE GIANT]', core: '#e6f0ff', glow: '100, 160, 255', prob: 0.05, size: 3.5 },
+                    { class: 'A [MAIN SEQ]', core: '#ffffff', glow: '255, 255, 255', prob: 0.15, size: 2.0 },
+                    { class: 'G [YELLOW DWARF]', core: '#fff9e6', glow: '255, 200, 50', prob: 0.30, size: 1.5 },
+                    { class: 'M [RED DWARF]', core: '#ffccbb', glow: '255, 80, 80', prob: 0.40, size: 1.0 },
+                    { class: 'ANOMALY [PULSAR]', core: '#f2e6ff', glow: '200, 80, 255', prob: 0.10, size: 2.5 }
+                ];
+
+                this.starClasses.forEach((st, i) => {
+                    let cx = 768 + (i * 256) + 128; let cy = 128; 
+                    let grad = sCtx.createRadialGradient(cx, cy, 0, cx, cy, 128);
+                    grad.addColorStop(0, '#ffffff'); 
+                    grad.addColorStop(0.12, st.core); 
+                    grad.addColorStop(0.4, `rgba(${st.glow}, 0.6)`); 
+                    grad.addColorStop(1, 'transparent'); 
+                    sCtx.fillStyle = grad; sCtx.beginPath(); sCtx.arc(cx, cy, 128, 0, Math.PI*2); sCtx.fill();
+                });
+            }
+
+            generateUniverse() {
+                // 💥 性能优化：探测是否为手机端
+                const isMobile = window.innerWidth <= 768;
+                const dustCount = isMobile ? 500 : 2500; // 手机端砍掉 80% 尘埃
+                const cloudCount = isMobile ? 20 : 100;  // 手机端砍掉 80% 星云
+                const starCount = isMobile ? 150 : 500;  // 手机端砍掉 70% 背景星
+
+                for(let i=0; i<dustCount; i++) {
+                    let bucketIdx = Math.floor(Math.random() * 3);
+                    this.dustBuckets[bucketIdx].push({ 
+                        x: (Math.random() - 0.5) * this.WORLD_SIZE, 
+                        y: (Math.random() - 0.5) * this.WORLD_SIZE, 
+                        z: Math.random() * 0.5 + 0.1, 
+                        size: Math.random() * 1.5 
+                    });
+                }
+
+                for(let i=0; i<cloudCount; i++) {
+                    this.organicClouds.push({
+                        x: (Math.random() - 0.5) * this.WORLD_SIZE, 
+                        y: (Math.random() - 0.5) * this.WORLD_SIZE, 
+                        z: Math.random() * 0.4 + 0.2, 
+                        spriteIdx: Math.floor(Math.random() * 4),
+                        radius: Math.random() * 800 + 400,
+                        rot: Math.random() * Math.PI * 2, 
+                        stretchX: (Math.random() * 0.8) + 0.6, 
+                        stretchY: (Math.random() * 0.8) + 0.6, 
+                        op: Math.random() * 0.2 + 0.05
+                    });
+                }
+
+                planetsDB.forEach(p => {
+                    this.tacticalNodes.push({
+                        isPlanetDB: true, planetData: p,
+                        x: (p.x - 50) / 50 * (this.WORLD_SIZE / 2), 
+                        y: (p.y - 50) / 50 * (this.WORLD_SIZE / 2),
+                        z: 1.0, 
+                        baseSize: 10, typeIdx: 0, classStr: p.faction, name: p.name,
+                        orbitals: 2, isMajor: true, customColor: p.color, customRgb: p.rgb
+                    });
+                });
+
+                const prefixes =["SYS", "ARES", "OBS", "VEGA", "LYRA", "ECHO"];
+                for (let i = 0; i < starCount; i++) {
+                    let r = Math.random(); let typeIdx = this.starClasses.findIndex(t => (r -= t.prob) <= 0);
+                    if(typeIdx === -1) typeIdx = 3; let type = this.starClasses[typeIdx];
+                    this.tacticalNodes.push({
+                        isPlanetDB: false,
+                        x: (Math.random() - 0.5) * this.WORLD_SIZE, 
+                        y: (Math.random() - 0.5) * this.WORLD_SIZE, 
+                        z: Math.random() * 0.7 + 0.2, 
+                        baseSize: (Math.random() * 1.5 + 1.0) * type.size, 
+                        typeIdx: typeIdx, classStr: type.class, 
+                        name: `${prefixes[Math.floor(Math.random() * prefixes.length)]}-${Math.floor(Math.random()*900)+100}`,
+                        orbitals: Math.floor(Math.random() * 4), isMajor: false
+                    });
+                }
+
+                const majorNodes = this.tacticalNodes.filter(s => s.isMajor);
+                majorNodes.forEach(node => {
+                    let nearby = majorNodes.map(s => ({ node: s, dist: Math.hypot(s.x - node.x, s.y - node.y) }))
+                        .filter(s => s.dist > 150 && s.dist < 1000).sort((a, b) => a.dist - b.dist).slice(0, 2);
+                    nearby.forEach(n => this.telemetryLines.push({ p1: node, p2: n.node }));
+                });
+            }
+
+            bindEvents() {
+                const tooltip = document.getElementById('tactical-tooltip');
+                const navStatus = document.getElementById('nav-status');
+
+                window.addEventListener('resize', () => {
+                    if (document.getElementById('starMapModal').classList.contains('active')) this.resize();
+                });
+
+                // --- PC 端鼠标事件 ---
+                this.mCanvas.addEventListener('mousedown', e => { 
+                    if(!this.bootComplete) return;
+                    this.isDragging = true; this.vel.x = 0; this.vel.y = 0; 
+                    this.lastMouse = { x: e.clientX, y: e.clientY }; this.clickStartPos = { x: e.clientX, y: e.clientY }; 
+                    tooltip.style.display = 'none'; 
+                });
+
+                window.addEventListener('mouseup', e => { 
+                    if(!this.bootComplete || !this.isDragging) return;
+                    this.isDragging = false; 
+                    let dx = e.clientX - this.clickStartPos.x; let dy = e.clientY - this.clickStartPos.y;
+                    if ((dx * dx + dy * dy) < 25) this.handleMapClick(e.clientX, e.clientY);
+                });
+
+                this.mCanvas.addEventListener('contextmenu', e => {
+                    e.preventDefault(); if(!this.bootComplete) return;
+                    this.activeRoute = []; this.updateNavHUD();
+                });
+
+                this.mCanvas.addEventListener('mousemove', e => {
+                    if(!this.bootComplete) return;
+                    const rect = this.mCanvas.getBoundingClientRect();
+                    const mx = e.clientX - rect.left; 
+                    const my = e.clientY - rect.top;
+                    
+                    const cx = this.mCanvas.width / 2;
+                    const cy = this.mCanvas.height / 2;
+                    this.globalMouseWorldX = (mx - cx) / this.cam.zoom - this.cam.x; 
+                    this.globalMouseWorldY = (my - cy) / this.cam.zoom - this.cam.y;
+                    
+                    if (this.isDragging) {
+                        let dx = e.clientX - this.lastMouse.x; let dy = e.clientY - this.lastMouse.y;
+                        this.cam.x += dx / this.cam.zoom; this.cam.y += dy / this.cam.zoom; 
+                        this.vel.x = dx / this.cam.zoom; this.vel.y = dy / this.cam.zoom;
+                        this.lastMouse = { x: e.clientX, y: e.clientY }; return; 
+                    }
+
+                    this.hoveredNode = null;
+                    const wrapSize = this.WORLD_SIZE;
+                    const wrap = (val, max) => { let v = val + max / 2; return ((v % max) + max) % max - max / 2; };
+
+                    for (let node of this.tacticalNodes) {
+                        let px = node.x + this.cam.x * node.z;
+                        let py = node.y + this.cam.y * node.z;
+                        if (!node.isMajor) { px = wrap(px, wrapSize); py = wrap(py, wrapSize); }
+                        
+                        let screenX = px * this.cam.zoom + cx;
+                        let screenY = py * this.cam.zoom + cy;
+                        let dx = screenX - mx; let dy = screenY - my; 
+                        let thresh = (node.baseSize * node.z + 15) * this.cam.zoom; 
+                        
+                        if ((dx * dx + dy * dy) < (thresh * thresh)) { this.hoveredNode = node; break; }
+                    }
+
+                    if (this.hoveredNode) {
+                        tooltip.style.display = 'block'; tooltip.style.left = (e.clientX + 30) + 'px'; tooltip.style.top = (e.clientY + 30) + 'px';
+                        document.getElementById('tt-name').innerText = this.hoveredNode.name; 
+                        document.getElementById('tt-class').innerText = this.hoveredNode.classStr; 
+                        document.getElementById('tt-planets').innerText = this.hoveredNode.orbitals;
+                        
+                        if (this.hoveredNode.customColor) {
+                            document.getElementById('tt-name').style.color = this.hoveredNode.customColor;
+                            tooltip.style.borderColor = this.hoveredNode.customColor;
+                        } else {
+                            document.getElementById('tt-name').style.color = '#fff';
+                            tooltip.style.borderColor = '#00e5ff';
+                        }
+
+                        if (this.activeRoute.includes(this.hoveredNode)) {
+                            tooltip.classList.add('in-route');
+                            document.getElementById('tt-status').innerText = `NAV LOCKED (WP-${this.activeRoute.indexOf(this.hoveredNode) + 1})`;
+                            document.getElementById('tt-status').style.color = "#ffb700";
+                        } else {
+                            tooltip.classList.remove('in-route');
+                            document.getElementById('tt-status').innerText = this.hoveredNode.classStr.includes("PULSAR") ? "CRITICAL" : "STABLE";
+                            document.getElementById('tt-status').style.color = this.hoveredNode.classStr.includes("PULSAR") ? "#ff3333" : "#00e5ff";
+                        }
+                        this.mCanvas.style.cursor = 'crosshair';
+                    } else { tooltip.style.display = 'none'; this.mCanvas.style.cursor = 'grab'; }
+                });
+
+                this.mCanvas.addEventListener('wheel', e => {
+                    if(!this.bootComplete) return;
+                    this.cam.zoom = Math.max(0.2, Math.min(this.cam.zoom * (e.deltaY > 0 ? 0.9 : 1.1), 4.5));
+                });
+
+                // 💥 --- 手机端触摸事件 (单指拖拽 + 双指缩放) --- 💥
+                let initialPinchDist = null;
+
+                this.mCanvas.addEventListener('touchstart', e => {
+                    if(!this.bootComplete) return;
+                    if (e.touches.length === 1) {
+                        this.isDragging = true; this.vel.x = 0; this.vel.y = 0;
+                        this.lastMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                        this.clickStartPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                        tooltip.style.display = 'none';
+                    } else if (e.touches.length === 2) {
+                        this.isDragging = false;
+                        initialPinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                    }
+                }, {passive: false});
+
+                this.mCanvas.addEventListener('touchmove', e => {
+                    if(!this.bootComplete) return;
+                    
+                    // 💥 核心修复：先礼貌地问浏览器“现在还能不能取消滚动？”，能取消再阻止。
+                    // 这样既能完美锁死网页背景，又彻底消灭了控制台的黄色警告！
+                    if (e.cancelable) {
+                        e.preventDefault(); 
+                    }
+
+                    if (e.touches.length === 1 && this.isDragging) {
+                        let dx = e.touches[0].clientX - this.lastMouse.x;
+                        let dy = e.touches[0].clientY - this.lastMouse.y;
+                        this.cam.x += dx / this.cam.zoom; 
+                        this.cam.y += dy / this.cam.zoom;
+                        this.vel.x = dx / this.cam.zoom; 
+                        this.vel.y = dy / this.cam.zoom;
+                        this.lastMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                    } else if (e.touches.length === 2 && initialPinchDist) {
+                        let currentDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                        let zoomFactor = currentDist / initialPinchDist;
+                        this.cam.zoom = Math.max(0.2, Math.min(this.cam.zoom * zoomFactor, 4.5));
+                        initialPinchDist = currentDist;
+                    }
+                }, {passive: false}); // 这里的 passive: false 必须保留，它是允许阻止滚动的通行证
+
+                this.mCanvas.addEventListener('touchend', e => {
+                    if(!this.bootComplete) return;
+                    if (e.touches.length === 0 && this.isDragging) {
+                        this.isDragging = false;
+                        let dx = this.lastMouse.x - this.clickStartPos.x;
+                        let dy = this.lastMouse.y - this.clickStartPos.y;
+                        if ((dx * dx + dy * dy) < 25) {
+                            this.handleMapClick(this.lastMouse.x, this.lastMouse.y);
+                        }
+                    }
+                    if (e.touches.length < 2) initialPinchDist = null;
+                });
+            }
+
+            handleMapClick(clientX, clientY) {
+                // 💥 核心修复：点击时实时计算命中的星球，兼容 PC 和手机
+                const rect = this.mCanvas.getBoundingClientRect();
+                const mx = clientX - rect.left; 
+                const my = clientY - rect.top;
+                const cx = this.mCanvas.width / 2;
+                const cy = this.mCanvas.height / 2;
+                
+                let clickedNode = null;
+                const wrapSize = this.WORLD_SIZE;
+                const wrap = (val, max) => { let v = val + max / 2; return ((v % max) + max) % max - max / 2; };
+
+                for (let node of this.tacticalNodes) {
+                    let px = node.x + this.cam.x * node.z;
+                    let py = node.y + this.cam.y * node.z;
+                    if (!node.isMajor) { px = wrap(px, wrapSize); py = wrap(py, wrapSize); }
+                    
+                    let screenX = px * this.cam.zoom + cx;
+                    let screenY = py * this.cam.zoom + cy;
+                    let dx = screenX - mx; let dy = screenY - my; 
+                    // 手机端点击判定范围稍微放大一点，防止点不中
+                    let thresh = (node.baseSize * node.z + 25) * this.cam.zoom; 
+                    
+                    if ((dx * dx + dy * dy) < (thresh * thresh)) { clickedNode = node; break; }
+                }
+
+                if (clickedNode) {
+                    if (clickedNode.isPlanetDB) {
+                        showPlanetDetail(clickedNode.planetData);
+                    }
+                    
+                    const nodeIndex = this.activeRoute.indexOf(clickedNode);
+                    if (nodeIndex !== -1) { 
+                        if (nodeIndex === this.activeRoute.length - 1) this.activeRoute.pop(); 
+                    } else {
+                        this.activeRoute.push(clickedNode);
+                    }
+                    this.updateNavHUD();
+                } else {
+                    document.getElementById('planet-detail-panel').classList.remove('active');
+                }
+            }
+
+            handleMapClick() {
+                if (this.hoveredNode) {
+                    if (this.hoveredNode.isPlanetDB) {
+                        showPlanetDetail(this.hoveredNode.planetData);
+                    }
+                    
+                    const nodeIndex = this.activeRoute.indexOf(this.hoveredNode);
+                    if (nodeIndex !== -1) { if (nodeIndex === this.activeRoute.length - 1) this.activeRoute.pop(); } 
+                    else this.activeRoute.push(this.hoveredNode);
+                    this.updateNavHUD();
+                } else {
+                    document.getElementById('planet-detail-panel').classList.remove('active');
+                }
+            }
+
+            updateNavHUD() {
+                const navStatus = document.getElementById('nav-status');
+                if (this.activeRoute.length === 0) { navStatus.innerText = "NAV: STANDBY"; navStatus.style.color = "rgba(255, 183, 0, 0.5)"; return; }
+                if (this.activeRoute.length === 1) { navStatus.innerText = `NAV: WP-1 [${this.activeRoute[0].name.split('-')[0]}] // AWAITING JUMP COORD`; navStatus.style.color = "#ffb700"; return; }
+                let totalDist = 0;
+                for (let i = 0; i < this.activeRoute.length - 1; i++) totalDist += Math.hypot(this.activeRoute[i].x - this.activeRoute[i+1].x, this.activeRoute[i].y - this.activeRoute[i+1].y);
+                navStatus.innerText = `NAV: ${this.activeRoute.length} WAYPOINTS // DIST: ${(totalDist * 2.5).toLocaleString(undefined, {maximumFractionDigits: 0})} LY`;
+                navStatus.style.color = "#ffb700";
+            }
+
+            renderMap() {
+                if (!this.bootComplete) return;
+                this.mapAnimId = requestAnimationFrame(() => this.renderMap());
+
+                if (!this.isDragging) { this.cam.x += this.vel.x; this.cam.y += this.vel.y; this.vel.x *= 0.92; this.vel.y *= 0.92; }
+
+                document.getElementById('hud-coords').innerText = `SYS.X: ${(-this.cam.x).toFixed(1).padStart(7, '0')} // SYS.Y: ${(-this.cam.y).toFixed(1).padStart(7, '0')}`;
+                document.getElementById('hud-zoom').innerText = `ZOOM: ${this.cam.zoom.toFixed(2)}x`;
+
+                this.mCtx.clearRect(0, 0, this.mCanvas.width, this.mCanvas.height);
+                
+                let halfW = (this.mCanvas.width / 2) / this.cam.zoom; let halfH = (this.mCanvas.height / 2) / this.cam.zoom;
+
+                this.mCtx.save(); 
+                this.mCtx.translate(this.mCanvas.width / 2, this.mCanvas.height / 2); 
+                this.mCtx.scale(this.cam.zoom, this.cam.zoom);
+
+                const wrapSize = this.WORLD_SIZE;
+                const wrap = (val, max) => {
+                    let v = val + max / 2;
+                    return ((v % max) + max) % max - max / 2;
+                };
+
+                // 1. 渲染宇宙尘埃
+                this.mCtx.fillStyle = '#fff';
+                this.dustBuckets.forEach((bucket, idx) => {
+                    this.mCtx.globalAlpha = this.bucketAlphas[idx]; this.mCtx.beginPath(); 
+                    bucket.forEach(d => {
+                        let px = wrap(d.x + this.cam.x * d.z, wrapSize); 
+                        let py = wrap(d.y + this.cam.y * d.z, wrapSize);
+                        if (px >= -halfW && px <= halfW && py >= -halfH && py <= halfH) this.mCtx.rect(px | 0, py | 0, d.size/this.cam.zoom, d.size/this.cam.zoom); 
+                    }); this.mCtx.fill(); 
+                });
+
+                // 2. 渲染星云气体
+                this.mCtx.globalCompositeOperation = 'screen'; 
+                this.organicClouds.forEach(c => {
+                    let px = wrap(c.x + this.cam.x * c.z, wrapSize); 
+                    let py = wrap(c.y + this.cam.y * c.z, wrapSize);
+                    if (px >= -halfW - c.radius && px <= halfW + c.radius && py >= -halfH - c.radius && py <= halfH + c.radius) {
+                        this.mCtx.save(); this.mCtx.translate(px | 0, py | 0); this.mCtx.rotate(c.rot); this.mCtx.scale(c.stretchX, c.stretchY);
+                        this.mCtx.globalAlpha = c.op; this.mCtx.drawImage(this.spriteCanvas, c.spriteIdx * 256, 0, 256, 256, -(c.radius | 0), -(c.radius | 0), (c.radius*2) | 0, (c.radius*2) | 0);
+                        this.mCtx.restore();
+                    }
+                });
+                this.mCtx.globalCompositeOperation = 'source-over'; 
+                this.mCtx.globalAlpha = 1.0;
+
+                // 3. 渲染战术连线
+                this.mCtx.strokeStyle = 'rgba(0, 229, 255, 0.2)'; this.mCtx.lineWidth = 1 / this.cam.zoom; this.mCtx.setLineDash([8 / this.cam.zoom, 12 / this.cam.zoom]);
+                this.mCtx.beginPath();
+                this.telemetryLines.forEach(lane => {
+                    let p1x = lane.p1.x + this.cam.x * lane.p1.z; let p1y = lane.p1.y + this.cam.y * lane.p1.z;
+                    let p2x = lane.p2.x + this.cam.x * lane.p2.z; let p2y = lane.p2.y + this.cam.y * lane.p2.z;
+                    this.mCtx.moveTo(p1x | 0, p1y | 0); this.mCtx.lineTo(p2x | 0, p2y | 0);
+                });
+                this.mCtx.stroke(); this.mCtx.setLineDash([]);
+
+                // 4. 渲染导航路线
+                const time = Date.now();
+                if (this.activeRoute.length > 0) {
+                    this.mCtx.beginPath(); this.mCtx.strokeStyle = 'rgba(255, 183, 0, 0.4)'; this.mCtx.lineWidth = 2 / this.cam.zoom; this.mCtx.setLineDash([10 / this.cam.zoom, 10 / this.cam.zoom]);
+                    let lastNode = this.activeRoute[this.activeRoute.length - 1]; 
+                    this.mCtx.moveTo(lastNode.x + this.cam.x, lastNode.y + this.cam.y);
+                    if (this.hoveredNode && !this.activeRoute.includes(this.hoveredNode)) {
+                        this.mCtx.lineTo(this.hoveredNode.x + this.cam.x * this.hoveredNode.z, this.hoveredNode.y + this.cam.y * this.hoveredNode.z);
+                    } else {
+                        this.mCtx.lineTo(this.globalMouseWorldX + this.cam.x, this.globalMouseWorldY + this.cam.y);
+                    }
+                    this.mCtx.stroke(); this.mCtx.setLineDash([]);
+
+                    if (this.activeRoute.length > 1) {
+                        this.mCtx.beginPath(); this.mCtx.strokeStyle = 'rgba(255, 183, 0, 0.2)'; this.mCtx.lineWidth = 12 / this.cam.zoom;
+                        this.mCtx.moveTo(this.activeRoute[0].x + this.cam.x, this.activeRoute[0].y + this.cam.y); 
+                        for (let i = 1; i < this.activeRoute.length; i++) this.mCtx.lineTo(this.activeRoute[i].x + this.cam.x, this.activeRoute[i].y + this.cam.y); 
+                        this.mCtx.stroke();
+                        
+                        this.mCtx.beginPath(); this.mCtx.strokeStyle = '#ffb700'; this.mCtx.lineWidth = 3 / this.cam.zoom;
+                        this.mCtx.moveTo(this.activeRoute[0].x + this.cam.x, this.activeRoute[0].y + this.cam.y); 
+                        for (let i = 1; i < this.activeRoute.length; i++) this.mCtx.lineTo(this.activeRoute[i].x + this.cam.x, this.activeRoute[i].y + this.cam.y); 
+                        this.mCtx.stroke();
+                    }
+
+                    this.mCtx.fillStyle = '#fff';
+                    for (let i = 0; i < this.activeRoute.length - 1; i++) {
+                        let p1 = this.activeRoute[i], p2 = this.activeRoute[i+1]; 
+                        let dx = p2.x - p1.x, dy = p2.y - p1.y, dist = Math.sqrt(dx*dx + dy*dy);
+                        let progress = ((time / 1000 * 300) % dist) / dist; 
+                        this.mCtx.beginPath(); this.mCtx.arc((p1.x + dx * progress) + this.cam.x, (p1.y + dy * progress) + this.cam.y, 3 / this.cam.zoom, 0, Math.PI*2); this.mCtx.fill();
+                    }
+                }
+
+                // 5. 渲染所有星体
+                const isMobile = window.innerWidth <= 768; // 💥 探测手机端
+                this.mCtx.globalCompositeOperation = 'source-over'; 
+                
+                this.tacticalNodes.forEach(node => {
+                    let px = node.x + this.cam.x * node.z;
+                    let py = node.y + this.cam.y * node.z;
+
+                    if (!node.isMajor) {
+                        px = wrap(px, wrapSize);
+                        py = wrap(py, wrapSize);
+                    }
+
+                    if (px < -halfW - 400 || px > halfW + 400 || py < -halfH - 400 || py > halfH + 400) return;
+                    
+                    let depthScale = node.z; 
+                    let currentSize = node.baseSize * depthScale;
+                    
+                    const alphaBase = (Math.sin((time % 100000) * 0.005 + node.x) * 0.2 + 0.8) * depthScale; 
+                    const coreRgb = node.customRgb || (node.classStr.includes("PULSAR") ? "200,80,255" : "0,229,255");
+                    
+                    // 💥 性能优化：手机端只画 1 层光晕，电脑端画 4 层
+                    const glowLayers = isMobile ? 1 : 4;
+                    const glowSpread = node.isPlanetDB ? 8 * depthScale : 4 * depthScale; 
+                    for(let i = glowLayers; i >= 1; i--) {
+                        this.mCtx.beginPath();
+                        this.mCtx.arc(px, py, currentSize + (i * glowSpread), 0, Math.PI * 2);
+                        this.mCtx.fillStyle = `rgba(${coreRgb}, ${0.12 * alphaBase / i})`;
+                        this.mCtx.fill();
+                    }
+
+                    this.mCtx.beginPath();
+                    this.mCtx.arc(px, py, currentSize, 0, Math.PI * 2);
+                    this.mCtx.fillStyle = `rgba(255, 255, 255, ${depthScale})`;
+                    this.mCtx.fill();
+
+                    if (node.isMajor) {
+                        const ringRadius = currentSize + 12; 
+                        this.mCtx.save();
+                        this.mCtx.translate(px, py);
+                        
+                        this.mCtx.rotate(time * 0.0005);
+                        this.mCtx.beginPath();
+                        this.mCtx.arc(0, 0, ringRadius, 0, Math.PI * 2);
+                        this.mCtx.strokeStyle = `rgba(${coreRgb}, 0.5)`;
+                        this.mCtx.lineWidth = 1 / this.cam.zoom;
+                        this.mCtx.setLineDash([6 / this.cam.zoom, 6 / this.cam.zoom]);
+                        this.mCtx.stroke();
+                        
+                        this.mCtx.rotate(-time * 0.001); 
+                        this.mCtx.beginPath();
+                        this.mCtx.arc(0, 0, ringRadius - 3, 0, Math.PI * 2);
+                        this.mCtx.setLineDash([]);
+                        this.mCtx.strokeStyle = `rgba(${coreRgb}, 0.2)`;
+                        this.mCtx.lineWidth = 1 / this.cam.zoom;
+                        this.mCtx.stroke();
+
+                        this.mCtx.beginPath();
+                        const tick = Math.min(3 / this.cam.zoom, 6); 
+                        this.mCtx.moveTo(-ringRadius - tick, 0); this.mCtx.lineTo(-ringRadius + tick, 0);
+                        this.mCtx.moveTo(ringRadius - tick, 0); this.mCtx.lineTo(ringRadius + tick, 0);
+                        this.mCtx.moveTo(0, -ringRadius - tick); this.mCtx.lineTo(0, -ringRadius + tick);
+                        this.mCtx.moveTo(0, ringRadius - tick); this.mCtx.lineTo(0, ringRadius + tick);
+                        this.mCtx.strokeStyle = `rgba(${coreRgb}, 0.8)`;
+                        this.mCtx.lineWidth = 1.5 / this.cam.zoom;
+                        this.mCtx.stroke();
+
+                        this.mCtx.restore();
+                    }
+
+                    if ((node.isMajor && this.cam.zoom > 0.4) || this.cam.zoom > 1.5) {
+                        this.mCtx.globalAlpha = depthScale; 
+                        this.mCtx.fillStyle = node.customColor ? node.customColor : `rgba(255, 255, 255, ${0.8 * depthScale})`; 
+                        this.mCtx.font = `${10 / this.cam.zoom}px 'JetBrains Mono', monospace`;
+                        const textOffset = node.isMajor ? 22 : 8;
+                        this.mCtx.fillText(`[${node.name.split('-')[0]}]`, px + currentSize + textOffset/this.cam.zoom, py + currentSize + 4/this.cam.zoom); 
+                    }
+                });
+
+                // 6. 画悬停选中的雷达准星
+                this.activeRoute.forEach((node, index) => {
+                    let px = node.x + this.cam.x * node.z;
+                    let py = node.y + this.cam.y * node.z;
+                    let s = (node.baseSize * node.z) + (15 / this.cam.zoom); 
+                    
+                    this.mCtx.strokeStyle = '#ffb700'; this.mCtx.lineWidth = 2 / this.cam.zoom;
+                    this.mCtx.beginPath();
+                    this.mCtx.moveTo(px - s, py - s/2); this.mCtx.lineTo(px - s, py - s); this.mCtx.lineTo(px - s/2, py - s);
+                    this.mCtx.moveTo(px + s, py - s/2); this.mCtx.lineTo(px + s, py - s); this.mCtx.lineTo(px + s/2, py - s);
+                    this.mCtx.moveTo(px - s, py + s/2); this.mCtx.lineTo(px - s, py + s); this.mCtx.lineTo(px - s/2, py + s);
+                    this.mCtx.moveTo(px + s, py + s/2); this.mCtx.lineTo(px + s, py + s); this.mCtx.lineTo(px + s/2, py + s); this.mCtx.stroke();
+                    this.mCtx.fillStyle = '#ffb700'; this.mCtx.font = `bold ${10 / this.cam.zoom}px 'Orbitron', sans-serif`; this.mCtx.fillText(`WP-0${index+1}`, px + s + (5/this.cam.zoom), py - s);
+
+                    for(let i=0; i<node.orbitals; i++) {
+                        let orbR = (node.baseSize * node.z) + (25 + (i * 15)) / this.cam.zoom; this.mCtx.beginPath(); this.mCtx.arc(px, py, orbR, 0, Math.PI*2); this.mCtx.strokeStyle = 'rgba(255, 183, 0, 0.3)'; this.mCtx.lineWidth = 1 / this.cam.zoom; this.mCtx.stroke();
+                        let spd = time / 1000 * (1 / (i + 1)); this.mCtx.fillStyle = '#fff'; this.mCtx.beginPath(); this.mCtx.arc(px + Math.cos(spd) * orbR, py + Math.sin(spd) * orbR, 2 / this.cam.zoom, 0, Math.PI*2); this.mCtx.fill();
+                    }
+                });
+
+                if (this.hoveredNode && !this.activeRoute.includes(this.hoveredNode)) {
+                    let px = this.hoveredNode.x + this.cam.x * this.hoveredNode.z;
+                    let py = this.hoveredNode.y + this.cam.y * this.hoveredNode.z;
+                    if (!this.hoveredNode.isMajor) { px = wrap(px, wrapSize); py = wrap(py, wrapSize); }
+
+                    let s = (this.hoveredNode.baseSize * this.hoveredNode.z) + (15 / this.cam.zoom); 
+                    let color = this.hoveredNode.customColor || '#00e5ff';
+                    this.mCtx.strokeStyle = color; this.mCtx.lineWidth = 2 / this.cam.zoom;
+                    this.mCtx.beginPath();
+                    this.mCtx.moveTo(px - s, py - s/2); this.mCtx.lineTo(px - s, py - s); this.mCtx.lineTo(px - s/2, py - s);
+                    this.mCtx.moveTo(px + s, py - s/2); this.mCtx.lineTo(px + s, py - s); this.mCtx.lineTo(px + s/2, py - s);
+                    this.mCtx.moveTo(px - s, py + s/2); this.mCtx.lineTo(px - s, py + s); this.mCtx.lineTo(px - s/2, py + s);
+                    this.mCtx.moveTo(px + s, py + s/2); this.mCtx.lineTo(px + s, py + s); this.mCtx.lineTo(px + s/2, py + s); this.mCtx.stroke();
+
+                    for(let i=0; i<this.hoveredNode.orbitals; i++) {
+                        let orbR = (this.hoveredNode.baseSize * this.hoveredNode.z) + (25 + (i * 15)) / this.cam.zoom; this.mCtx.beginPath(); this.mCtx.arc(px, py, orbR, 0, Math.PI*2); 
+                        this.mCtx.strokeStyle = color.replace(')', ', 0.2)').replace('rgb', 'rgba'); 
+                        if(this.mCtx.strokeStyle === color) this.mCtx.strokeStyle = 'rgba(0, 229, 255, 0.2)';
+                        this.mCtx.lineWidth = 1 / this.cam.zoom; this.mCtx.stroke();
+                        let spd = time / 1000 * (1 / (i + 1)); this.mCtx.fillStyle = '#fff'; this.mCtx.beginPath(); this.mCtx.arc(px + Math.cos(spd) * orbR, py + Math.sin(spd) * orbR, 2 / this.cam.zoom, 0, Math.PI*2); this.mCtx.fill();
+                    }
+                }
+
+                this.mCtx.restore();
+            }
+        }
+
         
 
         /* =========================================================
@@ -14049,6 +14993,8 @@ if(!title || !parentFaction || !content) {
         
         
         })();
+
+        
 
 
 
