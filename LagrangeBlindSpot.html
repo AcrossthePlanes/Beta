@@ -815,6 +815,14 @@
             z-index: 1;
         }
 
+        /* 3. 全局悬停效果：保留物理错位感和内发光 (所有卡片通用) */
+.intel-card:hover, .faction-card:hover, .plot-card:hover, .my-org-card:hover,
+.intel-card.is-centered, .faction-card.is-centered { /* 👈 新增这两句 */
+    transform: translate(-4px, -4px) !important; 
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.6), inset 0 0 20px var(--theme-shadow) !important;
+    z-index: 10;
+}
+
         .card-icon {
             font-size: 2rem;
             margin-bottom: 1rem;
@@ -2529,38 +2537,96 @@
         .cyber-list { padding-left: 20px; color: #a0c4d8; line-height: 2.2; font-size: 1.1rem; margin-bottom: 30px; }
         .cyber-list li::marker { color: #12a8ff; font-family: monospace; font-weight: bold; }
         
-        .glitch-text { 
-            margin-top: 40px; 
-            font-family: "Impact", sans-serif; 
-            font-size: 2.5rem; 
-            color: #fff; 
-            text-transform: uppercase; 
-            letter-spacing: 4px; 
-            text-shadow: 3px 0 rgba(18,168,255,0.8), -3px 0 rgba(244,67,54,0.8); 
+        /* =========================================================
+           💥 终极视觉：大标题级故障撕裂 + 色彩拉伸 (完美融合版)
+           ========================================================= */
+        .glitch-text {
+            position: relative;
+            margin: 60px auto 20px auto;
+            font-family: "Impact", "Microsoft YaHei", sans-serif;
+            font-size: clamp(2.5rem, 6vw, 4rem); 
+            font-weight: 900;
             text-align: center;
-            /* 💥 新增：绑定赛博闪烁动画，4秒一个循环 */
-            animation: cyber-flicker 4s infinite;
+            letter-spacing: 8px;
+            color: #ffffff;
+            /* 💥 找回旧版灵魂：平时就带有红蓝双色重影 */
+            text-shadow: 3px 0 rgba(18,168,255,0.8), -3px 0 rgba(244,67,54,0.8);
+            /* 融合旧版的拉伸闪烁动画 */
+            animation: cyber-flicker-stretch 4s infinite; 
         }
 
-        /* 💥 新增：纯粹的明暗闪烁与色差瞬移（绝对不扭曲字体形状） */
-        @keyframes cyber-flicker {
+        /* 🔴 红色错位撕裂层 */
+        .glitch-text::before,
+        .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            /* 💥 核心修改：彻底透明，绝不遮挡背后的星星和弥散光！ */
+            background: transparent; 
+            /* 💥 滤色混合模式：重叠时会让颜色发亮，产生屏幕过曝的电子感 */
+            mix-blend-mode: screen; 
+            overflow: hidden;
+            clip-path: inset(100% 0 0 0); /* 默认隐藏 */
+        }
+
+        .glitch-text::before {
+            /* 💥 撕裂出去的层变成纯红色 */
+            color: rgba(244, 67, 54, 0.9); 
+            text-shadow: -3px 0 #f44336; 
+            animation: cyber-tear-left 3s infinite linear alternate-reverse;
+            z-index: 2;
+        }
+
+        /* 🔵 蓝色错位撕裂层 */
+        .glitch-text::after {
+            /* 💥 撕裂出去的层变成纯蓝色 */
+            color: rgba(18, 168, 255, 0.9); 
+            text-shadow: 3px 0 #12a8ff; 
+            animation: cyber-tear-right 2.5s infinite linear alternate-reverse;
+            z-index: 3;
+        }
+
+        /* 💥 融合旧版：底层的红蓝阴影瞬间炸开拉大 + 接触不良闪烁 */
+        @keyframes cyber-flicker-stretch {
             0%, 100% { opacity: 1; text-shadow: 3px 0 rgba(18,168,255,0.8), -3px 0 rgba(244,67,54,0.8); }
-            /* 第一次轻微断电 */
             5%  { opacity: 0.2; text-shadow: none; }
             6%  { opacity: 1; text-shadow: 3px 0 rgba(18,168,255,0.8), -3px 0 rgba(244,67,54,0.8); }
-            /* 红蓝阴影瞬间炸开拉大 */
-            11% { opacity: 0.8; text-shadow: 6px 0 rgba(18,168,255,1), -6px 0 rgba(244,67,54,1); } 
+            /* 阴影瞬间向两边拉伸炸开 */
+            11% { opacity: 0.8; text-shadow: 12px 0 rgba(18,168,255,1), -12px 0 rgba(244,67,54,1); } 
             12% { opacity: 1; text-shadow: 3px 0 rgba(18,168,255,0.8), -3px 0 rgba(244,67,54,0.8); }
-            /* 连续接触不良闪烁 */
             45% { opacity: 1; }
             46% { opacity: 0.1; }
             47% { opacity: 0.9; }
             48% { opacity: 0.1; }
             49% { opacity: 1; }
-            /* 核心特效：红蓝阴影瞬间对调反转，极具赛博感 */
+            /* 阴影瞬间对调反转 */
             75% { opacity: 1; text-shadow: 3px 0 rgba(18,168,255,0.8), -3px 0 rgba(244,67,54,0.8); }
-            76% { opacity: 1; text-shadow: -3px 0 rgba(18,168,255,0.9), 3px 0 rgba(244,67,54,0.9); } 
+            76% { opacity: 1; text-shadow: -6px 0 rgba(18,168,255,0.9), 6px 0 rgba(244,67,54,0.9); } 
             77% { opacity: 1; text-shadow: 3px 0 rgba(18,168,255,0.8), -3px 0 rgba(244,67,54,0.8); }
+        }
+
+        /* 💥 加大幅度：真正的物理切割，错位距离拉大到 20px 以上 */
+        @keyframes cyber-tear-left {
+            0%, 80% { clip-path: inset(100% 0 0 0); transform: translate(0, 0); }
+            81% { clip-path: inset(20% 0 60% 0); transform: translate(-20px, 0); }
+            84% { clip-path: inset(60% 0 10% 0); transform: translate(25px, 0); }
+            87% { clip-path: inset(40% 0 50% 0); transform: translate(-25px, 0); }
+            90% { clip-path: inset(80% 0 5% 0); transform: translate(20px, 0); }
+            93% { clip-path: inset(10% 0 70% 0); transform: translate(-15px, 0); }
+            96% { clip-path: inset(30% 0 50% 0); transform: translate(25px, 0); }
+            100% { clip-path: inset(100% 0 0 0); transform: translate(0, 0); }
+        }
+
+        @keyframes cyber-tear-right {
+            0%, 70% { clip-path: inset(100% 0 0 0); transform: translate(0, 0); }
+            71% { clip-path: inset(10% 0 60% 0); transform: translate(25px, 0); }
+            74% { clip-path: inset(30% 0 20% 0); transform: translate(-20px, 0); }
+            77% { clip-path: inset(70% 0 10% 0); transform: translate(30px, 0); }
+            80% { clip-path: inset(20% 0 50% 0); transform: translate(-25px, 0); }
+            83% { clip-path: inset(50% 0 30% 0); transform: translate(20px, 0); }
+            86% { clip-path: inset(5% 0 80% 0); transform: translate(-30px, 0); }
+            100% { clip-path: inset(100% 0 0 0); transform: translate(0, 0); }
         }
 
         /* =========================================
@@ -4785,10 +4851,21 @@ textarea:-webkit-autofill:active {
     to { --angle: 360deg; }
 }
 
-/* 💥 专属设定：主界面的卡片悬停时，隐藏原本的边框，给流光让路 */
+/* 💥 专属设定：主界面的卡片悬停或居中时，隐藏原本的边框，给流光让路 */
 #mainView .intel-card:hover, 
-#mainView .faction-card:hover {
+#mainView .faction-card:hover,
+#mainView .intel-card.is-centered, 
+#mainView .faction-card.is-centered { /* 👈 新增这两句 */
     border-color: transparent !important; 
+}
+
+/* 悬停或居中时：显示流光，并启动旋转动画 */
+#mainView .intel-card:hover::before, #mainView .intel-card:hover::after,
+#mainView .faction-card:hover::before, #mainView .faction-card:hover::after,
+#mainView .intel-card.is-centered::before, #mainView .intel-card.is-centered::after, /* 👈 新增 */
+#mainView .faction-card.is-centered::before, #mainView .faction-card.is-centered::after { /* 👈 新增 */
+    opacity: 1;
+    animation: spinLight 3s linear infinite;
 }
 
 /* 统一设置伪元素基础属性 (加上 #mainView 限制) */
@@ -4907,11 +4984,14 @@ textarea:-webkit-autofill:active {
 #center-status {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 50; text-align: center;
     letter-spacing: 5px; color: #00e5ff; text-shadow: 0 0 15px #00e5ff; transition: opacity 0.5s ease; font-weight: bold; font-size: 18px;
+    pointer-events: none; /* 💥 核心修复：让鼠标穿透这行透明文字，不再阻挡点击和显示打字光标 */
 }
 
 #tactical-tooltip {
     position: absolute; display: none; pointer-events: none; background: rgba(2, 6, 12, 0.95); border: 1px solid #00e5ff;
-    padding: 15px; font-size: 11px; color: #a9c2c2; z-index: 60; min-width: 220px; box-shadow: 0 0 20px rgba(0,0,0,0.8), inset 0 0 10px rgba(0, 229, 255, 0.1);
+    padding: 15px; font-size: 11px; color: #a9c2c2; z-index: 60; 
+    min-width: 260px; /* 💥 核心修改：加宽到 260px */
+    box-shadow: 0 0 20px rgba(0,0,0,0.8), inset 0 0 10px rgba(0, 229, 255, 0.1);
 }
 #tactical-tooltip.in-route { border-color: #ffb700; box-shadow: 0 0 20px rgba(0,0,0,0.8), inset 0 0 10px rgba(255, 183, 0, 0.3); }
 #tactical-tooltip h3 { margin: 0 0 10px 0; color: #fff; font-size: 14px; letter-spacing: 2px; }
@@ -4920,6 +5000,124 @@ textarea:-webkit-autofill:active {
 .in-route .data-label { color: #ffb700; }
 
 #planet-detail-panel.active { transform: translateX(0) !important; }
+
+/* 💥 1. 顶部标题的霓虹呼吸感 */
+        @keyframes cyber-title-breathe {
+            0%, 100% { text-shadow: 0 0 8px rgba(18,168,255,0.6); }
+            50% { text-shadow: 0 0 15px rgba(18,168,255,0.9), 0 0 25px rgba(18,168,255,0.4); }
+        }
+        .group-name {
+            animation: cyber-title-breathe 4s ease-in-out infinite;
+        }
+
+        /* 💥 2. 悬浮菜单按钮的物理上下浮动 */
+        @keyframes float-breathe {
+            0%, 100% { 
+                transform: translateY(0); 
+                box-shadow: 4px 4px 0 rgba(18, 168, 255, 0.2); 
+            }
+            50% { 
+                transform: translateY(-4px); /* 向上浮动 4px */
+                box-shadow: 4px 8px 0 rgba(18, 168, 255, 0.4); /* 阴影拉长，产生高度感 */
+            }
+        }
+        .floating-menu-btn {
+            animation: float-breathe 3s ease-in-out infinite;
+        }
+        /* 鼠标放上去时，取消呼吸动画，执行原本的按压动画 */
+        .floating-menu-btn:hover {
+            animation: none; 
+        }
+
+        /* =========================================================
+           💥 细节提升：科幻终端标题装饰线 (完美还原档案 UI)
+           ========================================================= */
+        
+        /* 1. 针对表单区标题、世界观区标题进行 Flex 布局改造 */
+        .form-section-title,
+        .world-section-title {
+            display: flex !important;
+            align-items: center;
+            border-bottom: none !important; /* 移除旧的死板底边框 */
+            white-space: nowrap; /* 防止文字换行 */
+            overflow: hidden; /* 隐藏溢出的线条 */
+            width: 100%;
+        }
+
+        /* (已删除左侧的 // 装饰，保持文字左对齐的清爽感) */
+
+        /* 3. 右侧：无限延伸的虚线 + 机械折角 (完美还原截图) */
+        .form-section-title::after,
+        .world-section-title::after {
+            content: '';
+            flex-grow: 1; /* 自动占满右侧所有剩余空间 */
+            height: 10px;
+            margin-left: 15px;
+            
+            /* 💥 核心魔法：顶部虚线 + 右侧实线 = 完美的 ┐ 型折角 */
+            border-top: 1px dashed currentColor;
+            border-right: 2px solid currentColor;
+            
+            opacity: 0.3;
+            transform: translateY(4px); /* 往下微调，使其与文字垂直居中对齐 */
+            min-width: 20px; /* 保证在极窄屏幕下也有线 */
+        }
+
+        /* 4. 额外赠送：给表单的输入框 Label 加上数据点缀 */
+        .input-group label {
+            display: flex;
+            align-items: center;
+        }
+        .input-group label::before {
+            content: '';
+            display: inline-block;
+            width: 3px;
+            height: 3px;
+            background: currentColor;
+            margin-right: 6px;
+            opacity: 0.6;
+            box-shadow: 0 0 5px currentColor; /* 微弱的发光 */
+        }
+
+        /* =========================================================
+           💥 细节提升：专属科幻 HUD 文本锁定框 (⌜ ⌝ ⌞ ⌟)
+           ========================================================= */
+        .hud-text-box {
+            position: relative;
+            padding: 20px 25px;
+            background: rgba(0, 5, 10, 0.4); /* 微微加深底色 */
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            margin-bottom: 30px; /* 和下方的警告卡片拉开距离 */
+        }
+
+        /* 利用伪元素绘制 4 个角的 8 条短线 */
+        .hud-text-box::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none; /* 鼠标穿透，防止阻挡文字复制 */
+            
+            /* 边角参数设定 */
+            --c-color: #12a8ff; /* 赛博蓝 */
+            --c-thick: 2px;     /* 线条粗细 */
+            --c-len: 12px;      /* 边角长度 */
+            
+            /* 拼出 4 个直角 */
+            background:
+                linear-gradient(to right, var(--c-color) var(--c-thick), transparent var(--c-thick)) 0 0,
+                linear-gradient(to bottom, var(--c-color) var(--c-thick), transparent var(--c-thick)) 0 0,
+                linear-gradient(to left, var(--c-color) var(--c-thick), transparent var(--c-thick)) 100% 0,
+                linear-gradient(to bottom, var(--c-color) var(--c-thick), transparent var(--c-thick)) 100% 0,
+                linear-gradient(to right, var(--c-color) var(--c-thick), transparent var(--c-thick)) 0 100%,
+                linear-gradient(to top, var(--c-color) var(--c-thick), transparent var(--c-thick)) 0 100%,
+                linear-gradient(to left, var(--c-color) var(--c-thick), transparent var(--c-thick)) 100% 100%,
+                linear-gradient(to top, var(--c-color) var(--c-thick), transparent var(--c-thick)) 100% 100%;
+            
+            background-repeat: no-repeat;
+            background-size: var(--c-len) var(--c-len);
+            z-index: 10;
+            opacity: 0.8;
+        }
 
     </style>
 </head>
@@ -4951,8 +5149,6 @@ function initCanvasStars() {
     window.addEventListener('resize', resize);
     resize();
 
-    // 💥 核心修复：根据屏幕宽度动态决定星星数量
-    // 如果屏幕宽度小于等于 768px (手机)，只生成 200 颗；否则生成 800 颗
     const isMobile = window.innerWidth <= 768;
     const starCount = isMobile ? 200 : 800;
 
@@ -4967,19 +5163,37 @@ function initCanvasStars() {
         });
     }
 
+    // 💥 新增：记录上一次的滚动位置
+    let lastScrollY = window.scrollY || window.pageYOffset;
+
     function draw() {
         ctx.clearRect(0, 0, width, height); 
         ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
         
+        // 💥 新增：计算这一帧页面滚动了多少距离
+        let currentScrollY = window.scrollY || window.pageYOffset;
+        let deltaY = currentScrollY - lastScrollY;
+        lastScrollY = currentScrollY;
+
         stars.forEach(star => {
             ctx.beginPath();
             ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
             ctx.fillStyle = star.color;
             ctx.fill();
 
+            // 1. 星星原本的缓慢上升漂浮
             star.y -= star.speed;
+
+            // 2. 💥 核心魔法：加入 3D 视差滚动！
+            // 乘以 star.speed 意味着：离得近的星星滚动快，离得远的星星滚动慢
+            star.y -= deltaY * star.speed * 0.8;
+
+            // 3. 💥 修复边界循环：不仅要处理飞出上边界，还要处理向下滚动时飞出下边界
             if (star.y < 0) {
-                star.y = height;
+                star.y += height;
+                star.x = Math.random() * width;
+            } else if (star.y > height) {
+                star.y -= height;
                 star.x = Math.random() * width;
             }
         });
@@ -5138,8 +5352,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             <!-- 顶部控制栏 -->
             <div style="padding: 20px; border-bottom: 1px solid rgba(0, 229, 255, 0.3); display: flex; justify-content: space-between; align-items: center; background: rgba(2,6,12,0.8); z-index: 100;">
-                <div style="color: #00e5ff; font-family: 'Impact', sans-serif; font-size: 24px; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0,229,255,0.5);">
-                    [ 🌐 ASTRAL CARTOGRAPHY // 战术星图导航 ]
+                <div style="color: #00e5ff; font-family: 'Impact', 'Microsoft YaHei', sans-serif; font-size: 24px; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0,229,255,0.5);">
+                    [ 星图导航 ]
                 </div>
                 <button class="btn-ghost" style="padding: 6px 15px; font-size: 14px; border-color: #00e5ff; color: #00e5ff;" onclick="closeStarMap()">[X] 关闭星图</button>
             </div>
@@ -5164,40 +5378,39 @@ document.addEventListener('DOMContentLoaded', function() {
                 <canvas id="map-canvas" style="position: absolute; inset: 0; z-index: 20; opacity: 0; transition: opacity 1.5s ease; cursor: grab;"></canvas>
 
                 <!-- 屏幕中央状态字 -->
-                <div id="center-status">SYS.NAVI // INITIATING JUMP...</div>
+                <div id="center-status" style="pointer-events: none;">系统导航 // 正在启动跃迁...</div>
 
                 <!-- 左下角 HUD -->
                 <div id="hud-overlay">
-                    <div class="hud-title">APERTURE AR :: v9.5</div>
-                    <div class="hud-data" id="hud-coords">SYS.X: 000.00 // SYS.Y: 000.00</div>
-                    <div class="hud-data" id="hud-zoom">ZOOM: 1.00x</div>
-                    <div id="nav-status">NAV: STANDBY</div>
-                    <div class="nav-hint">L-CLICK: SELECT PLANET // R-CLICK: CLEAR ROUTE</div>
+                    <div class="hud-title">全息星图系统 : v9.5</div>
+                    <div class="hud-data" id="hud-coords">坐标.X: 000.00 // 坐标.Y: 000.00</div>
+                    <div class="hud-data" id="hud-zoom">缩放倍率: 1.00x</div>
+                    <div id="nav-status">导航: 待命</div>
+                    <div class="nav-hint">左键: 锁定目标 // 拖拽: 平移星图</div>
                 </div>
 
                 <!-- 鼠标悬停提示框 -->
                 <div id="tactical-tooltip">
-                    <h3 id="tt-name">SYS_UNKNOWN</h3>
-                    <div class="data-row"><span class="data-label">FACTION</span><span id="tt-class">N/A</span></div>
-                    <div class="data-row"><span class="data-label">ORBITALS</span><span id="tt-planets">0</span></div>
-                    <div class="data-row"><span class="data-label">STATUS</span><span id="tt-status" style="color:#0f0;">STABLE</span></div>
+                    <h3 id="tt-name">未知星体</h3>
+                    <div class="data-row"><span class="data-label">所在星区</span><span id="tt-region">未知</span></div>
+                    <div class="data-row"><span class="data-label">所属阵营</span><span id="tt-class">未知</span></div>
+                    <div class="data-row"><span class="data-label">星体类型</span><span id="tt-type">行星</span></div>
+                    <div class="data-row"><span class="data-label">当前状态</span><span id="tt-status" style="color:#0f0;">稳定</span></div>
                 </div>
 
-                <!-- 右侧：星球详情面板 (默认隐藏在右侧) -->
-                <div id="planet-detail-panel" style="width: 320px; background: rgba(2, 6, 12, 0.95); border-left: 2px solid #00e5ff; padding: 20px; box-sizing: border-box; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.2, 1, 0.3, 1); position: absolute; right: 0; top: 0; height: 100%; z-index: 50; box-shadow: -10px 0 30px rgba(0,0,0,0.9);">
-                    <div style="color: #8bb9d6; font-family: monospace; font-size: 12px; margin-bottom: 5px;" id="planet-faction">FACTION</div>
-                    <h2 id="planet-name" style="color: #fff; margin: 0 0 15px 0; font-size: 28px; text-shadow: 0 0 10px rgba(0,229,255,0.5);">PLANET_NAME</h2>
+                <!-- 右侧：星球详情面板 -->
+                <div id="planet-detail-panel" style="width: 320px; background: rgba(2, 6, 12, 0.95); border-left: 2px solid #00e5ff; padding: 20px; box-sizing: border-box; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.2, 1, 0.3, 1); position: absolute; right: 0; top: 0; height: 100%; z-index: 50; box-shadow: -10px 0 30px rgba(0,0,0,0.9); display: flex; flex-direction: column;">
                     
-                    <div style="width: 100%; height: 120px; border: 1px solid rgba(0,229,255,0.3); margin-bottom: 15px; background: rgba(0,229,255,0.05); display: flex; justify-content: center; align-items: center; font-family: monospace; color: #00e5ff; font-size: 12px;" id="planet-image">
-                        [ SATELLITE IMAGE ]
-                    </div>
-
-                    <div style="color: #e0f2fe; font-size: 13px; line-height: 1.8; margin-bottom: 20px; height: 200px; overflow-y: auto;" id="planet-desc">
+                    <div style="color: #8bb9d6; font-family: monospace; font-size: 12px; margin-bottom: 5px;" id="planet-faction">归属</div>
+                    <h2 id="planet-name" style="color: #fff; margin: 0 0 15px 0; font-size: 28px; text-shadow: 0 0 10px rgba(0,229,255,0.5);">星球名称</h2>
+                    
+                    <!-- 删除了图片框，并将这里的 height 改为 flex: 1，让文字自动撑满剩余空间 -->
+                    <div style="color: #e0f2fe; font-size: 13px; line-height: 1.8; margin-bottom: 20px; flex: 1; overflow-y: auto;" id="planet-desc">
                         星球详细描述...
                     </div>
 
-                    <button class="submit-btn" style="width: 100%; font-size: 16px; padding: 12px; border-color: #00e5ff; color: #00e5ff; background: rgba(0,229,255,0.1);" id="btn-set-hometown">
-                        [ 📍 设为我的籍贯 ]
+                    <button class="submit-btn" style="width: 100%; font-size: 16px; padding: 12px; border-color: #00e5ff; color: #00e5ff; background: rgba(0,229,255,0.1); margin-top: auto;" id="btn-set-hometown">
+                        [ 设为我的籍贯 ]
                     </button>
                 </div>
 
@@ -5360,8 +5573,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
 
                         <section class="world-section" id="sec-conflict">
-                            <h2 class="world-section-title"> 快速了解世界观 </h2>
+                            <h2 class="world-section-title"> 快速了解世界观 </h2>                            
                             <div class="world-text">
+                                <div class="hud-text-box">
                                 <p>时间：公元2240年</p>
                                 <p>在人类走出太阳系后的第一个世纪，文明并没有迎来真正的黄金时代。</p>
                                 <p>半个世纪前，一种被称为<span class="world-highlight">C-62</span>（“黑血”） 的高能同位素矿物被发现，它能够提供近乎无限的清洁能源，让人类文明得以飞速发展并继续向外扩张，也让整个星系陷入漫长的资源战争。</p>
@@ -5372,10 +5586,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <p>联盟、财团、外环居民、佣兵组织和无数独立势力彼此争斗、合作、背叛，在脆弱的平衡中维持着整个文明的运转；暗杀、暴动、海盗袭击、企业战争和情报渗透几乎每天都在发生，却没有任何一方能够真正摧毁自己的敌人。</p>
                                 <p>因为所有人都明白，他们共同生活在一艘正在缓慢渗水的船上。</p>
                                 <p>在这片广袤而混乱的深空之中，没有谁能真正统治谁。</p>
+                                </div>
                                 <!-- 💥 动态渲染的系统警告卡片容器 -->
                                 <div id="dynamic-warning-container"></div>
                             </br>
-                                <div class="glitch-text">欢迎来到深空边缘。</div>
+                                <div class="glitch-text" data-text="欢迎来到深空边缘。">欢迎来到深空边缘。</div>
                             </div>
                         </section>
 
@@ -6351,9 +6566,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div class="input-group full-width">
                     <label>籍贯</label>
-                    <div class="input-wrapper">
-                        <span class="prefix">&gt;</span>
-                        <textarea id="f-hometown" rows="1" placeholder="地球：国家+省份 / 非地球：殖民地名字+分区" required></textarea>
+                    <div style="display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap;">
+                        <div class="input-wrapper" style="flex: 1; min-width: 140px;">
+                            <span class="prefix">&gt;</span>
+                            <input type="text" id="f-hometown-planet" placeholder="点击右侧星图选址" readonly style="cursor: pointer;" onclick="openStarMap('f-hometown-planet')">
+                        </div>
+                        <div class="input-wrapper select-wrapper" style="flex: 1; min-width: 140px;" id="f-hometown-base-wrapper">
+                            <span class="prefix">&gt;</span>
+                            <select id="f-hometown-base" onchange="checkCustomBase('f')">
+                                <option value="" disabled selected>-- 请先选择星球 --</option>
+                            </select>
+                        </div>
+                        <div class="input-wrapper" style="flex: 1; min-width: 140px; display: none;" id="f-hometown-custom-wrapper">
+                            <span class="prefix">&gt;</span>
+                            <input type="text" id="f-hometown-custom" placeholder="输入自定义区域...">
+                        </div>
+                        <button type="button" class="sys-modal-btn confirm" style="height: 41px; margin: 0; white-space: nowrap; border-color: #00e5ff; color: #00e5ff; background: rgba(0,229,255,0.1);" onclick="openStarMap('f-hometown-planet')">[ 星图选址 ]</button>
                     </div>
                 </div>
             </div>
@@ -6417,7 +6645,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     <div class="input-group full-width">
                         <label style="color: #ff80ab;">真实籍贯</label>
-                        <div class="input-wrapper" style="border-color: rgba(233,30,99,0.4);"><span class="prefix" style="color:#e91e63;">&gt;</span><textarea id="h-hometown" rows="1" placeholder="隐藏的真实籍贯"></textarea></div>
+                        <div style="display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap;">
+                            <div class="input-wrapper" style="flex: 1; min-width: 140px; border-color: rgba(233,30,99,0.4);">
+                                <span class="prefix" style="color:#e91e63;">&gt;</span>
+                                <input type="text" id="h-hometown-planet" placeholder="点击右侧星图选址" readonly style="cursor: pointer;" onclick="openStarMap('h-hometown-planet')">
+                            </div>
+                            <div class="input-wrapper select-wrapper" style="flex: 1; min-width: 140px; border-color: rgba(233,30,99,0.4);" id="h-hometown-base-wrapper">
+                                <span class="prefix" style="color:#e91e63;">&gt;</span>
+                                <select id="h-hometown-base" onchange="checkCustomBase('h')">
+                                    <option value="" disabled selected>-- 请先选择星球 --</option>
+                                </select>
+                            </div>
+                            <div class="input-wrapper" style="flex: 1; min-width: 140px; display: none; border-color: rgba(233,30,99,0.4);" id="h-hometown-custom-wrapper">
+                                <span class="prefix" style="color:#e91e63;">&gt;</span>
+                                <input type="text" id="h-hometown-custom" placeholder="输入自定义区域...">
+                            </div>
+                            <button type="button" class="sys-modal-btn confirm" style="height: 41px; margin: 0; white-space: nowrap; border-color: #00e5ff; color: #00e5ff; background: rgba(0,229,255,0.1);" onclick="openStarMap('h-hometown-planet')">[ 星图选址 ]</button>
+                        </div>
                     </div>
                     <div class="input-group">
     <label style="color: #ff80ab;">真实职业/身份</label>
@@ -7036,6 +7280,45 @@ window.getCyberLoaderHTML = function(text = 'UPLINKING...', color = '#12a8ff') {
             get(key) {
                 const arr = this[key] || this.sysMsg;
                 return arr[Math.floor(Math.random() * arr.length)];
+            }
+        };
+
+        // 💥 新增：防偷设私密开关引擎 (瞬间刷新修复版)
+        window.togglePrivacy = async function(charId, currentStatus) {
+            const newStatus = !currentStatus;
+            const msg = newStatus 
+                ? "确认将档案设为【私密】吗？\n\n设为私密后，您的档案将从人设库、3D隧道和全局搜索中彻底隐藏，仅您自己和管理员可见。这可以有效防止偷设。" 
+                : "确认将档案【公开】吗？\n\n公开后，所有人都可以查阅您的档案。";
+            
+            const isSure = await SysModal.confirm(msg, "[ 隐私设置 ]");
+            if (!isSure) return;
+
+            try {
+                // 1. 更新云端数据库
+                const { error } = await supabaseClient.from('characters').update({ is_private: newStatus }).eq('id', charId);
+                if (error) throw error;
+                
+                // 2. 💥 核心修复：强制转换为字符串对比，确保 100% 命中本地缓存
+                const myChar = characterDB.find(c => String(c.id) === String(charId));
+                if (myChar) myChar.is_private = newStatus;
+                
+                // 顺便把排队库里的也更新了，防止处于审核状态时点击无效
+                const myPendingChar = pendingDB.find(c => String(c.id) === String(charId));
+                if (myPendingChar) myPendingChar.is_private = newStatus;
+                
+                // 3. 💥 核心修复：把刷新 UI 的操作移到 alert 弹窗的前面！
+                // 这样在你看到“设置成功”弹窗的同时，背后的页面就已经瞬间变样了
+                renderProfile();
+                renderRoster();
+                updateSearchIndex();
+                if (window.innerWidth > 768) init3DTunnel(); 
+
+                // 4. 弹出成功提示
+                await SysModal.alert(newStatus ? "档案已隐藏，现在仅您和管理员可见。" : "档案已公开。", "设置成功");
+                
+            } catch (e) {
+                console.error(e);
+                SysModal.alert("设置失败，请检查网络。", "✕ ERROR");
             }
         };
 
@@ -7857,6 +8140,35 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
             });
         };
 
+        /* =========================================================
+           💥 手机端专属：屏幕中心雷达探测器 (滚动聚焦)
+           ========================================================= */
+        const centerFocusObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-centered'); // 进入中心区域，亮起
+                } else {
+                    entry.target.classList.remove('is-centered'); // 离开中心区域，熄灭
+                }
+            });
+        }, {
+            root: null,
+            // 💥 核心魔法：上下各往内缩进 35%，只留下屏幕正中间 30% 的区域作为“触发区”
+            rootMargin: '-35% 0px -35% 0px',
+            threshold: 0
+        });
+
+        window.updateCenterFocusTargets = function() {
+            centerFocusObserver.disconnect(); // 先清空旧的监听
+            
+            // 只在手机和平板端 (<= 900px) 启用这个炫酷的滚动聚焦功能
+            if (window.innerWidth <= 900) {
+                document.querySelectorAll('#mainView .intel-card, #mainView .faction-card').forEach(card => {
+                    centerFocusObserver.observe(card);
+                });
+            }
+        };
+
         // 4. 💥 核心：动态生成情报目录 (安全修复版) 💥
         window.generateIntelTOC = function() {
             const intelSubToc = document.getElementById('intel-sub');
@@ -8036,7 +8348,7 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                     location.reload(); 
                 } else {
                     const msg = `即将断开当前公民的终端连接。\n请确保您已妥善保管当前密钥：【 ${currentUser.id} 】\n\n确认断开并切换身份吗？`;
-                    const isSure = await SysModal.confirm(msg, "⚠️ TERMINAL DISCONNECT // 断开连接");
+                    const isSure = await SysModal.confirm(msg, "TERMINAL DISCONNECT // 断开连接");
                     if (isSure) {
                         localStorage.removeItem('tf141_device_id');
                         location.reload(); 
@@ -8221,21 +8533,33 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                 btn.className = 'roster-btn';
                 
                 if (['admin', 'super_admin'].includes(currentUser?.role) || char.owner_id === currentUser.id) {
-                    // 管理员或本人：可以高亮并点击查看
                     btn.style.borderColor = char.status === 'rejected' ? '#f44336' : '#ffeb3b';
                     btn.style.color = char.status === 'rejected' ? '#f44336' : '#ffeb3b';
                     let prefixTag = '';
-if (char.status === 'pending') prefixTag = '待审核';
-else if (char.status === 'rejected') prefixTag = '已退回';
-else if (char.status === 'approved') prefixTag = '已通过';
+                    if (char.status === 'pending') prefixTag = '待审核';
+                    else if (char.status === 'rejected') prefixTag = '已退回';
+                    else if (char.status === 'approved') prefixTag = '已通过';
 
-if (char.target_edit_id) {
-    prefixTag = "修改申请"; 
-    btn.style.boxShadow = "inset 0 0 10px rgba(18, 168, 255, 0.4)"; 
-}
-btn.innerHTML = `[${prefixTag}] ${char.name}`;
+                    if (char.target_edit_id) {
+                        prefixTag = "修改申请"; 
+                        btn.style.boxShadow = "inset 0 0 10px rgba(18, 168, 255, 0.4)"; 
+                    }
+
+                    // 💥 核心新增：仅管理员可见的机密信息尾巴
+                    let adminInfo = '';
+                    if (['admin', 'super_admin'].includes(currentUser?.role)) {
+                        const timeStr = new Date(char.updated_at || char.created_at || Date.now()).toLocaleString();
+                        const isRevision = !!char.target_edit_id;
+                        const auditCount = (char.review_comments && char.review_comments.audit_count) ? char.review_comments.audit_count : 0;
+                        adminInfo = `<div style="font-size: 10px; color: #8bb9d6; margin-top: 4px; font-family: monospace; font-weight: normal;">${timeStr} | 驳回: ${auditCount}次 ${isRevision ? '<span style="color:#ff9800; margin-left:5px;">[老卡修改]</span>' : ''}</div>`;
+                        btn.style.display = 'flex';
+                        btn.style.flexDirection = 'column';
+                        btn.style.alignItems = 'flex-start';
+                    }
+
+                    btn.innerHTML = `<div style="font-weight:bold;">[${prefixTag}] ${char.name}</div>${adminInfo}`;
                     btn.onclick = () => showQueueDetail(char);
-                } else {
+                }else {
                     // 其他群友：只能看到加密的占位符，不能点开
                     btn.style.opacity = '0.4';
                     btn.style.borderColor = '#666';
@@ -8273,7 +8597,22 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                 prefixTag = "修改申请"; 
                 btn.style.boxShadow = "inset 0 0 10px rgba(139, 195, 74, 0.4)";
             }
-            btn.innerHTML = `[${prefixTag}] ${svgOrg} ${org.title}`;
+
+            // 💥 核心新增：仅管理员可见的机密信息尾巴
+            let adminInfoOrg = '';
+            if (['admin', 'super_admin'].includes(currentUser?.role)) {
+                const timeStr = new Date(org.updated_at || org.created_at || Date.now()).toLocaleString();
+                const isRevision = !!org.target_edit_id;
+                let reviewObj = org.review_comments;
+                if (typeof reviewObj === 'string') { try { reviewObj = JSON.parse(reviewObj); } catch(e) {} }
+                const auditCount = (reviewObj && reviewObj.audit_count) ? reviewObj.audit_count : 0;
+                adminInfoOrg = `<div style="font-size: 10px; color: #8bb9d6; margin-top: 4px; font-family: monospace; font-weight: normal;">${timeStr} | 驳回: ${auditCount}次 ${isRevision ? '<span style="color:#ff9800; margin-left:5px;">[老组织修改]</span>' : ''}</div>`;
+                btn.style.display = 'flex';
+                btn.style.flexDirection = 'column';
+                btn.style.alignItems = 'flex-start';
+            }
+
+            btn.innerHTML = `<div style="font-weight:bold;">[${prefixTag}] ${svgOrg} ${org.title}</div>${adminInfoOrg}`;
             btn.onclick = () => showOrgQueueDetail(org);
         } else {
             btn.style.opacity = '0.4';
@@ -8507,6 +8846,7 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                             OP: ${currentUser.nickname} <span onclick="changeTerminalName()" class="profile-rename-btn">[改名]</span><br>
                             KEY: ${currentUser.id}<br>
                             UPLINK: SECURE<br>
+                            <span onclick="togglePrivacy('${myChar.id}', ${myChar.is_private || false})" style="color: ${myChar.is_private ? '#ff9800' : '#8bb9d6'}; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; display: inline-block; margin-top: 12px; font-weight: bold;">${myChar.is_private ? '[ 已设为私密 (点击公开) ]' : '[ 设为私密档案 ]'}</span><br>
                             <span onclick="destroyAccount()" style="color: #f44336; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; display: inline-block; margin-top: 12px; font-weight: bold;">[ 永久注销账号 ]</span>
                         </div>
                     </div>
@@ -8784,6 +9124,24 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
             const orientationField = renderField('orientation', '性取向', char.orientation || 'N/A');
             const roleField = renderField('role', '属性', char.role || 'N/A');
 
+            // 💥 核心新增：管理员专属机密视窗
+            let adminBanner = '';
+            if (['admin', 'super_admin'].includes(currentUser?.role)) {
+                const timeStr = new Date(char.updated_at || char.created_at || Date.now()).toLocaleString();
+                const isRevision = !!char.target_edit_id;
+                const auditCount = (char.review_comments && char.review_comments.audit_count) ? char.review_comments.audit_count : 0;
+                adminBanner = `
+                    <div style="background: rgba(255, 152, 0, 0.1); border: 1px dashed #ff9800; padding: 12px; margin-bottom: 15px; border-radius: 4px;">
+                        <div style="color: #ff9800; font-weight: bold; font-size: 13px; font-family: monospace; margin-bottom: 6px;">[ 🛡️ 管理员机密视窗 ]</div>
+                        <div style="color: #ffcc80; font-size: 12px; line-height: 1.6;">
+                            • <strong>最新提交时间：</strong>${timeStr}<br>
+                            • <strong>历史驳回次数：</strong>${auditCount} 次<br>
+                            • <strong>档案性质：</strong>${isRevision ? '<span style="color:#f44336; font-weight:bold; background:rgba(244,67,54,0.2); padding:2px 6px; border-radius:2px;">已通过档案的修改申请 (批准后将覆盖原档案)</span>' : '<span style="color:#4caf50;">全新档案申请</span>'}
+                        </div>
+                    </div>
+                `;
+            }
+
             // 💥 最终装配输出 (清爽版)
             detail.innerHTML = `
                 <div class="detail-header-box">
@@ -8796,6 +9154,7 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                     ${headerAnnoBox}
                 </div>
                 
+                ${adminBanner}
                 ${feedbackHtml}
                 
                 <div class="form-grid" style="margin-bottom: 10px; border-bottom: 1px dashed rgba(255,235,59,0.3); padding-bottom: 10px;">
@@ -8900,12 +9259,16 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
             const originalText = btn.innerText;
             btn.innerHTML = `[ ${CyberLang.icon} ${CyberLang.get('processing')} ]`;
             
+            // 💥 核心新增：读取历史驳回次数并 +1
+            const charDraft = pendingDB.find(c => String(c.id) === String(id));
+            const currentAuditCount = (charDraft && charDraft.review_comments && charDraft.review_comments.audit_count) ? charDraft.review_comments.audit_count : 0;
+
             // 将全部意见打包成一个 JSON 对象存进云端
             const reviewData = {
                 general: generalText,
-                fields: window.currentAdminAnnotations
+                fields: window.currentAdminAnnotations,
+                audit_count: currentAuditCount + 1 // 💥 记录驳回次数
             };
-
             try {
                 await supabaseClient.from('characters').update({ 
                     status: 'rejected',
@@ -8983,7 +9346,35 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
             // 2. 将数据塞回表单里
             document.getElementById('f-name').value = char.name || '';
             document.getElementById('f-callsign').value = char.callsign || '';
-            document.getElementById('f-hometown').value = char.hometown || '';
+            // 💥 拆分并回显公开籍贯
+            if (char.hometown && char.hometown !== 'N/A') {
+                const parts = char.hometown.split(' - ');
+                const pName = parts[0];
+                const bName = parts.length > 1 ? parts[1] : '';
+                
+                document.getElementById('f-hometown-planet').value = pName;
+                populateBaseSelect(pName, 'f');
+                
+                const baseSel = document.getElementById('f-hometown-base');
+                const customWrap = document.getElementById('f-hometown-custom-wrapper');
+                const customInput = document.getElementById('f-hometown-custom');
+                
+                let found = false;
+                for(let i=0; i<baseSel.options.length; i++) {
+                    if(baseSel.options[i].value === bName) {
+                        baseSel.value = bName;
+                        found = true; break;
+                    }
+                }
+                if(!found && bName) {
+                    baseSel.value = 'custom';
+                    customWrap.style.display = 'flex';
+                    customInput.value = bName;
+                }
+            } else {
+                document.getElementById('f-hometown-planet').value = '';
+                document.getElementById('f-hometown-base').innerHTML = '<option value="" disabled selected>-- 请先选择星球 --</option>';
+            }
             document.getElementById('f-gender').value = char.gender || '';
             // 💥 新增：载入性别备注
             document.getElementById('f-gender-notes').value = char.gender_notes || '';
@@ -9016,7 +9407,32 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                 // 💥 新增：回填真实姓名
                 document.getElementById('h-name').value = char.hidden_name || '';
                 document.getElementById('h-callsign').value = char.hidden_callsign || '';
-                document.getElementById('h-hometown').value = char.hidden_hometown || '';
+                // 💥 拆分并回显里身份籍贯
+                if (char.hidden_hometown) {
+                    const parts = char.hidden_hometown.split(' - ');
+                    const pName = parts[0];
+                    const bName = parts.length > 1 ? parts[1] : '';
+                    
+                    document.getElementById('h-hometown-planet').value = pName;
+                    populateBaseSelect(pName, 'h');
+                    
+                    const baseSel = document.getElementById('h-hometown-base');
+                    const customWrap = document.getElementById('h-hometown-custom-wrapper');
+                    const customInput = document.getElementById('h-hometown-custom');
+                    
+                    let found = false;
+                    for(let i=0; i<baseSel.options.length; i++) {
+                        if(baseSel.options[i].value === bName) {
+                            baseSel.value = bName;
+                            found = true; break;
+                        }
+                    }
+                    if(!found && bName) {
+                        baseSel.value = 'custom';
+                        customWrap.style.display = 'flex';
+                        customInput.value = bName;
+                    }
+                }
                 
                 // 💥 核心修复：加上 -custom
                 document.getElementById('h-occupation-custom').value = char.hidden_occupation || ''; 
@@ -9114,24 +9530,27 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                 }
             }
 
-            // 💥 提前获取原档案，用于继承私密设定
-            const originalChar = editingCharId ? (characterDB.find(c => String(c.id) === String(editingCharId)) || pendingDB.find(c => String(c.id) === String(editingCharId))) : null;
+            // 💥 拼接公开籍贯
+            let fPlanet = document.getElementById('f-hometown-planet').value.trim();
+            let fBaseSel = document.getElementById('f-hometown-base').value;
+            let fBase = fBaseSel === 'custom' ? document.getElementById('f-hometown-custom').value.trim() : fBaseSel;
+            let finalHometown = (fPlanet && fBase) ? `${fPlanet} - ${fBase}` : (fPlanet || 'N/A');
+
+            // 💥 拼接里身份籍贯
+            let hPlanet = document.getElementById('h-hometown-planet') ? document.getElementById('h-hometown-planet').value.trim() : '';
+            let hBaseSel = document.getElementById('h-hometown-base') ? document.getElementById('h-hometown-base').value : '';
+            let hBase = hBaseSel === 'custom' ? document.getElementById('h-hometown-custom').value.trim() : hBaseSel;
+            let finalHiddenHometown = (hPlanet && hBase) ? `${hPlanet} - ${hBase}` : hPlanet;
 
             const newChar = {
                 owner_id: currentUser.id, name: document.getElementById('f-name').value || 'UNKNOWN',
                 callsign: callsign, faction: faction, organization: org,
-                hometown: document.getElementById('f-hometown').value || 'N/A',
-                // 💥 新增：职位/职业
+                hometown: finalHometown, // 💥 使用拼接后的籍贯
                 occupation: document.getElementById('f-occupation-custom').value || 'N/A',
-                
-                // 💥 核心修复：将所有的 null 替换为 '' (空字符串)，防止数据库 400 报错！
                 rp_sample: rpGroup.style.display === 'block' ? rpSample : '',
-                
-                // 💥 彻底剥离私密设定：提交表单时不再携带这些字段，它们完全独立！
                 family_ties: document.getElementById('f-family-ties').value.trim() || '',
                 gender: document.getElementById('f-gender').value || 'N/A',
                 gender_notes: document.getElementById('f-gender-notes').value || '', 
-                // 💥 新增：性取向与属性
                 orientation: document.getElementById('f-orientation').value || 'N/A',
                 role: document.getElementById('f-role').value || 'N/A',
                 age: document.getElementById('f-age').value || 'N/A',
@@ -9139,18 +9558,16 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                 weight: document.getElementById('f-weight').value || 'N/A', blood: document.getElementById('f-blood').value || 'N/A',
                 appearance: document.getElementById('f-appearance').value || 'N/A', personality: document.getElementById('f-personality').value || 'N/A',
                 notes: document.getElementById('f-notes').value || 'N/A', status: 'pending'
-            }; // 这是 newChar 的结尾大括号
+            }; 
 
-            // 👇👇👇 加上这块代码，确保里身份被存入数据库 👇👇👇
             newChar.has_hidden = isHiddenEnabled;
             newChar.hidden_name = document.getElementById('h-name') ? document.getElementById('h-name').value.trim() : '';
             newChar.hidden_callsign = document.getElementById('h-callsign') ? document.getElementById('h-callsign').value.trim() : '';
             newChar.hidden_faction = document.getElementById('h-faction') ? document.getElementById('h-faction').value : '';
             newChar.hidden_org = document.getElementById('h-org') ? document.getElementById('h-org').value : '';
             newChar.hidden_occupation = document.getElementById('h-occupation-custom') ? document.getElementById('h-occupation-custom').value.trim() : '';
-            newChar.hidden_hometown = document.getElementById('h-hometown') ? document.getElementById('h-hometown').value.trim() : '';
+            newChar.hidden_hometown = finalHiddenHometown; // 💥 使用拼接后的里身份籍贯
             newChar.hidden_notes = document.getElementById('h-notes') ? document.getElementById('h-notes').value.trim() : '';
-            // 👆👆👆 加上这块代码 👆👆👆
             
             
             try {
@@ -9201,7 +9618,13 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
             const CONFIG = { itemCount: 20, starCount: 150, zGap: 800, loopSize: 0, camSpeed: 2.5 };
             CONFIG.loopSize = CONFIG.itemCount * CONFIG.zGap;
 
-            let TEXTS = characterDB.map(c => c.callsign);
+            // 💥 核心防偷设拦截：3D 隧道中也过滤掉私密档案
+            const visibleChars = characterDB.map((c, idx) => ({...c, originalIndex: idx})).filter(c => {
+                if (c.is_private && c.owner_id !== currentUser?.id && !['admin', 'super_admin'].includes(currentUser?.role)) return false;
+                return true;
+            });
+
+            let TEXTS = visibleChars.map(c => c.callsign);
             if (TEXTS.length === 0) TEXTS = ["NO_DATA", "EMPTY", "AWAITING_INPUT"];
             while(TEXTS.length < 10) TEXTS = TEXTS.concat(TEXTS);
 
@@ -9226,11 +9649,12 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                 const el = document.createElement('div');
                 el.className = 'tunnel-item';
                 
-                const charIndex = i % (characterDB.length || 1);
-                const charData = characterDB.length > 0 ? characterDB[charIndex] : { id: 'OP-XXXX', callsign: TEXTS[i % TEXTS.length] };
+                const charIndex = i % (visibleChars.length || 1);
+                const charData = visibleChars.length > 0 ? visibleChars[charIndex] : { id: 'OP-XXXX', callsign: TEXTS[i % TEXTS.length] };
+                const actualCharIndex = visibleChars.length > 0 ? charData.originalIndex : 0; // 映射回真实的全局索引
                 
                 // 💥 核心修复：给每一个生成的 3D 元素分配一个独一无二的物理索引
-                const uniqueItemIndex = window.tunnelItems.length; 
+                const uniqueItemIndex = window.tunnelItems.length;
 
                 const isHeading = i % 4 === 0;
                 if (isHeading) {
@@ -9238,16 +9662,17 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                     txt.className = 'tunnel-text';
                     txt.innerText = charData.callsign;
                     el.appendChild(txt);
-                    window.tunnelItems.push({ el, type: 'text', x: 0, y: 0, rot: 0, currentRot: 0, baseZ: -i * CONFIG.zGap, charIndex, uniqueItemIndex });
+                    window.tunnelItems.push({ el, type: 'text', x: 0, y: 0, rot: 0, currentRot: 0, baseZ: -i * CONFIG.zGap, charIndex: actualCharIndex, uniqueItemIndex });
                 } else {
                     const card = document.createElement('div');
                     card.className = 'tunnel-card';
+                    const lockIcon = charData.is_private ? '<svg viewBox="0 0 24 24" style="width: 1.2em; height: 1.2em; fill: #ff9800; vertical-align: middle; margin-top: -3px; margin-right: 4px; filter: drop-shadow(0 0 5px rgba(255,152,0,0.8));"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>' : '';
                     card.innerHTML = `
                         <div class="tunnel-card-header">
                             <span class="card-id">${window.getDogTag(charData)}</span>
                             <div style="width: 10px; height: 10px; background: #12a8ff; box-shadow: 0 0 5px #12a8ff;"></div>
                         </div>
-                        <h2>${charData.callsign}</h2>
+                        <h2>${lockIcon}${charData.callsign}</h2>
                         <div style="display:flex; justify-content:space-between; font-size:12px; margin-top:15px; color:#607D8B;">
                             <span>STATUS: ACTIVE</span>
                             <span>CLASS: ASSAULT</span>
@@ -9255,7 +9680,6 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                     `;
                     el.appendChild(card);
 
-                    // 💥 核心修复：点击时传递的是这张卡片在空间里的“物理索引”，而不是公民数据的索引
                     card.onclick = (e) => {
                         e.stopPropagation();
                         if(window.triggerTunnelFly) window.triggerTunnelFly(uniqueItemIndex);
@@ -9266,7 +9690,7 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                     const y = Math.sin(angle) * (containerHeight * 0.4);
                     const rot = (Math.random() - 0.5) * 30;
 
-                    window.tunnelItems.push({ el, type: 'card', x, y, rot, currentRot: rot, baseZ: -i * CONFIG.zGap, charIndex, uniqueItemIndex });
+                    window.tunnelItems.push({ el, type: 'card', x, y, rot, currentRot: rot, baseZ: -i * CONFIG.zGap, charIndex: actualCharIndex, uniqueItemIndex });
                 }
                 world.appendChild(el);
             }
@@ -9445,6 +9869,12 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
             // 2. 先过滤出符合条件的人设
             const filteredChars = characterDB.map((char, index) => ({ char, originalIndex: index })).filter(item => {
                 const c = item.char;
+                
+                // 💥 核心防偷设拦截：如果是私密档案，且不是本人，且不是管理员，直接在列表中隐藏！
+                if (c.is_private && c.owner_id !== currentUser?.id && !['admin', 'super_admin'].includes(currentUser?.role)) {
+                    return false;
+                }
+
                 if (searchQuery && !c.callsign.toLowerCase().includes(searchQuery) && !c.name.toLowerCase().includes(searchQuery)) return false;
                 if (factionFilter !== 'ALL' && c.faction !== factionFilter) return false;
                 if (orgFilter !== 'ALL' && c.organization !== orgFilter) return false;
@@ -9516,7 +9946,8 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
 
                     const btn = document.createElement('button');
                     btn.className = 'roster-btn';
-                    btn.innerHTML = `[${window.getDogTag(char)}] ${char.name}`;
+                    const lockIcon = char.is_private ? '<svg viewBox="0 0 24 24" style="width: 1.1em; height: 1.1em; fill: #ff9800; vertical-align: middle; margin-top: -2px; margin-right: 4px; filter: drop-shadow(0 0 3px rgba(255,152,0,0.5));"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>' : '';
+                    btn.innerHTML = `[${window.getDogTag(char)}] ${lockIcon}${char.name}`;
                     
                     // 鼠标悬停时，按钮边框变成该阵营的主题色
                     btn.onmouseover = () => { btn.style.borderColor = themeColor; btn.style.color = '#fff'; btn.style.boxShadow = `0 0 10px ${themeColor}80`; };
@@ -9618,7 +10049,10 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
             // 将数据填入面板
             detailContainer.innerHTML = `
                 <div class="detail-header">
-                    <h3 style="color: #e0f2fe; text-shadow: 0 0 8px rgba(18, 168, 255, 0.6);">${renderDual(char, 'name', 'hidden_name')} // ${renderDual(char, 'callsign', 'hidden_callsign')} ${getDecryptBtn(char)}</h3>
+                    <h3 style="color: #e0f2fe; text-shadow: 0 0 8px rgba(18, 168, 255, 0.6);">
+                        ${char.is_private ? '<svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: #ff9800; vertical-align: middle; margin-top: -2px; margin-right: 6px; filter: drop-shadow(0 0 5px rgba(255,152,0,0.6));"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>' : ''}
+                        ${renderDual(char, 'name', 'hidden_name')} // ${renderDual(char, 'callsign', 'hidden_callsign')} ${getDecryptBtn(char)}
+                    </h3>
                     <button class="close-btn" onclick="document.getElementById('roster-detail').style.display='none'">[X] CLOSE</button>
                 </div>
                 <div class="form-grid" style="margin-bottom: 10px; border-bottom: 1px dashed rgba(18,168,255,0.4); padding-bottom: 10px;">
@@ -9681,6 +10115,7 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                 <div class="detail-header">
                      <!-- 标题等保持不变 -->
                     <h3 style="font-size: 26px; margin: 0; text-shadow: 0 0 15px #12a8ff; letter-spacing: 2px;">
+                        ${char.is_private ? '<svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #ff9800; vertical-align: middle; margin-top: -4px; margin-right: 8px; filter: drop-shadow(0 0 8px rgba(255,152,0,0.6));"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>' : ''}
                         <span style="color:#fff;">${renderDual(char, 'name', 'hidden_name')}</span> // ${renderDual(char, 'callsign', 'hidden_callsign')} ${getDecryptBtn(char)}
                     </h3>
                     <button class="close-btn" onclick="closeDetailOverlay()" style="font-size: 16px; padding: 5px 10px; border: 1px solid #f44336;">[X] CLOSE</button>
@@ -10503,6 +10938,8 @@ btn.innerHTML = `[${prefixTag}] ${char.name}`;
                     </div>
                 `;
             }
+            // 💥 新增：阵营卡片渲染完毕后，更新中心探测雷达
+            if (typeof updateCenterFocusTargets === 'function') updateCenterFocusTargets();
         }
 
         window.openArticleById = function(id) {
@@ -10943,7 +11380,8 @@ setInterval(updateWarningCountdown, 1000);
 
             updateSearchIndex();
             generateIntelTOC();
-        }
+         if (typeof updateCenterFocusTargets === 'function') updateCenterFocusTargets();
+        } // <-- 这是 renderIntelGrid 函数的结尾大括号
 
         // 9. 管理员专属：永久删除文章
         window.deleteArticle = async function(id) {
@@ -11108,6 +11546,11 @@ setInterval(updateWarningCountdown, 1000);
             // 2. 索引所有已通过的公民档案
             characterDB.forEach((c, index) => {
                 if (c.status !== 'approved') return;
+                
+                // 💥 核心防偷设拦截：全局搜索中过滤掉私密档案
+                if (c.is_private && c.owner_id !== currentUser?.id && !['admin', 'super_admin'].includes(currentUser?.role)) {
+                    return;
+                }
                 
                 // 💥 核心修复：人设只通过名字/代号调取，不再把阵营、组织和职业塞进关键词！
                 // 这样搜阵营时就不会搜出一大堆玩家档案了。
@@ -12892,7 +13335,7 @@ window.deleteForumPost = async function(postId) {
                 // 重新绑定右上角退出按钮的事件
                 document.querySelector('.logout-btn').onclick = async function() {
                     const msg = `即将断开当前公民的终端连接。\n请确保您已妥善保管当前密钥：【 ${currentUser.id} 】\n\n确认断开并切换身份吗？`;
-                    const isSure = await SysModal.confirm(msg, "⚠️ TERMINAL DISCONNECT // 断开连接");
+                    const isSure = await SysModal.confirm(msg, "TERMINAL DISCONNECT // 断开连接");
                     if (isSure) {
                         localStorage.removeItem('tf141_device_id');
                         location.reload(); 
@@ -13336,6 +13779,24 @@ if(!title || !parentFaction || !content) {
             const summaryField = renderOrgField('summary', '简介', org.summary, true);
             const contentField = renderOrgField('content', '详细设定', cleanContent, true);
 
+            // 💥 核心新增：管理员专属机密视窗
+            let adminBanner = '';
+            if (['admin', 'super_admin'].includes(currentUser?.role)) {
+                const timeStr = new Date(org.updated_at || org.created_at || Date.now()).toLocaleString();
+                const isRevision = !!org.target_edit_id;
+                const auditCount = (reviewObj && reviewObj.audit_count) ? reviewObj.audit_count : 0;
+                adminBanner = `
+                    <div style="background: rgba(255, 152, 0, 0.1); border: 1px dashed #ff9800; padding: 12px; margin-bottom: 15px; border-radius: 4px;">
+                        <div style="color: #ff9800; font-weight: bold; font-size: 13px; font-family: monospace; margin-bottom: 6px;">[ 🛡️ 管理员机密视窗 ]</div>
+                        <div style="color: #ffcc80; font-size: 12px; line-height: 1.6;">
+                            • <strong>最新提交时间：</strong>${timeStr}<br>
+                            • <strong>历史驳回次数：</strong>${auditCount} 次<br>
+                            • <strong>档案性质：</strong>${isRevision ? '<span style="color:#f44336; font-weight:bold; background:rgba(244,67,54,0.2); padding:2px 6px; border-radius:2px;">已通过组织的修改申请 (批准后将覆盖原档案)</span>' : '<span style="color:#4caf50;">全新组织创立申请</span>'}
+                        </div>
+                    </div>
+                `;
+            }
+
             detail.innerHTML = `
                 <div class="detail-header" style="border-bottom-color: #8bc34a; display: flex; flex-direction: column; align-items: flex-start; padding-bottom: 15px; margin-bottom: 15px;">
                     <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
@@ -13346,6 +13807,7 @@ if(!title || !parentFaction || !content) {
                     </div>
                     ${headerAnnoBox}
                 </div>
+                ${adminBanner} <!-- 💥 插入在这里 -->
                 ${feedbackHtml}
                 <div class="form-grid" style="margin-bottom: 10px;">
                     ${factionField}
@@ -13411,10 +13873,20 @@ if(!title || !parentFaction || !content) {
             const originalText = btn.innerText;
             btn.innerHTML = `[ ${CyberLang.icon} ${CyberLang.get('processing')} ]`;
             
+            // 💥 核心新增：读取历史驳回次数并 +1
+            const orgDraft = pendingOrgsDB.find(o => String(o.id) === String(id));
+            let currentAuditCount = 0;
+            if (orgDraft && orgDraft.review_comments) {
+                let rev = orgDraft.review_comments;
+                if (typeof rev === 'string') { try { rev = JSON.parse(rev); } catch(e){} }
+                if (rev && rev.audit_count) currentAuditCount = rev.audit_count;
+            }
+
             // 将全部意见打包成一个 JSON 对象存进云端
             const reviewData = {
                 general: generalText,
-                fields: window.currentAdminAnnotations
+                fields: window.currentAdminAnnotations,
+                audit_count: currentAuditCount + 1 // 💥 记录驳回次数
             };
 
             try {
@@ -13539,29 +14011,174 @@ if(!title || !parentFaction || !content) {
            💥 AR 星图系统数据与逻辑引擎 (Aperture Cartography)
            ========================================================= */
         
-        // 1. 星球数据库 (x, y 是百分比位置，50,50 是正中心)
+        // 1. 星球数据库 (x, y 是百分比位置，50,50 是正中心太阳)
         const planetsDB = [
-            { id: "earth", name: "地球 (Earth)", faction: "泛星联盟 (P.S.C)", color: "#00e5ff", rgb: "0, 229, 255", x: 50, y: 50, desc: "人类的摇篮，如今是泛星联盟的最高议会所在地。表面被巨大的都市带覆盖，拥有最顶级的医疗和科技。" },
-            { id: "mars", name: "火星工业区 (Mars)", faction: "泛星联盟 (P.S.C)", color: "#00e5ff", rgb: "0, 229, 255", x: 40, y: 35, desc: "联盟最大的重工业基地与舰队造船厂。空气中常年弥漫着铁锈味。" },
-            { id: "ceres", name: "谷神星矿区 (Ceres)", faction: "外环 (Frontier)", color: "#f44336", rgb: "244, 67, 54", x: 75, y: 20, desc: "外环最大的 C-62 黑血原矿开采地之一。环境恶劣，治安混乱，星尘病感染率极高。" },
-            { id: "acheron", name: "阿刻戎自由港 (Acheron)", faction: "自治空间站", color: "#ffeb3b", rgb: "255, 235, 59", x: 20, y: 70, desc: "游离于联盟管辖之外的巨型空间站。这里是全星系最大的黑市，情报贩子、赏金猎人的天堂。" },
-            { id: "titan", name: "泰坦星脉基地 (Titan)", faction: "独立防务承包商", color: "#4caf50", rgb: "76, 175, 80", x: 85, y: 80, desc: "被巨型财团和 PMC 买下的卫星。表面是合法的安保公司训练营，暗地里进行着各种非法的实验。" },
-            { id: "drifter", name: "游荡者舰队 (Drifter Fleet)", faction: "无阵营 / 独立势力", color: "#9e9e9e", rgb: "158, 158, 158", x: 15, y: 25, desc: "没有固定坐标的庞大拾荒者船队。他们拒绝在任何星球定居，靠打捞星际战争的残骸为生。" }
+            // ==========================================
+            // ☀️ 恒星中心
+            // ==========================================
+            { id: "sun", system: "sun_sys", isParent: true, name: "太阳", faction: "恒星", region: "太阳系中心", color: "#ffeb3b", rgb: "255, 235, 59", x: 50, y: 50, sizeScale: 2.5, desc: "太阳系的母星。戴森球计划在战争爆发后被无限期搁置，目前仅有几座无人能量收集站仍在近日轨道运行。" },
+
+            // ==========================================
+            // 🌐 内环 - 轨道半径 200
+            // ==========================================
+            { id: "mercury", system: "mercury_sys", isParent: true, name: "水星", faction: "泛星联盟", region: "内环", color: "#00e5ff", rgb: "0, 229, 255", x: 53.21, y: 50.86, sizeScale: 0.8, desc: "极度靠近太阳的焦热行星，地表布满了联盟的自动化太阳能阵列与反物质工厂。" },
+            { id: "mercury_forge", system: "mercury_sys", isParent: false, name: "日冕锻造站", faction: "泛星联盟", region: "内环", color: "#00e5ff", rgb: "0, 229, 255", x: 54.0, y: 51.5, sizeScale: 0.4, desc: "利用太阳辐射进行极端材料冶炼的军工设施。" },
+
+            { id: "venus", system: "venus_sys", isParent: true, name: "金星", faction: "泛星联盟", region: "内环", color: "#00e5ff", rgb: "0, 229, 255", x: 48.33, y: 52.88, sizeScale: 0.9, desc: "被浓厚硫酸云覆盖的行星。联盟的高级研究人员居住在漂浮于云层之上的『云城』中。" },
+            { id: "venus_cloud", system: "venus_sys", isParent: false, name: "伊什塔尔云城", faction: "泛星联盟", region: "内环", color: "#00e5ff", rgb: "0, 229, 255", x: 47.5, y: 53.5, sizeScale: 0.5, desc: "悬浮在金星大气层中的奢华都市，内环权贵的度假胜地。" },
+
+            { id: "earth", system: "earth_sys", isParent: true, name: "地球", faction: "泛星联盟", region: "内环", color: "#00e5ff", rgb: "0, 229, 255", x: 47.11, y: 48.33, sizeScale: 1.0, desc: "人类的摇篮。表面被巨大的都市带覆盖，拥有最顶级的医疗和科技，是内环绝对的经济中心。" },
+            { id: "luna", system: "earth_sys", isParent: false, name: "月球", faction: "泛星联盟", region: "内环", color: "#00e5ff", rgb: "0, 229, 255", x: 46.2, y: 47.5, sizeScale: 0.5, desc: "泛星议会、联盟总理府、最高星际法院所在地。整个星系的最高权力中枢，防卫极其森严。" },
+            { id: "earth_def", system: "earth_sys", isParent: false, name: "近地防御网", faction: "泛星联盟", region: "内环", color: "#00e5ff", rgb: "0, 229, 255", x: 48.0, y: 47.5, sizeScale: 0.4, desc: "环绕地球的巨型武装空间站群，任何未授权的跃迁都会被瞬间摧毁。" },
+            { id: "lagrange_l4", system: "earth_sys", isParent: false, name: "拉格朗日点盲区", faction: "自治空间站", region: "内环", color: "#ffeb3b", rgb: "255, 235, 59", x: 46.5, y: 49.5, sizeScale: 0.5, desc: "地球与月球引力平衡的盲区，隐藏着不受联盟监管的巨型黑市空间站，灯下黑的法外之地。" },
+
+            { id: "mars", system: "mars_sys", isParent: true, name: "火星", faction: "泛星联盟", region: "内环", color: "#00e5ff", rgb: "0, 229, 255", x: 52.88, y: 48.33, sizeScale: 0.9, desc: "联盟最大的重工业基地与舰队造船厂。空气中常年弥漫着铁锈味。" },
+            { id: "phobos", system: "mars_sys", isParent: false, name: "火卫一", faction: "泛星联盟", region: "内环", color: "#00e5ff", rgb: "0, 229, 255", x: 53.8, y: 49.0, sizeScale: 0.4, desc: "被彻底掏空改造的军事要塞，驻扎着联盟第一舰队的主力。" },
+            { id: "deimos", system: "mars_sys", isParent: false, name: "火卫二", faction: "泛星联盟", region: "内环", color: "#00e5ff", rgb: "0, 229, 255", x: 52.0, y: 49.2, sizeScale: 0.4, desc: "火星轨道上的巨型干船坞，负责维修和建造星际战舰。" },
+            { id: "utopia", system: "mars_sys", isParent: false, name: "乌托邦平原船坞", faction: "独立防务承包商", region: "内环", color: "#4caf50", rgb: "76, 175, 80", x: 53.0, y: 47.2, sizeScale: 0.5, desc: "承包商在火星的合法驻地，提供雇佣兵招募与战舰改装服务。" },
+
+            // ==========================================
+            // 🪨 小行星带 - 轨道半径 500
+            // ==========================================
+            { id: "ceres", system: "ceres_sys", isParent: true, name: "谷神星", faction: "外环", region: "小行星带", color: "#f44336", rgb: "244, 67, 54", x: 51.44, y: 58.20, sizeScale: 0.7, desc: "外环最大的农业与合成食物生产基地。长期受到各大财团的剥削与控制。" },
+            { id: "ceres_ag", system: "ceres_sys", isParent: false, name: "农业空间站", faction: "外环", region: "小行星带", color: "#f44336", rgb: "244, 67, 54", x: 50.5, y: 59.0, sizeScale: 0.4, desc: "巨大的温室空间站，为整个外环提供着勉强糊口的合成淀粉。" },
+
+            { id: "vesta", system: "vesta_sys", isParent: true, name: "灶神星", faction: "独立防务承包商", region: "小行星带", color: "#4caf50", rgb: "76, 175, 80", x: 42.17, y: 47.15, sizeScale: 0.6, desc: "佣兵团的前线补给站，充满了火药味和酒精味。" },
+            { id: "vesta_armory", system: "vesta_sys", isParent: false, name: "灶神星军火库", faction: "独立防务承包商", region: "小行星带", color: "#4caf50", rgb: "76, 175, 80", x: 42.8, y: 46.0, sizeScale: 0.4, desc: "全星系最大的私人军火交易市场。" },
+
+            { id: "pallas", system: "pallas_sys", isParent: true, name: "智神星", faction: "自治空间站", region: "小行星带", color: "#ffeb3b", rgb: "255, 235, 59", x: 55.35, y: 43.61, sizeScale: 0.6, desc: "走私客和情报贩子的中转站，连接内环与外环的灰色地带。" },
+            { id: "juno", system: "juno_sys", isParent: true, name: "婚神星", faction: "外环", region: "小行星带", color: "#f44336", rgb: "244, 67, 54", x: 58.20, y: 48.55, sizeScale: 0.6, desc: "外环反抗军的秘密联络点，表面上是一个废弃的采矿站。" },
+
+            // ==========================================
+            // 🪐 外环 - 轨道半径 900
+            // ==========================================
+            { id: "jupiter", system: "jupiter_sys", isParent: true, name: "木星", faction: "无阵营 / 废弃", region: "外环", color: "#9e9e9e", rgb: "158, 158, 158", x: 35.90, y: 55.13, sizeScale: 1.8, desc: "旧聚变技术时代的生产基地，在黑血被发现后逐渐衰落并废弃。如今是拾荒者和星际海盗的藏身处。" },
+            { id: "io", system: "jupiter_sys", isParent: false, name: "木卫一", faction: "无阵营 / 废弃", region: "外环", color: "#9e9e9e", rgb: "158, 158, 158", x: 37.4, y: 55.1, sizeScale: 0.5, desc: "火山活动剧烈的卫星，地表散落着旧时代的采矿遗迹。" },
+            { id: "europa", system: "jupiter_sys", isParent: false, name: "木卫二", faction: "无阵营 / 废弃", region: "外环", color: "#9e9e9e", rgb: "158, 158, 158", x: 36.5, y: 57.0, sizeScale: 0.5, desc: "冰层下隐藏着旧时代的秘密设施，常有拾荒者来此碰运气。" },
+            { id: "ganymede", system: "jupiter_sys", isParent: false, name: "木卫三", faction: "独立防务承包商", region: "外环", color: "#4caf50", rgb: "76, 175, 80", x: 34.0, y: 56.5, sizeScale: 0.6, desc: "被某大型承包商买下的私人领地，作为外环的佣兵集散中心。" },
+            { id: "callisto", system: "jupiter_sys", isParent: false, name: "木卫四", faction: "外环", region: "外环", color: "#f44336", rgb: "244, 67, 54", x: 33.5, y: 53.5, sizeScale: 0.5, desc: "外环反抗军的秘密据点之一，地表布满了隐蔽的地下掩体。" },
+            { id: "jupiter_station", system: "jupiter_sys", isParent: false, name: "废弃聚变站", faction: "自治空间站", region: "外环", color: "#ffeb3b", rgb: "255, 235, 59", x: 36.5, y: 53.5, sizeScale: 0.4, desc: "巨大的钢铁残骸，现已被星际海盗改造为法外据点。" },
+
+            { id: "saturn", system: "saturn_sys", isParent: true, name: "土星", faction: "独立防务承包商", region: "外环", color: "#ff9800", rgb: "255, 152, 0", x: 61.49, y: 59.64, sizeScale: 1.6, desc: "泰坦星脉财团总部所在地。土星环内隐藏着庞大的私人舰队造船厂与雇佣兵训练基地。" },
+            { id: "titan", system: "saturn_sys", isParent: false, name: "泰坦星", faction: "独立防务承包商", region: "外环", color: "#ff9800", rgb: "255, 152, 0", x: 63.4, y: 60.7, sizeScale: 0.7, desc: "财团核心总部，地表被甲烷湖泊和重工业穹顶覆盖。" },
+            { id: "enceladus", system: "saturn_sys", isParent: false, name: "土卫二", faction: "独立防务承包商", region: "外环", color: "#ff9800", rgb: "255, 152, 0", x: 60.7, y: 61.0, sizeScale: 0.5, desc: "冰层下隐藏着隐秘的雇佣兵训练营与非法生化实验室。" },
+            { id: "iapetus", system: "saturn_sys", isParent: false, name: "土卫八", faction: "独立防务承包商", region: "外环", color: "#ff9800", rgb: "255, 152, 0", x: 59.5, y: 58.3, sizeScale: 0.5, desc: "财团的深空通讯中继站，监控着整个外环的信号。" },
+            { id: "rhea", system: "saturn_sys", isParent: false, name: "土卫五", faction: "外环", region: "外环", color: "#f44336", rgb: "244, 67, 54", x: 62.4, y: 58.0, sizeScale: 0.5, desc: "被外环劳工占据的卫星，常年与泰坦星的财团武装发生摩擦。" },
+
+            { id: "uranus", system: "uranus_sys", isParent: true, name: "天王星", faction: "外环", region: "外环", color: "#f44336", rgb: "244, 67, 54", x: 47.39, y: 35.22, sizeScale: 1.2, desc: "冰巨星。大气层中漂浮着外环居民的气体采集站。" },
+            { id: "titania", system: "uranus_sys", isParent: false, name: "天卫三", faction: "外环", region: "外环", color: "#f44336", rgb: "244, 67, 54", x: 48.5, y: 36.3, sizeScale: 0.5, desc: "外环边缘的哨站，生活条件极其艰苦。" },
+            { id: "oberon", system: "uranus_sys", isParent: false, name: "天卫四", faction: "外环", region: "外环", color: "#f44336", rgb: "244, 67, 54", x: 45.6, y: 35.2, sizeScale: 0.5, desc: "反抗军的地下兵工厂，利用冰层掩盖热信号。" },
+            { id: "ariel", system: "uranus_sys", isParent: false, name: "天卫一", faction: "自治空间站", region: "外环", color: "#ffeb3b", rgb: "255, 235, 59", x: 48.4, y: 34.2, sizeScale: 0.4, desc: "一个中立的医疗与补给空间站，不问来客身份。" },
+
+            { id: "neptune", system: "neptune_sys", isParent: true, name: "海王星", faction: "泛星联盟", region: "外环", color: "#00e5ff", rgb: "0, 229, 255", x: 64.09, y: 44.87, sizeScale: 1.2, desc: "联盟在外环的最远端据点，主要用于深空观测和预警。" },
+            { id: "triton", system: "neptune_sys", isParent: false, name: "海卫一", faction: "泛星联盟", region: "外环", color: "#00e5ff", rgb: "0, 229, 255", x: 64.1, y: 46.5, sizeScale: 0.5, desc: "联盟的深空监狱与黑箱审讯中心，有去无回之地。" },
+            { id: "proteus", system: "neptune_sys", isParent: false, name: "海卫八", faction: "独立防务承包商", region: "外环", color: "#4caf50", rgb: "76, 175, 80", x: 63.1, y: 43.9, sizeScale: 0.4, desc: "受雇于联盟的驻扎地，负责看守海卫一监狱的外围。" },
+            { id: "nereid", system: "neptune_sys", isParent: false, name: "海卫二", faction: "外环", region: "外环", color: "#f44336", rgb: "244, 67, 54", x: 65.8, y: 43.9, sizeScale: 0.4, desc: "一颗轨道极度偏心的卫星，常被走私客用作引力弹弓的跳板。" },
+
+            // ==========================================
+            // ☄️ 柯伊伯带 - 轨道半径 1300
+            // ==========================================
+            { id: "pluto", system: "pluto_sys", isParent: true, name: "冥王星", faction: "无阵营 / 独立势力", region: "柯伊伯带", color: "#9e9e9e", rgb: "158, 158, 158", x: 42.59, y: 70.35, sizeScale: 0.6, desc: "被遗忘的矮行星，流放者和逃犯的最终归宿。" },
+            { id: "charon", system: "pluto_sys", isParent: false, name: "冥卫一", faction: "无阵营 / 独立势力", region: "柯伊伯带", color: "#9e9e9e", rgb: "158, 158, 158", x: 43.2, y: 71.3, sizeScale: 0.4, desc: "星际海盗的隐秘母港，停泊着大量改装过的武装商船。" },
+
+            { id: "acheron", system: "acheron_sys", isParent: true, name: "阿卡戎自由港", faction: "自治空间站", region: "柯伊伯带", color: "#ffeb3b", rgb: "255, 235, 59", x: 36.07, y: 33.40, sizeScale: 0.8, desc: "游离于联盟管辖之外的巨型空间站。这里是全星系最大的黑市，情报贩子、赏金猎人的天堂。" },
+            { id: "acheron_docks", system: "acheron_sys", isParent: false, name: "走私船坞", faction: "自治空间站", region: "柯伊伯带", color: "#ffeb3b", rgb: "255, 235, 59", x: 34.8, y: 34.1, sizeScale: 0.4, desc: "黑市交易的核心集散地，每天都有无数来路不明的货物在此吞吐。" },
+            { id: "acheron_casino", system: "acheron_sys", isParent: false, name: "霓虹赌场", faction: "自治空间站", region: "柯伊伯带", color: "#ffeb3b", rgb: "255, 235, 59", x: 37.7, y: 32.5, sizeScale: 0.4, desc: "销金窟。在这里，你可以用黑血原矿换取任何东西，包括人命。" },
+
+            { id: "mining_zone", system: "mining_sys", isParent: true, name: "核心矿区", faction: "外环", region: "柯伊伯带", color: "#f44336", rgb: "244, 67, 54", x: 65.32, y: 34.68, sizeScale: 0.9, desc: "位于星系边缘的高危矿区。环境恶劣，辐射极高，星尘病感染率居高不下，也是各方势力争夺最激烈的绞肉机。" },
+            { id: "refinery", system: "mining_sys", isParent: false, name: "黑血精炼厂", faction: "外环", region: "柯伊伯带", color: "#f44336", rgb: "244, 67, 54", x: 66.8, y: 34.7, sizeScale: 0.5, desc: "提炼高纯度 C-62 的巨型工厂，常年喷吐着幽蓝色的辐射废气。" },
+            { id: "slag_pit", system: "mining_sys", isParent: false, name: "废渣填埋场", faction: "外环", region: "柯伊伯带", color: "#f44336", rgb: "244, 67, 54", x: 65.3, y: 36.2, sizeScale: 0.4, desc: "堆放剧毒矿渣的地方，也是底层矿工们苟延残喘的贫民窟。" },
+
+            { id: "eris", system: "eris_sys", isParent: true, name: "阋神星", faction: "无阵营 / 独立势力", region: "柯伊伯带", color: "#9e9e9e", rgb: "158, 158, 158", x: 70.92, y: 55.60, sizeScale: 0.6, desc: "太阳系已知最边缘的矮行星，极度寒冷，几乎没有生命迹象。" },
+            { id: "dysnomia", system: "eris_sys", isParent: false, name: "阋卫一", faction: "无阵营 / 独立势力", region: "柯伊伯带", color: "#9e9e9e", rgb: "158, 158, 158", x: 70.9, y: 54.4, sizeScale: 0.4, desc: "传说中隐藏着旧时代遗物的神秘卫星，但去过的人都没能回来。" }
         ];
+
+        // 💥 基地与国家数据库 (已严格按英文 A-Z 排序)
+        const planetLocationsDB = {
+            "地球": ["Australia (澳大利亚)", "Brazil (巴西)", "China (中国)", "EU (欧盟)", "India (印度)", "Japan (日本)", "Russia (俄罗斯)", "South Africa (南非)", "USA (美国)"],
+            "月球": ["Apollo Site (阿波罗遗址)", "Selene Base (塞勒涅基地)", "Tranquility Port (宁静海太空港)", "Tycho Base (第谷基地)"],
+            "火星": ["Hellas Planitia (希腊平原哨站)", "Olympus City (奥林帕斯城)", "Utopia Planitia (乌托邦平原)", "Valles Marineris (水手谷矿区)"],
+            "水星": ["Caloris Basin (卡洛里斯盆地)", "Corona Forge (日冕锻造站)"],
+            "金星": ["Aphrodite Terra (阿佛洛狄忒高地)", "Ishtar Cloud City (伊什塔尔云城)"],
+            "谷神星": ["Ceres Prime (谷神星主站)", "Dawn Farm (曙光农场)", "Piazzi Crater (皮亚齐陨石坑)"],
+            "灶神星": ["Armory Prime (军火库主站)", "Rheasilvia (雷亚西尔维亚)"],
+            "智神星": ["Athena Hub (雅典娜枢纽)"],
+            "婚神星": ["Abandoned Mine (废弃采矿站)"],
+            "木星": ["Great Red Spot Obs (大红斑观测站)"],
+            "木卫一": ["Loki Patera (洛基火山口)", "Pele Station (佩莱火山站)"],
+            "木卫二": ["Conamara Chaos (康纳马拉混沌)", "Sub-Ice City (冰下城)"],
+            "木卫三": ["Galileo Regio (伽利略区)", "Mercenary Hub (佣兵集散中心)"],
+            "木卫四": ["Valhalla (瓦尔哈拉多环区)"],
+            "土星": ["Cassini Obs (卡西尼观测站)"],
+            "泰坦星": ["Huygens Station (惠更斯深潜站)", "Kraken Mare (克拉肯海)", "Titan Pulse HQ (泰坦星脉总部)"],
+            "土卫二": ["Tiger Stripes (虎皮条纹区)"],
+            "土卫八": ["Cassini Regio (卡西尼区)"],
+            "土卫五": ["Rhea Prime (雷亚主城)"],
+            "天王星": ["Atmospheric Station (大气采集站)"],
+            "天卫三": ["Titania Outpost (提泰妮娅哨站)"],
+            "天卫四": ["Oberon Forge (奥伯龙兵工厂)"],
+            "天卫一": ["Ariel Med-Bay (艾瑞尔医疗站)"],
+            "海王星": ["Neptune Orbital (海王星轨道站)"],
+            "海卫一": ["Triton Blacksite (特里同黑牢)"],
+            "海卫八": ["Proteus Camp (普罗透斯营地)"],
+            "海卫二": ["Nereid Jump-Point (涅瑞伊得跳板)"],
+            "冥王星": ["Sputnik Planitia (斯普特尼克平原)", "Tombaugh Regio (汤博区)"],
+            "冥卫一": ["Charon Pirate Port (卡戎海盗港)", "Mordor Macula (莫多尔斑)"],
+            "阿卡戎自由港": ["Core Market (核心交易区)", "Neon Casino (霓虹赌场)", "Smuggler's Dock (走私船坞)"],
+            "核心矿区": ["Mine Zero (零号矿坑)", "Refinery (黑血精炼厂)", "Slag Pit (废渣填埋场)"],
+            "阋神星": ["Eris Prime (阋神星主站)"],
+            "阋卫一": ["Relic Site (遗物发掘场)"]
+        };
+
+        // 💥 动态填充基地/国家下拉栏
+        window.populateBaseSelect = function(planetFullName, prefix) {
+            const planetName = planetFullName.split(' ')[0]; // 提取中文名，如 "地球"
+            const selectEl = document.getElementById(`${prefix}-hometown-base`);
+            const customWrapper = document.getElementById(`${prefix}-hometown-custom-wrapper`);
+            const baseWrapper = document.getElementById(`${prefix}-hometown-base-wrapper`);
+            
+            if (!selectEl) return;
+
+            let options = planetLocationsDB[planetName] || [];
+            
+            let html = `<option value="" disabled selected>-- 选择区域/基地 --</option>`;
+            options.forEach(opt => {
+                html += `<option value="${opt}">${opt}</option>`;
+            });
+            html += `<option value="custom">-- 其他 / 自定义 --</option>`;
+            
+            selectEl.innerHTML = html;
+            selectEl.value = "";
+            
+            baseWrapper.style.display = 'flex';
+            customWrapper.style.display = 'none';
+        };
+
+        // 💥 监听下拉栏，如果选了自定义，就显示输入框
+        window.checkCustomBase = function(prefix) {
+            const selectEl = document.getElementById(`${prefix}-hometown-base`);
+            const customWrapper = document.getElementById(`${prefix}-hometown-custom-wrapper`);
+            if (selectEl.value === 'custom') {
+                customWrapper.style.display = 'flex';
+            } else {
+                customWrapper.style.display = 'none';
+            }
+        };
 
         let currentSelectedPlanet = null;
         let arEngine = null;
+        window.hometownTargetInput = null; // 💥 新增：记录当前是哪个输入框在呼叫星图
 
-        // 2. 打开星图 (修复尺寸塌陷问题)
-        window.openStarMap = function() {
+        // 2. 打开星图 (支持接收目标输入框 ID)
+        window.openStarMap = function(targetInputId = null) {
+            window.hometownTargetInput = targetInputId; // 记录呼叫来源
+            
             const modal = document.getElementById('starMapModal');
             document.getElementById('planet-detail-panel').classList.remove('active');
             
-            // 💥 核心修复 1：强制先让弹窗显示出来，让浏览器计算出真实的宽高
             modal.style.display = 'flex';
             modal.classList.add('active');
             
-            // 💥 核心修复 2：延迟 100 毫秒，等容器有了真实的宽高后再启动引擎
             setTimeout(() => {
                 if (!arEngine) arEngine = new ARMapEngine();
                 arEngine.boot();
@@ -13574,7 +14191,6 @@ if(!title || !parentFaction || !content) {
             modal.classList.remove('active');
             document.getElementById('planet-detail-panel').classList.remove('active');
             
-            // 延迟隐藏，等待 CSS 动画结束
             setTimeout(() => { modal.style.display = 'none'; }, 300);
             
             if (arEngine) arEngine.shutdown();
@@ -13590,33 +14206,49 @@ if(!title || !parentFaction || !content) {
             document.getElementById('planet-desc').innerText = planet.desc;
             
             const btn = document.getElementById('btn-set-hometown');
-            btn.style.background = `rgba(${hexToRgb(planet.color)}, 0.1)`;
-            btn.style.borderColor = planet.color;
-            btn.style.color = planet.color;
+            
+            // 💥 核心逻辑：只有当星图是被输入框呼叫出来时，才显示【设为籍贯】按钮
+            if (window.hometownTargetInput) {
+                btn.style.display = 'block';
+                btn.style.background = `rgba(${hexToRgb(planet.color)}, 0.1)`;
+                btn.style.borderColor = planet.color;
+                btn.style.color = planet.color;
+            } else {
+                btn.style.display = 'none';
+            }
 
             document.getElementById('planet-detail-panel').classList.add('active');
         };
 
         // 5. 设为籍贯按钮逻辑
         document.getElementById('btn-set-hometown').addEventListener('click', () => {
-            if (currentSelectedPlanet) {
-                const hometownInput = document.getElementById('f-hometown');
-                if (hometownInput) {
-                    hometownInput.value = currentSelectedPlanet.name;
-                    hometownInput.style.height = 'auto';
-                    hometownInput.style.height = hometownInput.scrollHeight + 'px';
-                    const factionSelect = document.getElementById('f-faction');
+            if (currentSelectedPlanet && window.hometownTargetInput) {
+                const planetInput = document.getElementById(window.hometownTargetInput);
+                if (planetInput) {
+                    // 填入星球名字
+                    planetInput.value = currentSelectedPlanet.name;
+                    
+                    // 💥 触发下拉框更新
+                    const prefix = window.hometownTargetInput.startsWith('f-') ? 'f' : 'h';
+                    populateBaseSelect(currentSelectedPlanet.name, prefix);
+                    
+                    // 智能联动阵营
+                    let factionSelectId = prefix === 'f' ? 'f-faction' : 'h-faction';
+                    const factionSelect = document.getElementById(factionSelectId);
+                    
                     if (factionSelect && factionSelect.value === "") {
                         for (let i = 0; i < factionSelect.options.length; i++) {
                             if (factionSelect.options[i].value.includes(currentSelectedPlanet.faction.split(' ')[0])) {
                                 factionSelect.value = factionSelect.options[i].value;
-                                factionSelect.dispatchEvent(new Event('change')); break;
+                                factionSelect.dispatchEvent(new Event('change')); 
+                                break;
                             }
                         }
                     }
                 }
+                
                 closeStarMap();
-                SysModal.alert(`已将您的籍贯设定为：【${currentSelectedPlanet.name}】`, "📍 导航坐标已锁定");
+                SysModal.alert(`已锁定星球：【${currentSelectedPlanet.name}】\n请在表单中继续选择具体的国家或基地。`, "导航坐标已锁定");
             }
         });
 
@@ -13638,7 +14270,7 @@ if(!title || !parentFaction || !content) {
                 this.mCanvas = document.getElementById('map-canvas');
                 this.tCtx = this.tCanvas.getContext('2d');
                 this.bCtx = this.bCanvas.getContext('2d');
-                this.mCtx = this.mCanvas.getContext('2d', { alpha: true }); // 💥 开启透明通道
+                this.mCtx = this.mCanvas.getContext('2d', { alpha: true }); 
                 
                 this.bootComplete = false;
                 this.transitAnimId = null;
@@ -13652,13 +14284,16 @@ if(!title || !parentFaction || !content) {
                 this.dustBuckets = [[], [], []];
                 this.bucketAlphas = [0.2, 0.4, 0.6];
                 
-                this.cam = { x: 0, y: 0, zoom: 0.8 };
+                this.cam = { x: 0, y: 0, zoom: 0.6 }; // 💥 视野拉远，一览众山小
                 this.vel = { x: 0, y: 0 };
                 this.isDragging = false;
                 this.lastMouse = { x: 0, y: 0 };
                 this.clickStartPos = { x: 0, y: 0 };
                 this.hoveredNode = null;
-                this.activeRoute = [];
+                
+                // 💥 核心修改：用单一的 selectedNode 替代原本复杂的 activeRoute 数组
+                this.selectedNode = null; 
+                
                 this.globalMouseWorldX = 0;
                 this.globalMouseWorldY = 0;
 
@@ -13666,10 +14301,14 @@ if(!title || !parentFaction || !content) {
                 this.generateSprites();
                 this.generateUniverse();
                 this.bindEvents();
-            }
 
+                this.cam = { x: 0, y: 0, zoom: 0.6 }; 
+                this.targetZoom = 0.6; // 💥 新增：目标缩放率（用于丝滑缓冲）
+                this.zoomMouseX = 0;   // 💥 新增：鼠标X坐标（用于定点聚焦）
+                this.zoomMouseY = 0;   // 💥 新增：鼠标Y坐标
+            }
+t
             resize() {
-                // 💥 核心修复 3：加入兜底机制，如果容器宽度为 0，则使用屏幕宽度
                 const w = this.container.clientWidth || window.innerWidth;
                 const h = this.container.clientHeight || window.innerHeight;
                 this.tCanvas.width = this.bCanvas.width = this.mCanvas.width = w;
@@ -13679,54 +14318,62 @@ if(!title || !parentFaction || !content) {
             boot() {
                 this.resize();
                 this.bootComplete = false;
-                this.activeRoute = [];
-                this.cam = { x: 0, y: 0, zoom: 0.8 };
+                this.selectedNode = null; 
+                this.cam = { x: 0, y: 0, zoom: 0.6 }; 
+                this.targetZoom = 0.6; // 💥 新增：重置时同步重置目标缩放率
                 
-                // Reset UI
-                document.getElementById('center-status').innerText = "SYS.NAVI // INITIATING JUMP...";
+                // 💥 修复：每次启动星图，先把图层显现出来
+                this.tCanvas.style.display = 'block';
+                this.bCanvas.style.display = 'block';
+                this.mCanvas.style.display = 'block';
+                
+                document.getElementById('center-status').innerText = "系统导航 // 正在启动跃迁...";
                 document.getElementById('center-status').style.opacity = 1;
                 document.getElementById('glass-effects').classList.remove('active');
                 document.getElementById('ar-reticle').classList.remove('active');
                 document.getElementById('hud-overlay').classList.remove('active');
+
+
                 
-                // 💥 终极修复：直接操作 style.opacity，无视 HTML 里的内联样式死锁！
                 this.mCanvas.style.opacity = 0; 
                 this.tCanvas.style.opacity = 1;
                 this.bCanvas.style.opacity = 1;
 
-                // 1. Start Hyperspace
                 this.initTransit();
                 this.renderTransit();
 
-                // 2. Choreography
                 setTimeout(() => { this.isDecelerating = true; }, 500); 
                 
                 setTimeout(() => {
-                    document.getElementById('center-status').innerText = "INITIALIZING AR MAP...";
+                    document.getElementById('center-status').innerText = "正在初始化全息星图...";
                     this.binaryActive = true;
                     this.renderBinary();
                     document.getElementById('glass-effects').classList.add('active');
                 }, 1200); 
 
                 setTimeout(() => {
-                    // 💥 终极修复：直接操作 style.opacity = 1，强制让画布显形！
                     this.mCanvas.style.opacity = 1;
                     this.tCanvas.style.opacity = 0;
+                    // 💥 增加这一句，彻底释放底层节点
+                    setTimeout(() => { this.tCanvas.style.display = 'none'; }, 500);
                 }, 1800); 
 
                 setTimeout(() => {
                     document.getElementById('center-status').style.opacity = 0;
                     this.bCanvas.style.opacity = 0;
+                    // 💥 增加这一句，彻底释放底层节点
+                    setTimeout(() => { this.bCanvas.style.display = 'none'; }, 500);
+                    
                     document.getElementById('hud-overlay').classList.add('active');
                     document.getElementById('ar-reticle').classList.add('active');
-                }, 2500); 
+                }, 2500);
 
                 setTimeout(() => {
                     this.bootComplete = true;
                     cancelAnimationFrame(this.transitAnimId);
                     this.binaryActive = false;
                     cancelAnimationFrame(this.binaryAnimId);
-                    this.renderMap(); // Start map loop
+                    this.renderMap(); 
                 }, 3500);
             }
 
@@ -13749,7 +14396,6 @@ if(!title || !parentFaction || !content) {
                         speed: 0.001 + Math.random() * 0.002, phase: Math.random() * Math.PI * 2 
                     });
                 }
-                
                 const fontSize = 24;
                 this.drops = [];
                 for(let x = 0; x < Math.floor(w / fontSize); x++) this.drops[x] = Math.random() * -100;
@@ -13789,7 +14435,7 @@ if(!title || !parentFaction || !content) {
                 const w = this.bCanvas.width; const h = this.bCanvas.height;
                 const fontSize = 24;
                 
-                this.bCtx.clearRect(0, 0, w, h); // 💥 修复：使用 clearRect 保持透明
+                this.bCtx.clearRect(0, 0, w, h); 
                 this.bCtx.fillStyle = '#00e5ff';
                 this.bCtx.font = fontSize + "px 'JetBrains Mono', monospace";
                 this.bCtx.textAlign = 'center';
@@ -13806,14 +14452,12 @@ if(!title || !parentFaction || !content) {
                 this.spriteCanvas.width = 2048; this.spriteCanvas.height = 256; 
                 const sCtx = this.spriteCanvas.getContext('2d', { alpha: true });
 
-                // 💥 升级：更丰富的星云色彩（青蓝、深紫、洋红、翠绿）
                 const nebulaColors =[ {r:0,g:150,b:255}, {r:120,g:50,b:255}, {r:255,g:50,b:150}, {r:0,g:255,b:100} ];
                 nebulaColors.forEach((c, i) => {
                     let cx = (i * 256) + 128; let cy = 128;
                     for(let puff=0; puff<4; puff++) {
                         let px = cx + (Math.random()*80 - 40); let py = cy + (Math.random()*80 - 40);
                         let grad = sCtx.createRadialGradient(px, py, 0, px, py, 120);
-                        // 💥 升级：更柔和的多级渐变，模拟气体层次
                         grad.addColorStop(0, `rgba(${c.r}, ${c.g}, ${c.b}, 0.5)`);
                         grad.addColorStop(0.4, `rgba(${c.r}, ${c.g}, ${c.b}, 0.15)`);
                         grad.addColorStop(1, 'transparent'); 
@@ -13822,13 +14466,13 @@ if(!title || !parentFaction || !content) {
                 });
 
                 this.starClasses = [
-                    { class: 'O [BLUE GIANT]', core: '#e6f0ff', glow: '100, 160, 255', prob: 0.05, size: 3.5 },
-                    { class: 'A [MAIN SEQ]', core: '#ffffff', glow: '255, 255, 255', prob: 0.15, size: 2.0 },
-                    { class: 'G [YELLOW DWARF]', core: '#fff9e6', glow: '255, 200, 50', prob: 0.30, size: 1.5 },
-                    { class: 'M [RED DWARF]', core: '#ffccbb', glow: '255, 80, 80', prob: 0.40, size: 1.0 },
-                    { class: 'ANOMALY [PULSAR]', core: '#f2e6ff', glow: '200, 80, 255', prob: 0.10, size: 2.5 }
+                    { class: 'O型 [蓝巨星]', core: '#e6f0ff', glow: '100, 160, 255', prob: 0.05, size: 3.5 },
+                    { class: 'A型 [主序星]', core: '#ffffff', glow: '255, 255, 255', prob: 0.15, size: 2.0 },
+                    { class: 'G型 [黄矮星]', core: '#fff9e6', glow: '255, 200, 50', prob: 0.30, size: 1.5 },
+                    { class: 'M型 [红矮星]', core: '#ffccbb', glow: '255, 80, 80', prob: 0.40, size: 1.0 },
+                    { class: '异常 [脉冲星]', core: '#f2e6ff', glow: '200, 80, 255', prob: 0.10, size: 2.5 }
                 ];
-
+                
                 this.starClasses.forEach((st, i) => {
                     let cx = 768 + (i * 256) + 128; let cy = 128; 
                     let grad = sCtx.createRadialGradient(cx, cy, 0, cx, cy, 128);
@@ -13841,11 +14485,10 @@ if(!title || !parentFaction || !content) {
             }
 
             generateUniverse() {
-                // 💥 性能优化：探测是否为手机端
                 const isMobile = window.innerWidth <= 768;
-                const dustCount = isMobile ? 500 : 2500; // 手机端砍掉 80% 尘埃
-                const cloudCount = isMobile ? 20 : 100;  // 手机端砍掉 80% 星云
-                const starCount = isMobile ? 150 : 500;  // 手机端砍掉 70% 背景星
+                const dustCount = isMobile ? 500 : 2500; 
+                const cloudCount = isMobile ? 20 : 100;  
+                const starCount = isMobile ? 150 : 500;  
 
                 for(let i=0; i<dustCount; i++) {
                     let bucketIdx = Math.floor(Math.random() * 3);
@@ -13873,13 +14516,36 @@ if(!title || !parentFaction || !content) {
 
                 planetsDB.forEach(p => {
                     this.tacticalNodes.push({
-                        isPlanetDB: true, planetData: p,
+                        isPlanetDB: true, 
+                        planetData: p,
+                        system: p.system, // 记录所属星系
+                        isParent: p.isParent, // 记录是否为主星
                         x: (p.x - 50) / 50 * (this.WORLD_SIZE / 2), 
                         y: (p.y - 50) / 50 * (this.WORLD_SIZE / 2),
                         z: 1.0, 
-                        baseSize: 10, typeIdx: 0, classStr: p.faction, name: p.name,
-                        orbitals: 2, isMajor: true, customColor: p.color, customRgb: p.rgb
+                        baseSize: 10 * (p.sizeScale || 1.0), // 卫星体积缩小
+                        typeIdx: 0, classStr: p.faction, name: p.name,
+                        orbitals: p.isParent ? 2 : 0, // 只有主星有轨道环
+                        isMajor: true, customColor: p.color, customRgb: p.rgb
                     });
+                });
+
+                // 💥 核心新增：生成星系内部的专属连线
+                const systemGroups = {};
+                this.tacticalNodes.filter(n => n.isPlanetDB).forEach(n => {
+                    if (!systemGroups[n.system]) systemGroups[n.system] = [];
+                    systemGroups[n.system].push(n);
+                });
+
+                Object.values(systemGroups).forEach(group => {
+                    const parent = group.find(n => n.isParent);
+                    if (parent) {
+                        group.forEach(child => {
+                            if (child !== parent) {
+                                this.telemetryLines.push({ p1: parent, p2: child, isSystemLine: true, system: parent.system });
+                            }
+                        });
+                    }
                 });
 
                 const prefixes =["SYS", "ARES", "OBS", "VEGA", "LYRA", "ECHO"];
@@ -13898,17 +14564,17 @@ if(!title || !parentFaction || !content) {
                     });
                 }
 
-                const majorNodes = this.tacticalNodes.filter(s => s.isMajor);
+                // 生成背景随机连线
+                const majorNodes = this.tacticalNodes.filter(s => s.isMajor && s.isParent); // 只连主星
                 majorNodes.forEach(node => {
                     let nearby = majorNodes.map(s => ({ node: s, dist: Math.hypot(s.x - node.x, s.y - node.y) }))
-                        .filter(s => s.dist > 150 && s.dist < 1000).sort((a, b) => a.dist - b.dist).slice(0, 2);
+                        .filter(s => s.dist > 200 && s.dist < 1500).sort((a, b) => a.dist - b.dist).slice(0, 2);
                     nearby.forEach(n => this.telemetryLines.push({ p1: node, p2: n.node }));
                 });
             }
 
             bindEvents() {
                 const tooltip = document.getElementById('tactical-tooltip');
-                const navStatus = document.getElementById('nav-status');
 
                 window.addEventListener('resize', () => {
                     if (document.getElementById('starMapModal').classList.contains('active')) this.resize();
@@ -13929,9 +14595,12 @@ if(!title || !parentFaction || !content) {
                     if ((dx * dx + dy * dy) < 25) this.handleMapClick(e.clientX, e.clientY);
                 });
 
+                // 右键取消锁定
                 this.mCanvas.addEventListener('contextmenu', e => {
                     e.preventDefault(); if(!this.bootComplete) return;
-                    this.activeRoute = []; this.updateNavHUD();
+                    this.selectedNode = null; 
+                    document.getElementById('planet-detail-panel').classList.remove('active');
+                    this.updateNavHUD();
                 });
 
                 this.mCanvas.addEventListener('mousemove', e => {
@@ -13973,35 +14642,44 @@ if(!title || !parentFaction || !content) {
                         tooltip.style.display = 'block'; tooltip.style.left = (e.clientX + 30) + 'px'; tooltip.style.top = (e.clientY + 30) + 'px';
                         document.getElementById('tt-name').innerText = this.hoveredNode.name; 
                         document.getElementById('tt-class').innerText = this.hoveredNode.classStr; 
-                        document.getElementById('tt-planets').innerText = this.hoveredNode.orbitals;
                         
-                        if (this.hoveredNode.customColor) {
-                            document.getElementById('tt-name').style.color = this.hoveredNode.customColor;
-                            tooltip.style.borderColor = this.hoveredNode.customColor;
+                        if (this.hoveredNode.isPlanetDB) {
+                            document.getElementById('tt-region').innerText = this.hoveredNode.planetData.region || '未知星区';
+                            document.getElementById('tt-type').innerText = this.hoveredNode.isParent ? '主星' : '卫星/设施';
                         } else {
-                            document.getElementById('tt-name').style.color = '#fff';
-                            tooltip.style.borderColor = '#00e5ff';
+                            document.getElementById('tt-region').innerText = '深空未知区域';
+                            document.getElementById('tt-type').innerText = '未命名天体';
                         }
 
-                        if (this.activeRoute.includes(this.hoveredNode)) {
+                        if (this.selectedNode === this.hoveredNode) {
                             tooltip.classList.add('in-route');
-                            document.getElementById('tt-status').innerText = `NAV LOCKED (WP-${this.activeRoute.indexOf(this.hoveredNode) + 1})`;
+                            document.getElementById('tt-status').innerText = `目标已锁定`;
                             document.getElementById('tt-status').style.color = "#ffb700";
                         } else {
                             tooltip.classList.remove('in-route');
-                            document.getElementById('tt-status').innerText = this.hoveredNode.classStr.includes("PULSAR") ? "CRITICAL" : "STABLE";
-                            document.getElementById('tt-status').style.color = this.hoveredNode.classStr.includes("PULSAR") ? "#ff3333" : "#00e5ff";
+                            document.getElementById('tt-status').innerText = this.hoveredNode.classStr.includes("脉冲星") ? "临界" : "稳定";
+                            document.getElementById('tt-status').style.color = this.hoveredNode.classStr.includes("脉冲星") ? "#ff3333" : "#00e5ff";
                         }
                         this.mCanvas.style.cursor = 'crosshair';
                     } else { tooltip.style.display = 'none'; this.mCanvas.style.cursor = 'grab'; }
                 });
 
+                // --- 💥 重写 PC 端滚轮：定点聚焦缩放 ---
                 this.mCanvas.addEventListener('wheel', e => {
                     if(!this.bootComplete) return;
-                    this.cam.zoom = Math.max(0.2, Math.min(this.cam.zoom * (e.deltaY > 0 ? 0.9 : 1.1), 4.5));
-                });
+                    e.preventDefault(); // 阻止网页默认滚动
+                    
+                    // 1. 记录鼠标相对于画布中心的当前位置
+                    const rect = this.mCanvas.getBoundingClientRect();
+                    this.zoomMouseX = e.clientX - rect.left - this.mCanvas.width / 2;
+                    this.zoomMouseY = e.clientY - rect.top - this.mCanvas.height / 2;
 
-                // 💥 --- 手机端触摸事件 (单指拖拽 + 双指缩放) --- 💥
+                    // 2. 赋予缩放目标值（加大缩放幅度，制造更爽快的推拉感）
+                    const zoomFactor = e.deltaY > 0 ? 0.75 : 1.35; 
+                    this.targetZoom = Math.max(0.15, Math.min(this.targetZoom * zoomFactor, 5.0));
+                }, { passive: false });
+
+                // --- 手机端触摸事件 ---
                 let initialPinchDist = null;
 
                 this.mCanvas.addEventListener('touchstart', e => {
@@ -14019,12 +14697,7 @@ if(!title || !parentFaction || !content) {
 
                 this.mCanvas.addEventListener('touchmove', e => {
                     if(!this.bootComplete) return;
-                    
-                    // 💥 核心修复：先礼貌地问浏览器“现在还能不能取消滚动？”，能取消再阻止。
-                    // 这样既能完美锁死网页背景，又彻底消灭了控制台的黄色警告！
-                    if (e.cancelable) {
-                        e.preventDefault(); 
-                    }
+                    if (e.cancelable) e.preventDefault(); 
 
                     if (e.touches.length === 1 && this.isDragging) {
                         let dx = e.touches[0].clientX - this.lastMouse.x;
@@ -14037,10 +14710,11 @@ if(!title || !parentFaction || !content) {
                     } else if (e.touches.length === 2 && initialPinchDist) {
                         let currentDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                         let zoomFactor = currentDist / initialPinchDist;
-                        this.cam.zoom = Math.max(0.2, Math.min(this.cam.zoom * zoomFactor, 4.5));
+                        this.cam.zoom = Math.max(0.15, Math.min(this.cam.zoom * zoomFactor, 5.0));
+                        this.targetZoom = this.cam.zoom; // 💥 新增：同步目标值，防止松手后回弹
                         initialPinchDist = currentDist;
                     }
-                }, {passive: false}); // 这里的 passive: false 必须保留，它是允许阻止滚动的通行证
+                }, {passive: false}); 
 
                 this.mCanvas.addEventListener('touchend', e => {
                     if(!this.bootComplete) return;
@@ -14056,8 +14730,8 @@ if(!title || !parentFaction || !content) {
                 });
             }
 
+            // 💥 核心修复：合并并重构点击逻辑，精准锁定目标
             handleMapClick(clientX, clientY) {
-                // 💥 核心修复：点击时实时计算命中的星球，兼容 PC 和手机
                 const rect = this.mCanvas.getBoundingClientRect();
                 const mx = clientX - rect.left; 
                 const my = clientY - rect.top;
@@ -14076,62 +14750,55 @@ if(!title || !parentFaction || !content) {
                     let screenX = px * this.cam.zoom + cx;
                     let screenY = py * this.cam.zoom + cy;
                     let dx = screenX - mx; let dy = screenY - my; 
-                    // 手机端点击判定范围稍微放大一点，防止点不中
                     let thresh = (node.baseSize * node.z + 25) * this.cam.zoom; 
                     
                     if ((dx * dx + dy * dy) < (thresh * thresh)) { clickedNode = node; break; }
                 }
 
                 if (clickedNode) {
+                    this.selectedNode = clickedNode; // 锁定目标
                     if (clickedNode.isPlanetDB) {
                         showPlanetDetail(clickedNode.planetData);
-                    }
-                    
-                    const nodeIndex = this.activeRoute.indexOf(clickedNode);
-                    if (nodeIndex !== -1) { 
-                        if (nodeIndex === this.activeRoute.length - 1) this.activeRoute.pop(); 
                     } else {
-                        this.activeRoute.push(clickedNode);
+                        document.getElementById('planet-detail-panel').classList.remove('active');
                     }
-                    this.updateNavHUD();
                 } else {
+                    this.selectedNode = null; // 点击空白处取消锁定
                     document.getElementById('planet-detail-panel').classList.remove('active');
                 }
-            }
-
-            handleMapClick() {
-                if (this.hoveredNode) {
-                    if (this.hoveredNode.isPlanetDB) {
-                        showPlanetDetail(this.hoveredNode.planetData);
-                    }
-                    
-                    const nodeIndex = this.activeRoute.indexOf(this.hoveredNode);
-                    if (nodeIndex !== -1) { if (nodeIndex === this.activeRoute.length - 1) this.activeRoute.pop(); } 
-                    else this.activeRoute.push(this.hoveredNode);
-                    this.updateNavHUD();
-                } else {
-                    document.getElementById('planet-detail-panel').classList.remove('active');
-                }
+                this.updateNavHUD();
             }
 
             updateNavHUD() {
                 const navStatus = document.getElementById('nav-status');
-                if (this.activeRoute.length === 0) { navStatus.innerText = "NAV: STANDBY"; navStatus.style.color = "rgba(255, 183, 0, 0.5)"; return; }
-                if (this.activeRoute.length === 1) { navStatus.innerText = `NAV: WP-1 [${this.activeRoute[0].name.split('-')[0]}] // AWAITING JUMP COORD`; navStatus.style.color = "#ffb700"; return; }
-                let totalDist = 0;
-                for (let i = 0; i < this.activeRoute.length - 1; i++) totalDist += Math.hypot(this.activeRoute[i].x - this.activeRoute[i+1].x, this.activeRoute[i].y - this.activeRoute[i+1].y);
-                navStatus.innerText = `NAV: ${this.activeRoute.length} WAYPOINTS // DIST: ${(totalDist * 2.5).toLocaleString(undefined, {maximumFractionDigits: 0})} LY`;
-                navStatus.style.color = "#ffb700";
+                if (!this.selectedNode) { 
+                    navStatus.innerText = "导航: 待命"; 
+                    navStatus.style.color = "rgba(255, 183, 0, 0.5)"; 
+                } else {
+                    navStatus.innerText = `导航: 目标已锁定 [${this.selectedNode.name}]`; 
+                    navStatus.style.color = "#ffb700"; 
+                }
             }
 
             renderMap() {
                 if (!this.bootComplete) return;
                 this.mapAnimId = requestAnimationFrame(() => this.renderMap());
 
+                // --- 💥 1. 丝滑阻尼推拉镜头 + 鼠标定点聚焦 ---
+                if (Math.abs(this.targetZoom - this.cam.zoom) > 0.001) {
+                    const oldZoom = this.cam.zoom;
+                    this.cam.zoom += (this.targetZoom - this.cam.zoom) * 0.12; // 12%的顺滑阻尼
+
+                    // 核心数学魔法：在缩放的同时反向偏移相机，把鼠标瞄准的星球死死“钉”在屏幕上
+                    this.cam.x += this.zoomMouseX / this.cam.zoom - this.zoomMouseX / oldZoom;
+                    this.cam.y += this.zoomMouseY / this.cam.zoom - this.zoomMouseY / oldZoom;
+                }
+
+                // --- 💥 2. 丝滑拖拽阻尼 (保持你原来的) ---
                 if (!this.isDragging) { this.cam.x += this.vel.x; this.cam.y += this.vel.y; this.vel.x *= 0.92; this.vel.y *= 0.92; }
 
-                document.getElementById('hud-coords').innerText = `SYS.X: ${(-this.cam.x).toFixed(1).padStart(7, '0')} // SYS.Y: ${(-this.cam.y).toFixed(1).padStart(7, '0')}`;
-                document.getElementById('hud-zoom').innerText = `ZOOM: ${this.cam.zoom.toFixed(2)}x`;
+                document.getElementById('hud-coords').innerText = `坐标.X: ${(-this.cam.x).toFixed(1).padStart(7, '0')} // 坐标.Y: ${(-this.cam.y).toFixed(1).padStart(7, '0')}`;
+                document.getElementById('hud-zoom').innerText = `缩放倍率: ${this.cam.zoom.toFixed(2)}x`;
 
                 this.mCtx.clearRect(0, 0, this.mCanvas.width, this.mCanvas.height);
                 
@@ -14172,52 +14839,60 @@ if(!title || !parentFaction || !content) {
                 this.mCtx.globalCompositeOperation = 'source-over'; 
                 this.mCtx.globalAlpha = 1.0;
 
-                // 3. 渲染战术连线
-                this.mCtx.strokeStyle = 'rgba(0, 229, 255, 0.2)'; this.mCtx.lineWidth = 1 / this.cam.zoom; this.mCtx.setLineDash([8 / this.cam.zoom, 12 / this.cam.zoom]);
-                this.mCtx.beginPath();
+                // 2.5 💥 渲染星区轨道环
+                this.mCtx.lineWidth = 1.5 / this.cam.zoom;
+                const orbits = [
+                    { r: 200, color: 'rgba(0, 229, 255, 0.15)', name: '内环' },
+                    { r: 500, color: 'rgba(76, 175, 80, 0.15)', name: '小行星带' },
+                    { r: 900, color: 'rgba(255, 152, 0, 0.15)', name: '外环' },
+                    { r: 1300, color: 'rgba(244, 67, 54, 0.15)', name: '柯伊伯带' }
+                ];
+                orbits.forEach(orbit => {
+                    this.mCtx.beginPath();
+                    this.mCtx.arc(this.cam.x, this.cam.y, orbit.r, 0, Math.PI * 2);
+                    this.mCtx.strokeStyle = orbit.color;
+                    this.mCtx.setLineDash([10 / this.cam.zoom, 15 / this.cam.zoom]);
+                    this.mCtx.stroke();
+                    this.mCtx.setLineDash([]);
+                    
+                    // 在轨道环上写字
+                    this.mCtx.fillStyle = orbit.color;
+                    this.mCtx.font = `${12 / this.cam.zoom}px 'Orbitron', monospace`;
+                    this.mCtx.textAlign = 'center';
+                    this.mCtx.fillText(orbit.name, this.cam.x, this.cam.y - orbit.r - (8 / this.cam.zoom));
+                });
+                this.mCtx.textAlign = 'left'; // 恢复默认对齐方式
+
+                // 3. 渲染战术连线 (支持星系联动高亮)
+                this.mCtx.globalAlpha = 0.6; // 👈 新增这一行：开始画线前，把透明度降为 60%
+
                 this.telemetryLines.forEach(lane => {
                     let p1x = lane.p1.x + this.cam.x * lane.p1.z; let p1y = lane.p1.y + this.cam.y * lane.p1.z;
                     let p2x = lane.p2.x + this.cam.x * lane.p2.z; let p2y = lane.p2.y + this.cam.y * lane.p2.z;
-                    this.mCtx.moveTo(p1x | 0, p1y | 0); this.mCtx.lineTo(p2x | 0, p2y | 0);
-                });
-                this.mCtx.stroke(); this.mCtx.setLineDash([]);
-
-                // 4. 渲染导航路线
-                const time = Date.now();
-                if (this.activeRoute.length > 0) {
-                    this.mCtx.beginPath(); this.mCtx.strokeStyle = 'rgba(255, 183, 0, 0.4)'; this.mCtx.lineWidth = 2 / this.cam.zoom; this.mCtx.setLineDash([10 / this.cam.zoom, 10 / this.cam.zoom]);
-                    let lastNode = this.activeRoute[this.activeRoute.length - 1]; 
-                    this.mCtx.moveTo(lastNode.x + this.cam.x, lastNode.y + this.cam.y);
-                    if (this.hoveredNode && !this.activeRoute.includes(this.hoveredNode)) {
-                        this.mCtx.lineTo(this.hoveredNode.x + this.cam.x * this.hoveredNode.z, this.hoveredNode.y + this.cam.y * this.hoveredNode.z);
+                    
+                    let isHoveredSystem = this.hoveredNode && this.hoveredNode.system && this.hoveredNode.system === lane.system;
+                    
+                    this.mCtx.beginPath();
+                    if (isHoveredSystem) {
+                        this.mCtx.strokeStyle = lane.p1.customColor || '#00e5ff';
+                        this.mCtx.lineWidth = 1.2 / this.cam.zoom; 
+                        this.mCtx.setLineDash([]);
                     } else {
-                        this.mCtx.lineTo(this.globalMouseWorldX + this.cam.x, this.globalMouseWorldY + this.cam.y);
+                        this.mCtx.strokeStyle = lane.isSystemLine ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 229, 255, 0.1)'; 
+                        this.mCtx.lineWidth = 1 / this.cam.zoom; 
+                        this.mCtx.setLineDash([8 / this.cam.zoom, 12 / this.cam.zoom]);
                     }
-                    this.mCtx.stroke(); this.mCtx.setLineDash([]);
+                    this.mCtx.moveTo(p1x | 0, p1y | 0); this.mCtx.lineTo(p2x | 0, p2y | 0);
+                    this.mCtx.stroke();
+                });
 
-                    if (this.activeRoute.length > 1) {
-                        this.mCtx.beginPath(); this.mCtx.strokeStyle = 'rgba(255, 183, 0, 0.2)'; this.mCtx.lineWidth = 12 / this.cam.zoom;
-                        this.mCtx.moveTo(this.activeRoute[0].x + this.cam.x, this.activeRoute[0].y + this.cam.y); 
-                        for (let i = 1; i < this.activeRoute.length; i++) this.mCtx.lineTo(this.activeRoute[i].x + this.cam.x, this.activeRoute[i].y + this.cam.y); 
-                        this.mCtx.stroke();
-                        
-                        this.mCtx.beginPath(); this.mCtx.strokeStyle = '#ffb700'; this.mCtx.lineWidth = 3 / this.cam.zoom;
-                        this.mCtx.moveTo(this.activeRoute[0].x + this.cam.x, this.activeRoute[0].y + this.cam.y); 
-                        for (let i = 1; i < this.activeRoute.length; i++) this.mCtx.lineTo(this.activeRoute[i].x + this.cam.x, this.activeRoute[i].y + this.cam.y); 
-                        this.mCtx.stroke();
-                    }
+                this.mCtx.setLineDash([]);
+                this.mCtx.globalAlpha = 1.0; // 👈 新增这一行：线画完了，立刻把透明度恢复到 100%！
 
-                    this.mCtx.fillStyle = '#fff';
-                    for (let i = 0; i < this.activeRoute.length - 1; i++) {
-                        let p1 = this.activeRoute[i], p2 = this.activeRoute[i+1]; 
-                        let dx = p2.x - p1.x, dy = p2.y - p1.y, dist = Math.sqrt(dx*dx + dy*dy);
-                        let progress = ((time / 1000 * 300) % dist) / dist; 
-                        this.mCtx.beginPath(); this.mCtx.arc((p1.x + dx * progress) + this.cam.x, (p1.y + dy * progress) + this.cam.y, 3 / this.cam.zoom, 0, Math.PI*2); this.mCtx.fill();
-                    }
-                }
-
-                // 5. 渲染所有星体
-                const isMobile = window.innerWidth <= 768; // 💥 探测手机端
+                // 4. 渲染所有星体
+                const isMobile = window.innerWidth <= 768; 
+                const time = Date.now();
+                
                 this.mCtx.globalCompositeOperation = 'source-over'; 
                 
                 this.tacticalNodes.forEach(node => {
@@ -14236,23 +14911,44 @@ if(!title || !parentFaction || !content) {
                     
                     const alphaBase = (Math.sin((time % 100000) * 0.005 + node.x) * 0.2 + 0.8) * depthScale; 
                     const coreRgb = node.customRgb || (node.classStr.includes("PULSAR") ? "200,80,255" : "0,229,255");
-                    
-                    // 💥 性能优化：手机端只画 1 层光晕，电脑端画 4 层
-                    const glowLayers = isMobile ? 1 : 4;
-                    const glowSpread = node.isPlanetDB ? 8 * depthScale : 4 * depthScale; 
-                    for(let i = glowLayers; i >= 1; i--) {
+
+                    this.mCtx.globalAlpha = alphaBase; // 统一接管全局透明度闪烁
+
+                    // 💥 极致分流算法
+                    if (!node.isMajor) {
+                        // 💥 核心 3D 视觉欺骗：背景恒星距离极远，放大时体积不该成比例暴增！
+                        // 用 Math.sqrt 压制放大倍率，当你拉近镜头时，它们只会微微变大，从而产生深邃的 3D 纵深感
+                        let visualSize = currentSize / Math.sqrt(this.cam.zoom);
+
+                        if (visualSize < 1.2) {
+                            this.mCtx.fillStyle = `rgba(255, 255, 255, 0.8)`;
+                            this.mCtx.fillRect(px - visualSize, py - visualSize, visualSize * 2, visualSize * 2);
+                        } else {
+                            const spriteSize = visualSize * 10; 
+                            const sx = 768 + (node.typeIdx * 256);
+                            this.mCtx.drawImage(
+                                this.spriteCanvas,
+                                sx, 0, 256, 256, 
+                                px - spriteSize/2, py - spriteSize/2, spriteSize, spriteSize 
+                            );
+                        }
+                    } else {
+                        // 2. 主星与基地：需要自定义颜色，保留画圆，但降低重绘层数
+                        const glowLayers = isMobile ? 1 : 2; // 即使 PC 端 2 层也足够好看
+                        const glowSpread = node.isPlanetDB ? 8 * depthScale : 4 * depthScale; 
+                        for(let i = glowLayers; i >= 1; i--) {
+                            this.mCtx.beginPath();
+                            this.mCtx.arc(px, py, currentSize + (i * glowSpread), 0, Math.PI * 2);
+                            this.mCtx.fillStyle = `rgba(${coreRgb}, ${0.15 / i})`; 
+                            this.mCtx.fill();
+                        }
+
                         this.mCtx.beginPath();
-                        this.mCtx.arc(px, py, currentSize + (i * glowSpread), 0, Math.PI * 2);
-                        this.mCtx.fillStyle = `rgba(${coreRgb}, ${0.12 * alphaBase / i})`;
+                        this.mCtx.arc(px, py, currentSize, 0, Math.PI * 2);
+                        this.mCtx.fillStyle = '#ffffff';
                         this.mCtx.fill();
-                    }
 
-                    this.mCtx.beginPath();
-                    this.mCtx.arc(px, py, currentSize, 0, Math.PI * 2);
-                    this.mCtx.fillStyle = `rgba(255, 255, 255, ${depthScale})`;
-                    this.mCtx.fill();
-
-                    if (node.isMajor) {
+                        // 画轨道环
                         const ringRadius = currentSize + 12; 
                         this.mCtx.save();
                         this.mCtx.translate(px, py);
@@ -14283,6 +14979,20 @@ if(!title || !parentFaction || !content) {
                         this.mCtx.lineWidth = 1.5 / this.cam.zoom;
                         this.mCtx.stroke();
 
+                        // 💥 核心新增：如果该节点属于当前悬停的星系，给它画一个战术高亮框
+                        let isHoveredSystem = this.hoveredNode && this.hoveredNode.system && this.hoveredNode.system === node.system;
+                        if (isHoveredSystem && node !== this.hoveredNode) {
+                            this.mCtx.beginPath();
+                            // 💥 圈放大：从 10 改为 18，拉开与星球本体的距离
+                            this.mCtx.arc(0, 0, currentSize + (18 / this.cam.zoom), 0, Math.PI * 2);
+                            this.mCtx.strokeStyle = node.customColor || '#00e5ff';
+                            // 💥 线变细：从 2 降为 1.2
+                            this.mCtx.lineWidth = 1.2 / this.cam.zoom;
+                            this.mCtx.setLineDash([4 / this.cam.zoom, 4 / this.cam.zoom]);
+                            this.mCtx.stroke();
+                            this.mCtx.setLineDash([]);
+                        }
+
                         this.mCtx.restore();
                     }
 
@@ -14295,10 +15005,13 @@ if(!title || !parentFaction || !content) {
                     }
                 });
 
-                // 6. 画悬停选中的雷达准星
-                this.activeRoute.forEach((node, index) => {
+                // 5. 💥 渲染被锁定的目标 (Target Lock)
+                if (this.selectedNode) {
+                    let node = this.selectedNode;
                     let px = node.x + this.cam.x * node.z;
                     let py = node.y + this.cam.y * node.z;
+                    if (!node.isMajor) { px = wrap(px, wrapSize); py = wrap(py, wrapSize); }
+                    
                     let s = (node.baseSize * node.z) + (15 / this.cam.zoom); 
                     
                     this.mCtx.strokeStyle = '#ffb700'; this.mCtx.lineWidth = 2 / this.cam.zoom;
@@ -14307,15 +15020,17 @@ if(!title || !parentFaction || !content) {
                     this.mCtx.moveTo(px + s, py - s/2); this.mCtx.lineTo(px + s, py - s); this.mCtx.lineTo(px + s/2, py - s);
                     this.mCtx.moveTo(px - s, py + s/2); this.mCtx.lineTo(px - s, py + s); this.mCtx.lineTo(px - s/2, py + s);
                     this.mCtx.moveTo(px + s, py + s/2); this.mCtx.lineTo(px + s, py + s); this.mCtx.lineTo(px + s/2, py + s); this.mCtx.stroke();
-                    this.mCtx.fillStyle = '#ffb700'; this.mCtx.font = `bold ${10 / this.cam.zoom}px 'Orbitron', sans-serif`; this.mCtx.fillText(`WP-0${index+1}`, px + s + (5/this.cam.zoom), py - s);
+                    this.mCtx.fillStyle = '#ffb700'; this.mCtx.font = `bold ${10 / this.cam.zoom}px 'Orbitron', 'Microsoft YaHei', sans-serif`; 
+                    this.mCtx.fillText(`锁定`, px + s + (5/this.cam.zoom), py - s);
 
                     for(let i=0; i<node.orbitals; i++) {
                         let orbR = (node.baseSize * node.z) + (25 + (i * 15)) / this.cam.zoom; this.mCtx.beginPath(); this.mCtx.arc(px, py, orbR, 0, Math.PI*2); this.mCtx.strokeStyle = 'rgba(255, 183, 0, 0.3)'; this.mCtx.lineWidth = 1 / this.cam.zoom; this.mCtx.stroke();
                         let spd = time / 1000 * (1 / (i + 1)); this.mCtx.fillStyle = '#fff'; this.mCtx.beginPath(); this.mCtx.arc(px + Math.cos(spd) * orbR, py + Math.sin(spd) * orbR, 2 / this.cam.zoom, 0, Math.PI*2); this.mCtx.fill();
                     }
-                });
+                }
 
-                if (this.hoveredNode && !this.activeRoute.includes(this.hoveredNode)) {
+                // 6. 渲染鼠标悬停提示框 (避开已锁定的目标)
+                if (this.hoveredNode && this.hoveredNode !== this.selectedNode) {
                     let px = this.hoveredNode.x + this.cam.x * this.hoveredNode.z;
                     let py = this.hoveredNode.y + this.cam.y * this.hoveredNode.z;
                     if (!this.hoveredNode.isMajor) { px = wrap(px, wrapSize); py = wrap(py, wrapSize); }
@@ -14948,21 +15663,40 @@ if(!title || !parentFaction || !content) {
            ========================================================= */
         (function initParallaxEngine() {
             let ticking = false;
-            // 实时收集所有带 parallax-ghost 的元素 (包含后续 JS 动态生成的)
             const parallaxGhosts = document.getElementsByClassName('parallax-ghost');
             
             function renderParallax() {
                 const scrollY = window.scrollY || window.pageYOffset;
                 
-                // 1. 星空背景深远视差 (加入无限循环算法)
+                // 1. 星空背景深远视差 (你已经加好的)
                 const stars = document.getElementById('stars-container');
                 if (stars && window.innerWidth > 768) { 
-                    // 💥 核心修复：加入 % 2000。
-                    // 因为我们的星星是每 2000px 重复一次的，这样算能让它在滑动时无限无缝衔接，永远滑不到头！
                     stars.style.transform = `translate3d(0, ${(scrollY * -0.15) % 2000}px, 0)`;
                 }
 
-                // 2. 巨型幽灵文字动态视差
+                // 👇👇👇 新增：2. Hero 核心内容全息悬浮视差 👇👇👇
+                const heroContent = document.querySelector('.hero-content');
+                if (heroContent && scrollY < window.innerHeight) {
+                    // 向下滚动时，内容稍微向下偏移，产生“滞后”的悬浮感
+                    heroContent.style.transform = `translate3d(0, ${scrollY * 0.25}px, 0)`;
+                    // 稍微降低一点透明度，模拟全息投影脱离焦点的感觉
+                    heroContent.style.opacity = 1 - (scrollY / window.innerHeight) * 1.2;
+                }
+
+                // 👇👇👇 新增：3. 卫星图传的“透视窗”视差 👇👇👇
+                const galleryItems = document.querySelectorAll('.gallery-item');
+                galleryItems.forEach(item => {
+                    const rect = item.getBoundingClientRect();
+                    // 如果图片进入了屏幕可视范围
+                    if (rect.top < window.innerHeight && rect.bottom > 0) {
+                        // 计算图片中心点偏离屏幕中心的比例 (-1 到 1)
+                        const offset = (window.innerHeight / 2 - (rect.top + rect.height / 2)) / window.innerHeight;
+                        // 改变背景图的 Y 轴位置，产生“透过窗户看风景”的 3D 错觉
+                        item.style.backgroundPositionY = `calc(50% + ${offset * 40}px)`;
+                    }
+                });
+
+                // 4. 巨型幽灵文字动态视差 
                 for (let i = 0; i < parallaxGhosts.length; i++) {
                     const el = parallaxGhosts[i];
                     const rect = el.parentElement.getBoundingClientRect();
