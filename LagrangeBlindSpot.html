@@ -14486,9 +14486,10 @@ t
 
             generateUniverse() {
                 const isMobile = window.innerWidth <= 768;
-                const dustCount = isMobile ? 500 : 2500; 
-                const cloudCount = isMobile ? 20 : 100;  
-                const starCount = isMobile ? 150 : 500;  
+                // 💥 性能优化 1：移动端粒子数量断崖式削减
+                const dustCount = isMobile ? 100 : 2500; 
+                const cloudCount = isMobile ? 5 : 100;  
+                const starCount = isMobile ? 60 : 500;   
 
                 for(let i=0; i<dustCount; i++) {
                     let bucketIdx = Math.floor(Math.random() * 3);
@@ -14605,6 +14606,8 @@ t
 
                 this.mCanvas.addEventListener('mousemove', e => {
                     if(!this.bootComplete) return;
+                    // 💥 性能优化：手机端根本没有鼠标，直接掐断悬停计算，省下海量 CPU 算力！
+                    if (window.innerWidth <= 768) return; 
                     const rect = this.mCanvas.getBoundingClientRect();
                     const mx = e.clientX - rect.left; 
                     const my = e.clientY - rect.top;
@@ -14784,17 +14787,20 @@ t
                 if (!this.bootComplete) return;
                 this.mapAnimId = requestAnimationFrame(() => this.renderMap());
 
+                // 💥 修复：把 isMobile 的定义提到函数最开头！让下面所有的优化都能拿到这个变量
+                const isMobile = window.innerWidth <= 768;
+                const time = Date.now(); // 顺便把 time 也提上来
+
                 // --- 💥 1. 丝滑阻尼推拉镜头 + 鼠标定点聚焦 ---
                 if (Math.abs(this.targetZoom - this.cam.zoom) > 0.001) {
                     const oldZoom = this.cam.zoom;
-                    this.cam.zoom += (this.targetZoom - this.cam.zoom) * 0.12; // 12%的顺滑阻尼
+                    this.cam.zoom += (this.targetZoom - this.cam.zoom) * 0.12; 
 
-                    // 核心数学魔法：在缩放的同时反向偏移相机，把鼠标瞄准的星球死死“钉”在屏幕上
                     this.cam.x += this.zoomMouseX / this.cam.zoom - this.zoomMouseX / oldZoom;
                     this.cam.y += this.zoomMouseY / this.cam.zoom - this.zoomMouseY / oldZoom;
                 }
 
-                // --- 💥 2. 丝滑拖拽阻尼 (保持你原来的) ---
+                // --- 💥 2. 丝滑拖拽阻尼 ---
                 if (!this.isDragging) { this.cam.x += this.vel.x; this.cam.y += this.vel.y; this.vel.x *= 0.92; this.vel.y *= 0.92; }
 
                 document.getElementById('hud-coords').innerText = `坐标.X: ${(-this.cam.x).toFixed(1).padStart(7, '0')} // 坐标.Y: ${(-this.cam.y).toFixed(1).padStart(7, '0')}`;
@@ -14826,13 +14832,16 @@ t
                 });
 
                 // 2. 渲染星云气体
-                this.mCtx.globalCompositeOperation = 'screen'; 
+                // 💥 性能优化 2：手机端关闭 screen 混合模式，改用普通透明度叠加
+                if (!isMobile) this.mCtx.globalCompositeOperation = 'screen'; 
                 this.organicClouds.forEach(c => {
                     let px = wrap(c.x + this.cam.x * c.z, wrapSize); 
                     let py = wrap(c.y + this.cam.y * c.z, wrapSize);
                     if (px >= -halfW - c.radius && px <= halfW + c.radius && py >= -halfH - c.radius && py <= halfH + c.radius) {
                         this.mCtx.save(); this.mCtx.translate(px | 0, py | 0); this.mCtx.rotate(c.rot); this.mCtx.scale(c.stretchX, c.stretchY);
-                        this.mCtx.globalAlpha = c.op; this.mCtx.drawImage(this.spriteCanvas, c.spriteIdx * 256, 0, 256, 256, -(c.radius | 0), -(c.radius | 0), (c.radius*2) | 0, (c.radius*2) | 0);
+                        // 手机端进一步降低星云透明度
+                        this.mCtx.globalAlpha = isMobile ? c.op * 0.5 : c.op; 
+                        this.mCtx.drawImage(this.spriteCanvas, c.spriteIdx * 256, 0, 256, 256, -(c.radius | 0), -(c.radius | 0), (c.radius*2) | 0, (c.radius*2) | 0);
                         this.mCtx.restore();
                     }
                 });
@@ -14850,8 +14859,16 @@ t
                 orbits.forEach(orbit => {
                     this.mCtx.beginPath();
                     this.mCtx.arc(this.cam.x, this.cam.y, orbit.r, 0, Math.PI * 2);
-                    this.mCtx.strokeStyle = orbit.color;
-                    this.mCtx.setLineDash([10 / this.cam.zoom, 15 / this.cam.zoom]);
+                    
+                    // 💥 性能优化 3：手机端绝对不要画虚线！用极低透明度的实线代替
+                    if (isMobile) {
+                        this.mCtx.strokeStyle = orbit.color.replace('0.15', '0.05');
+                        this.mCtx.setLineDash([]);
+                    } else {
+                        this.mCtx.strokeStyle = orbit.color;
+                        this.mCtx.setLineDash([10 / this.cam.zoom, 15 / this.cam.zoom]);
+                    }
+                    
                     this.mCtx.stroke();
                     this.mCtx.setLineDash([]);
                     
@@ -14861,16 +14878,16 @@ t
                     this.mCtx.textAlign = 'center';
                     this.mCtx.fillText(orbit.name, this.cam.x, this.cam.y - orbit.r - (8 / this.cam.zoom));
                 });
-                this.mCtx.textAlign = 'left'; // 恢复默认对齐方式
+                this.mCtx.textAlign = 'left';
 
                 // 3. 渲染战术连线 (支持星系联动高亮)
-                this.mCtx.globalAlpha = 0.6; // 👈 新增这一行：开始画线前，把透明度降为 60%
+                this.mCtx.globalAlpha = 0.6; 
 
                 this.telemetryLines.forEach(lane => {
                     let p1x = lane.p1.x + this.cam.x * lane.p1.z; let p1y = lane.p1.y + this.cam.y * lane.p1.z;
                     let p2x = lane.p2.x + this.cam.x * lane.p2.z; let p2y = lane.p2.y + this.cam.y * lane.p2.z;
                     
-                    let isHoveredSystem = this.hoveredNode && this.hoveredNode.system && this.hoveredNode.system === lane.system;
+                    let isHoveredSystem = !isMobile && this.hoveredNode && this.hoveredNode.system && this.hoveredNode.system === lane.system;
                     
                     this.mCtx.beginPath();
                     if (isHoveredSystem) {
@@ -14880,18 +14897,23 @@ t
                     } else {
                         this.mCtx.strokeStyle = lane.isSystemLine ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 229, 255, 0.1)'; 
                         this.mCtx.lineWidth = 1 / this.cam.zoom; 
-                        this.mCtx.setLineDash([8 / this.cam.zoom, 12 / this.cam.zoom]);
+                        
+                        // 💥 性能优化 4：手机端连线禁用虚线
+                        if (isMobile) {
+                            this.mCtx.setLineDash([]);
+                            this.mCtx.globalAlpha = 0.2; // 降低透明度模拟虚线感
+                        } else {
+                            this.mCtx.setLineDash([8 / this.cam.zoom, 12 / this.cam.zoom]);
+                        }
                     }
                     this.mCtx.moveTo(p1x | 0, p1y | 0); this.mCtx.lineTo(p2x | 0, p2y | 0);
                     this.mCtx.stroke();
                 });
 
                 this.mCtx.setLineDash([]);
-                this.mCtx.globalAlpha = 1.0; // 👈 新增这一行：线画完了，立刻把透明度恢复到 100%！
+                this.mCtx.globalAlpha = 1.0;
 
                 // 4. 渲染所有星体
-                const isMobile = window.innerWidth <= 768; 
-                const time = Date.now();
                 
                 this.mCtx.globalCompositeOperation = 'source-over'; 
                 
@@ -14934,69 +14956,89 @@ t
                         }
                     } else {
                         // 2. 主星与基地：需要自定义颜色，保留画圆，但降低重绘层数
-                        const glowLayers = isMobile ? 1 : 2; // 即使 PC 端 2 层也足够好看
-                        const glowSpread = node.isPlanetDB ? 8 * depthScale : 4 * depthScale; 
-                        for(let i = glowLayers; i >= 1; i--) {
+                        if (isMobile) {
+                            // 💥 性能优化 5：手机端极简星球渲染 (1层微光 + 核心 + 静态外环)
                             this.mCtx.beginPath();
-                            this.mCtx.arc(px, py, currentSize + (i * glowSpread), 0, Math.PI * 2);
-                            this.mCtx.fillStyle = `rgba(${coreRgb}, ${0.15 / i})`; 
+                            this.mCtx.arc(px, py, currentSize + (4 * depthScale), 0, Math.PI * 2);
+                            this.mCtx.fillStyle = `rgba(${coreRgb}, 0.15)`; 
                             this.mCtx.fill();
+
+                            this.mCtx.beginPath();
+                            this.mCtx.arc(px, py, currentSize, 0, Math.PI * 2);
+                            this.mCtx.fillStyle = '#ffffff';
+                            this.mCtx.fill();
+
+                            this.mCtx.beginPath();
+                            this.mCtx.arc(px, py, currentSize + 6, 0, Math.PI * 2);
+                            this.mCtx.strokeStyle = `rgba(${coreRgb}, 0.3)`;
+                            this.mCtx.lineWidth = 1 / this.cam.zoom;
+                            this.mCtx.stroke();
+                        } else {
+                            // 💻 PC端保留原本华丽的渲染逻辑
+                            const glowLayers = 2; 
+                            const glowSpread = node.isPlanetDB ? 8 * depthScale : 4 * depthScale; 
+                            for(let i = glowLayers; i >= 1; i--) {
+                                this.mCtx.beginPath();
+                                this.mCtx.arc(px, py, currentSize + (i * glowSpread), 0, Math.PI * 2);
+                                this.mCtx.fillStyle = `rgba(${coreRgb}, ${0.15 / i})`; 
+                                this.mCtx.fill();
+                            }
+
+                            this.mCtx.beginPath();
+                            this.mCtx.arc(px, py, currentSize, 0, Math.PI * 2);
+                            this.mCtx.fillStyle = '#ffffff';
+                            this.mCtx.fill();
+
+                            // 画轨道环与旋转刻度
+                            const ringRadius = currentSize + 12; 
+                            this.mCtx.save();
+                            this.mCtx.translate(px, py);
+                            
+                            this.mCtx.rotate(time * 0.0005);
+                            this.mCtx.beginPath();
+                            this.mCtx.arc(0, 0, ringRadius, 0, Math.PI * 2);
+                            this.mCtx.strokeStyle = `rgba(${coreRgb}, 0.5)`;
+                            this.mCtx.lineWidth = 1 / this.cam.zoom;
+                            this.mCtx.setLineDash([6 / this.cam.zoom, 6 / this.cam.zoom]);
+                            this.mCtx.stroke();
+                            
+                            this.mCtx.rotate(-time * 0.001); 
+                            this.mCtx.beginPath();
+                            this.mCtx.arc(0, 0, ringRadius - 3, 0, Math.PI * 2);
+                            this.mCtx.setLineDash([]);
+                            this.mCtx.strokeStyle = `rgba(${coreRgb}, 0.2)`;
+                            this.mCtx.lineWidth = 1 / this.cam.zoom;
+                            this.mCtx.stroke();
+
+                            this.mCtx.beginPath();
+                            const tick = Math.min(3 / this.cam.zoom, 6); 
+                            this.mCtx.moveTo(-ringRadius - tick, 0); this.mCtx.lineTo(-ringRadius + tick, 0);
+                            this.mCtx.moveTo(ringRadius - tick, 0); this.mCtx.lineTo(ringRadius + tick, 0);
+                            this.mCtx.moveTo(0, -ringRadius - tick); this.mCtx.lineTo(0, -ringRadius + tick);
+                            this.mCtx.moveTo(0, ringRadius - tick); this.mCtx.lineTo(0, ringRadius + tick);
+                            this.mCtx.strokeStyle = `rgba(${coreRgb}, 0.8)`;
+                            this.mCtx.lineWidth = 1.5 / this.cam.zoom;
+                            this.mCtx.stroke();
+                            this.mCtx.restore();
                         }
 
-                        this.mCtx.beginPath();
-                        this.mCtx.arc(px, py, currentSize, 0, Math.PI * 2);
-                        this.mCtx.fillStyle = '#ffffff';
-                        this.mCtx.fill();
-
-                        // 画轨道环
-                        const ringRadius = currentSize + 12; 
-                        this.mCtx.save();
-                        this.mCtx.translate(px, py);
-                        
-                        this.mCtx.rotate(time * 0.0005);
-                        this.mCtx.beginPath();
-                        this.mCtx.arc(0, 0, ringRadius, 0, Math.PI * 2);
-                        this.mCtx.strokeStyle = `rgba(${coreRgb}, 0.5)`;
-                        this.mCtx.lineWidth = 1 / this.cam.zoom;
-                        this.mCtx.setLineDash([6 / this.cam.zoom, 6 / this.cam.zoom]);
-                        this.mCtx.stroke();
-                        
-                        this.mCtx.rotate(-time * 0.001); 
-                        this.mCtx.beginPath();
-                        this.mCtx.arc(0, 0, ringRadius - 3, 0, Math.PI * 2);
-                        this.mCtx.setLineDash([]);
-                        this.mCtx.strokeStyle = `rgba(${coreRgb}, 0.2)`;
-                        this.mCtx.lineWidth = 1 / this.cam.zoom;
-                        this.mCtx.stroke();
-
-                        this.mCtx.beginPath();
-                        const tick = Math.min(3 / this.cam.zoom, 6); 
-                        this.mCtx.moveTo(-ringRadius - tick, 0); this.mCtx.lineTo(-ringRadius + tick, 0);
-                        this.mCtx.moveTo(ringRadius - tick, 0); this.mCtx.lineTo(ringRadius + tick, 0);
-                        this.mCtx.moveTo(0, -ringRadius - tick); this.mCtx.lineTo(0, -ringRadius + tick);
-                        this.mCtx.moveTo(0, ringRadius - tick); this.mCtx.lineTo(0, ringRadius + tick);
-                        this.mCtx.strokeStyle = `rgba(${coreRgb}, 0.8)`;
-                        this.mCtx.lineWidth = 1.5 / this.cam.zoom;
-                        this.mCtx.stroke();
-
-                        // 💥 核心新增：如果该节点属于当前悬停的星系，给它画一个战术高亮框
-                        let isHoveredSystem = this.hoveredNode && this.hoveredNode.system && this.hoveredNode.system === node.system;
+                        // 战术高亮框 (PC/手机通用)
+                        let isHoveredSystem = !isMobile && this.hoveredNode && this.hoveredNode.system && this.hoveredNode.system === node.system;
                         if (isHoveredSystem && node !== this.hoveredNode) {
                             this.mCtx.beginPath();
-                            // 💥 圈放大：从 10 改为 18，拉开与星球本体的距离
-                            this.mCtx.arc(0, 0, currentSize + (18 / this.cam.zoom), 0, Math.PI * 2);
+                            this.mCtx.arc(px, py, currentSize + (18 / this.cam.zoom), 0, Math.PI * 2);
                             this.mCtx.strokeStyle = node.customColor || '#00e5ff';
-                            // 💥 线变细：从 2 降为 1.2
                             this.mCtx.lineWidth = 1.2 / this.cam.zoom;
-                            this.mCtx.setLineDash([4 / this.cam.zoom, 4 / this.cam.zoom]);
+                            if (!isMobile) this.mCtx.setLineDash([4 / this.cam.zoom, 4 / this.cam.zoom]);
                             this.mCtx.stroke();
                             this.mCtx.setLineDash([]);
                         }
-
-                        this.mCtx.restore();
                     }
 
-                    if ((node.isMajor && this.cam.zoom > 0.4) || this.cam.zoom > 1.5) {
+                    // 💥 性能优化 6：手机端在快速拖拽时，隐藏文字渲染，停止拖拽才显示
+                    const isMovingFast = isMobile && (Math.abs(this.vel.x) > 2 || Math.abs(this.vel.y) > 2);
+                    
+                    if (!isMovingFast && ((node.isMajor && this.cam.zoom > 0.4) || this.cam.zoom > 1.5)) {
                         this.mCtx.globalAlpha = depthScale; 
                         this.mCtx.fillStyle = node.customColor ? node.customColor : `rgba(255, 255, 255, ${0.8 * depthScale})`; 
                         this.mCtx.font = `${10 / this.cam.zoom}px 'JetBrains Mono', monospace`;
@@ -15030,7 +15072,8 @@ t
                 }
 
                 // 6. 渲染鼠标悬停提示框 (避开已锁定的目标)
-                if (this.hoveredNode && this.hoveredNode !== this.selectedNode) {
+                // 💥 性能优化：手机端直接跳过这整个渲染步骤
+                if (!isMobile && this.hoveredNode && this.hoveredNode !== this.selectedNode) {
                     let px = this.hoveredNode.x + this.cam.x * this.hoveredNode.z;
                     let py = this.hoveredNode.y + this.cam.y * this.hoveredNode.z;
                     if (!this.hoveredNode.isMajor) { px = wrap(px, wrapSize); py = wrap(py, wrapSize); }
