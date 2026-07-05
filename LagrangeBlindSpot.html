@@ -7832,18 +7832,22 @@ window.triggerConflictRejection = async function(charDraft) {
                     if (item.channel_admins && item.channel_admins.includes(currentUser.id)) canEditUpdates = true;
                 }
 
-                let editBtnHtml = canEditUpdates ? `<button class="sys-modal-btn confirm" style="float: right; padding: 4px 10px; font-size: 12px; border-color: #ffeb3b; color: #ffeb3b; margin-top: -4px;" onclick="openUpdatesEditor('${item.id}')">[ 编辑公告 ]</button>` : '';
+                // 💥 修复：强制 width: auto !important 防止手机端被拉伸成 100%，并去掉 float
+                let editBtnHtml = canEditUpdates ? `<button class="sys-modal-btn confirm" style="width: auto !important; padding: 4px 10px; font-size: 12px; border-color: #ffeb3b; color: #ffeb3b; margin: 0;" onclick="openUpdatesEditor('${item.id}')">[ 编辑公告 ]</button>` : '';
 
                 // 💥 提取近况与公告
                 const updatesText = window.getArticleUpdates(item.content);
                 let updatesHtml = '';
                 if (updatesText || canEditUpdates) {
+                    // 💥 修复：改用 flex 布局，让标题和按钮在手机端也能完美对齐，不会错位
                     updatesHtml = `
                         <div style="margin-bottom: 25px; padding: 20px; background: rgba(255,235,59,0.05); border-left: 4px solid #ffeb3b; border-radius: 4px; box-shadow: 0 0 20px rgba(255,235,59,0.1);">
-                            <h4 style="color: #ffeb3b; margin: 0 0 10px 0; font-family: monospace; letter-spacing: 1px; font-size: 16px;">
-                                [ 近况与公告 ]
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
+                                <h4 style="color: #ffeb3b; margin: 0; font-family: monospace; letter-spacing: 1px; font-size: 16px;">
+                                    [ 近况与公告 ]
+                                </h4>
                                 ${editBtnHtml}
-                            </h4>
+                            </div>
                             <div style="color: #fff8b0; font-size: 15px; line-height: 1.8; word-break: break-word;">${updatesText || '<span style="opacity:0.5;">暂无公告</span>'}</div>
                         </div>
                     `;
@@ -14486,10 +14490,10 @@ t
 
             generateUniverse() {
                 const isMobile = window.innerWidth <= 768;
-                // 💥 性能优化 1：移动端粒子数量断崖式削减
                 const dustCount = isMobile ? 100 : 2500; 
-                const cloudCount = isMobile ? 5 : 100;  
-                const starCount = isMobile ? 60 : 500;   
+                // 💥 修复：把手机端星云数量从 5 稍微加到 15，不然太稀疏了
+                const cloudCount = isMobile ? 15 : 100;  
+                const starCount = isMobile ? 60 : 500;
 
                 for(let i=0; i<dustCount; i++) {
                     let bucketIdx = Math.floor(Math.random() * 3);
@@ -14832,15 +14836,17 @@ t
                 });
 
                 // 2. 渲染星云气体
-                // 💥 性能优化 2：手机端关闭 screen 混合模式，改用普通透明度叠加
-                if (!isMobile) this.mCtx.globalCompositeOperation = 'screen'; 
+                // 💥 修复：恢复 screen 发光混合模式！因为数量已经减少了，开着发光也不会卡！
+                this.mCtx.globalCompositeOperation = 'screen'; 
                 this.organicClouds.forEach(c => {
                     let px = wrap(c.x + this.cam.x * c.z, wrapSize); 
                     let py = wrap(c.y + this.cam.y * c.z, wrapSize);
                     if (px >= -halfW - c.radius && px <= halfW + c.radius && py >= -halfH - c.radius && py <= halfH + c.radius) {
                         this.mCtx.save(); this.mCtx.translate(px | 0, py | 0); this.mCtx.rotate(c.rot); this.mCtx.scale(c.stretchX, c.stretchY);
-                        // 手机端进一步降低星云透明度
-                        this.mCtx.globalAlpha = isMobile ? c.op * 0.5 : c.op; 
+                        
+                        // 💥 修复：恢复透明度，甚至在手机端稍微提亮一点点 (乘以 1.5)
+                        this.mCtx.globalAlpha = isMobile ? Math.min(c.op * 1.5, 1) : c.op; 
+                        
                         this.mCtx.drawImage(this.spriteCanvas, c.spriteIdx * 256, 0, 256, 256, -(c.radius | 0), -(c.radius | 0), (c.radius*2) | 0, (c.radius*2) | 0);
                         this.mCtx.restore();
                     }
