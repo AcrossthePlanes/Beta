@@ -1,0 +1,5107 @@
+/* 基础页面设置（加入了科幻网格和径向渐变微光背景） */
+        /* 基础页面设置 */
+        body {
+            background-color: #060b14; /* 极暗的深蓝兜底色 */
+            /* 💥 删除了原本僵硬的线形网格背景 */
+            
+            color: #ffffff;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            box-sizing: border-box;
+            position: relative;
+            overflow-x: hidden; 
+        }
+        /* 💥 修复：限制右上角名字的最大宽度，防止挤破容器 */
+        .nav-nickname {
+            display: inline-block;
+            max-width: 80px; /* 💥 电脑端从 120px 缩小到 80px，大约只显示 5 个中文字符 */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            vertical-align: bottom;
+        }
+        @media (max-width: 768px) {
+            .nav-nickname {
+                max-width: 50px; /* 💥 手机端从 80px 缩小到 50px，大约只显示 3 个中文字符 */
+            }
+        }
+
+        /* =========================================
+           💥 全局动态弥散背景 (Pure CSS GPU Accelerated)
+           ========================================= */
+        .cyber-diffuse-bg {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -10; /* 沉在最底层 */
+            pointer-events: none; /* 防止阻挡点击 */
+            overflow: hidden;
+            background-color: #060b14; 
+        }
+
+        /* 弥散光球 1：赛博蓝 (左上角游走) */
+        .cyber-diffuse-bg::before {
+            content: '';
+            position: absolute;
+            top: -20%; left: -20%;
+            width: 80vmax; height: 80vmax;
+            /* 💥 亮度下调：0.15 -> 0.08，边缘收窄：60% -> 50% */
+            background: radial-gradient(circle, rgba(18, 168, 255, 0.08) 0%, transparent 50%);
+            animation: diffuse-float 8s ease-in-out infinite alternate;
+        }
+
+        /* 弥散光球 2：霓虹紫 (右下角游走) */
+        .cyber-diffuse-bg::after {
+            content: '';
+            position: absolute;
+            bottom: -20%; right: -20%;
+            width: 90vmax; height: 90vmax;
+            /* 💥 亮度下调：0.12 -> 0.06，边缘收窄：60% -> 50% */
+            background: radial-gradient(circle, rgba(224, 64, 251, 0.06) 0%, transparent 50%);
+            animation: diffuse-float-reverse 10s ease-in-out infinite alternate;
+        }
+
+        /* 弥散光球 3：警告红 (右上角游走) */
+        .cyber-diffuse-orb {
+            position: absolute;
+            top: 10%; right: -10%;
+            width: 70vmax; height: 70vmax;
+            /* 💥 亮度下调：0.08 -> 0.04，边缘收窄：60% -> 50% */
+            background: radial-gradient(circle, rgba(244, 67, 54, 0.04) 0%, transparent 50%);
+            animation: diffuse-float-3 12s ease-in-out infinite alternate;
+        }
+
+        /* --- 💥 加速与大范围漂浮动画 --- */
+        @keyframes diffuse-float {
+            0% { transform: translate(0, 0) scale(1); }
+            /* 扩大了 vw 和 vh 的位移距离，并且放大了 scale 缩放 */
+            50% { transform: translate(25vw, 15vh) scale(1.3); }
+            100% { transform: translate(-10vw, 30vh) scale(0.9); }
+        }
+        @keyframes diffuse-float-reverse {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-30vw, -15vh) scale(1.2); }
+            100% { transform: translate(20vw, -25vh) scale(1.4); }
+        }
+        @keyframes diffuse-float-3 {
+            0% { transform: translate(0, 0) scale(0.8); }
+            50% { transform: translate(-40vw, 30vh) scale(1.5); }
+            100% { transform: translate(-15vw, -20vh) scale(1.1); }
+        }
+
+
+
+        /* 💥 2. 修改：原本的 header */
+        .header {
+            display: flex;
+            justify-content: space-between; 
+            align-items: flex-end; 
+            border-bottom: 2px solid rgba(18, 168, 255, 0.5);
+            padding-bottom: 10px;
+            margin-bottom: 0; 
+        }
+
+        /* 这是电脑端的发光标题！千万不要删掉它的字体和发光特效 */
+        .group-name {
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            font-family: "Impact", "Kaiti", "STKaiti", serif;
+            color: #e0f2fe;
+            text-shadow: 0 0 8px rgba(18,168,255,0.6);
+        }
+
+        .header-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;  
+            gap: 5px;
+        }
+
+        /* 💥 修改：右上角身份状态栏 (拆分文本与按钮) */
+        .lang-text {
+            font-size: 14px;
+            line-height: 1;
+            padding-right: 2px;
+            color: #12a8ff; 
+            font-family: monospace;
+            display: flex;
+            align-items: center;
+            gap: 10px; /* 文字和按钮之间的间距 */
+        }
+
+        /* 身份文本：允许选中，且点一下自动全选！ */
+        .op-key-text {
+            cursor: text;
+            user-select: all; /* 💥 黑科技：鼠标点一下，整段文字自动高亮选中，直接 Ctrl+C 即可 */
+            -webkit-user-select: all;
+        }
+
+        /* 专属注销按钮 */
+        .logout-btn {
+            cursor: pointer;
+            color: #12a8ff;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        /* 悬停时变红发光 */
+        .logout-btn:hover {
+            color: #f44336;
+            text-shadow: 0 0 8px rgba(244, 67, 54, 0.6);
+        }
+
+        /* 💥 1. 修改：顶部导航栏包装盒 (提升通透感) */
+        .top-nav-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 85;
+            
+            /* 💥 重点：把透明度从 0.85 降到了 0.4，颜色稍微带一点点极暗的蓝 */
+            background: rgba(6, 11, 20, 0.4); 
+            
+            /* 模糊度稍微加大到 15px，保证背景变透明后，透上来的文字会被完美糊掉，不影响标题阅读 */
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            
+            margin: -20px -20px 20px -20px; 
+            padding: 20px 20px 0 20px; 
+        }
+
+        /* =========================================
+           战术搜索终端 (Cyber-Brutalism Search Bar)
+           ========================================= */
+        .search-group {
+            display: flex;
+            align-items: stretch; /* 让内部元素等高 */
+            background: rgba(0, 5, 10, 0.8);
+            border: 2px solid #12a8ff;
+            /* 粗野主义硬边阴影 */
+            box-shadow: 4px 4px 0 rgba(18, 168, 255, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            margin-top: 5px;
+        }
+
+        /* 当输入框被点击聚焦时，整个搜索框产生物理按压/浮起感 */
+        .search-group:focus-within {
+            box-shadow: 6px 6px 0 rgba(18, 168, 255, 0.6);
+            transform: translate(-2px, -2px);
+            border-color: #e0f2fe;
+        }
+
+        /* 终端命令行前缀 */
+        .search-prefix {
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            background: rgba(18, 168, 255, 0.1);
+            color: #12a8ff;
+            font-family: "Impact", monospace;
+            font-size: 14px;
+            letter-spacing: 1px;
+            border-right: 2px solid #12a8ff;
+            user-select: none;
+        }
+
+        /* 闪烁的光标特效 */
+        .blink-cursor {
+            animation: blink 1s step-end infinite;
+            margin-left: 4px;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* 输入框本体 */
+        .search-input {
+            background: transparent;
+            border: none;
+            color: #e0f2fe;
+            width: 120px; /* 默认宽度 */
+            padding: 8px 12px;
+            font-family: monospace;
+            font-size: 14px;
+            outline: none;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .search-input::placeholder {
+            color: rgba(18, 168, 255, 0.4);
+        }
+
+        /* 核心交互：聚焦时输入框自动伸长，展现出“准备录入”的战术感 */
+        .search-input:focus {
+            width: 220px; 
+        }
+
+        /* 搜索按钮 */
+        .search-btn {
+            background: transparent;
+            border: none;
+            border-left: 2px solid #12a8ff;
+            color: #12a8ff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0 15px;
+            cursor: pointer;
+            font-family: "Impact", sans-serif;
+            font-size: 14px;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .search-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: #12a8ff;
+            transition: transform 0.3s;
+        }
+
+        /* 悬浮时强烈的反色效果 */
+        .search-btn:hover {
+            background: #12a8ff;
+            color: #060b14;
+        }
+
+        .search-btn:hover svg {
+            fill: #060b14;
+            transform: scale(1.1) rotate(90deg); /* 图标微动效 */
+        }
+
+        /* ─── 搜索报错时的红光警报状态 ─── */
+        .search-error {
+            border-color: #f44336 !important;
+            box-shadow: 4px 4px 0 rgba(244, 67, 54, 0.5) !important;
+            animation: shake 0.4s ease-in-out;
+        }
+        .search-error .search-prefix {
+            background: rgba(244, 67, 54, 0.1);
+            color: #f44336;
+            border-right-color: #f44336;
+        }
+        .search-error .search-btn {
+            border-left-color: #f44336;
+            color: #f44336;
+        }
+        .search-error .search-btn svg { fill: #f44336; }
+
+        /* 💥 3. 修改：方形悬浮菜单按钮 */
+        .floating-menu-btn {
+            position: absolute;
+            top: calc(100% + 15px); /* 悬浮在毛玻璃下方 15px 处 */
+            right: 20px; /* 和搜索框完美右对齐 */
+            width: 42px;
+            height: 42px;
+            background: rgba(0, 5, 10, 0.85);
+            border: 2px solid #12a8ff;
+            color: #12a8ff;
+            font-size: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            /* 粗野主义硬边阴影，和上面的搜索框保持统一风格！ */
+            box-shadow: 4px 4px 0 rgba(18, 168, 255, 0.2);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 悬停时的物理按压感 */
+        .floating-menu-btn:hover {
+            background: #12a8ff;
+            color: #060b14;
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 rgba(18, 168, 255, 0.6);
+        }
+
+        /* ─── 战术下拉检索菜单 ─── */
+        .search-dropdown {
+            position: absolute;
+            top: calc(100% + 10px); /* 位于搜索框正下方 */
+            right: 0; /* 右对齐 */
+            width: 320px;
+            background: rgba(0, 5, 10, 0.95);
+            border: 2px solid #12a8ff;
+            box-shadow: 6px 6px 0 rgba(18, 168, 255, 0.3);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: none; /* 默认隐藏 */
+            flex-direction: column;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        /* 激活时显示并带有下拉动画 */
+        .search-dropdown.active {
+            display: flex;
+            animation: slideDown 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 下拉菜单项 */
+        .dropdown-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(18, 168, 255, 0.2);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0; /* 💥 核心修复：防止搜索结果过多时被强行挤压高度 */
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        /* 悬停时的战术锁定动效 */
+        .dropdown-item:hover {
+            background: rgba(18, 168, 255, 0.15);
+            padding-left: 25px; /* 向右缩进 */
+            border-left: 4px solid #12a8ff;
+        }
+
+        .dropdown-title {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            font-size: 15px;
+            font-weight: bold;
+            color: #e0f2fe;
+            text-shadow: 0 0 5px rgba(18,168,255,0.3);
+        }
+
+        .dropdown-tag {
+            font-family: monospace;
+            font-size: 12px;
+            color: #12a8ff;
+        }
+
+        /* 自定义下拉框滚动条 */
+        .search-dropdown::-webkit-scrollbar { width: 6px; }
+        .search-dropdown::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); }
+        .search-dropdown::-webkit-scrollbar-thumb { background: #12a8ff; }
+
+        /* --- 核心控制：界面的显示与隐藏 --- */
+        .view-panel {
+            display: none; 
+            flex-grow: 1;
+            animation: fadeIn 0.3s ease-in-out;
+            
+            /* 侧边栏打开时的后推过渡动画 */
+            transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease;
+            transform-origin: top center; 
+            
+            /* 💥 修复：删掉 backface-visibility 和 transform-style */
+            /* 彻底解除层叠上下文结界，让手机端悬浮球逃出来！ */
+        }
+
+        /* 🔷 科幻解密加载动画 */
+@keyframes scanline {
+    0% { top: -10%; }
+    100% { top: 110%; }
+}
+@keyframes glitch-flash {
+    0%, 100% { opacity: 1; clip-path: none; }
+    20% { opacity: 0.7; clip-path: inset(30% 0 50% 0); transform: translateX(-4px); }
+    40% { opacity: 0.9; clip-path: inset(60% 0 10% 0); transform: translateX(4px); }
+    60% { opacity: 0.6; clip-path: inset(10% 0 70% 0); transform: translateX(-2px); }
+    80% { opacity: 1; clip-path: none; transform: translateX(0); }
+}
+@keyframes decode-in {
+    0%   { opacity: 0; transform: translateY(18px) scaleY(1.04); filter: blur(6px) brightness(2); }
+    40%  { opacity: 0.7; filter: blur(1px) brightness(1.3); }
+    100% { opacity: 1; transform: translateY(0) scaleY(1); filter: blur(0) brightness(1); }
+}
+#article-decode-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: #060b14;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+#article-decode-overlay.visible {
+    opacity: 1;
+    pointer-events: all;
+}
+#article-decode-overlay .decode-bar {
+    width: 280px;
+    height: 2px;
+    background: rgba(18,168,255,0.15);
+    margin-top: 28px;
+    position: relative;
+    overflow: hidden;
+}
+#article-decode-overlay .decode-bar::after {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; height: 100%;
+    width: 60%;
+    background: linear-gradient(90deg, transparent, #12a8ff, transparent);
+    animation: ticker-scroll 0.9s linear infinite;
+}
+#article-decode-overlay .decode-label {
+    font-family: monospace;
+    font-size: 13px;
+    color: #12a8ff;
+    letter-spacing: 3px;
+    margin-top: 16px;
+    animation: blink 1s step-end infinite;
+}
+#article-decode-overlay .decode-title-ghost {
+    font-family: "Impact", sans-serif;
+    font-size: clamp(1.5rem, 4vw, 2.8rem);
+    color: #12a8ff;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-shadow: 0 0 20px #12a8ff;
+    animation: glitch-flash 0.6s steps(1) infinite;
+    max-width: 80vw;
+    text-align: center;
+    word-break: break-all;
+}
+#articleView.active .article-page-content,
+#logReaderView.active #logReaderContent {
+    animation: decode-in 0.5s cubic-bezier(0.22,1,0.36,1) both;
+}
+
+       /* 统一所有视图面板的布局，防止内部元素（如3D隧道）被挤压 */
+        .view-panel.active {
+            display: block; 
+            width: 100%;
+        }
+
+        /* 主界面文字 */
+        .vertical-text {
+            writing-mode: vertical-rl; 
+            text-orientation: upright; 
+            font-size: 56px;
+            font-family: "Kaiti", "STKaiti", serif; 
+            letter-spacing: 15px; 
+            text-shadow: 0 0 15px rgba(18,168,255,0.6);
+        }
+
+        .placeholder-text {
+            width: 100%;
+            text-align: center;
+        }
+        
+        /* ！！！原作者亮亮的科幻发光字体样式！！！ */
+        .neon-title {
+            font-family: "Impact", "Arial Black", sans-serif;
+            font-size: 32px;
+            color: #ffffff;
+            margin: 0 0 10px 0;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            /* 核心发光特效 */
+            text-shadow: 
+                0 0 5px #fff,
+                0 0 10px #12a8ff,
+                0 0 20px #12a8ff,
+                0 0 40px #12a8ff,
+                0 0 80px #12a8ff;
+        }
+
+        .placeholder-text h3 {
+            color: #12a8ff;
+            letter-spacing: 2px;
+        }
+        .placeholder-text p {
+            color: #8bb9d6;
+            font-size: 14px;
+        }
+
+        
+
+.wiki-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* 统一按钮基础样式 */
+.wiki-item-btn {
+    background: rgba(18,168,255,0.05);
+    border: 1px solid rgba(18,168,255,0.4);
+    color: #12a8ff;
+    padding: 12px 15px;
+    text-align: left;
+    font-size: 20px;
+    border-radius: 0;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    width: 100%;
+    font-family: "PingFang SC", sans-serif;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+}
+.wiki-item-btn::after {
+    content: '';
+    position: absolute;
+    left: 0; top: 0;
+    width: 0; height: 100%;
+    background: rgba(18,168,255,0.08);
+    transition: width 0.3s ease;
+    z-index: 0;
+}
+.wiki-item-btn:hover::after { width: 100%; }
+.wiki-item-btn:hover {
+    background-color: rgba(18,168,255,0.15);
+    box-shadow: 0 0 12px rgba(18,168,255,0.4), inset 0 0 8px rgba(18,168,255,0.05);
+    border-color: #12a8ff;
+    text-shadow: 0 0 8px rgba(18,168,255,0.9);
+    letter-spacing: 2px;
+}
+
+/* 各导航项颜色主题 */
+.wiki-item-btn[data-target="mainView"]    { --nav-color: #12a8ff; }
+.wiki-item-btn[data-target="worldView"]   { --nav-color: #12a8ff; }
+.wiki-item-btn[data-target="storyView"]   { --nav-color: #e040fb; }
+.wiki-item-btn[data-target="queueView"]   { --nav-color: #ffeb3b; }
+.wiki-item-btn[data-target="logView"]     { --nav-color: #12a8ff; }
+.wiki-item-btn[data-target="profileView"] { --nav-color: #00e5ff; }
+.wiki-item-btn[data-target="forumView"]   { --nav-color: #4caf50; }
+.wiki-item-btn[data-target="adminView"]   { --nav-color: #f44336; }
+
+
+/* 管理员按钮顶部分隔 */
+#adminMenuWrapper {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(244,67,54,0.2);
+}
+
+        /* =========================================
+           新版主界面 (赛博粗野主义风格参考 CLAY CLUB)
+           ========================================= */
+        #mainView.active {
+            display: block; /* 覆盖原本的 flex */
+            width: 100%;
+            padding: 0;
+        }
+
+        /* ─── 1. HERO SECTION 英雄区 ─── */
+        .hero-section {
+            position: relative;
+            min-height: 70vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 4rem 2rem;
+            border-bottom: 2px solid #12a8ff;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 3;
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .hero-chip {
+            display: inline-block;
+            border: 2px solid #12a8ff;
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            font-family: monospace;
+            font-weight: bold;
+            letter-spacing: 0.15em;
+            background: rgba(18, 168, 255, 0.1);
+            color: #12a8ff;
+            margin-bottom: 1.5rem;
+            box-shadow: 3px 3px 0 rgba(18, 168, 255, 0.3);
+        }
+
+        .hero-title {
+            font-family: "Impact", "Arial Black", sans-serif;
+            font-size: clamp(3.5rem, 8vw, 7rem);
+            line-height: 0.95;
+            letter-spacing: 2px;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .hero-title .fill {
+            display: block;
+            color: #e0f2fe;
+            text-shadow: 0 0 20px rgba(18, 168, 255, 0.6);
+        }
+
+        .hero-title .stroke {
+            display: block;
+            -webkit-text-stroke: 2px #12a8ff;
+            color: transparent;
+            text-shadow: none;
+        }
+
+        .hero-title .cyber-fill {
+            display: block;
+            color: #12a8ff;
+            text-shadow: 0 0 10px #12a8ff;
+        }
+
+        .hero-sub {
+            margin-top: 2rem;
+            font-size: 1rem;
+            max-width: 600px;
+            line-height: 1.8;
+            color: #8bb9d6;
+            border-left: 3px solid #12a8ff;
+            padding-left: 15px;
+            background: linear-gradient(90deg, rgba(18,168,255,0.05), transparent);
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* 赛博粗野主义按钮 */
+        .btn-primary, .btn-ghost {
+            padding: 1rem 2rem;
+            font-family: "Impact", sans-serif;
+            font-size: 1rem;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+            text-transform: uppercase;
+        }
+
+        .btn-primary {
+            background: rgba(18, 168, 255, 0.2);
+            color: #fff;
+            border: 2px solid #12a8ff;
+            /* 重点：硬边阴影取代模糊阴影 */
+            box-shadow: 6px 6px 0 rgba(18, 168, 255, 0.5);
+            text-shadow: 0 0 5px #12a8ff;
+        }
+
+        .btn-primary:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 9px 9px 0 rgba(18, 168, 255, 0.8);
+            background: rgba(18, 168, 255, 0.4);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: #12a8ff;
+            border: 2px solid #12a8ff;
+            box-shadow: 6px 6px 0 rgba(18, 168, 255, 0.2);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(18, 168, 255, 0.1);
+            transform: translate(-3px, -3px);
+            box-shadow: 9px 9px 0 rgba(18, 168, 255, 0.5);
+        }
+
+        /* ─── 2. 无缝滚动横幅 TICKER ─── */
+        .ticker {
+            background: rgba(18, 168, 255, 0.1);
+            color: #12a8ff;
+            border-bottom: 2px solid #12a8ff;
+            padding: 0.8rem 0;
+            overflow: hidden;
+            white-space: nowrap;
+            position: relative;
+            box-shadow: inset 0 0 15px rgba(18,168,255,0.2);
+        }
+
+        .ticker-inner {
+            display: inline-flex;
+            gap: 3rem;
+            animation: ticker-scroll 20s linear infinite;
+        }
+
+        .ticker-item {
+            font-family: monospace;
+            font-size: 0.85rem;
+            font-weight: bold;
+            letter-spacing: 0.15em;
+        }
+
+        .ticker-sep { opacity: 0.5; }
+
+        @keyframes ticker-scroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        /* ─── 3. 情报网格区 INTEL GRID ─── */
+        .intel-section {
+    padding: 1rem 2rem 4rem 2rem; /* 上1rem，左右2rem，下4rem */
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+        .section-header { margin-bottom: 3rem; }
+        
+        .section-label {
+            font-size: 0.8rem;
+            font-family: monospace;
+            color: #12a8ff;
+            letter-spacing: 0.15em;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-title {
+            font-family: "Impact", sans-serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            margin: 0;
+            color: #e0f2fe;
+            letter-spacing: 2px;
+        }
+
+        .section-title .accent {
+            color: #12a8ff;
+            text-shadow: 0 0 15px rgba(18,168,255,0.6);
+        }
+
+        .intel-grid {
+            display: grid;
+            /* 把最小宽度从 280px 缩小到 240px，让它们更容易挤进同一行 */
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 25px; 
+        }
+
+        /* 赛博粗野主义卡片 */
+        .intel-card {
+            background: rgba(0, 5, 10, 0.8);
+            border: 2px solid #12a8ff;
+            padding: 2rem;
+            position: relative;
+            cursor: crosshair;
+            transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+        }
+
+        .intel-card:hover {
+            transform: translate(-5px, -5px);
+            /* 硬边阴影 */
+            box-shadow: 8px 8px 0 rgba(18, 168, 255, 0.4);
+            background: rgba(18, 168, 255, 0.05);
+            z-index: 1;
+        }
+
+        /* 3. 全局悬停效果：保留物理错位感和内发光 (所有卡片通用) */
+.intel-card:hover, .faction-card:hover, .plot-card:hover, .my-org-card:hover,
+.intel-card.is-centered, .faction-card.is-centered { /* 👈 新增这两句 */
+    transform: translate(-4px, -4px) !important; 
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.6), inset 0 0 20px var(--theme-shadow) !important;
+    z-index: 10;
+}
+
+        .card-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: block;
+            filter: drop-shadow(0 0 5px #12a8ff);
+        }
+
+        .card-level {
+            font-size: 0.7rem;
+            font-family: monospace;
+            color: #12a8ff;
+            border: 1px solid #12a8ff;
+            padding: 2px 8px;
+            display: inline-block;
+            margin-bottom: 1rem;
+            background: rgba(18,168,255,0.1);
+        }
+
+        .card-name {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            font-size: 1.3rem;
+            color: #fff;
+            margin: 0 0 1rem 0;
+            text-shadow: 0 0 5px rgba(18,168,255,0.5);
+        }
+
+        .card-desc {
+            font-size: 0.85rem;
+            line-height: 1.7;
+            color: #8bb9d6;
+            margin-bottom: 2rem;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px dashed rgba(18,168,255,0.3);
+            padding-top: 1rem;
+        }
+
+        .card-price {
+            font-family: "Impact", sans-serif;
+            font-size: 1.1rem;
+            color: #e0f2fe;
+            letter-spacing: 1px;
+        }
+
+        .card-duration {
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: #12a8ff;
+        }
+
+        /* ─── 横向拖拽画廊区 GALLERY STRIP ─── */
+        .gallery-strip {
+            position: relative;
+            background: rgba(0,0,0,0.5);
+            border-top: 2px solid #12a8ff;
+            border-bottom: 2px solid #12a8ff;
+            overflow: hidden;
+            margin-top: 2rem;
+        }
+
+        .gallery-caption {
+            position: absolute;
+            bottom: 1rem;
+            right: 2rem;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #12a8ff;
+            z-index: 5;
+            background: rgba(0,0,0,0.8);
+            padding: 5px 10px;
+            border: 1px solid #12a8ff;
+        }
+
+        .gallery-item {
+            flex: 1 0 320px; /* 自动拉伸填满屏幕 */
+            max-width: 500px; /* 限制最大宽度，防止屏幕太大时拉得太长 */
+            height: 220px;
+            border: 2px solid rgba(18, 168, 255, 0.4);
+            position: relative; /* 💥 核心：改为相对定位，方便内部文字绝对定位 */
+            font-family: monospace;
+            color: rgba(18,168,255,0.8);
+            user-select: none;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+            overflow: hidden; /* 确保背景放大时不会溢出边框 */
+        }
+        
+        .gallery-item:hover {
+            border-color: #12a8ff;
+            box-shadow: 0 0 20px rgba(18, 168, 255, 0.4), inset 0 0 40px rgba(18,168,255,0.6);
+            background-size: 110% !important; /* 悬停时背景微微放大 */
+        }
+
+        /* 💥 新增：右下角专属的文字标签样式 */
+        .gallery-item-label {
+            position: absolute;
+            bottom: 15px; /* 距离底部 15px */
+            right: 15px;  /* 距离右侧 15px */
+            background: rgba(0, 5, 10, 0.85); /* 给文字加个深色底，防止看不清 */
+            padding: 4px 10px;
+            border: 1px solid #12a8ff;
+            font-size: 14px;
+            letter-spacing: 1px;
+            box-shadow: 2px 2px 0 rgba(18, 168, 255, 0.2); /* 粗野主义小阴影 */
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        /* 鼠标悬停在图片上时，右下角的标签会反色高亮 */
+        .gallery-item:hover .gallery-item-label {
+            background: #12a8ff;
+            color: #060b14;
+            box-shadow: 4px 4px 0 rgba(18, 168, 255, 0.4);
+        }
+
+        /* ─── 横向拖拽情报流 (GALLERY DRAG SCROLL) ─── */
+        .gallery-wrapper {
+            width: 100%;
+            overflow: hidden; /* 隐藏原生滚动条 */
+            position: relative;
+        }
+
+        .article-grid {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding-bottom: 20px;
+            cursor: grab; /* 提示可拖拽 */
+            /* 隐藏滚动条但保留滚动功能 */
+            scrollbar-width: none; 
+            -ms-overflow-style: none; 
+        }
+        .article-grid::-webkit-scrollbar { display: none; }
+        
+        .article-grid.active {
+            cursor: grabbing; /* 拖拽时的鼠标样式 */
+        }
+
+        .article-card {
+            flex: 0 0 320px; /* 固定卡片宽度，不随屏幕挤压 */
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(18, 168, 255, 0.2);
+            border-radius: 6px;
+            overflow: hidden;
+            transition: filter 0.3s ease, border-color 0.3s ease;
+            backdrop-filter: blur(4px);
+            user-select: none; /* 防止拖拽时选中文本 */
+        }
+
+        /* 搜索框报错闪烁动画 */
+        .search-error {
+            border-color: #f44336 !important;
+            background: rgba(244, 67, 54, 0.1) !important;
+            color: #f44336 !important;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* 文章卡片的头图（带扫描线特效） */
+        .card-img {
+            height: 160px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(18,168,255,0.5);
+            font-family: monospace;
+            font-size: 14px;
+            letter-spacing: 2px;
+            border-bottom: 1px solid rgba(18, 168, 255, 0.2);
+            position: relative;
+        }
+        
+        /* 预设三种不同的占位图纹理，之后可换成真实图片 */
+        .placeholder-a { background: repeating-linear-gradient(45deg, rgba(18,168,255,0.05), rgba(18,168,255,0.05) 10px, transparent 10px, transparent 20px); }
+        .placeholder-b { background: radial-gradient(circle, rgba(18,168,255,0.1) 10%, transparent 10%), radial-gradient(circle, rgba(18,168,255,0.1) 10%, transparent 10%); background-size: 20px 20px; background-position: 0 0, 10px 10px; }
+        .placeholder-c { background: linear-gradient(0deg, rgba(18,168,255,0.1) 1px, transparent 1px); background-size: 100% 20px; }
+
+        .card-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-tag {
+            color: #12a8ff;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-family: monospace;
+        }
+
+        .card-title {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            color: #e0f2fe;
+            text-shadow: 0 0 5px rgba(18,168,255,0.3);
+        }
+
+        .card-desc {
+            color: #8bb9d6;
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 0 0 20px 0;
+            flex-grow: 1;
+        }
+
+        /* 文章卡片按钮 */
+        .card-btn {
+            background: transparent;
+            color: #12a8ff;
+            border: none;
+            text-align: left;
+            padding: 0;
+            cursor: pointer;
+            font-family: monospace;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        .card-btn:hover {
+            color: #ffffff;
+            text-shadow: 0 0 8px #12a8ff;
+            padding-left: 5px; /* 悬停时有个向右的小滑移特效 */
+        }
+
+        /* --- HUD 工具样式 --- */
+        .hud-controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            padding: 15px;
+            border: 1px solid rgba(18, 168, 255, 0.3);
+            border-radius: 8px;
+            box-shadow: inset 0 0 20px rgba(18, 168, 255, 0.05);
+        }
+
+        .hud-btn {
+            background: rgba(18,168,255,0.1);
+            border: 1px solid #12a8ff;
+            color: #12a8ff;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: 0.2s;
+            text-shadow: 0 0 5px rgba(18,168,255,0.5);
+        }
+        .hud-btn:hover {
+            background: rgba(18,168,255,0.3);
+            box-shadow: 0 0 10px rgba(18,168,255,0.4);
+        }
+
+        .hud-input {
+            background: rgba(0,0,0,0.6);
+            border: 1px solid #12a8ff;
+            color: #ffffff;
+            padding: 8px;
+            width: 100px;
+            text-align: center;
+            outline: none;
+            border-radius: 4px;
+            box-shadow: inset 0 0 5px rgba(18, 168, 255, 0.2);
+        }
+
+        #frame {
+            margin-top: 30px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            overflow: auto;
+        }
+
+        #frame svg {
+            max-width: 100%;
+            height: auto;
+            /* 给生成的SVG卡片再加一点外发光，融入背景 */
+            filter: drop-shadow(0 0 15px rgba(18,168,255,0.3));
+        }
+
+        /* --- 战术录入表单样式 --- */
+        .system-notice {
+            background: rgba(18, 168, 255, 0.05);
+            border-left: 3px solid #12a8ff;
+            padding: 12px 15px;
+            margin-bottom: 30px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #8bb9d6;
+            border-radius: 0 4px 4px 0;
+            box-shadow: inset 20px 0 30px -20px rgba(18, 168, 255, 0.1);
+        }
+
+        .notice-label {
+            color: #12a8ff;
+            font-weight: bold;
+            font-family: monospace;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .tactical-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-section-title {
+            font-family: monospace;
+            color: rgba(18, 168, 255, 0.6);
+            border-bottom: 1px dashed rgba(18, 168, 255, 0.3);
+            padding-bottom: 5px;
+            margin-top: 10px;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .input-group label {
+            font-size: 12px;
+            color: #8bb9d6;
+            margin-bottom: 6px;
+            font-family: "PingFang SC", monospace;
+            letter-spacing: 1px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(18, 168, 255, 0.3);
+            border-radius: 4px;
+            transition: 0.3s;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: #12a8ff;
+            box-shadow: 0 0 10px rgba(18, 168, 255, 0.3), inset 0 0 10px rgba(18, 168, 255, 0.1);
+        }
+
+        .prefix {
+            color: #12a8ff;
+            font-family: monospace;
+            padding: 10px 0 10px 10px;
+            user-select: none;
+        }
+
+        /* 💥 人设表单旁边的帮助小按钮 💥 */
+        .help-btn {
+            color: #12a8ff;
+            cursor: pointer;
+            margin-left: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            transition: all 0.2s;
+            opacity: 0.7;
+            display: inline-block;
+        }
+        .help-btn:hover {
+            color: #fff;
+            opacity: 1;
+            text-shadow: 0 0 8px #12a8ff;
+            transform: scale(1.1);
+        }
+
+        /* =========================================
+           表单输入控件核心样式 (修复白底问题)
+           ========================================= */
+        .tactical-form input,
+        .tactical-form textarea,
+        .tactical-form select {
+            background: transparent !important; /* 强制背景透明 */
+            border: none !important;            /* 去掉默认边框 */
+            color: #ffffff;
+            width: 100%;
+            padding: 10px;
+            font-family: "PingFang SC", monospace;
+            font-size: 14px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        /* 针对下拉菜单的专属设定 */
+        .tactical-form select {
+            cursor: pointer;
+            appearance: none;         /* 隐藏掉原生的丑陋黑箭头 */
+            -webkit-appearance: none;
+        }
+
+        /* 修复下拉框弹出的选项白底黑字问题 */
+        .tactical-form select option {
+            background: #060b14;      /* 深色底 */
+            color: #12a8ff;           /* 赛博蓝字 */
+            font-family: "PingFang SC", sans-serif;
+        }
+
+        .tactical-form select:disabled {
+            color: rgba(139, 185, 214, 0.4);
+            cursor: not-allowed;
+        }
+
+        /* 针对多行文本框的专属设定 (自动撑开版) */
+        .tactical-form textarea {
+            font-family: "PingFang SC", sans-serif;
+            resize: none; /* 禁止右下角手动拉伸 */
+            overflow: hidden; /* 隐藏原生滚动条，配合 JS 自动撑开 */
+            line-height: 1.5;
+            min-height: 41px; /* 保持单行时的基础高度 */
+            word-break: break-all; /* 防止长串英文不换行 */
+        }
+
+        .tactical-form input::placeholder,
+        .tactical-form textarea::placeholder {
+            color: rgba(139, 185, 214, 0.4);
+        }
+
+        /* 下拉菜单右侧的科幻小蓝三角 */
+        .select-wrapper {
+            position: relative;
+            flex-grow: 1;
+        }
+        .select-wrapper::after {
+            content: "▼";
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #12a8ff;
+            font-size: 12px;
+            pointer-events: none; /* 让鼠标穿透，点击三角也能展开菜单 */
+        }
+
+        .submit-btn {
+    background: rgba(18, 168, 255, 0.1);
+    border: 1px solid #12a8ff;
+    color: #12a8ff;
+    padding: 15px;
+    margin-top: 10px;
+    font-family: monospace;
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: 0.3s;
+    border-radius: 4px;
+    box-sizing: border-box; /* 💥 修复：防止 padding 撑破容器 */
+}
+
+        .submit-btn:hover {
+            background: rgba(18, 168, 255, 0.3);
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(18, 168, 255, 0.5);
+            text-shadow: 0 0 5px #ffffff;
+        }
+
+        /* 💥 新增：下拉菜单的基础样式 */
+        .tactical-form select {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            width: 100%;
+            padding: 10px;
+            font-family: "PingFang SC", monospace;
+            font-size: 14px;
+            outline: none;
+            cursor: pointer;
+            appearance: none; /* 隐藏原生箭头，后面我们用更科幻的代替 */
+            -webkit-appearance: none;
+        }
+
+        /* 修复下拉选项在系统默认下的白底黑字，强制改为深色模式 */
+        .tactical-form select option {
+            background: #060b14;
+            color: #12a8ff;
+            font-family: "PingFang SC", sans-serif;
+        }
+
+        .tactical-form select:disabled {
+            color: rgba(139, 185, 214, 0.4);
+            cursor: not-allowed;
+        }
+
+        /* 给下拉菜单右侧加个科幻小箭头 */
+        .select-wrapper {
+            position: relative;
+            flex-grow: 1;
+        }
+        .select-wrapper::after {
+            content: "▼";
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #12a8ff;
+            font-size: 12px;
+            pointer-events: none; /* 让鼠标穿透，不影响点击 */
+        }
+
+        /* =========================================
+           环境特效：鼠标追光、粒子飘雪、点击涟漪
+           ========================================= */
+        
+        /* 1. 鼠标追踪的朦胧光源（跟随 --mouse-x 和 --mouse-y） */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle 600px at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(18, 168, 255, 0.15), transparent 80%);
+            pointer-events: none; /* 确保光源不阻挡任何点击事件 */
+            z-index: 1;
+        }
+
+
+        /* =========================================
+           💥 视差像素星空背景 (深空防晕调校版)
+           ========================================= */
+        #stars-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -5; 
+            pointer-events: none;
+            /* 💥 删掉这里的 overflow: hidden; 释放星空的边界 */
+        }
+
+        .star-layer {
+            background: transparent;
+            position: absolute;
+            top: 0; left: 0;
+        }
+
+        /* 伪元素用于无缝循环衔接 */
+        .star-layer::after {
+            content: " ";
+            position: absolute;
+            top: 2000px;
+            left: 0;
+            background: transparent;
+        }
+
+        /* 远层小星尘 (最暗、最慢) */
+        #stars-small {
+            width: 1px; height: 1px;
+            animation: animStar 300s linear infinite; 
+            opacity: 0.4; 
+        }
+        /* 中层蓝星 */
+        #stars-medium {
+            width: 2px; height: 2px;
+            animation: animStar 200s linear infinite;
+            opacity: 0.6;
+        }
+        /* 近层大星 (最亮、稍微快一点点) */
+        #stars-big {
+            width: 3px; height: 3px;
+            animation: animStar 150s linear infinite;
+            opacity: 0.8;
+        }
+
+        /* 极慢的上升漂浮动画 */
+        @keyframes animStar {
+            from { transform: translateY(0px); }
+            to { transform: translateY(-2000px); }
+        }
+        
+        /* 3. 点击产生的雷达涟漪 */
+        .radar-ping {
+            position: absolute;
+            border: 2px solid rgba(18, 168, 255, 0.8);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            animation: ping 1s ease-out forwards;
+            z-index: 9999; /* 确保波纹显示在最顶层 */
+            box-shadow: 0 0 15px rgba(18, 168, 255, 0.4), inset 0 0 10px rgba(18, 168, 255, 0.2);
+        }
+        
+        @keyframes ping {
+            0% { width: 0; height: 0; opacity: 1; border-width: 3px; }
+            100% { width: 120px; height: 120px; opacity: 0; border-width: 1px; }
+        }
+
+        /* =========================================
+           3D 数据隧道系统样式 (Cyber-Brutalism 升级版)
+           ========================================= */
+        /* 1. 恢复 3D 屏幕撑满它的父容器 */
+        .viewport-container {
+            position: relative;
+            width: 100%;           
+            height: 450px;         
+            background: #03060a;
+            overflow: hidden;
+            border: 2px solid #12a8ff;
+            box-shadow: 8px 8px 0 rgba(18, 168, 255, 0.3), inset 0 0 50px rgba(0,0,0,0.8);
+            margin-bottom: 40px;
+            perspective: 800px;
+            cursor: crosshair;
+            /* 💥 修复：去掉 transform 的过渡，防止 3D 渲染降级变糊 */
+            transition: box-shadow 0.2s;
+        }
+
+        .viewport-container:hover {
+            /* 💥 修复：去掉 transform: translate(-2px, -2px); 彻底解决悬停变模糊的问题 */
+            box-shadow: 10px 10px 0 rgba(18, 168, 255, 0.5), inset 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        /* =========================================
+           各视图独立布局控制 (主界面 mainView 保持原生 100% 全宽)
+           ========================================= */
+
+        /* 1. 世界观设定 (worldView) 独立控制 */
+        #worldView {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* 2. 人设填写卡 (createView) 独立控制 */
+        #createView .archive-container {
+            max-width: 800px; /* 表单太宽会很难看，800px 聚拢感更好 */
+            margin: 0 auto;
+        }
+
+        /* 💥 新增：战术等候室 (queueView) 独立控制，限制和填写卡一样的舒适宽度 */
+        #queueView .archive-container {
+            max-width: 800px; 
+            margin: 0 auto;
+        }
+
+        /* 3. 群友人设库 (logView) 独立控制 */
+        #logView .archive-container {
+            max-width: 1200px; /* 3D 数据隧道和公民列表需要大一点的空间，设为 1200px */
+            margin: 0 auto;
+        }
+
+        .tunnel-hud {
+            position: absolute;
+            top: 15px; left: 15px;
+            color: #12a8ff;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 10;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            text-shadow: 0 0 5px rgba(18,168,255,0.5);
+            pointer-events: none;
+        }
+
+        #world {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 0; height: 0;
+            transform-style: preserve-3d;
+        }
+
+        .tunnel-item {
+            position: absolute;
+            transform-style: preserve-3d;
+            top: 0; left: 0;
+        }
+
+        /* 巨大的赛博文字 (确保它不会阻挡鼠标点击) */
+        .tunnel-text {
+            font-size: 6rem;
+            font-weight: 900;
+            font-family: "Impact", "Arial Black", sans-serif;
+            color: transparent;
+            -webkit-text-stroke: 2px rgba(18,168,255,0.3);
+            transform: translate(-50%, -50%);
+            letter-spacing: 5px;
+            pointer-events: none; /* 💥 重点：防止背景文字挡住卡片的点击 */
+        }
+
+        /* 浮动的档案卡片 */
+        .tunnel-card {
+            width: 260px;
+            background: rgba(4, 22, 34, 0.7);
+            border: 1px solid rgba(18,168,255,0.4);
+            box-shadow: 0 0 15px rgba(18,168,255,0.2);
+            backdrop-filter: blur(5px);
+            padding: 15px;
+            transform: translate(-50%, -50%);
+            color: #8bb9d6;
+            font-family: monospace;
+            cursor: crosshair;
+            /* 💥 新增：平滑的过渡动画 */
+            transition: all 0.3s cubic-bezier(0.2, 1, 0.3, 1); 
+        }
+
+        /* 💥 新增：鼠标悬停时的高亮与放大特效 💥 */
+        .tunnel-card:hover {
+            border-color: #fff;
+            box-shadow: 0 0 30px rgba(18,168,255,0.8), inset 0 0 20px rgba(18,168,255,0.4);
+            transform: translate(-50%, -50%) scale(1.08); /* 微微放大 */
+            background: rgba(4, 22, 34, 0.95);
+            z-index: 10;
+        }
+
+        .tunnel-star {
+            width: 2px; height: 2px;
+            background: #12a8ff;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #12a8ff;
+        }
+
+        /* 💥 3D 空间内的详情展开面板样式 💥 */
+        .tunnel-detail-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 5, 10, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 20;
+            display: none; /* 默认隐藏 */
+            flex-direction: column;
+            padding: 40px;
+            box-sizing: border-box;
+            border: 2px solid #12a8ff;
+            box-shadow: inset 0 0 80px rgba(18,168,255,0.3);
+            color: #fff;
+            /* 赛博展开动画 */
+            animation: cyber-expand 0.4s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+            overflow-y: auto;
+        }
+
+        /* 💥 详情面板专属的赛博滚动条 💥 */
+        .tunnel-detail-overlay::-webkit-scrollbar { 
+            width: 6px; 
+        }
+        .tunnel-detail-overlay::-webkit-scrollbar-track { 
+            background: rgba(0, 5, 10, 0.8); 
+            border-left: 1px solid rgba(18,168,255,0.2); 
+        }
+        .tunnel-detail-overlay::-webkit-scrollbar-thumb { 
+            background: #12a8ff; 
+            box-shadow: 0 0 10px #12a8ff; 
+        }
+
+        /* 展开动画：从中心点向四周切开 */
+        @keyframes cyber-expand {
+            0% { clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%); opacity: 0; transform: scale(0.8); }
+            100% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); opacity: 1; transform: scale(1); }
+        }
+
+        /* 收起动画 */
+        @keyframes cyber-collapse {
+            0% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); opacity: 1; transform: scale(1); }
+            100% { clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%); opacity: 0; transform: scale(1.1); }
+        }
+
+        /* =========================================
+           群友档案列表与详情面板样式
+           ========================================= */
+        .roster-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .roster-btn {
+            background: rgba(18, 168, 255, 0.1);
+            border: 1px solid rgba(18, 168, 255, 0.4);
+            color: #12a8ff;
+            padding: 8px 15px;
+            font-family: monospace;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: 0.2s;
+        }
+
+        .roster-btn:hover {
+            background: rgba(18, 168, 255, 0.3);
+            box-shadow: 0 0 10px rgba(18, 168, 255, 0.4);
+            color: #fff;
+        }
+
+        .roster-detail {
+            margin-top: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #12a8ff;
+            border-left: 4px solid #12a8ff;
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: inset 0 0 20px rgba(18, 168, 255, 0.1);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dashed rgba(18, 168, 255, 0.4);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .detail-header h3 {
+            margin: 0;
+            color: #e0f2fe;
+            font-size: 20px;
+            text-shadow: 0 0 8px rgba(18, 168, 255, 0.6);
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: #f44336;
+            cursor: pointer;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        .close-btn:hover { text-shadow: 0 0 5px #f44336; }
+
+        .detail-item { font-size: 14px; color: #fff; margin-bottom: 10px; }
+        .detail-lbl { color: #8bb9d6; font-family: monospace; margin-right: 5px; }
+
+        .detail-text-block {
+            margin-top: 15px;
+            background: rgba(18, 168, 255, 0.05);
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #e0f2fe;
+            white-space: pre-wrap; /* 保留换行符 */
+        }
+
+        .delete-btn {
+            margin-top: 15px;
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid #f44336;
+            color: #f44336;
+            padding: 5px 10px;
+            font-family: monospace;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .delete-btn:hover { background: rgba(244, 67, 54, 0.3); }
+
+        /* ─── 独立文章阅读弹窗 (Modal) ─── */
+        .article-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 5, 10, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 9999;
+            display: none; /* 默认隐藏 */
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* ─── 全屏文章阅读视图 (沉浸式全息文档风格) ─── */
+        .article-page-container {
+            width: 100%;
+            max-width: 900px; /* 稍微收窄一点，最适合长文阅读的宽度 */
+            margin: 0 auto;
+            padding: 2rem 20px 5rem 20px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .article-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(18, 168, 255, 0.3);
+            padding-bottom: 1rem;
+        }
+
+        .article-sys-status {
+            font-family: monospace;
+            color: #12a8ff;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .article-page-header {
+            text-align: center; /* 标题居中，更有正式档案的仪式感 */
+            margin-bottom: 3rem;
+        }
+
+        .article-page-meta {
+            display: inline-block;
+            background: rgba(18, 168, 255, 0.1);
+            border: 1px solid #12a8ff;
+            color: #12a8ff;
+            font-family: "Impact", monospace;
+            font-size: 0.9rem;
+            padding: 4px 15px;
+            letter-spacing: 2px;
+            margin-bottom: 1.5rem;
+            border-radius: 2px;
+        }
+
+        .article-page-title {
+            font-family: "Impact", "Microsoft YaHei", sans-serif;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            color: #e0f2fe;
+            margin: 0;
+            line-height: 1.2;
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px rgba(18, 168, 255, 0.4);
+        }
+
+        .article-divider {
+            height: 2px;
+            width: 60%;
+            margin: 2rem auto 0 auto;
+            background: linear-gradient(90deg, transparent, #12a8ff, transparent);
+            opacity: 0.6;
+        }
+
+        /* 💥 核心：统一官方文章与个人记录的阅读面板样式 */
+        .article-page-content, .solo-log-content {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            font-size: 1.1rem;
+            line-height: 2;
+            color: #a0c4d8; /* 柔和的灰蓝色，保护视力 */
+            background: rgba(6, 11, 20, 0.85); /* 深色毛玻璃底 */
+            border: 1px solid rgba(18, 168, 255, 0.2);
+            border-top: 4px solid #12a8ff; /* 顶部赛博高光线 */
+            padding: 3rem 4rem;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(18, 168, 255, 0.05);
+            word-wrap: break-word;
+        }
+
+        /* 富文本内部排版优化 */
+        .article-page-content p, .solo-log-content p { margin-bottom: 1.5em; }
+        
+        .article-page-content h1, .article-page-content h2, .article-page-content h3,
+        .solo-log-content h1, .solo-log-content h2, .solo-log-content h3 {
+            color: #e0f2fe;
+            margin-top: 2em;
+            margin-bottom: 1em;
+            border-bottom: 1px dashed rgba(18, 168, 255, 0.3);
+            padding-bottom: 0.5em;
+            font-family: "PingFang SC", sans-serif;
+            text-shadow: 0 0 8px rgba(18, 168, 255, 0.4);
+        }
+
+        .article-page-content img, .solo-log-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            border: 1px solid rgba(18, 168, 255, 0.4);
+            box-shadow: 0 0 15px rgba(18, 168, 255, 0.1);
+            margin: 1.5em 0;
+        }
+
+        .article-page-content blockquote, .solo-log-content blockquote {
+            border-left: 4px solid #12a8ff;
+            background: rgba(18, 168, 255, 0.05);
+            padding: 1em 1.5em;
+            margin: 1.5em 0;
+            color: #8bb9d6;
+            font-style: italic;
+        }
+
+        /* 首字母下沉特效 (仅限第一段，防止破坏排版) */
+        .article-page-content > p:first-of-type::first-letter {
+            font-size: 3.5rem;
+            color: #12a8ff;
+            float: left;
+            line-height: 0.8;
+            margin-right: 12px;
+            margin-top: 5px;
+            font-family: "Impact", sans-serif;
+            text-shadow: 0 0 10px rgba(18, 168, 255, 0.5);
+        }
+
+        .article-page-footer {
+            margin-top: 3rem;
+            text-align: center;
+            font-family: monospace;
+            color: rgba(18, 168, 255, 0.5);
+            letter-spacing: 3px;
+            border-top: 1px dashed rgba(18, 168, 255, 0.3);
+            padding-top: 2rem;
+        }
+
+        /* =========================================
+           定制版系统终端弹窗 (SysModal) - 赛博升级版
+           ========================================= */
+        .sys-modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 5, 10, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 999999 !important; /* 💥 核心修复：提高层级，确保永远在最顶层 */
+            display: none; 
+            justify-content: center; align-items: center;
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        
+        .sys-modal-overlay.active {
+            display: flex; opacity: 1;
+        }
+
+        /* 💥 弹窗关闭时的背景渐隐 💥 */
+        .sys-modal-overlay.active.closing {
+            opacity: 0;
+        }
+
+        .sys-modal-box {
+            background: rgba(6, 11, 20, 0.95);
+            border: 2px solid #12a8ff;
+            box-shadow: 0 0 30px rgba(18, 168, 255, 0.3), inset 0 0 20px rgba(18, 168, 255, 0.1);
+            width: 90%; max-width: 450px;
+            padding: 25px;
+            position: relative;
+            overflow: hidden; /* 确保扫描线不跑出去 */
+            /* 移除了原本的 transition，改用 animation */
+        }
+
+        /* 💥 弹窗本体的动态扫描线特效 💥 */
+        .sys-modal-box::after {
+            content: "";
+            position: absolute;
+            top: -50%; left: 0; width: 100%; height: 200%;
+            background: linear-gradient(to bottom, transparent 48%, rgba(18, 168, 255, 0.15) 50%, transparent 52%);
+            background-size: 100% 10px;
+            animation: modal-scanline 4s linear infinite;
+            pointer-events: none; /* 确保不阻挡鼠标点击 */
+            z-index: 10;
+        }
+
+        @keyframes modal-scanline {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(50%); }
+        }
+
+        /* 💥 展开时的赛博闪烁 (CRT 开启效果) 💥 */
+        .sys-modal-overlay.active .sys-modal-box {
+            animation: cyber-glitch-in 0.4s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+        }
+
+        /* 💥 关闭时的赛博断电 (CRT 关闭效果) 💥 */
+        .sys-modal-overlay.closing .sys-modal-box {
+            animation: cyber-glitch-out 0.3s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cyber-glitch-in {
+            0% { opacity: 0; transform: scale(0.95) translateY(20px); filter: contrast(2) brightness(2); clip-path: inset(50% 0 50% 0); }
+            20% { opacity: 1; transform: scale(1.02) translateY(-5px); filter: contrast(1) brightness(1); clip-path: inset(10% 0 80% 0); }
+            40% { opacity: 0.8; clip-path: inset(80% 0 10% 0); }
+            60% { opacity: 1; transform: scale(0.98) translateY(2px); clip-path: inset(0 0 0 0); }
+            80% { opacity: 0.9; }
+            100% { opacity: 1; transform: scale(1) translateY(0); filter: none; clip-path: inset(0 0 0 0); }
+        }
+
+        @keyframes cyber-glitch-out {
+            0% { opacity: 1; transform: scale(1); clip-path: inset(0 0 0 0); }
+            40% { opacity: 0.8; transform: scale(1.05); filter: contrast(1.5) brightness(1.5); clip-path: inset(40% 0 40% 0); }
+            100% { opacity: 0; transform: scale(0.9) translateY(-20px); clip-path: inset(50% 0 50% 0); }
+        }
+
+        .sys-modal-header {
+            font-family: "Impact", monospace;
+            color: #12a8ff;
+            font-size: 18px;
+            letter-spacing: 2px;
+            border-bottom: 1px dashed rgba(18, 168, 255, 0.4);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 8px rgba(18, 168, 255, 0.5);
+        }
+
+        .sys-modal-body {
+            font-family: "PingFang SC", sans-serif;
+            color: #e0f2fe;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .sys-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .sys-modal-btn {
+            background: transparent;
+            border: 1px solid #12a8ff;
+            font-family: monospace;
+            font-size: 14px;
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sys-modal-btn.confirm {
+            background: rgba(18, 168, 255, 0.15);
+            color: #12a8ff;
+        }
+        .sys-modal-btn.confirm:hover {
+            background: #12a8ff; color: #060b14;
+            box-shadow: 0 0 15px #12a8ff;
+        }
+
+        .sys-modal-btn.cancel {
+            border-color: #f44336; color: #f44336;
+        }
+        .sys-modal-btn.cancel:hover {
+            background: rgba(244, 67, 54, 0.15);
+            box-shadow: 0 0 15px rgba(244, 67, 54, 0.5);
+        }
+
+
+        /* =========================================
+           个人终端 (Profile View) 专属样式
+           ========================================= */
+        #profileView .archive-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .profile-card {
+            display: flex;
+            gap: 30px;
+            background: rgba(0, 5, 10, 0.8);
+            border: 2px solid #12a8ff;
+            padding: 30px;
+            box-shadow: inset 0 0 30px rgba(18, 168, 255, 0.1), 0 0 15px rgba(18, 168, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .profile-avatar-section {
+            flex: 0 0 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* 赛博字符头像占位图 */
+        .avatar-placeholder {
+            width: 180px;
+            height: 180px;
+            border: 2px dashed #12a8ff;
+            background: repeating-linear-gradient(45deg, rgba(18,168,255,0.05), rgba(18,168,255,0.05) 10px, transparent 10px, transparent 20px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 72px;
+            color: rgba(18,168,255,0.8);
+            font-family: "Impact", sans-serif;
+            box-shadow: 0 0 20px rgba(18,168,255,0.2);
+            position: relative;
+            text-shadow: 0 0 15px rgba(18,168,255,0.8);
+        }
+
+        /* 头像扫描线特效 */
+        .avatar-placeholder::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to bottom, transparent 50%, rgba(18,168,255,0.2) 51%);
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+
+        .profile-status-badge {
+            padding: 8px 15px;
+            font-family: monospace;
+            font-weight: bold;
+            letter-spacing: 1px;
+            border: 1px solid;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        /* 三种状态的颜色定义 */
+        .status-approved { color: #4caf50; border-color: #4caf50; background: rgba(76, 175, 80, 0.1); box-shadow: 0 0 10px rgba(76, 175, 80, 0.3); }
+        .status-pending { color: #ffeb3b; border-color: #ffeb3b; background: rgba(255, 235, 59, 0.1); box-shadow: 0 0 10px rgba(255, 235, 59, 0.3); }
+        .status-rejected { color: #f44336; border-color: #f44336; background: rgba(244, 67, 54, 0.1); box-shadow: 0 0 10px rgba(244, 67, 54, 0.3); }
+
+        .profile-details-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* =========================================
+           世界观资料库 (Cyber-Notion Style)
+           ========================================= */
+        .world-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 20px 5rem 20px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .world-header { margin-bottom: 3rem; }
+        
+        .world-meta { 
+            font-family: monospace; 
+            color: #12a8ff; 
+            letter-spacing: 2px; 
+            margin-bottom: 10px; 
+            font-weight: bold;
+        }
+        
+        .world-title { 
+            font-family: "Impact", "Microsoft YaHei", sans-serif; 
+            font-size: clamp(2.5rem, 5vw, 4rem); 
+            color: #e0f2fe; 
+            margin: 0; 
+            text-shadow: 0 0 15px rgba(18,168,255,0.4); 
+            letter-spacing: 2px; 
+        }
+
+        /* Notion 风格的引用块 (Callout) */
+        .world-quote { 
+            border-left: 4px solid #12a8ff; 
+            background: rgba(18, 168, 255, 0.05); 
+            padding: 20px 25px; 
+            font-size: 1.2rem; 
+            color: #8bb9d6; 
+            font-style: italic; 
+            margin-bottom: 3rem; 
+            line-height: 1.8; 
+            box-shadow: inset 20px 0 30px -20px rgba(18, 168, 255, 0.1);
+        }
+
+        .world-section { margin-bottom: 4rem; }
+        .world-section:last-child { margin-bottom: 0; } /* ⬅️ 新增这一行 */
+        
+        .world-section-title { 
+            font-size: 1.8rem; 
+            color: #fff; 
+            border-bottom: 1px dashed rgba(18,168,255,0.3); 
+            padding-bottom: 10px; 
+            margin-bottom: 20px; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            text-shadow: 0 0 8px rgba(18,168,255,0.5);
+        }
+
+        .world-text { 
+            font-size: 1.1rem; 
+            line-height: 1.9; 
+            color: #a0c4d8; 
+            margin-bottom: 1.5rem; 
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+
+        .world-highlight { 
+            color: #12a8ff; 
+            font-weight: bold; 
+            text-shadow: 0 0 8px rgba(18,168,255,0.4); 
+        }
+
+        /* =========================================
+           💥 赛博警戒卡片 V2 (硬核粗野主义升级版) 💥
+           ========================================= */
+        /* ── 警告卡片主体 ── */
+.cyber-warning-card {
+    position: relative;
+    background: rgba(15, 2, 2, 0.92);
+    border: 1px solid #f44336;
+    border-left: 5px solid #f44336;
+    padding: 0;
+    width: 100%;
+    max-width: 750px;
+    margin: 30px auto 0 auto;
+    box-sizing: border-box;
+    border-radius: 0;
+    overflow: hidden;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+    animation: warning-flicker 4s infinite, warning-glitch-shift 7s infinite;
+    box-shadow: 0 0 25px rgba(244,67,54,0.35), inset 0 0 30px rgba(244,67,54,0.08);
+    overflow-anchor: none; /* 💥 新增：禁止浏览器自动干预滚动条，交由我们的 JS 精准控制 */
+}
+
+/* 幽灵水印 WARNING */
+.cyber-warning-card::before {
+    content: 'WARNING';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: "Impact", sans-serif;
+    font-size: 110px;
+    color: rgba(244, 67, 54, 0.05);
+    pointer-events: none;
+    z-index: 0;
+    letter-spacing: 15px;
+    animation: warning-glitch-shift 3s infinite;
+}
+
+/* 背景横线网格 */
+.cyber-warning-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: repeating-linear-gradient(
+        0deg, transparent, transparent 3px,
+        rgba(244,67,54,0.04) 3px, rgba(244,67,54,0.04) 4px
+    );
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* 警戒斜线 */
+.hazard-stripes {
+    position: absolute;
+    left: 0; width: 100%; height: 5px;
+    background: repeating-linear-gradient(
+        -45deg,
+        #f44336, #f44336 6px,
+        #1a0000 6px, #1a0000 12px
+    );
+    z-index: 5;
+    animation: hazard-scroll 0.4s linear infinite;
+    box-shadow: 0 0 10px rgba(244,67,54,0.9);
+}
+.hazard-stripes.top { top: 0; }
+.hazard-stripes.bottom { bottom: 0; }
+
+@keyframes hazard-scroll {
+    0%   { background-position: 0 0; }
+    100% { background-position: 16.97px 0; }
+}
+
+/* 扫描线 */
+.warning-scanline {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, #f44336 40%, #ff6b6b 50%, #f44336 60%, transparent);
+    opacity: 0;
+    z-index: 6;
+    animation: warning-scan 2.5s linear infinite;
+    pointer-events: none;
+    box-shadow: 0 0 12px #f44336, 0 0 25px #f44336;
+}
+@keyframes warning-scan {
+    0%   { top: 5px;  opacity: 0; }
+    5%   { opacity: 1; }
+    95%  { opacity: 1; }
+    100% { top: calc(100% - 5px); opacity: 0; }
+}
+
+/* 故障位移 */
+@keyframes warning-glitch-shift {
+    0%, 89%, 100% { transform: none; clip-path: none; }
+    90%  { transform: translateX(-3px); clip-path: inset(20% 0 60% 0); }
+    91%  { transform: translateX(3px);  clip-path: inset(60% 0 10% 0); }
+    92%  { transform: translateX(-2px); clip-path: inset(40% 0 40% 0); }
+    93%  { transform: none; clip-path: none; }
+}
+
+/* 整体闪烁 */
+@keyframes warning-flicker {
+    0%,100% { opacity:1; box-shadow: 0 0 25px rgba(244,67,54,0.35), inset 0 0 30px rgba(244,67,54,0.08); }
+    2%  { opacity: 0.6; box-shadow: none; }
+    3%  { opacity: 1; box-shadow: 0 0 50px rgba(244,67,54,0.8), inset 0 0 50px rgba(244,67,54,0.3); }
+    4%  { opacity: 0.3; }
+    5%  { opacity: 1; }
+    60% { box-shadow: 0 0 30px rgba(244,67,54,0.4); }
+}
+
+/* ── 头部区域（含倒计时栏）── */
+.warning-top-bar {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 20px;
+    background: rgba(244,67,54,0.12);
+    border-bottom: 1px solid rgba(244,67,54,0.4);
+    margin-top: 5px;
+}
+
+.warning-header-text {
+    position: relative;
+    z-index: 2;
+    color: #f44336;
+    font-family: "Impact", monospace;
+    font-size: 15px;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-shadow: 0 0 10px rgba(244,67,54,1), 0 0 20px rgba(244,67,54,0.5);
+}
+
+/* 倒计时 */
+.warning-countdown {
+    font-family: monospace;
+    font-size: 13px;
+    color: #ff6b6b;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-shadow: 0 0 8px #f44336;
+    animation: warning-flicker 1.5s infinite;
+}
+.warning-countdown-digits {
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 10px #f44336, 0 0 20px #f44336;
+    min-width: 70px;
+    text-align: right;
+}
+
+/* 数字滚动条 */
+.warning-stats-bar {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid rgba(244,67,54,0.25);
+}
+.warning-stat {
+    flex: 1;
+    padding: 7px 14px;
+    border-right: 1px solid rgba(244,67,54,0.2);
+    font-family: monospace;
+    font-size: 11px;
+    color: rgba(244,67,54,0.7);
+    letter-spacing: 1px;
+}
+.warning-stat:last-child { border-right: none; }
+.warning-stat-val {
+    display: block;
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 8px #f44336;
+    letter-spacing: 2px;
+    animation: val-glitch 6s infinite;
+}
+@keyframes val-glitch {
+    0%,88%,100% { opacity:1; transform:none; }
+    89% { opacity:0.4; transform: translateX(2px); }
+    90% { opacity:1; transform: none; }
+    91% { opacity:0.6; transform: translateX(-2px); }
+    92% { opacity:1; }
+}
+
+/* 滚动展开动画 */
+/* ── 警告卡片主体 ── */
+.cyber-warning-card {
+    position: relative;
+    background: rgba(15, 2, 2, 0.92);
+    border: 1px solid #f44336;
+    border-left: 5px solid #f44336;
+    padding: 0;
+    width: 100%;
+    max-width: 750px;
+    margin: 30px auto 0 auto;
+    box-sizing: border-box;
+    border-radius: 0;
+    overflow: hidden;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+    animation: warning-flicker 4s infinite, warning-glitch-shift 7s infinite;
+    box-shadow: 0 0 25px rgba(244,67,54,0.35), inset 0 0 30px rgba(244,67,54,0.08);
+    
+    /* 💥 修复：将动画时间从 0.6s 延长到 1.2s，让展开变得从容 */
+    --expand-duration: 1.2s; 
+}
+
+/* 滚动展开动画 */
+.warning-expandable {
+    display: grid;
+    grid-template-rows: 0fr;
+    /* 💥 修复：换用更平滑的缓动曲线，消除突然弹开的突兀感 */
+    transition: grid-template-rows var(--expand-duration) cubic-bezier(0.25, 1, 0.5, 1);
+}
+.warning-expandable-inner {
+    overflow: hidden;
+}
+.cyber-warning-card.expanded .warning-expandable {
+    grid-template-rows: 1fr;
+}
+/* 展开前只显示顶部标题栏，高度收起 */
+.cyber-warning-card:not(.expanded) .hazard-stripes.bottom {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .cyber-warning-card {
+        margin: 16px 0 0 0;
+        clip-path: none;
+    }
+    .warning-top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        padding: 10px 14px;
+    }
+    .warning-countdown {
+        font-size: 11px;
+    }
+    .warning-countdown-digits {
+        font-size: 13px;
+    }
+    .warning-stats-bar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+    .warning-stat {
+        padding: 8px 12px;
+        font-size: 10px;
+        border-right: 1px solid rgba(244,67,54,0.2);
+        border-bottom: 1px solid rgba(244,67,54,0.2);
+    }
+    .warning-stat:nth-child(2),
+    .warning-stat:nth-child(4) {
+        border-right: none;
+    }
+    .warning-stat:nth-child(3),
+    .warning-stat:nth-child(4) {
+        border-bottom: none;
+    }
+    .warning-stat-val {
+        font-size: 15px;
+    }
+    .warning-body {
+        padding: 14px 14px 16px 14px;
+    }
+    .warning-content-text {
+        font-size: 13px;
+        line-height: 1.75;
+    }
+}
+
+/* ── 正文区域 ── */
+.warning-body {
+    position: relative;
+    z-index: 2;
+    padding: 18px 22px 20px 22px;
+}
+.warning-content-text {
+    position: relative;
+    z-index: 2;
+    color: #ffb4a9;
+    font-size: 14px;
+    line-height: 1.85;
+    font-family: "PingFang SC", sans-serif;
+    text-shadow: 0 0 2px rgba(244,67,54,0.3);
+}
+.warning-content-text p { margin-bottom: 10px; }
+.warning-content-text p:last-child { margin-bottom: 0; }
+.warning-content-text strong { color: #fff; text-shadow: 0 0 8px #f44336; }
+
+        /* 阵营卡片网格 */
+        .faction-grid { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 30px; 
+        }
+        
+        .faction-card { 
+            background: rgba(0, 5, 10, 0.6); 
+            border: 1px solid rgba(18, 168, 255, 0.2); 
+            padding: 30px; 
+            border-radius: 8px; 
+            transition: all 0.3s; 
+            backdrop-filter: blur(4px);
+        }
+        .faction-card:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* 三大阵营专属主题色 */
+        .faction-card.psc { border-top: 4px solid #12a8ff; }
+        .faction-card.psc:hover { border-color: #12a8ff; box-shadow: 0 0 20px rgba(18, 168, 255, 0.1); }
+        
+        .faction-card.frontier { border-top: 4px solid #f44336; }
+        .faction-card.frontier:hover { border-color: #f44336; box-shadow: 0 0 20px rgba(244, 67, 54, 0.1); }
+        
+        .faction-card.pmc { border-top: 4px solid #4caf50; }
+        .faction-card.pmc:hover { border-color: #4caf50; box-shadow: 0 0 20px rgba(76, 175, 80, 0.1); }
+
+        /* 自由港专属主题色 (赛博黄) */
+        .faction-card.freeport { border-top: 4px solid #ffeb3b; }
+        .faction-card.freeport:hover { border-color: #ffeb3b; box-shadow: 0 0 20px rgba(255, 235, 59, 0.1); }
+        .faction-card.freeport .faction-tag { color: #ffeb3b; background: rgba(255,235,59,0.1); border: 1px solid rgba(255,235,59,0.3); }
+        
+        .faction-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 15px; 
+            flex-wrap: wrap; 
+            gap: 10px; 
+        }
+        .faction-header h3 { margin: 0; font-size: 1.5rem; color: #fff; }
+        
+        .faction-tag { 
+            font-family: monospace; 
+            font-size: 0.85rem; 
+            padding: 4px 10px; 
+            border-radius: 4px; 
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .faction-card.psc .faction-tag { color: #12a8ff; background: rgba(18,168,255,0.1); border: 1px solid rgba(18,168,255,0.3); }
+        .faction-card.frontier .faction-tag { color: #f44336; background: rgba(244,67,54,0.1); border: 1px solid rgba(244,67,54,0.3); }
+        .faction-card.pmc .faction-tag { color: #4caf50; background: rgba(76,175,80,0.1); border: 1px solid rgba(76,175,80,0.3); }
+        
+        .faction-desc { color: #8bb9d6; line-height: 1.8; margin-bottom: 25px; font-size: 1.05rem; }
+        
+        /* 下属组织列表 (Notion Toggle 风格) */
+        .sub-org-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 15px; }
+        /* 💥 世界观：组织按钮样式 💥 */
+        .sub-org-list { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            margin-top: 15px;
+        }
+        .sub-org-btn { 
+            background: rgba(18, 168, 255, 0.05); 
+            border: 1px solid rgba(18, 168, 255, 0.2); 
+            padding: 15px 20px; 
+            border-radius: 4px; 
+            border-left: 3px solid #12a8ff; 
+            text-align: left; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .sub-org-btn:hover { 
+            background: rgba(18, 168, 255, 0.15); 
+            border-color: #12a8ff; 
+            transform: translateX(5px); 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+        .sub-org-btn strong { 
+            color: #fff; 
+            font-size: 1.1rem; 
+            display: block; 
+            margin-bottom: 5px; 
+            text-shadow: 0 0 5px rgba(18,168,255,0.5);
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+        .sub-org-btn span {
+            color: #a0c4d8; 
+            font-size: 0.95rem;
+            line-height: 1.6;
+            font-family: "PingFang SC", sans-serif;
+        }
+
+        /* 💥 个人资料/人设库：可点击的阵营与组织标签 💥 */
+        .clickable-tag {
+            color: #12a8ff;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: bold;
+            font-family: monospace;
+        }
+        .clickable-tag:hover {
+            color: #fff;
+            text-shadow: 0 0 10px #12a8ff;
+            background: rgba(18, 168, 255, 0.2);
+        }
+        .sub-org-list li strong { color: #fff; font-size: 1.1rem; display: block; margin-bottom: 5px; }
+        
+        /* 入职指南列表 */
+        .cyber-list { padding-left: 20px; color: #a0c4d8; line-height: 2.2; font-size: 1.1rem; margin-bottom: 30px; }
+        .cyber-list li::marker { color: #12a8ff; font-family: monospace; font-weight: bold; }
+        
+        /* =========================================================
+           💥 终极视觉：大标题级故障撕裂 + 色彩拉伸 (完美融合版)
+           ========================================================= */
+        .glitch-text {
+            position: relative;
+            margin: 60px auto 20px auto;
+            font-family: "Impact", "Microsoft YaHei", sans-serif;
+            font-size: clamp(2.5rem, 6vw, 4rem); 
+            font-weight: 900;
+            text-align: center;
+            letter-spacing: 8px;
+            color: #ffffff;
+            /* 💥 找回旧版灵魂：平时就带有红蓝双色重影 */
+            text-shadow: 3px 0 rgba(18,168,255,0.8), -3px 0 rgba(244,67,54,0.8);
+            /* 融合旧版的拉伸闪烁动画 */
+            animation: cyber-flicker-stretch 4s infinite; 
+        }
+
+        /* 🔴 红色错位撕裂层 */
+        .glitch-text::before,
+        .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            /* 💥 核心修改：彻底透明，绝不遮挡背后的星星和弥散光！ */
+            background: transparent; 
+            /* 💥 滤色混合模式：重叠时会让颜色发亮，产生屏幕过曝的电子感 */
+            mix-blend-mode: screen; 
+            overflow: hidden;
+            clip-path: inset(100% 0 0 0); /* 默认隐藏 */
+        }
+
+        .glitch-text::before {
+            /* 💥 撕裂出去的层变成纯红色 */
+            color: rgba(244, 67, 54, 0.9); 
+            text-shadow: -3px 0 #f44336; 
+            animation: cyber-tear-left 3s infinite linear alternate-reverse;
+            z-index: 2;
+        }
+
+        /* 🔵 蓝色错位撕裂层 */
+        .glitch-text::after {
+            /* 💥 撕裂出去的层变成纯蓝色 */
+            color: rgba(18, 168, 255, 0.9); 
+            text-shadow: 3px 0 #12a8ff; 
+            animation: cyber-tear-right 2.5s infinite linear alternate-reverse;
+            z-index: 3;
+        }
+
+        /* 💥 融合旧版：底层的红蓝阴影瞬间炸开拉大 + 接触不良闪烁 */
+        @keyframes cyber-flicker-stretch {
+            0%, 100% { opacity: 1; text-shadow: 3px 0 rgba(18,168,255,0.8), -3px 0 rgba(244,67,54,0.8); }
+            5%  { opacity: 0.2; text-shadow: none; }
+            6%  { opacity: 1; text-shadow: 3px 0 rgba(18,168,255,0.8), -3px 0 rgba(244,67,54,0.8); }
+            /* 阴影瞬间向两边拉伸炸开 */
+            11% { opacity: 0.8; text-shadow: 12px 0 rgba(18,168,255,1), -12px 0 rgba(244,67,54,1); } 
+            12% { opacity: 1; text-shadow: 3px 0 rgba(18,168,255,0.8), -3px 0 rgba(244,67,54,0.8); }
+            45% { opacity: 1; }
+            46% { opacity: 0.1; }
+            47% { opacity: 0.9; }
+            48% { opacity: 0.1; }
+            49% { opacity: 1; }
+            /* 阴影瞬间对调反转 */
+            75% { opacity: 1; text-shadow: 3px 0 rgba(18,168,255,0.8), -3px 0 rgba(244,67,54,0.8); }
+            76% { opacity: 1; text-shadow: -6px 0 rgba(18,168,255,0.9), 6px 0 rgba(244,67,54,0.9); } 
+            77% { opacity: 1; text-shadow: 3px 0 rgba(18,168,255,0.8), -3px 0 rgba(244,67,54,0.8); }
+        }
+
+        /* 💥 加大幅度：真正的物理切割，错位距离拉大到 20px 以上 */
+        @keyframes cyber-tear-left {
+            0%, 80% { clip-path: inset(100% 0 0 0); transform: translate(0, 0); }
+            81% { clip-path: inset(20% 0 60% 0); transform: translate(-20px, 0); }
+            84% { clip-path: inset(60% 0 10% 0); transform: translate(25px, 0); }
+            87% { clip-path: inset(40% 0 50% 0); transform: translate(-25px, 0); }
+            90% { clip-path: inset(80% 0 5% 0); transform: translate(20px, 0); }
+            93% { clip-path: inset(10% 0 70% 0); transform: translate(-15px, 0); }
+            96% { clip-path: inset(30% 0 50% 0); transform: translate(25px, 0); }
+            100% { clip-path: inset(100% 0 0 0); transform: translate(0, 0); }
+        }
+
+        @keyframes cyber-tear-right {
+            0%, 70% { clip-path: inset(100% 0 0 0); transform: translate(0, 0); }
+            71% { clip-path: inset(10% 0 60% 0); transform: translate(25px, 0); }
+            74% { clip-path: inset(30% 0 20% 0); transform: translate(-20px, 0); }
+            77% { clip-path: inset(70% 0 10% 0); transform: translate(30px, 0); }
+            80% { clip-path: inset(20% 0 50% 0); transform: translate(-25px, 0); }
+            83% { clip-path: inset(50% 0 30% 0); transform: translate(20px, 0); }
+            86% { clip-path: inset(5% 0 80% 0); transform: translate(-30px, 0); }
+            100% { clip-path: inset(100% 0 0 0); transform: translate(0, 0); }
+        }
+
+        /* =========================================
+           新增：世界观左侧导航栏样式 (极简无框悬浮版)
+           ========================================= */
+        /* 💥 终极修复：打通目录的滑动轨道 💥 */
+        .world-layout {
+            display: grid;
+            /* 1fr(左侧留白) | 140px(目录) | 40px(间距) | 980px(正文) | 1fr(右侧留白) */
+            grid-template-columns: 1fr 140px 40px minmax(0, 980px) 1fr;
+            width: 100%;
+            max-width: 100%;
+            padding: 1rem 0;
+            margin: 0;
+            /* 💥 删除了 align-items: start，让轨道自动拉伸填满高度 */
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .world-toc-wrapper {
+            grid-column: 2;
+            grid-row: 1 / 3; /* 💥 核心通行证：允许目录跨越第1行(正文)和第2行(情报)！ */
+            height: 100%; 
+        }
+
+        .world-content-wrapper {
+            grid-column: 4;
+            grid-row: 1; /* 明确指定在第1行 */
+            min-width: 0;
+        }
+
+        .intel-section {
+            grid-column: 4; /* 💥 核心：让情报区和正文完美左对齐，把左边的空间彻底让给目录！ */
+            grid-row: 2; /* 明确指定在第2行 */
+            width: 100%;
+            max-width: 100%;
+            padding: 1rem 0 4rem 0; /* 去掉左右 padding，保持和正文对齐 */
+            box-sizing: border-box;
+            margin: 0;
+        }
+
+        .gallery-strip {
+            grid-column: 1 / -1; /* 跨越所有列，占满全宽 */
+            grid-row: 3; /* 明确指定在第3行 */
+            width: 100%;
+        }
+
+        .world-layout .world-container {
+            flex: 1; 
+            max-width: 900px;
+            padding: 0;
+            margin: 0;
+            animation: none; 
+        }
+
+        /* 左侧导航栏本体 (极简纯文字风格) */
+        .world-toc {
+            position: sticky;
+            top: 100px; 
+            width: 140px; /* ⬇️ 变窄：从 220px 缩减到 140px */
+            flex-shrink: 0;
+            /* ⬇️ 重点：去掉所有背景、边框、阴影、毛玻璃 */
+            background: transparent;
+            border: none;
+            padding: 0; 
+            box-shadow: none;
+            backdrop-filter: none;
+            z-index: 50;
+        }
+
+        .toc-title {
+            font-family: "Impact", monospace;
+            color: #12a8ff;
+            font-size: 1rem; /* 字体缩小一点 */
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            border-bottom: none; /* 去掉底部的虚线 */
+            text-shadow: 0 0 5px rgba(18, 168, 255, 0.3);
+            opacity: 0.7; /* 稍微降低一点标题的存在感 */
+        }
+
+        .toc-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px; /* 间距稍微收紧 */
+        }
+
+        /* 💥 目录主按钮样式 (提亮版) 💥 */
+        .toc-btn {
+            background: transparent;
+            border: none;
+            color: #e0f2fe; /* 从灰蓝提亮为冰蓝色 */
+            text-align: left;
+            padding: 5px 0; 
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            font-size: 0.95rem; 
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 2px solid transparent;
+            position: relative;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8); /* 增加一点黑色底影，让文字更清晰 */
+        }
+
+        /* 悬停与激活的高亮状态 */
+        .toc-btn:hover, .toc-btn.active {
+            color: #ffffff; /* 激活时变成纯白 */
+            background: transparent; 
+            border-left: 2px solid #12a8ff;
+            padding-left: 10px; 
+            text-shadow: 0 0 8px #12a8ff; /* 增强发光效果 */
+            transform: none; 
+        }
+
+        /* 💥 子目录专属样式 (提亮版) 💥 */
+        .toc-btn.sub-btn {
+            padding-left: 15px;
+            font-size: 0.85rem;
+            color: #8bb9d6; /* 去掉原本的 0.6 透明度，改为实色灰蓝 */
+        }
+        .toc-btn.sub-btn:hover, .toc-btn.sub-btn.active {
+            padding-left: 25px;
+            color: #e0f2fe; /* 悬停时提亮 */
+            text-shadow: 0 0 8px #12a8ff;
+        }
+
+        /* 💥 子目录折叠容器样式 💥 */
+        .sub-toc-list {
+            list-style: none;
+            padding: 0;
+            margin: 8px 0 0 0;
+            display: none; /* 默认隐藏 */
+            flex-direction: column;
+            gap: 8px;
+        }
+        .sub-toc-list.open {
+            display: flex; /* 展开时显示 */
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* 💥 目录下拉箭头旋转动画 💥 */
+        .toc-arrow.open {
+            transform: rotate(-90deg); /* 逆时针旋转90度，从朝左(◀)变成朝下(▼) */
+        }
+
+
+        /* =========================================
+           💥 历史时间线 (Timeline) 专属样式 💥
+           ========================================= */
+        .timeline-wrapper {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            /* 💥 核心修复 1：必须加上 align-items: flex-start，否则 sticky 无法生效 */
+            align-items: flex-start; 
+            /* 💥 顺便把背景改成透明，让刚才加的弥散光和星空透过来！ */
+            background: transparent; 
+        }
+
+        /* 左侧固定导航栏容器 */
+        .timeline-nav__wrapper {
+            /* 💥 核心修复 2：从 fixed 升级为 sticky */
+            position: sticky; 
+            top: 0; left: 0;
+            width: 400px; 
+            /* 💥 核心修复 3：防止被右侧内容挤压变形 */
+            flex-shrink: 0; 
+            height: 100vh;
+            z-index: 10;
+            pointer-events: none; 
+        }
+
+        /* 💥 时间线返回按钮专属样式 💥 */
+        .timeline-return-btn {
+            position: absolute;
+            top: 90px; 
+            left: 20px;
+            z-index: 100;
+            padding: 8px 15px;
+            font-size: 12px;
+            background: rgba(6, 11, 20, 0.8);
+            backdrop-filter: blur(5px);
+            pointer-events: auto; 
+        }
+
+        /* 💥 核心修复：绝对定位，画一个死边框，严格限制在返回按钮下方！ */
+        .timeline-nav {
+            position: absolute;
+            top: 140px; /* 强制从 140px 开始，绝对不可能碰到 90px 的返回按钮 */
+            bottom: 0;  /* 延伸到底部 */
+            left: 10px; /* 配合 padding 把线包进去 */
+            width: 390px; 
+            list-style: none;
+            margin: 0; 
+            padding: 0 0 150px 40px; /* 左侧 40px padding 保护折线不被切掉 */
+            pointer-events: auto; 
+            overflow-y: auto; 
+            overflow-x: hidden; 
+            scrollbar-width: none; 
+            -ms-overflow-style: none; 
+        }
+        .timeline-nav::-webkit-scrollbar { 
+            display: none; 
+        }
+
+        /* 💥 时间线返回按钮专属样式 💥 */
+        .timeline-return-btn {
+            position: absolute;
+            top: 90px; 
+            left: 20px;
+            z-index: 100;
+            padding: 8px 15px;
+            font-size: 12px;
+            background: rgba(6, 11, 20, 0.8);
+            backdrop-filter: blur(5px);
+            pointer-events: auto; 
+        }
+
+        .timeline-nav li {
+            position: relative;
+            transition: all 0.3s ease-out;
+            margin-bottom: 1.5em;
+        }
+
+        /* 赛博折线 (未激活状态) */
+        .timeline-nav li::after {
+            content: '';
+            display: block;
+            border-left: 2px solid rgba(18, 168, 255, 0.2);
+            border-top: 2px solid rgba(18, 168, 255, 0.2);
+            height: 120px;
+            width: 20px;
+            position: absolute;
+            left: -30px;
+            top: 15px;
+            transition: all 0.3s ease-out;
+        }
+        .timeline-nav li:last-child::after {
+            display: none; 
+        }
+
+        .timeline-nav a {
+            display: block;
+            padding: 0;
+            color: #8bb9d6;
+            text-decoration: none;
+            transition: all 0.15s ease-out;
+            cursor: pointer;
+        }
+
+        .timeline-nav a:hover {
+            padding-left: 1em;
+            color: #e0f2fe;
+        }
+
+        /* 激活状态 */
+        .timeline-nav li.active {
+            pointer-events: none;
+            padding-left: 1em;
+        }
+
+        /* 赛博折线 (激活发光状态) */
+        .timeline-nav li.active::after {
+            width: 35px;
+            height: 220px;
+            top: 35px;
+            border-color: #12a8ff;
+            filter: drop-shadow(0 0 5px #12a8ff);
+        }
+
+        .timeline-nav__counter {
+            font-size: 24px;
+            font-family: 'Impact', monospace;
+            color: rgba(18, 168, 255, 0.4);
+            transition: all 0.15s ease-out;
+            letter-spacing: 2px;
+        }
+
+        .timeline-nav li.active .timeline-nav__counter {
+            font-size: 48px;
+            color: #12a8ff;
+            text-shadow: 0 0 15px #12a8ff;
+        }
+
+        .timeline-nav__title {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 0 0.25em;
+            width: 300px;
+            height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: height 0.3s ease-out, opacity 0.2s ease-out;
+            color: #e0f2fe;
+            font-family: "PingFang SC", sans-serif;
+        }
+
+        .timeline-nav li.active .timeline-nav__title {
+            height: 35px;
+            opacity: 1;
+            overflow: visible;
+        }
+
+        .timeline-nav__body {
+            font-size: 14px;
+            width: 300px;
+            height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: height 0.3s ease-out, opacity 0.2s ease-out;
+            color: #8bb9d6;
+            line-height: 1.6;
+        }
+
+        .timeline-nav li.active .timeline-nav__body {
+            height: auto;
+            min-height: 80px;
+            opacity: 1;
+            overflow: visible;
+            padding-top: 10px;
+        }
+
+        /* 右侧内容区 */
+        .timeline-content {
+            /* 💥 核心修复 4：因为左侧导航现在占据了真实的物理空间(400px)，
+               所以右侧只需要留 50px 的间距，并自动占满剩余空间即可 */
+            margin-left: 50px; 
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .timeline-section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 50px 50px 50px 0;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        /* 1. 主页 Hero 区域幽灵文字 */
+        .ghost-bg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, calc(-50% + var(--parallax-y, 0px)));
+            font-family: "Impact", sans-serif;
+            font-size: clamp(8rem, 25vw, 25rem);
+            font-weight: 900;
+            
+            /* 💥 修复 1：把透明度从 0.03 提高到了 0.08，让它更清晰 */
+            color: rgba(18, 168, 255, 0.08); 
+            
+            /* 💥 修复 2：加了一层极弱的蓝色光晕，增加全息投影的质感 */
+            text-shadow: 0 0 30px rgba(18, 168, 255, 0.15);
+            
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 0;
+            will-change: transform; 
+        }
+
+        /* 2. 时间线区域背景巨型年份 */
+        .timeline-section h2 {
+            font-size: clamp(6rem, 15vw, 12rem);
+            font-family: 'Impact', sans-serif;
+            color: rgba(18, 168, 255, 0.03);
+            margin: 0;
+            position: absolute;
+            top: 50%;
+            /* 💥 同样加入视差变量 */
+            transform: translateY(calc(-50% + var(--parallax-y, 0px)));
+            z-index: 0;
+            pointer-events: none;
+            will-change: transform; 
+        }
+
+        .timeline-section .content-box {
+            position: relative;
+            z-index: 1;
+            background: rgba(0, 5, 10, 0.8);
+            border: 1px solid #12a8ff;
+            border-left: 4px solid #12a8ff;
+            padding: 40px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.6), inset 0 0 20px rgba(18, 168, 255, 0.1);
+            max-width: 800px;
+            backdrop-filter: blur(5px);
+        }
+
+        /* 💥 手机端专属：时间线卡片头部（电脑端隐藏） */
+        .timeline-mobile-header { display: none; }
+
+        /* =========================================
+           💥 终极修复：弹窗内部输入框的白底问题 💥
+           ========================================= */
+        .sys-modal-box .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            background: rgba(0, 0, 0, 0.6) !important;
+            border: 1px solid rgba(18, 168, 255, 0.4) !important;
+            border-radius: 4px;
+            transition: 0.3s;
+            margin-top: 15px;
+            z-index: 20; /* 确保输入框在扫描线之上，能被正常点击 */
+        }
+
+        .sys-modal-box .input-wrapper:focus-within {
+            border-color: #12a8ff !important;
+            box-shadow: 0 0 15px rgba(18, 168, 255, 0.4), inset 0 0 10px rgba(18, 168, 255, 0.2) !important;
+        }
+
+        .sys-modal-box .prefix {
+            color: #12a8ff;
+            font-family: monospace;
+            padding: 10px 0 10px 10px;
+            user-select: none;
+        }
+
+        .sys-modal-box input {
+            background: transparent !important; /* 强制背景透明 */
+            border: none !important;            /* 强制去掉边框 */
+            color: #ffffff !important;          /* 字体变成白色 */
+            width: 100%;
+            padding: 10px;
+            font-family: "PingFang SC", monospace;
+            font-size: 14px;
+            outline: none !important;
+            box-sizing: border-box;
+        }
+        
+        /* 💥 核心杀手锏：干掉浏览器自动填充带来的顽固白底 💥 */
+        .sys-modal-box input:-webkit-autofill,
+        .sys-modal-box input:-webkit-autofill:hover, 
+        .sys-modal-box input:-webkit-autofill:focus, 
+        .sys-modal-box input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px #060b14 inset !important; /* 用深色阴影填满背景 */
+            -webkit-text-fill-color: #ffffff !important; /* 强制文字为白色 */
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
+        /* =========================================
+   管理员控制台 Tab 选项卡样式
+   ========================================= */
+.admin-tab-btn {
+    background: rgba(76, 175, 80, 0.05);
+    border: 1px solid rgba(76, 175, 80, 0.3);
+    border-bottom: none;
+    color: rgba(76, 175, 80, 0.6);
+    padding: 10px 25px;
+    font-family: monospace;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 4px 4px 0 0;
+    position: relative;
+    top: 1px; /* 让选中的 Tab 盖住底部的边框 */
+}
+
+.admin-tab-btn:hover {
+    background: rgba(76, 175, 80, 0.15);
+    color: #4caf50;
+}
+
+.admin-tab-btn.active {
+    background: rgba(76, 175, 80, 0.2);
+    border-color: #4caf50;
+    color: #4caf50;
+    text-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+    border-bottom: 1px solid rgba(0, 5, 10, 1); /* 制造融合的视错觉 */
+    z-index: 2;
+}
+
+.admin-tab-content {
+    display: none;
+    background: rgba(0, 5, 10, 0.6);
+    border: 1px solid rgba(76, 175, 80, 0.4);
+    padding: 20px;
+    border-radius: 0 4px 4px 4px;
+    box-shadow: inset 0 0 20px rgba(76, 175, 80, 0.05);
+}
+
+.admin-tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* =========================================
+   深空通讯网络 (论坛) 专属样式
+   ========================================= */
+.forum-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.forum-sidebar {
+    flex: 0 0 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: sticky;
+    top: 80px;
+}
+
+.forum-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0; /* 💥 核心修复：防止 Flex 子元素无限撑开 */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 频道切换按钮 */
+.channel-btn {
+    background: rgba(0, 5, 10, 0.6);
+    border: 1px solid rgba(76, 175, 80, 0.3);
+    color: #8bc34a;
+    padding: 12px 15px;
+    text-align: left;
+    font-family: "PingFang SC", sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.channel-btn:hover {
+    background: rgba(76, 175, 80, 0.15);
+    border-color: #4caf50;
+    transform: translateX(5px);
+}
+
+.channel-btn.active {
+    background: rgba(76, 175, 80, 0.2);
+    border-left: 4px solid #4caf50;
+    color: #fff;
+    text-shadow: 0 0 8px rgba(76, 175, 80, 0.8);
+    font-weight: bold;
+}
+
+/* 帖子输入区 */
+.forum-post-box {
+    background: rgba(0, 5, 10, 0.8);
+    border: 2px solid #4caf50;
+    padding: 20px;
+    border-radius: 4px;
+    box-shadow: inset 0 0 20px rgba(76, 175, 80, 0.1), 4px 4px 0 rgba(76, 175, 80, 0.2);
+}
+
+.forum-textarea {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(76, 175, 80, 0.4);
+    color: #fff;
+    padding: 12px;
+    font-family: "PingFang SC", sans-serif;
+    font-size: 14px;
+    resize: none;
+    outline: none;
+    box-sizing: border-box;
+    min-height: 80px;
+    margin-bottom: 10px;
+    transition: all 0.3s;
+}
+
+.forum-textarea:focus {
+    border-color: #4caf50;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+}
+
+/* 单个帖子卡片 */
+.post-card {
+    background: rgba(0, 5, 10, 0.7);
+    border: 1px solid rgba(18, 168, 255, 0.3);
+    padding: 0; /* 💥 核心修复：去掉父级 padding，彻底消灭负边距 */
+    border-radius: 4px;
+    position: relative;
+    transition: all 0.3s;
+    box-sizing: border-box;
+    width: 100%;
+    overflow: hidden; /* 💥 核心修复：切断一切溢出可能 */
+}
+
+.post-card.announcement {
+    border-color: #ffeb3b;
+    border-left: 4px solid #ffeb3b;
+    background: rgba(255, 235, 59, 0.05);
+}
+
+.post-card.faction {
+    border-color: #e91e63;
+    border-left: 4px solid #e91e63;
+}
+
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+    padding: 20px 20px 10px 20px; /* 💥 边距移到这里 */
+    margin-bottom: 0;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.post-author {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0; /* 💥 防止长名字撑破 */
+    flex: 1;
+}
+
+.post-info {
+    min-width: 0; /* 💥 防止长名字撑破 */
+    flex: 1;
+}
+
+
+.post-avatar {
+    width: 40px;
+    height: 40px;
+    background: rgba(18, 168, 255, 0.1);
+    border: 1px solid #12a8ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Impact", sans-serif;
+    color: #12a8ff;
+    font-size: 20px;
+}
+
+.post-info h4 {
+    margin: 0 0 4px 0;
+    color: #e0f2fe;
+    font-size: 15px;
+}
+
+.post-info span {
+    font-size: 12px;
+    color: #8bb9d6;
+    font-family: monospace;
+    background: rgba(18, 168, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 2px;
+}
+
+.post-time {
+    font-family: monospace;
+    color: #666;
+    font-size: 12px;
+}
+
+.post-content {
+    color: #fff;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    padding: 15px 20px 20px 20px; /* 💥 边距移到这里 */
+    margin-bottom: 0;
+    word-break: break-word;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+
+/* 评论区 */
+.comments-section {
+    background: rgba(0, 0, 0, 0.4);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 15px 20px; /* 💥 边距移到这里 */
+    margin: 0; /* 💥 核心修复：彻底干掉导致安卓错乱的负边距 (-20px) */
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.comment-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.comment-author {
+    color: #12a8ff;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.comment-content {
+    color: #ccc;
+}
+
+.comment-input-box {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.comment-input-box input {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(18, 168, 255, 0.3);
+    color: #fff;
+    padding: 8px 10px;
+    font-family: "PingFang SC", sans-serif;
+    outline: none;
+    box-sizing: border-box; /* 💥 修复：防止 padding 撑破容器 */
+}
+
+.comment-input-box input:focus { border-color: #12a8ff; }
+
+
+/* =========================================
+   双面人系统 (表里档案) 专属样式
+   ========================================= */
+/* 隐藏身份表单区 */
+#hidden-identity-section {
+    display: none;
+    border: 1px solid #e91e63;
+    padding: 20px;
+    background: rgba(233, 30, 99, 0.05);
+    border-radius: 4px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    box-shadow: inset 0 0 20px rgba(233, 30, 99, 0.1);
+}
+
+/* 解密按钮 */
+.decrypt-btn {
+    background: rgba(233, 30, 99, 0.1);
+    border: 1px solid #e91e63;
+    color: #e91e63;
+    padding: 2px 8px;
+    font-family: monospace;
+    cursor: pointer;
+    border-radius: 2px;
+    font-size: 12px;
+    margin-left: 10px;
+    transition: 0.2s;
+    animation: glitch-blink 3s infinite;
+    vertical-align: middle;
+}
+.decrypt-btn:hover {
+    background: #e91e63;
+    color: #fff;
+    box-shadow: 0 0 15px #e91e63;
+}
+
+@keyframes glitch-blink {
+    0%, 100% { opacity: 1; }
+    95% { opacity: 1; }
+    96% { opacity: 0.2; }
+    97% { opacity: 1; }
+    98% { opacity: 0.5; }
+    99% { opacity: 1; }
+}
+
+/* 故障切换动画 (纯左右撕裂闪烁，不扭腰) */
+.glitch-anim {
+    animation: cyber-glitch-swap 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+@keyframes cyber-glitch-swap {
+    0% { filter: contrast(1) brightness(1) hue-rotate(0deg); transform: translateX(0); }
+    20% { filter: contrast(2) brightness(2) hue-rotate(90deg); transform: translateX(-6px); }
+    40% { filter: contrast(0.5) brightness(0.5) hue-rotate(-90deg); transform: translateX(6px); }
+    60% { filter: contrast(2) brightness(2) hue-rotate(180deg); transform: translateX(-3px); }
+    80% { filter: contrast(0.8) brightness(1.5) hue-rotate(45deg); transform: translateX(3px); }
+    100% { filter: contrast(1) brightness(1) hue-rotate(0deg); transform: translateX(0); }
+}
+
+/* 表里数据切换逻辑 */
+.hidden-data { display: none; color: #ff80ab; text-shadow: 0 0 5px #e91e63; }
+.show-hidden .public-data { display: none !important; }
+.show-hidden .hidden-data { display: inline !important; animation: fadeIn 0.3s forwards; }
+
+/* 激活里身份时的全局变红特效 */
+.show-hidden { 
+    border-color: #e91e63 !important; 
+    box-shadow: inset 0 0 40px rgba(233, 30, 99, 0.15) !important; 
+}
+.show-hidden .detail-lbl { color: #e91e63 !important; }
+.show-hidden .clickable-tag { color: #ff80ab !important; }
+.show-hidden h3, .show-hidden h1 { color: #ff80ab !important; text-shadow: 0 0 10px #e91e63 !important; }
+
+/* 论坛里身份发帖特效 */
+.post-card.hidden-identity {
+    border-color: #e91e63;
+    border-left: 4px solid #e91e63;
+    background: rgba(233, 30, 99, 0.05);
+}
+.post-card.hidden-identity .post-avatar {
+    border-color: #e91e63;
+    color: #e91e63;
+    background: rgba(233, 30, 99, 0.1);
+}
+.post-card.hidden-identity h4 { color: #ff80ab; }
+.post-card.hidden-identity .post-info span { background: rgba(233, 30, 99, 0.1); color: #ff80ab; }
+
+
+/* =========================================
+   主线剧情卡片 富文本专属排版
+   ========================================= */
+.plot-rich-text {
+    color: #e1bee7;
+    font-size: 15px;
+    line-height: 1.8;
+    max-height: 400px; /* 限制最大高度 */
+    overflow-y: auto;  /* 内容太多时自动出现滚动条 */
+    padding-right: 10px;
+}
+
+/* 定制紫色滚动条 */
+.plot-rich-text::-webkit-scrollbar { width: 4px; }
+.plot-rich-text::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+.plot-rich-text::-webkit-scrollbar-thumb { background: #e040fb; border-radius: 2px; }
+
+/* 富文本内部元素样式 */
+        .plot-rich-text h1, .plot-rich-text h2, .plot-rich-text h3 {
+            color: #e040fb !important; /* 强制使用专属霓虹紫 */
+            margin-top: 0;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(224,64,251,0.4);
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            line-height: 1.4;
+        }
+        
+        /* 💥 核心修复：拆分大中小标题的字号 */
+        .plot-rich-text h1 { font-size: 24px !important; }
+        .plot-rich-text h2 { font-size: 20px !important; }
+        .plot-rich-text h3 { font-size: 16px !important; }
+
+        .plot-rich-text p {
+            margin-bottom: 15px;
+        }
+
+/* =========================================
+   滚动条与输入框高度优化 (自戏/对戏/富文本)
+   ========================================= */
+
+/* 1. 限制对戏输入框的最大高度，防止无限撑开 */
+#rp-msg-text {
+    max-height: 150px; /* 超过这个高度就不再撑开 */
+    overflow-y: auto !important; /* 强制显示滚动条 */
+}
+
+/* 2. 对戏区域 (聊天预览框 + 输入框) 的霓虹紫滚动条 */
+#rp-chat-preview::-webkit-scrollbar,
+#rp-msg-text::-webkit-scrollbar {
+    width: 6px;
+}
+#rp-chat-preview::-webkit-scrollbar-track,
+#rp-msg-text::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+}
+#rp-chat-preview::-webkit-scrollbar-thumb,
+#rp-msg-text::-webkit-scrollbar-thumb {
+    background: #e040fb;
+    border-radius: 3px;
+    box-shadow: 0 0 5px rgba(224, 64, 251, 0.5); /* 紫色发光 */
+}
+
+/* 3. 富文本编辑器 (自戏/主线) 的赛博滚动条 */
+.ql-editor::-webkit-scrollbar {
+    width: 6px;
+}
+.ql-editor::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+}
+/* 自戏编辑器默认用赛博蓝 */
+.ql-editor::-webkit-scrollbar-thumb {
+    background: #12a8ff;
+    border-radius: 3px;
+    box-shadow: 0 0 5px rgba(18, 168, 255, 0.5); /* 蓝色发光 */
+}
+/* 管理员主线编辑器用赛博黄覆盖 */
+#admin-article-form .ql-editor::-webkit-scrollbar-thumb {
+    background: #ffeb3b;
+    box-shadow: 0 0 5px rgba(255, 235, 59, 0.5); /* 黄色发光 */
+}
+
+/* =========================================
+   个人记录 (对戏/自戏) 专属样式
+   ========================================= */
+/* 聊天记录容器 */
+.chat-container { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 20px; 
+    padding: 30px; 
+    background: rgba(0, 5, 10, 0.6); 
+    border-radius: 8px; 
+    border: 1px solid rgba(224, 64, 251, 0.3); 
+    box-shadow: inset 0 0 30px rgba(224, 64, 251, 0.05);
+}
+
+/* 单条消息包装 */
+.chat-msg { 
+    display: flex; 
+    flex-direction: column; 
+    max-width: 85%; 
+    animation: fadeIn 0.3s ease; 
+}
+
+/* 玩家自己 (靠右) */
+.chat-msg.me { 
+    align-self: flex-end; 
+    align-items: flex-end; 
+}
+
+/* 对戏对象 (靠左) */
+.chat-msg.other { 
+    align-self: flex-start; 
+    align-items: flex-start; 
+}
+
+/* 名字标签 */
+.chat-name { 
+    font-size: 12px; 
+    margin-bottom: 6px; 
+    font-family: monospace; 
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+.chat-msg.me .chat-name { color: #12a8ff; }
+.chat-msg.other .chat-name { color: #e040fb; }
+
+/* 气泡本体 */
+.chat-bubble { 
+    padding: 12px 18px; 
+    border-radius: 8px; 
+    font-size: 15px; 
+    line-height: 1.6; 
+    color: #fff; 
+    word-break: break-word; 
+    white-space: pre-wrap; /* 保留换行符 */
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+/* 玩家气泡样式 (赛博蓝) */
+.chat-msg.me .chat-bubble { 
+    background: rgba(18, 168, 255, 0.15); 
+    border: 1px solid #12a8ff; 
+    border-bottom-right-radius: 0; 
+    box-shadow: -4px 4px 15px rgba(18, 168, 255, 0.1); 
+}
+
+/* 对象气泡样式 (霓虹紫) */
+.chat-msg.other .chat-bubble { 
+    background: rgba(224, 64, 251, 0.15); 
+    border: 1px solid #e040fb; 
+    border-bottom-left-radius: 0; 
+    box-shadow: 4px 4px 15px rgba(224, 64, 251, 0.1); 
+}
+
+/* 记录编辑器专属 Tab */
+.log-tab-btn {
+    background: transparent;
+    border: 1px solid rgba(224, 64, 251, 0.3);
+    color: rgba(224, 64, 251, 0.6);
+    padding: 10px 25px;
+    font-family: monospace;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 4px 4px 0 0;
+    border-bottom: none;
+}
+.log-tab-btn.active {
+    background: rgba(224, 64, 251, 0.15);
+    border-color: #e040fb;
+    color: #e040fb;
+    text-shadow: 0 0 8px rgba(224, 64, 251, 0.5);
+}
+
+/* =========================================
+   自戏记录专属阅读排版
+   ========================================= */
+.solo-log-content {
+    color: #e0f2fe;
+    font-size: 16px;
+    line-height: 2;
+    background: rgba(0, 5, 10, 0.6);
+    border: 1px solid rgba(18, 168, 255, 0.3);
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: inset 0 0 40px rgba(18, 168, 255, 0.05);
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.solo-log-content p { margin-bottom: 15px; }
+.solo-log-content strong { color: #ffeb3b; text-shadow: 0 0 5px rgba(255, 235, 59, 0.4); }
+.solo-log-content img { 
+    max-width: 100%; 
+    border-radius: 6px; 
+    border: 1px solid #12a8ff; 
+    box-shadow: 0 0 15px rgba(18, 168, 255, 0.2); 
+    margin: 15px 0; 
+}
+.solo-log-content h1, .solo-log-content h2, .solo-log-content h3 {
+    color: #12a8ff;
+    margin-top: 0;
+    margin-bottom: 15px;
+    text-shadow: 0 0 10px rgba(18, 168, 255, 0.4);
+}
+
+/* =========================================
+           💥 个人终端：我管理的组织卡片样式
+           ========================================= */
+        .my-orgs-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .my-org-card {
+            background: rgba(18, 168, 255, 0.05);
+            border: 1px solid rgba(18, 168, 255, 0.2);
+            border-left: 3px solid #12a8ff; /* 💥 找回左侧的线 */
+            border-radius: 0 !important; /* 💥 去掉圆角，变成硬核直角 */
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+            width: 100%; /* 💥 强制占满容器宽度 */
+            box-sizing: border-box;
+        }
+        .my-org-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .my-org-icon {
+            font-size: 20px;
+            filter: drop-shadow(0 0 5px rgba(18,168,255,0.5));
+        }
+        .my-org-name {
+            color: #fff;
+            font-family: 'PingFang SC', sans-serif;
+            font-size: 15px;
+            letter-spacing: 1px;
+        }
+        .my-org-edit-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* 组织卡片双按钮容器 */
+        .my-org-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .my-org-action-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        /* =========================================
+           💥 剧情卡片滑动切换动画
+           ========================================= */
+        @keyframes plotSlideNext {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes plotSlidePrev {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .plot-anim-next { animation: plotSlideNext 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important; }
+        .plot-anim-prev { animation: plotSlidePrev 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important; }
+
+        /* 💥 终极修复：干掉浏览器自动填充带来的顽固白底 💥 */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+textarea:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #060b14 inset !important; /* 用深色阴影填满背景 */
+    -webkit-text-fill-color: #ffffff !important; /* 强制文字为白色 */
+    transition: background-color 5000s ease-in-out 0s;
+    background-color: transparent !important;
+}
+
+/* 💥 优化：更新主线按钮专属高亮样式 */
+#btn-edit-main-plot {
+    background: rgba(224, 64, 251, 0.3); /* 加深紫色半透明底色 */
+    border: 1px solid #e040fb;
+    color: #ffffff; /* 文字改为纯白，极大提升清晰度 */
+    text-shadow: 0 0 8px #e040fb; /* 紫色文字发光 */
+    padding: 6px 12px;
+    font-family: monospace;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+/* 鼠标悬停时变成实心高亮 */
+#btn-edit-main-plot:hover {
+    background: #e040fb;
+    color: #060b14;
+    text-shadow: none;
+    box-shadow: 0 0 15px #e040fb;
+}
+
+/* =========================================
+   💥 全局 SVG 科幻加载动画 💥
+   ========================================= */
+.cyber-loader-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    width: 100%;
+    grid-column: 1 / -1; /* 保证在网格中占满整行 */
+    box-sizing: border-box;
+}
+.cyber-spinner {
+    width: 45px;
+    height: 45px;
+    animation: cyber-spin 1.5s linear infinite;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 0 8px currentColor); /* 自动跟随文字颜色发光 */
+}
+.cyber-spinner .bg-circle {
+    stroke: currentColor;
+    opacity: 0.2;
+}
+.cyber-spinner .anim-circle {
+    stroke: currentColor;
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: 0;
+    stroke-linecap: square;
+    animation: cyber-dash 1.5s ease-in-out infinite;
+}
+.cyber-loader-text {
+    font-family: monospace;
+    font-size: 13px;
+    letter-spacing: 2px;
+    animation: cyber-pulse 1.5s ease-in-out infinite;
+}
+@keyframes cyber-spin { 100% { transform: rotate(360deg); } }
+@keyframes cyber-dash {
+    0% { stroke-dasharray: 1, 150; stroke-dashoffset: 0; }
+    50% { stroke-dasharray: 90, 150; stroke-dashoffset: -35; }
+    100% { stroke-dasharray: 90, 150; stroke-dashoffset: -124; }
+}
+@keyframes cyber-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* =========================================
+           💥 终端安全协议：防复制模式 💥
+           ========================================= */
+        body.secure-no-select {
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            user-select: none !important;
+            -webkit-touch-callout: none !important; /* 禁用 iOS 长按弹出菜单 */
+        }
+
+        /* 豁免输入框、文本域、下拉框 */
+        body.secure-no-select input,
+        body.secure-no-select textarea,
+        body.secure-no-select select {
+            -webkit-user-select: auto !important;
+            -moz-user-select: auto !important;
+            -ms-user-select: auto !important;
+            user-select: auto !important;
+            -webkit-touch-callout: default !important;
+        }
+        
+        /* 💥 专属豁免：保证右上角终端密钥依然可以一键全选复制 */
+        body.secure-no-select .op-key-text {
+            -webkit-user-select: all !important;
+            -moz-user-select: all !important;
+            -ms-user-select: all !important;
+            user-select: all !important;
+        }
+
+        /* =========================================
+           消息提示弹窗专属样式 (含手机端适配)
+           ========================================= */
+        .notif-dropdown-box {
+            position: absolute;
+            width: 300px;
+            right: -5px;
+            top: 35px;
+            z-index: 1000;
+            padding: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: default;
+            text-shadow: none;
+            background: rgba(0, 5, 10, 0.95);
+            border: 2px solid #12a8ff;
+            box-shadow: 6px 6px 0 rgba(18, 168, 255, 0.3);
+            backdrop-filter: blur(10px);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        /* 自定义滚动条 */
+        .notif-dropdown-box::-webkit-scrollbar { width: 4px; }
+        .notif-dropdown-box::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); }
+        .notif-dropdown-box::-webkit-scrollbar-thumb { background: #12a8ff; }
+
+        /* =========================================
+           个人终端 Tab 样式
+           ========================================= */
+        .profile-tabs { display: flex; border-bottom: 1px solid rgba(18, 168, 255, 0.4); margin-bottom: 15px; gap: 5px; }
+        .profile-tab-btn { background: transparent; border: 1px solid rgba(18, 168, 255, 0.3); border-bottom: none; color: rgba(18, 168, 255, 0.6); padding: 8px 20px; font-family: monospace; font-size: 14px; cursor: pointer; border-radius: 4px 4px 0 0; transition: 0.2s; position: relative; top: 1px; }
+        .profile-tab-btn:hover { background: rgba(18, 168, 255, 0.1); color: #12a8ff; }
+        .profile-tab-btn.active { background: rgba(18, 168, 255, 0.15); color: #12a8ff; border-color: #12a8ff; text-shadow: 0 0 8px rgba(18, 168, 255, 0.5); border-bottom: 1px solid rgba(0, 5, 10, 1); z-index: 2; }
+        .profile-tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .profile-tab-content.active { display: block; }
+
+        /* =========================================
+           组织专属阅读器 Tab 样式
+           ========================================= */
+        .org-tabs {
+            display: flex;
+            border-bottom: 1px solid rgba(139, 195, 74, 0.4);
+            margin-bottom: 20px;
+            gap: 5px;
+        }
+        .org-tab-btn {
+            background: transparent;
+            border: 1px solid rgba(139, 195, 74, 0.3);
+            border-bottom: none;
+            color: rgba(139, 195, 74, 0.6);
+            padding: 10px 25px;
+            font-family: monospace;
+            font-size: 15px;
+            cursor: pointer;
+            border-radius: 4px 4px 0 0;
+            transition: 0.2s;
+            position: relative;
+            top: 1px;
+        }
+        .org-tab-btn:hover {
+            background: rgba(139, 195, 74, 0.1);
+            color: #8bc34a;
+        }
+        .org-tab-btn.active {
+            background: rgba(139, 195, 74, 0.15);
+            color: #8bc34a;
+            border-color: #8bc34a;
+            text-shadow: 0 0 8px rgba(139, 195, 74, 0.5);
+            border-bottom: 1px solid rgba(6, 11, 20, 1); /* 制造融合视错觉 */
+            z-index: 2;
+        }
+        .org-tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .org-tab-content.active {
+            display: block;
+        }
+
+        /* =========================================
+           频道公告 Tab 样式
+           ========================================= */
+        .ann-tab-btn {
+            background: transparent; border: none; color: rgba(255,235,59,0.6); font-family: monospace; font-size: 14px; cursor: pointer; padding: 5px 10px; transition: 0.2s; border-bottom: 2px solid transparent;
+        }
+        .ann-tab-btn:hover { color: #ffeb3b; }
+        .ann-tab-btn.active {
+            color: #ffeb3b; font-weight: bold; text-shadow: 0 0 8px rgba(255,235,59,0.5); border-bottom: 2px solid #ffeb3b;
+        }
+        .ann-tab-content { display: none; }
+        .ann-tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+        /* =========================================
+           论坛长文本智能折叠系统
+           ========================================= */
+        .content-collapse-wrapper {
+            max-height: 120px; /* 默认折叠高度，大约 5-6 行 */
+            overflow: hidden;
+            /* 💥 核心黑科技：使用遮罩实现底部文字渐隐，完美融合任何背景色 */
+            -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+            mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+            transition: max-height 0.5s cubic-bezier(0, 1, 0, 1); /* 丝滑展开动画 */
+        }
+        
+        .content-collapse-wrapper.expanded {
+            max-height: 3000px; /* 展开后的最大高度限制（足够容纳万字长文） */
+            -webkit-mask-image: none;
+            mask-image: none;
+            transition: max-height 0.5s ease-in-out;
+        }
+
+        .expand-toggle-btn {
+            background: transparent;
+            border: none;
+            color: #12a8ff;
+            font-family: monospace;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 5px 0;
+            margin-top: 5px;
+            display: inline-block;
+            transition: 0.2s;
+        }
+
+        .expand-toggle-btn:hover {
+            color: #fff;
+            text-shadow: 0 0 8px #12a8ff;
+        }
+
+        /* =========================================
+           💥 论坛排版终极修复：强制换行防撑破
+           ========================================= */
+        .post-content, 
+        .comment-content, 
+        .content-collapse-wrapper {
+            word-break: break-word !important; /* 强制打断长单词或连续字母 */
+            overflow-wrap: anywhere !important; /* 确保在任何情况下都不会撑出容器 */
+            white-space: pre-wrap; /* 保留正常的换行符 */
+        }
+
+        /* =========================================
+           论坛个人主页弹窗 (Forum Profile Modal)
+           ========================================= */
+        .forum-profile-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 5, 10, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 100000; 
+            display: none; 
+            justify-content: center; align-items: center;
+            padding: 20px; box-sizing: border-box;
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .forum-profile-modal.active { display: flex; opacity: 1; }
+        
+        .forum-profile-box {
+            background: rgba(6, 11, 20, 0.95);
+            border: 2px solid #12a8ff;
+            box-shadow: 0 0 30px rgba(18, 168, 255, 0.3), inset 0 0 20px rgba(18, 168, 255, 0.1);
+            width: 100%; max-width: 600px; max-height: 85vh;
+            display: flex; flex-direction: column;
+            position: relative;
+        }
+        .forum-profile-box.hidden-mode {
+            border-color: #e91e63;
+            box-shadow: 0 0 30px rgba(233, 30, 99, 0.3), inset 0 0 20px rgba(233, 30, 99, 0.1);
+        }
+
+        .fp-header {
+            padding: 20px; border-bottom: 1px dashed rgba(18, 168, 255, 0.4);
+            display: flex; gap: 20px; align-items: center; position: relative;
+        }
+        .forum-profile-box.hidden-mode .fp-header { border-bottom-color: rgba(233, 30, 99, 0.4); }
+
+        .fp-avatar {
+            width: 80px; height: 80px; font-size: 40px;
+            background: rgba(18, 168, 255, 0.1); border: 2px solid #12a8ff;
+            display: flex; justify-content: center; align-items: center;
+            font-family: "Impact", sans-serif; color: #12a8ff;
+        }
+        .forum-profile-box.hidden-mode .fp-avatar {
+            background: rgba(233, 30, 99, 0.1); border-color: #e91e63; color: #e91e63;
+        }
+
+        .fp-info h2 { margin: 0 0 5px 0; color: #fff; font-size: 24px; display: flex; align-items: center; gap: 10px; }
+        .fp-info p { margin: 0; color: #8bb9d6; font-family: monospace; font-size: 13px; }
+        .forum-profile-box.hidden-mode .fp-info p { color: #ff80ab; }
+
+        .fp-feed {
+            flex: 1; overflow-y: auto; padding: 20px;
+            display: flex; flex-direction: column; gap: 15px;
+        }
+        .fp-feed::-webkit-scrollbar { width: 4px; }
+        .fp-feed::-webkit-scrollbar-thumb { background: #12a8ff; }
+        .forum-profile-box.hidden-mode .fp-feed::-webkit-scrollbar-thumb { background: #e91e63; }
+
+        /* =========================================
+           论坛发帖框 (PC & 手机端响应式优化)
+           ========================================= */
+        .post-box-header {
+            display: flex; justify-content: flex-start; align-items: center; gap: 15px;
+            margin-bottom: 15px; border-bottom: 1px dashed rgba(76, 175, 80, 0.4); padding-bottom: 15px;
+        }
+        .post-box-user { display: flex; align-items: center; gap: 15px; }
+        .post-box-avatar-el {
+            width: 45px; height: 45px; background: rgba(76, 175, 80, 0.1); border: 2px solid #4caf50; 
+            display: flex; justify-content: center; align-items: center; font-family: 'Impact', sans-serif; color: #4caf50; font-size: 22px;
+        }
+        .post-box-name-el { color: #fff; font-weight: bold; font-size: 16px; margin-bottom: 4px; }
+        .post-box-subtitle { color: #4caf50; font-family: monospace; font-size: 11px; }
+        .post-box-profile-btn { border-color: #4caf50; color: #4caf50; padding: 4px 10px; font-size: 12px; }
+        
+        .post-box-select {
+    background: rgba(0,0,0,0.5); color: #fff; border: 1px solid #4caf50; padding: 8px; 
+    font-family: monospace; margin-bottom: 10px; outline: none; width: 100%; border-radius: 4px;
+    box-sizing: border-box; /* 💥 修复：防止 padding 撑破容器 */
+}
+        .post-box-footer { display: flex; justify-content: flex-end; }
+        .post-box-submit-btn { margin: 0; padding: 8px 20px; font-size: 14px; color: #060b14; background: #4caf50; border-color: #4caf50; }
+
+        /* =========================================
+           💥 终极修复：防止所有头像被挤压变形
+           ========================================= */
+        .post-avatar, 
+        .fp-avatar, 
+        .post-box-avatar-el,
+        .profile-avatar-section .avatar-placeholder {
+            flex-shrink: 0 !important; /* 绝对禁止被挤压缩小 */
+            overflow: hidden !important; /* 确保图片完美贴合边框 */
+        }
+        
+        /* 确保图片永远按比例填充，不拉伸 */
+        .post-avatar img, 
+        .fp-avatar img, 
+        .post-box-avatar-el img,
+        .profile-avatar-section .avatar-placeholder img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+
+        /* =========================================
+           💥 终极修复：论坛昵称挤压与按钮小巧左对齐 💥
+           ========================================= */
+        .fp-info { flex: 1; min-width: 0 !important; }
+        .fp-info h2 { flex-wrap: wrap !important; word-break: break-word !important; }
+        .fp-avatar { flex-shrink: 0 !important; min-width: 80px !important; min-height: 80px !important; }
+        
+        /* 强制让这两个按钮变小，覆盖掉 sys-modal-btn 的默认全宽 */
+        #fp-name .sys-modal-btn, .post-box-profile-btn {
+            width: auto !important;
+            min-width: 0 !important;
+            padding: 2px 10px !important;
+            font-size: 11px !important;
+            line-height: 1.5 !important;
+            height: auto !important;
+            display: inline-block !important;
+            margin-top: 0 !important;
+        }
+        
+        #fp-name .sys-modal-btn { margin-left: 10px !important; }
+
+        /* =========================================
+           💥 终极修复：发帖框头像放大与完美网格对齐 💥
+           ========================================= */
+        /* 1. 电脑端头像也适当放大，显得更大气 */
+        .post-box-avatar-el {
+            width: 60px !important; 
+            height: 60px !important; 
+            font-size: 28px !important;
+        }
+
+        /* =========================================
+           💥 修复：论坛帖子操作按钮文字断行 💥
+           ========================================= */
+        /* 强制让帖子头部的所有小按钮（[审核]、[改]、[删]）作为一个整体，不许从中间断开文字 */
+        .post-info span {
+            white-space: nowrap !important; 
+            display: inline-block !important; 
+        }
+        
+        /* 确保名字太长时，名字本身可以正常换行，而不会把按钮挤出屏幕 */
+        .post-info h4 {
+            word-break: break-word !important; 
+            vertical-align: middle !important;
+        }
+
+        /* =========================================
+           💥 终极修复：解除死锁，改用智能算法防拉伸 💥
+           ========================================= */
+        body {
+            position: relative;
+            width: 100%;
+        }
+
+
+        /* ==========================================================================
+           🛠️ 组件化样式提取 (Component Classes) - 替代 JS 内联样式
+           ========================================================================== */
+        
+        /* 1. 管理员行内批注组件 */
+        .anno-btn { color: #f44336; cursor: pointer; font-weight: bold; margin-left: 5px; background: rgba(244,67,54,0.1); padding: 0 4px; border-radius: 2px; }
+        .anno-input-box { margin-top: 8px; width: 100%; box-sizing: border-box; background: rgba(244,67,54,0.1); border: 1px dashed #f44336; color: #ffb4a9; padding: 6px; font-family: 'PingFang SC', monospace; resize: none; font-size: 13px; overflow: hidden; outline: none; }
+        .anno-text-box { margin-top: 8px; width: 100%; box-sizing: border-box; background: rgba(244,67,54,0.1); border-left: 2px solid #f44336; color: #ffb4a9; padding: 6px 10px; font-size: 13px; line-height: 1.5; }
+        .anno-summary-panel { margin-top: 20px; border: 1px solid rgba(244, 67, 54, 0.5); padding: 15px; background: rgba(244, 67, 54, 0.05); border-radius: 4px; }
+
+        /* 2. 详情面板通用布局 (Queue Detail & Profile) */
+        .detail-header-box { display: flex; flex-direction: column; align-items: flex-start; padding-bottom: 15px; border-bottom: 1px dashed rgba(18, 168, 255, 0.4); margin-bottom: 15px; }
+        .detail-title-row { display: flex; justify-content: space-between; width: 100%; align-items: center; }
+        .detail-title-text { margin: 0; display: flex; align-items: center; flex-wrap: wrap; }
+        .detail-action-row { margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end; }
+        .detail-flex-col { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; width: 100%; }
+
+        /* 3. 个人终端专属 */
+        .profile-meta-text { font-family: monospace; font-size: 12px; color: #8bb9d6; text-align: center; line-height: 1.6; }
+        .profile-rename-btn { color: #12a8ff; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; margin-left: 10px; }
+        .profile-title-box { border-bottom: 2px solid; padding-bottom: 10px; margin-bottom: 10px; }
+        .profile-title-box h1 { margin: 0; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 36px; color: #fff; letter-spacing: 2px; }
+        .profile-callsign { font-family: 'Impact', monospace; font-size: 18px; letter-spacing: 1px; }
+        .profile-stats-box { gap: 10px; margin-top: 10px; background: rgba(0,0,0,0.4); padding: 10px; border: 1px solid rgba(255,255,255,0.1); }
+        .secret-note-box { border: 1px solid #ffeb3b; background: rgba(255,235,59,0.05); }
+        .text-cyber-yellow { color: #ffeb3b; }
+        .mt-15 { margin-top: 15px; }
+
+        /* 4. 论坛评论与输入框专属 */
+        .comment-item-box { display: flex; flex-direction: column; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed rgba(255,255,255,0.05); font-size: 13px; line-height: 1.5; }
+        .comment-header-row { display: flex; justify-content: space-between; margin-bottom: 4px; align-items: flex-start; gap: 10px; }
+        .comment-author-group { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+        .comment-time-text { font-family: monospace; color: #666; font-size: 10px; flex-shrink: 0; margin-top: 2px; }
+        .comment-action-btn { cursor: pointer; font-size: 12px; }
+        .comment-input-wrapper { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 8px; 
+    margin-top: 15px; 
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.comment-input-row { 
+    display: flex; 
+    gap: 8px; 
+    align-items: flex-end; 
+    width: 100%;
+    box-sizing: border-box;
+}
+.comment-textarea {  flex: 1;  background: rgba(0,0,0,0.5);  border: 1px solid rgba(18, 168, 255, 0.3);  color: #fff;  padding: 8px 10px;  font-family: 'PingFang SC', sans-serif;  outline: none;  resize: none;  border-radius: 2px; 
+    min-height: 34px; 
+    max-height: 120px; 
+    overflow-y: auto; 
+    font-size: 13px; 
+    line-height: 1.4; 
+    box-sizing: border-box; /* 💥 修复：防止 padding 撑破容器 */
+}        .comment-submit-btn { width: auto !important; min-width: 60px; padding: 0 15px !important; height: 34px; line-height: 34px; white-space: nowrap; flex-shrink: 0; font-size: 12px; border-width: 1px; margin: 0 !important; }
+
+        /* ==========================================================================
+           📱 响应式设计与移动端深度适配 (终极修复版)
+           ========================================================================== */
+
+        /* 💥 终极修复：使用 clip 替代 hidden，既防拉伸，又完美保护 sticky 吸顶！ */
+        body { 
+            overflow-x: clip !important; 
+            width: 100% !important; 
+            max-width: 100vw !important; 
+            position: relative; 
+        }
+        
+        /* 💥 修复 3：补回丢失的动画关键帧 (悬浮球弹动 & 菜单弹出) */
+        @keyframes gentleBounce {
+            0% { transform: translateY(0) scale(1); }
+            30% { transform: translateY(-6px) scale(0.95); }
+            60% { transform: translateY(2px) scale(1.02); }
+            100% { transform: translateY(0) scale(1); }
+        }
+        @keyframes simplePop {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 目录子菜单的箭头旋转动画 */
+        .toc-arrow { transition: transform 0.3s ease; }
+        .toc-arrow.open { transform: rotate(-90deg); }
+
+        /* 💥 修复 1：电脑端论坛发帖框名字与按钮左对齐 (靠着头像) */
+        .post-box-user-text {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* 强制内部元素靠左对齐 */
+            justify-content: center;
+        }
+        .post-box-profile-btn {
+            margin-top: 8px !important; /* 和上面的名字/副标题拉开一点距离 */
+            width: auto !important;
+            padding: 2px 10px !important;
+            font-size: 11px !important;
+        }
+
+        /* 💻 宽屏桌面端优化 (>= 1100px) */
+        @media (min-width: 1100px) {
+            .intel-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        /* 💻 桌面端标题放大 (>= 769px) */
+        @media (min-width: 769px) {
+            .group-name { font-size: 42px; line-height: 0.8; transform: translateY(2px); }
+        }
+
+        /* 📱 平板及小屏笔记本适配 (<= 900px) */
+        @media (max-width: 900px) {
+            .world-layout { display: flex; flex-direction: column; padding: 1rem 0; gap: 20px; }
+            .world-content-wrapper, .intel-section { padding-left: 15px; padding-right: 15px; box-sizing: border-box; }
+
+            /* 悬浮目录球 */
+            .world-toc {
+                position: fixed; bottom: 30px; right: 15px; width: 48px; height: 48px; max-width: 48px; /* 💥修复：稍微往左收一点，并锁死最大宽度 */
+                background: rgba(6, 11, 20, 0.3); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+                border: 1px solid rgba(18, 168, 255, 0.4); border-radius: 50%; z-index: 95;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), inset 0 0 15px rgba(18, 168, 255, 0.2);
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                touch-action: none; cursor: grab; transition: background 0.3s, border-color 0.3s;
+            }
+            .world-toc:active { cursor: grabbing; background: rgba(18, 168, 255, 0.2); }
+            .world-toc.wobble { animation: gentleBounce 0.4s cubic-bezier(0.2, 1, 0.3, 1); }
+            
+            .toc-title { font-size: 11px; margin: 0; color: #12a8ff; text-shadow: 0 0 5px rgba(18, 168, 255, 0.5); pointer-events: none; font-family: monospace; letter-spacing: 1px; }
+
+            /* 悬浮球防拉伸与智能对齐 */
+            .toc-list {
+                position: absolute; display: none; flex-direction: column; gap: 15px;
+                width: 220px !important; /* 💥终极修复：写死宽度，绝对不让它忽大忽小 */
+                max-width: calc(100vw - 80px) !important; max-height: 60vh;
+                background: transparent; border: none; box-shadow: none; backdrop-filter: none;
+                padding: 0; overflow-y: auto; scrollbar-width: none; box-sizing: border-box !important;
+            }
+            .toc-list::-webkit-scrollbar { display: none; }
+            .world-toc.open .toc-list { display: flex; }
+
+            .world-toc.expand-up .toc-list { bottom: 55px; top: auto; }
+            .world-toc.expand-down .toc-list { top: 55px; bottom: auto; }
+            /* 💥终极修复：把菜单往屏幕中间推 55px，彻底远离屏幕边缘，绝不撑破！ */
+            .world-toc.align-left .toc-list { left: 55px !important; right: auto !important; align-items: flex-start !important; }
+            .world-toc:not(.align-left) .toc-list { right: 55px !important; left: auto !important; align-items: flex-end !important; }
+
+            .toc-btn {
+                background: transparent; border: none; padding: 0; color: #e0f2fe;
+                font-family: "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 15px; letter-spacing: 1px;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.8); opacity: 0; pointer-events: none;
+                white-space: normal !important; word-break: break-word !important; text-align: right !important;
+            }
+            .world-toc.align-left .toc-btn { text-align: left !important; }
+            .world-toc.open .toc-btn { pointer-events: auto; opacity: 1; animation: simplePop 0.3s ease forwards; }
+            .toc-btn.active { color: #12a8ff; text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 12px rgba(18, 168, 255, 0.8); font-weight: bold; }
+
+            /* 时间线适配 */
+            .timeline-wrapper { flex-direction: column; }
+            .timeline-nav__wrapper {
+                position: sticky; top: 58px; margin-left: -15px; margin-right: -15px; width: calc(100% + 30px) !important; /* 💥修复：不用100vw，防止撑破屏幕 */
+                box-sizing: border-box; height: auto; padding: 10px 15px; background: rgba(6, 11, 20, 0.95);
+                border-bottom: 1px solid #12a8ff; z-index: 90; pointer-events: auto; backdrop-filter: blur(10px);
+                display: flex; align-items: center; gap: 15px;
+            }
+            .timeline-return-btn {
+                position: relative; top: auto; left: auto; bottom: auto; right: auto; width: auto; flex-shrink: 0;
+                border-radius: 0; padding: 6px 10px; background: rgba(0, 5, 10, 0.6); border: 1px solid #12a8ff;
+                border-left: 3px solid #12a8ff; box-shadow: 3px 3px 0 rgba(18, 168, 255, 0.2); z-index: 99; font-size: 12px; margin: 0;
+            }
+            .timeline-nav {
+                position: relative; top: auto; left: auto; width: auto; flex-grow: 1; padding: 0;
+                display: flex; overflow-x: auto; gap: 25px; scrollbar-width: none; align-items: center;
+            }
+            .timeline-nav::-webkit-scrollbar { display: none; }
+            .timeline-nav li { margin: 0; flex-shrink: 0; }
+            .timeline-nav li::after { display: none; }
+            .timeline-nav__title, .timeline-nav__body { display: none; }
+            .timeline-nav li.active .timeline-nav__counter { font-size: 28px; }
+            .timeline-content { margin-left: 0; width: 100%; }
+            .timeline-section { min-height: auto; padding: 30px 15px; border-bottom: 1px dashed rgba(18,168,255,0.3); }
+            .timeline-section .content-box { padding: 20px; }
+            .timeline-mobile-header { display: block; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed rgba(18, 168, 255, 0.3); }
+        }
+
+        /* 📱 纯手机端深度适配 (<= 768px) */
+        @media (max-width: 768px) {
+            .viewport-container { display: none; }
+
+            /* =====================================
+               手机端：大屏手机 (iPhone 11 等宽度充足) 
+               ===================================== */
+            .top-nav-wrapper { 
+                display: grid; 
+                grid-template-columns: auto minmax(0, 1fr) auto; 
+                align-items: center; 
+                gap: 12px; 
+                padding: 15px 20px; 
+                border-bottom: 1px solid rgba(18, 168, 255, 0.5); 
+            }
+            .header { display: contents; }
+            
+            .floating-menu-btn {
+                grid-column: 1; grid-row: 1; position: static; width: auto; height: auto;
+                background: transparent; border: none; box-shadow: none; backdrop-filter: none;
+                font-size: 26px; padding: 0; color: #12a8ff; line-height: 1;
+                display: flex; align-items: center; justify-content: center; margin: 0;
+            }
+            
+            /* 手机端的标题，使用自动计算缩放 */
+            .group-name { 
+                grid-column: 2; grid-row: 1; 
+                
+                /* 💥 核心黑科技：clamp(最小字号, 动态计算, 最大字号) */
+                /* 5.5vw 意味着屏幕越宽字越大。iPhone SE 是 17px，12 Pro 是 21px，大屏是 24px */
+                font-size: clamp(16px, 5.5vw, 24px); 
+                
+                letter-spacing: 0.5px; /* 稍微收紧一点字间距，腾出空间 */
+                line-height: 1; 
+                margin: 0; 
+                display: block; 
+                text-align: left; 
+                white-space: nowrap;
+                font-family: "Impact", sans-serif; 
+                text-shadow: none; 
+                
+                /* 加上防爆屏的最后底线，但平时不会触发 */
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
+            .header-right { 
+                grid-column: 3; grid-row: 1; 
+                display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 5px; 
+                min-width: 0; 
+            }
+            .lang-text { font-size: 11px; background: transparent; padding: 0; border: none; gap: 5px; line-height: 1; }
+            .hide-on-mobile { display: none !important; } 
+            
+            .search-group { width: 120px; max-width: 100%; height: 26px; margin-top: 0; box-shadow: none; border: 1px solid #12a8ff; background: rgba(0, 5, 10, 0.6); }
+            .search-group:focus-within { box-shadow: 0 0 8px rgba(18,168,255,0.4); transform: none; }
+            .search-prefix { display: none; }
+            .search-input { flex-grow: 1; width: 100%; font-size: 12px; padding: 0 8px; line-height: 26px; }
+            .search-input:focus { width: 100%; } 
+            .search-btn { padding: 0 10px; border-left: 1px solid rgba(18, 168, 255, 0.4); display: flex; align-items: center; justify-content: center; }
+            .search-btn svg { width: 12px; height: 12px; } 
+            .search-dropdown { width: 85vw; max-width: 320px; right: 0; }
+
+            /* 扁平化与间距收紧 */
+            .hero-chip { font-size: 9px; padding: 2px 6px; border-width: 1px; box-shadow: none; letter-spacing: 1px; margin-bottom: 1rem; }
+            .btn-primary, .btn-ghost, .article-page-meta { box-shadow: none; transform: none; }
+            .btn-primary:hover, .btn-ghost:hover, .submit-btn:hover, .sys-modal-btn:hover { transform: none; box-shadow: none; }
+            .hero-section { padding: 2rem 15px; min-height: auto; }
+            .hero-title { font-size: clamp(2.2rem, 10vw, 3rem); }
+            .hero-sub { font-size: 0.85rem; margin-top: 1.5rem; }
+            .hero-actions { flex-direction: row; flex-wrap: wrap; gap: 10px; justify-content: flex-start; }
+            .hero-actions .btn-primary, .hero-actions .btn-ghost { width: auto; padding: 8px 16px; font-size: 12px; text-align: center; }
+            .ticker { padding: 4px 0; border-bottom-width: 1px; }
+            .ticker-item { font-size: 10px; }
+            .faction-card, .intel-card { border-radius: 0; padding: 15px; border-top-width: 2px; }
+            .faction-grid, .intel-grid { gap: 12px; grid-template-columns: 1fr; }
+            .intel-section { padding: 1rem 15px 3rem 15px; }
+            .section-title { font-size: 1.8rem; }
+            .gallery-item { flex: 0 0 260px; height: 180px; }
+            .article-grid { gap: 15px; padding: 1rem 15px; }
+            .world-title { font-size: 1.8rem; }
+            .world-quote { padding: 15px; font-size: 0.95rem; }
+            .world-section-title { font-size: 1.2rem; }
+            .world-text, .faction-desc, .sub-org-list li, .cyber-list { font-size: 0.95rem; line-height: 1.7; }
+            .glitch-text { font-size: 1.5rem; }
+            .form-grid, .form-grid-3 { grid-template-columns: 1fr; }
+
+            /* 组织与卡片重排 */
+            .sub-org-list { align-items: stretch; }
+            .sub-org-btn { width: 100%; margin: 0; text-align: left; padding: 10px 15px; border-top: 1px solid rgba(18, 168, 255, 0.2); border-left: 3px solid #12a8ff; border-radius: 0; box-sizing: border-box; }
+            .sub-org-btn strong { font-size: 14px; }
+            .sub-org-btn span { font-size: 11px; }
+            
+            /* 世界观组织阅读按钮往下移，避开标签条 */
+            #world-faction-grid .intel-card .btn-ghost { 
+                position: absolute !important; 
+                top: 45px !important; 
+                right: 15px !important; 
+                width: auto !important; 
+                padding: 6px 14px !important; 
+                font-size: 12px !important; 
+                margin: 0 !important; 
+                border-width: 1px !important; 
+                background: rgba(0, 5, 10, 0.6) !important; 
+            }
+            
+            /* 办事大厅与个人终端 */
+            #queueView .archive-container > div:nth-child(2) { flex-direction: column; gap: 15px; }
+            #queueView .archive-container > div:nth-child(2) .submit-btn { width: 100%; padding: 25px 15px; }
+            .profile-card { flex-direction: column; padding: 20px; }
+            .my-org-card { flex-direction: column; align-items: flex-start; gap: 12px; padding: 15px; width: 100%; box-sizing: border-box; }
+            .my-org-edit-btn { width: 100%; text-align: center; box-sizing: border-box; }
+            .profile-update-btn { width: auto; display: inline-block; padding: 6px 16px; font-size: 12px; }
+            .my-org-actions { width: 100%; justify-content: space-between; }
+            .my-org-action-btn { flex: 1; text-align: center; padding: 8px 0; }
+
+            /* 文章阅读器与编辑器 */
+            .article-page-container { padding: 15px; box-sizing: border-box !important; /* 💥 核心修复：防止 100% 宽度被 padding 撑破向右偏移 */}
+            .article-top-bar { display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(18, 168, 255, 0.3); padding-bottom: 10px; }
+            .article-top-bar .btn-ghost { position: static; padding: 6px 12px; font-size: 12px; width: auto; }
+            .article-sys-status { display: none; }
+            .article-page-header, .archive-header { text-align: left; margin-bottom: 20px; }
+            .article-page-title, .archive-header .neon-title, .archive-header h1 { text-align: left; font-size: 22px; padding-left: 0; line-height: 1.3; margin-bottom: 10px; }
+            .article-page-meta { float: none; display: inline-block; font-size: 10px; padding: 3px 8px; margin-bottom: 15px; }
+            .article-divider { width: 100%; margin-top: 15px; }
+            .article-page-content, .solo-log-content { padding: 1.5rem 1rem; font-size: 1rem; line-height: 1.8; border-width: 1px; border-top-width: 3px; box-sizing: border-box !important; /* 💥 核心修复：确保内部文字完美居中 */}
+            .article-page-content > p:first-of-type::first-letter { font-size: 2.5rem; margin-right: 8px; margin-top: 2px; }
+
+            /* 剧情与日志 */
+            #storyView h3 { font-size: 14px; }
+            #storyView h3 span { display: block; font-size: 10px; margin-top: 4px; }
+            #btn-edit-main-plot, #log-upload-btns .submit-btn { padding: 4px 8px; font-size: 11px; width: auto; letter-spacing: 0; }
+            #log-upload-btns { gap: 5px; justify-content: flex-end; flex-wrap: wrap; }
+            .plot-card { padding: 15px; }
+            .plot-card > div:first-child { flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
+            .plot-status-current, .plot-status-past { font-size: 11px; padding: 2px 6px; }
+            .plot-card h3 { font-size: 16px; margin-bottom: 8px; }
+            .plot-card p { font-size: 12px; margin-bottom: 10px; -webkit-line-clamp: 4; }
+            
+            /* 剧情卡片底部的滑动提示文字 */
+            .plot-card::after {
+                content: '⇦ 左右滑动切换进度 ⇨';
+                display: block;
+                text-align: center;
+                font-size: 10px;
+                color: rgba(224, 64, 251, 0.4);
+                margin-top: 15px;
+                font-family: monospace;
+                letter-spacing: 1px;
+            }
+            .plot-nav-btn { display: none !important; }
+            .plot-carousel-wrapper { gap: 0 !important; }
+            
+            #solo-logs-grid .intel-card, #rp-logs-grid .intel-card { display: flex; flex-direction: column; }
+            #solo-logs-grid .btn-ghost, #rp-logs-grid .btn-ghost { width: fit-content; align-self: flex-end; padding: 4px 12px; font-size: 11px; margin-top: 10px; border-width: 1px; }
+
+            /* 系统弹窗 */
+            .sys-modal-box { width: 85%; padding: 20px; box-sizing: border-box; }
+            .sys-modal-header { font-size: 16px; }
+            .sys-modal-body { font-size: 13px; }
+            .sys-modal-actions { flex-direction: column; gap: 10px; margin-top: 20px; }
+            .sys-modal-btn { width: 100%; text-align: center; box-sizing: border-box; }
+
+            /* 论坛与消息 */
+            .notif-dropdown-box { position: fixed; top: 55px; right: 10px; width: calc(100vw - 20px); max-width: 320px; }
+            .forum-layout { flex-direction: column; }
+            .forum-sidebar { flex: none; width: 100%; flex-direction: row; overflow-x: auto; position: relative; top: 0; padding-bottom: 5px; }
+            .channel-btn { white-space: nowrap; padding: 10px; }
+            .forum-post-box {background: rgba(0, 5, 10, 0.8); border: 2px solid #4caf50; padding: 20px; border-radius: 4px; box-shadow: inset 0 0 20px rgba(76, 175, 80, 0.1), 4px 4px 0 rgba(76, 175, 80, 0.2); box-sizing: border-box; /* 💥 修复：防止 padding 撑破容器 */ }
+            
+            /* 论坛发帖框头像与按钮完美对齐 */
+            .post-box-header { display: grid !important; grid-template-columns: auto 1fr !important; grid-template-rows: auto auto !important; gap: 6px 15px !important; align-items: center !important; flex-direction: unset !important; }
+            .post-box-user-text { display: contents !important; }
+            .post-box-avatar-el { grid-column: 1 !important; grid-row: 1 / 3 !important; width: 65px !important; height: 65px !important; font-size: 32px !important; }
+            .post-box-name-el { grid-column: 2 !important; grid-row: 1 !important; align-self: end !important; font-size: 18px !important; margin-bottom: 0 !important; }
+            .post-box-subtitle { display: none; }
+            .post-box-profile-btn { grid-column: 2 !important; grid-row: 2 !important; margin: 0 !important; align-self: start !important; width: fit-content !important; padding: 2px 10px !important; font-size: 11px !important; line-height: 1.5 !important; height: auto !important; display: inline-block !important; }
+            
+            .post-box-footer { justify-content: center; }
+            .post-box-submit-btn { width: 100%; padding: 12px; font-size: 16px; letter-spacing: 2px; }
+            .fp-info h2 { flex-direction: column; align-items: flex-start; gap: 6px; font-size: 20px; }
+            #fp-name .sys-modal-btn { margin-left: 0; margin-top: 4px; width: auto; min-width: 0; padding: 2px 10px; font-size: 11px; line-height: 1.5; height: auto; display: inline-block; }
+            .fp-avatar { width: 60px; height: 60px; min-width: 60px; min-height: 60px; font-size: 30px; }
+        }
+
+       /* =========================================
+           💥 顶级赛博轴线展开动效 V10 (真·自适应版) 💥
+           ========================================= */
+        /* 1. 解除物理死锁，恢复原生滑动能力，依靠底层的边界探测算法防止拉伸 */
+        html, body {
+            overflow-x: hidden; 
+            width: 100%;
+        }
+
+        @media (max-width: 900px) {
+            /* 2. 悬浮球点击：边框发光锁定与延迟熄灭 */
+            .world-toc {
+                transition: background 0.3s ease 0.5s, border-color 0.3s ease 0.5s, box-shadow 0.3s ease 0.5s, transform 0.3s ease 0s !important;
+                border: 2px solid transparent !important;
+            }
+            .world-toc.open {
+                background: rgba(6, 11, 20, 0.95) !important;
+                border-color: #12a8ff !important;
+                box-shadow: 0 0 15px #12a8ff, inset 0 0 10px #12a8ff !important;
+                transform: scale(0.95);
+                transition: background 0.3s ease 0s, border-color 0.3s ease 0s, box-shadow 0.3s ease 0s, transform 0.3s ease 0s !important;
+            }
+            @keyframes gentleBounce { 0% { transform: scale(1); } 100% { transform: scale(1); } }
+
+            /* 3. 菜单容器基础设置 */
+            .world-toc .toc-list {
+                display: flex !important;
+                flex-direction: column;
+                position: absolute;
+                width: 180px !important; 
+                max-width: calc(100vw - 80px) !important;
+                background: transparent !important;
+                visibility: hidden;
+                pointer-events: none;
+                transition: visibility 0s linear 0.6s !important;
+                z-index: 100;
+                transform: translateX(var(--menu-shift, 0px)); /* 💥 重点：接受 JS 传来的智能偏移量 */
+            }
+            .world-toc.open .toc-list {
+                visibility: visible;
+                pointer-events: auto;
+                transition: visibility 0s linear 0s !important;
+            }
+
+            /* 4. 💥 核心：赛博主轴线 (带呼吸空隙) */
+            .world-toc .toc-list::before {
+                content: '';
+                position: absolute;
+                width: 2px;
+                background: #12a8ff;
+                box-shadow: 0 0 10px #12a8ff, 0 0 20px #12a8ff;
+                transform: scaleY(0); 
+                z-index: 101;
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.2s !important; 
+            }
+            .world-toc.open .toc-list::before {
+                transform: scaleY(1);
+                transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) 0s !important; 
+            }
+            
+            .world-toc.expand-up .toc-list { bottom: 55px; top: auto; }
+            .world-toc.expand-up .toc-list::before { bottom: -10px; height: calc(100% + 10px); transform-origin: bottom; }
+            
+            .world-toc.expand-down .toc-list { top: 55px; bottom: auto; }
+            .world-toc.expand-down .toc-list::before { top: -10px; height: calc(100% + 10px); transform-origin: top; }
+
+            /* 5. 智能左右对齐与紧凑排版 */
+            .world-toc .toc-list > li > div { justify-content: flex-start !important; gap: 8px !important; }
+            .world-toc .toc-btn { flex-grow: 0 !important; width: auto !important; white-space: normal !important; word-break: break-word !important; }
+
+            /* 左侧展开 */
+            .world-toc.align-left .toc-list { left: 23px !important; right: auto !important; padding-left: 15px !important; align-items: flex-start !important; }
+            .world-toc.align-left .toc-list::before { left: calc(0px - var(--menu-shift, 0px)); right: auto; } /* 💥 修复偏移 */
+            .world-toc.align-left .toc-list > li { transform: translateX(-15px); }
+            .world-toc.align-left .toc-btn { text-align: left !important; }
+            .world-toc.align-left .sub-toc-list { align-items: flex-start !important; border-left: 2px solid rgba(18,168,255,0.3); border-right: none; padding-left: 10px !important; margin-left: 5px !important; }
+            .world-toc.align-left .toc-arrow { transform: rotate(0deg); }
+            .world-toc.open.align-left .toc-arrow.open { transform: rotate(-90deg) !important; }
+
+            /* 右侧展开 */
+            .world-toc:not(.align-left) .toc-list { right: 23px !important; left: auto !important; padding-right: 15px !important; align-items: flex-end !important; }
+            .world-toc:not(.align-left) .toc-list::before { right: var(--menu-shift, 0px); left: auto; } /* 💥 修复偏移 */
+            .world-toc:not(.align-left) .toc-list > li { transform: translateX(15px); }
+            .world-toc:not(.align-left) .toc-btn { text-align: right !important; }
+            .world-toc:not(.align-left) .sub-toc-list { align-items: flex-end !important; border-right: 2px solid rgba(18,168,255,0.3); border-left: none; padding-right: 10px !important; margin-right: 5px !important; }
+            
+            .world-toc:not(.align-left) .toc-list > li > div { flex-direction: row-reverse !important; justify-content: flex-start !important; }
+            .world-toc:not(.align-left) .toc-btn.active { border-left: none !important; border-right: 2px solid #12a8ff !important; padding-left: 0 !important; padding-right: 10px !important; }
+            .world-toc:not(.align-left) .toc-arrow { transform: rotate(180deg); } 
+            .world-toc.open:not(.align-left) .toc-arrow.open { transform: rotate(-90deg) !important; } 
+
+            /* 6. 💥 节点滑出与收回动画 */
+            .world-toc .toc-list > li {
+                opacity: 0;
+                position: relative;
+                z-index: 102;
+                transition: opacity 0.2s ease 0s, transform 0.2s ease 0s !important;
+            }
+            .world-toc.open .toc-list > li {
+                opacity: 1;
+                transform: translateX(0) !important;
+                transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) !important; 
+            }
+
+            .world-toc.open .toc-list > li:nth-child(1) { transition-delay: 0.15s !important; }
+            .world-toc.open .toc-list > li:nth-child(2) { transition-delay: 0.20s !important; }
+            .world-toc.open .toc-list > li:nth-child(3) { transition-delay: 0.25s !important; }
+            .world-toc.open .toc-list > li:nth-child(4) { transition-delay: 0.30s !important; }
+            .world-toc.open .toc-list > li:nth-child(5) { transition-delay: 0.35s !important; }
+            .world-toc.open .toc-list > li:nth-child(6) { transition-delay: 0.40s !important; }
+            .world-toc.open .toc-list > li:nth-child(7) { transition-delay: 0.45s !important; }
+            .world-toc.open .toc-list > li:nth-child(8) { transition-delay: 0.50s !important; }
+
+            /* 7. 💥 子目录丝滑展开动画 */
+            .world-toc .sub-toc-list {
+                display: flex !important; 
+                flex-direction: column;
+                max-height: 0; 
+                opacity: 0; 
+                overflow: hidden;
+                margin: 0 !important; 
+                padding-top: 0 !important;
+                padding-bottom: 0 !important;
+                transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out, margin 0.3s ease-in-out !important;
+            }
+            .world-toc .sub-toc-list.open {
+                max-height: 300px; 
+                opacity: 1;
+                margin-top: 5px !important; 
+                margin-bottom: 5px !important;
+            }
+
+            .world-toc .sub-toc-list > li { opacity: 0; transform: translateY(-5px); transition: all 0.3s ease; width: 100%; }
+            .world-toc .sub-toc-list.open > li { opacity: 1; transform: translateY(0); }
+            .world-toc .sub-toc-list.open > li:nth-child(1) { transition-delay: 0.1s; }
+            .world-toc .sub-toc-list.open > li:nth-child(2) { transition-delay: 0.15s; }
+            .world-toc .sub-toc-list.open > li:nth-child(3) { transition-delay: 0.2s; }
+            .world-toc .sub-toc-list.open > li:nth-child(4) { transition-delay: 0.25s; }
+        }
+
+        /* =========================================
+           💥 1. 主界面：3D 后推景深动画 (解绑抬头)
+           ========================================= */
+        .page-container {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            box-sizing: border-box;
+            /* 删除了这里的 transition，让包括顶部导航栏在内的外框彻底保持不动 */
+        }
+
+        /* 赋予内部所有独立视图面板(界面)动画能力 */
+        .view-panel {
+            animation: fadeIn 0.3s ease-in-out;
+            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease;
+            transform-origin: top center; 
+            
+            /* 💥 核心修复：删掉这里的 will-change: transform, opacity; 
+               解除层叠上下文封印，让手机端的悬浮球能够突破结界浮在毛玻璃之上！ */
+        }
+
+        /* 当侧边栏打开时，只让当前显示的界面缩小、左移，抬头(导航栏)一动不动！ */
+        body.sidebar-open .view-panel.active {
+            /* 💥 优化 3：使用 translate3d 强制开启 3D 硬件加速 */
+            transform: scale(0.95) translate3d(-15px, 0, 0);
+            opacity: 0.6;
+            /* 💥 优化 4：彻底删掉 filter: blur(3px); 
+               因为上面的 overlay 遮罩已经有强大的毛玻璃了，双重模糊会导致严重掉帧卡顿！ */
+            pointer-events: none; 
+        }
+
+       /* =========================================
+           💥 2. 全局遮罩：极致 iOS 液态毛玻璃 (高性能版)
+           ========================================= */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 90;
+            
+            background-color: rgba(6, 11, 20, 0.35);
+            
+            /* 💥 性能优化 1：将 blur(35px) 降为 blur(12px) */
+            /* 12px 已经足够产生高级的毛玻璃质感，但计算量暴降了 80% */
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            
+            opacity: 0;
+            visibility: hidden;
+            
+            /* 💥 性能优化 2：提前告诉浏览器我们要改变透明度，让它准备好显存 */
+            will-change: opacity;
+            
+            /* 💥 性能优化 3：稍微加快一点点动画速度，减少 GPU 处于高负载的时间 */
+            transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.4s;
+        }
+
+        /* 3. 液态流光模拟：在玻璃内部增加柔和的色彩折射 */
+        .overlay::before {
+            content: '';
+            position: absolute; inset: 0;
+            background-image: 
+                radial-gradient(ellipse 100% 150% at 0% 50%, rgba(18, 168, 255, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse 100% 150% at 100% 50%, rgba(224, 64, 251, 0.1) 0%, transparent 50%);
+            filter: blur(40px);
+            opacity: 0;
+            transition: opacity 0.6s ease;
+            pointer-events: none;
+        }
+
+        /* 4. 电影级微噪点：降维提速版 */
+        .overlay::after {
+            content: '';
+            position: absolute; inset: 0;
+            /* 💥 修复：只计算 1 次 (numOctaves='1')，显卡开销暴降，且保留完美透明度 */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
+            background-size: 50px 50px;
+            opacity: 0;
+            mix-blend-mode: overlay; /* 恢复混合模式，让噪点融入背景 */
+            transition: opacity 0.5s ease 0.1s;
+            pointer-events: none;
+        }
+        
+        .overlay.show { opacity: 1; visibility: visible; }
+        .overlay.show::before { opacity: 1; }
+        /* 极致克制的噪点透明度，0.06 恰到好处 */
+        .overlay.show::after { opacity: 0.06; }
+
+        /* =========================================
+           💥 3. 侧边栏：抽屉式滑出动画
+           ========================================= */
+        .sidebar {
+            position: fixed;
+            top: 0; right: 0; 
+            width: 340px; height: 100%;
+            z-index: 100;
+            padding: 20px; box-sizing: border-box;
+            
+            /* 保持你原本的深色半透明质感 */
+            background-color: rgba(6, 11, 20, 0.95);
+            border-left: 1px solid rgba(18,168,255,0.5);
+            box-shadow: -5px 0 20px rgba(0,0,0,0.8), -2px 0 15px rgba(18,168,255,0.2);
+            
+            /* 抽屉式滑出动画 (默认藏在屏幕右侧外) */
+            transform: translateX(100%);
+            transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        /* 内部毛玻璃 */
+        .sidebar::before {
+            content: '';
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            pointer-events: none; z-index: 0;
+        }
+
+        .sidebar.open { transform: translateX(0); /* 滑入屏幕 */ }
+
+        /* 内部元素的延迟滑入动画，增加层次感 */
+        .sidebar-inner {
+            position: relative; z-index: 1;
+            padding: 28px 20px 20px 20px; height: 100%;
+            display: flex; flex-direction: column;
+            opacity: 0; transform: translateX(15px);
+            transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        
+        .sidebar.open .sidebar-inner {
+            opacity: 1; transform: translateX(0); transition-delay: 0.15s;
+        }
+
+        /* 侧边栏内部按钮样式恢复 */
+        .sidebar-close {
+            font-family: monospace; font-size: 12px; letter-spacing: 3px;
+            cursor: pointer; color: rgba(18,168,255,0.5);
+            margin-bottom: 32px; padding-bottom: 16px;
+            border-bottom: 1px solid rgba(18,168,255,0.1);
+            transition: color 0.2s, text-shadow 0.2s; text-align: left;
+        }
+        .sidebar-close:hover { color: #12a8ff; text-shadow: 0 0 8px rgba(18,168,255,0.8); }
+        .wiki-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+        .wiki-item-btn {
+            background: rgba(18,168,255,0.05); border: 1px solid rgba(18,168,255,0.4);
+            color: #12a8ff; padding: 12px 15px; text-align: left; font-size: 20px;
+            border-radius: 0; cursor: pointer; transition: all 0.25s ease;
+            width: 100%; font-family: "PingFang SC", sans-serif; letter-spacing: 1px;
+            position: relative; overflow: hidden;
+        }
+        .wiki-item-btn::after {
+            content: ''; position: absolute; left: 0; top: 0; width: 0; height: 100%;
+            background: rgba(18,168,255,0.08); transition: width 0.3s ease; z-index: 0;
+        }
+        .wiki-item-btn:hover::after { width: 100%; }
+        .wiki-item-btn:hover {
+            background-color: rgba(18,168,255,0.15);
+            box-shadow: 0 0 12px rgba(18,168,255,0.4), inset 0 0 8px rgba(18,168,255,0.05);
+            border-color: #12a8ff; text-shadow: 0 0 8px rgba(18,168,255,0.9); letter-spacing: 2px;
+        }
+
+        /* =========================================================
+   💥 终极定制版：50%透明度 + 直角粗野悬停 + 追逐线边框 (CodePen 移植)
+   ========================================================= */
+
+/* 1. 基础卡片外观 (50%通透毛玻璃、强制直角、内置噪点) */
+.intel-card, .faction-card, .plot-card, .my-org-card {
+    background: 
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E"),
+        rgba(6, 11, 20, 0.5) !important;
+    
+    backdrop-filter: blur(12px) !important; 
+    -webkit-backdrop-filter: blur(12px) !important;
+    
+    border: 1px solid rgba(255, 255, 255, 0.1) !important; /* 极细基础边框 */
+    border-radius: 0 !important; /* 💥 强制直角 */
+    box-shadow: none !important; /* 默认状态隐藏阴影 */
+    
+    position: relative;
+    /* 💥 必须去掉 overflow: hidden，否则外围的发光线条会被切掉 */
+    overflow: visible !important; 
+    transition: transform 0.2s cubic-bezier(0.2, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease !important;
+    
+    /* 默认光效颜色 (赛博蓝) */
+    --theme-color: #12a8ff;
+    --theme-shadow: rgba(18, 168, 255, 0.4);
+    --path-width: 2px; /* 跑马灯线条的粗细 */
+}
+
+/* 2. 匹配势力的专属颜色管线 */
+.faction-card.psc { --theme-color: #12a8ff; --theme-shadow: rgba(18, 168, 255, 0.5); }
+.faction-card.frontier { --theme-color: #f44336; --theme-shadow: rgba(244, 67, 54, 0.5); }
+.faction-card.pmc { --theme-color: #4caf50; --theme-shadow: rgba(76, 175, 80, 0.5); }
+.faction-card.freeport { --theme-color: #ffeb3b; --theme-shadow: rgba(255, 235, 59, 0.5); }
+
+/* 3. 全局悬停效果：保留物理错位感和内发光 (所有卡片通用) */
+.intel-card:hover, .faction-card:hover, .plot-card:hover, .my-org-card:hover {
+    transform: translate(-4px, -4px) !important; 
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.6), inset 0 0 20px var(--theme-shadow) !important;
+    z-index: 10;
+}
+
+/* =========================================================
+   💥 4. 核心黑科技：高性能 GPU 流光边框 (仅限主界面)
+   ========================================================= */
+
+/* 定义一个允许被动画驱动的 CSS 角度变量 */
+@property --angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+}
+
+@keyframes spinLight {
+    to { --angle: 360deg; }
+}
+
+/* 💥 专属设定：主界面的卡片悬停或居中时，隐藏原本的边框，给流光让路 */
+#mainView .intel-card:hover, 
+#mainView .faction-card:hover,
+#mainView .intel-card.is-centered, 
+#mainView .faction-card.is-centered { /* 👈 新增这两句 */
+    border-color: transparent !important; 
+}
+
+/* 悬停或居中时：显示流光，并启动旋转动画 */
+#mainView .intel-card:hover::before, #mainView .intel-card:hover::after,
+#mainView .faction-card:hover::before, #mainView .faction-card:hover::after,
+#mainView .intel-card.is-centered::before, #mainView .intel-card.is-centered::after, /* 👈 新增 */
+#mainView .faction-card.is-centered::before, #mainView .faction-card.is-centered::after { /* 👈 新增 */
+    opacity: 1;
+    animation: spinLight 3s linear infinite;
+}
+
+/* 统一设置伪元素基础属性 (加上 #mainView 限制) */
+#mainView .intel-card::before, #mainView .intel-card::after,
+#mainView .faction-card::before, #mainView .faction-card::after {
+    content: '';
+    position: absolute;
+    inset: -1px; /* 覆盖原本的边框 */
+    z-index: 20;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0; /* 默认隐藏 */
+    transition: opacity 0.3s ease;
+
+    /* 圆锥渐变，画出一个带有拖尾的彗星光束 */
+    background: conic-gradient(
+        from var(--angle), 
+        transparent 60%, 
+        var(--theme-color) 100%
+    );
+
+    /* 遮罩镂空。把中间掏空，只留下边缘 2px 的线 */
+    padding: var(--path-width); 
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+}
+
+/* 利用 ::after 制造外发光 */
+#mainView .intel-card::after,
+#mainView .faction-card::after {
+    filter: blur(6px);
+}
+
+/* 悬停时：显示流光，并启动旋转动画 */
+#mainView .intel-card:hover::before, #mainView .intel-card:hover::after,
+#mainView .faction-card:hover::before, #mainView .faction-card:hover::after {
+    opacity: 1;
+    animation: spinLight 3s linear infinite;
+}
+
+/* =========================================================
+   💥 修复：手机端悬浮目录展开时字体变小的问题
+   ========================================================= */
+@media (max-width: 900px) {
+    .world-toc.open {
+        /* 强制保持 100% 原始大小，干掉原本的 scale(0.95) 缩小特效 */
+        transform: scale(1) !important; 
+    }
+}
+
+/* =========================================
+           💥 手机端专属性能拯救：只降低毛玻璃负担，不碰任何动画！
+           ========================================= */
+        @media (max-width: 768px) {
+            .overlay {
+                /* 电脑端是 blur(35px)，手机端强行降到 blur(8px) */
+                /* 8px 依然有很好看的毛玻璃质感，但手机显卡的计算量暴降了 80% */
+                backdrop-filter: blur(8px) saturate(150%) !important;
+                -webkit-backdrop-filter: blur(8px) saturate(150%) !important;
+            }
+            
+            /* 提前告诉手机显卡准备好菜单的动画，防止掉帧 */
+            .world-toc .toc-list > li {
+                will-change: transform, opacity;
+            }
+        }
+
+        /* =========================================
+   💥 AR 星图专属样式 (Aperture Cartography)
+   ========================================= */
+#glass-effects {
+    position: absolute; inset: 0; z-index: 10; pointer-events: none;
+    opacity: 0; transition: opacity 1.5s ease;
+    background: radial-gradient(circle at center, rgba(0,0,0,0.2) 10%, rgba(2, 6, 12, 0.9) 100%);
+}
+#glass-effects.active { opacity: 1; }
+
+.glass-grid {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image: linear-gradient(rgba(0, 229, 255, 0.4) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(0, 229, 255, 0.4) 1px, transparent 1px);
+    background-size: 100px 100px; opacity: 0.05; transform: perspective(1000px) translateZ(-50px);
+}
+
+.scanline {
+    position: absolute; width: 100%; height: 3px; background: rgba(0, 229, 255, 0.2);
+    top: 0; opacity: 0; z-index: 11;
+}
+#glass-effects.active .scanline { animation: ar-scan 6s linear infinite; opacity: 1; }
+@keyframes ar-scan { 0% { top: -10%; } 100% { top: 110%; } }
+
+#ar-reticle {
+    display: none !important; /* 💥 隐藏画面中央的巨大准星 */
+    position: absolute; top: 50%; left: 50%; width: 600px; height: 600px; transform: translate(-50%, -50%);
+    border: 1px dashed rgba(0, 229, 255, 0.15); border-radius: 50%; z-index: 15; pointer-events: none; opacity: 0; transition: opacity 1.5s ease;
+    justify-content: center; align-items: center;
+}
+#ar-reticle.active { opacity: 1; }
+#ar-reticle::before { content: ''; position: absolute; width: 300px; height: 300px; border: 1px solid rgba(0, 229, 255, 0.1); border-radius: 50%; }
+#ar-reticle::after { content: ''; position: absolute; width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.3), transparent); }
+
+#map-canvas.active { opacity: 1; }
+
+#hud-overlay {
+    position: absolute; bottom: 30px; left: 30px; z-index: 40; opacity: 0; transform: translateX(-20px); transition: all 1s ease;
+    background: rgba(2, 6, 12, 0.85); border-left: 3px solid #00e5ff; padding: 15px 20px; font-size: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.9);
+    font-family: monospace;
+}
+#hud-overlay.active { opacity: 1; transform: translateX(0); }
+.hud-title { font-size: 14px; letter-spacing: 2px; color: #fff; margin-bottom: 5px; font-weight: bold; }
+.hud-data { color: rgba(0, 229, 255, 0.8); letter-spacing: 1px; margin-bottom: 3px;}
+#nav-status { margin-top: 10px; color: #ffb700; font-weight: bold; border-top: 1px dashed rgba(255, 183, 0, 0.3); padding-top: 5px; }
+.nav-hint { font-size: 10px; color: #888; margin-top: 5px; }
+
+#center-status {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 50; text-align: center;
+    letter-spacing: 5px; color: #00e5ff; text-shadow: 0 0 15px #00e5ff; transition: opacity 0.5s ease; font-weight: bold; font-size: 18px;
+    pointer-events: none; /* 💥 核心修复：让鼠标穿透这行透明文字，不再阻挡点击和显示打字光标 */
+}
+
+#tactical-tooltip {
+    position: absolute; display: none; pointer-events: none; background: rgba(2, 6, 12, 0.95); border: 1px solid #00e5ff;
+    padding: 15px; font-size: 11px; color: #a9c2c2; z-index: 60; 
+    min-width: 260px; /* 💥 核心修改：加宽到 260px */
+    box-shadow: 0 0 20px rgba(0,0,0,0.8), inset 0 0 10px rgba(0, 229, 255, 0.1);
+}
+#tactical-tooltip.in-route { border-color: #ffb700; box-shadow: 0 0 20px rgba(0,0,0,0.8), inset 0 0 10px rgba(255, 183, 0, 0.3); }
+#tactical-tooltip h3 { margin: 0 0 10px 0; color: #fff; font-size: 14px; letter-spacing: 2px; }
+.data-row { margin-bottom: 5px; display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 3px;}
+.data-label { color: #00e5ff; font-weight: bold; }
+.in-route .data-label { color: #ffb700; }
+
+#planet-detail-panel.active { transform: translateX(0) !important; }
+
+/* 💥 1. 顶部标题的霓虹呼吸感 */
+        @keyframes cyber-title-breathe {
+            0%, 100% { text-shadow: 0 0 8px rgba(18,168,255,0.6); }
+            50% { text-shadow: 0 0 15px rgba(18,168,255,0.9), 0 0 25px rgba(18,168,255,0.4); }
+        }
+        .group-name {
+            animation: cyber-title-breathe 4s ease-in-out infinite;
+        }
+
+        /* 💥 2. 悬浮菜单按钮的物理上下浮动 */
+        @keyframes float-breathe {
+            0%, 100% { 
+                transform: translateY(0); 
+                box-shadow: 4px 4px 0 rgba(18, 168, 255, 0.2); 
+            }
+            50% { 
+                transform: translateY(-4px); /* 向上浮动 4px */
+                box-shadow: 4px 8px 0 rgba(18, 168, 255, 0.4); /* 阴影拉长，产生高度感 */
+            }
+        }
+        .floating-menu-btn {
+            animation: float-breathe 3s ease-in-out infinite;
+        }
+        /* 鼠标放上去时，取消呼吸动画，执行原本的按压动画 */
+        .floating-menu-btn:hover {
+            animation: none; 
+        }
+
+        /* =========================================================
+           💥 细节提升：科幻终端标题装饰线 (完美还原档案 UI)
+           ========================================================= */
+        
+        /* 1. 针对表单区标题、世界观区标题进行 Flex 布局改造 */
+        .form-section-title,
+        .world-section-title {
+            display: flex !important;
+            align-items: center;
+            border-bottom: none !important; /* 移除旧的死板底边框 */
+            white-space: nowrap; /* 防止文字换行 */
+            overflow: hidden; /* 隐藏溢出的线条 */
+            width: 100%;
+        }
+
+        /* (已删除左侧的 // 装饰，保持文字左对齐的清爽感) */
+
+        /* 3. 右侧：无限延伸的虚线 + 机械折角 (完美还原截图) */
+        .form-section-title::after,
+        .world-section-title::after {
+            content: '';
+            flex-grow: 1; /* 自动占满右侧所有剩余空间 */
+            height: 10px;
+            margin-left: 15px;
+            
+            /* 💥 核心魔法：顶部虚线 + 右侧实线 = 完美的 ┐ 型折角 */
+            border-top: 1px dashed currentColor;
+            border-right: 2px solid currentColor;
+            
+            opacity: 0.3;
+            transform: translateY(4px); /* 往下微调，使其与文字垂直居中对齐 */
+            min-width: 20px; /* 保证在极窄屏幕下也有线 */
+        }
+
+        /* 4. 额外赠送：给表单的输入框 Label 加上数据点缀 */
+        .input-group label {
+            display: flex;
+            align-items: center;
+        }
+        .input-group label::before {
+            content: '';
+            display: inline-block;
+            width: 3px;
+            height: 3px;
+            background: currentColor;
+            margin-right: 6px;
+            opacity: 0.6;
+            box-shadow: 0 0 5px currentColor; /* 微弱的发光 */
+        }
+
+        /* =========================================================
+           💥 细节提升：专属科幻 HUD 文本锁定框 (⌜ ⌝ ⌞ ⌟)
+           ========================================================= */
+        .hud-text-box {
+            position: relative;
+            padding: 20px 25px;
+            background: rgba(0, 5, 10, 0.4); /* 微微加深底色 */
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            margin-bottom: 30px; /* 和下方的警告卡片拉开距离 */
+        }
+
+        /* 利用伪元素绘制 4 个角的 8 条短线 */
+        .hud-text-box::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none; /* 鼠标穿透，防止阻挡文字复制 */
+            
+            /* 边角参数设定 */
+            --c-color: #12a8ff; /* 赛博蓝 */
+            --c-thick: 2px;     /* 线条粗细 */
+            --c-len: 12px;      /* 边角长度 */
+            
+            /* 拼出 4 个直角 */
+            background:
+                linear-gradient(to right, var(--c-color) var(--c-thick), transparent var(--c-thick)) 0 0,
+                linear-gradient(to bottom, var(--c-color) var(--c-thick), transparent var(--c-thick)) 0 0,
+                linear-gradient(to left, var(--c-color) var(--c-thick), transparent var(--c-thick)) 100% 0,
+                linear-gradient(to bottom, var(--c-color) var(--c-thick), transparent var(--c-thick)) 100% 0,
+                linear-gradient(to right, var(--c-color) var(--c-thick), transparent var(--c-thick)) 0 100%,
+                linear-gradient(to top, var(--c-color) var(--c-thick), transparent var(--c-thick)) 0 100%,
+                linear-gradient(to left, var(--c-color) var(--c-thick), transparent var(--c-thick)) 100% 100%,
+                linear-gradient(to top, var(--c-color) var(--c-thick), transparent var(--c-thick)) 100% 100%;
+            
+            background-repeat: no-repeat;
+            background-size: var(--c-len) var(--c-len);
+            z-index: 10;
+            opacity: 0.8;
+        }
