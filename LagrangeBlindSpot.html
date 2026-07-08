@@ -5316,6 +5316,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </script>
 
     </head> 
+
 <body class="secure-no-select">
     
     <!-- 💥 新增：iOS 液态折射毛玻璃 SVG 滤镜 -->
@@ -5398,6 +5399,13 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 
+    <!-- 💥 新增：高清电子证件展示弹窗 -->
+    <div class="sys-modal-overlay" id="certModalOverlay" style="z-index: 9999999;" onclick="if(event.target===this) closeCertificate()">
+        <div class="sys-modal-box" id="certModalBox" style="max-width: 600px; width: 90%; background: rgba(6, 11, 20, 0.95); border-color: #e91e63; box-shadow: 0 0 40px rgba(233,30,99,0.3), inset 0 0 20px rgba(233,30,99,0.1); padding: 0;">
+            <!-- JS 动态内容将在这里渲染 -->
+        </div>
+    </div>
+
     <!-- 💥 新增：近况与公告专属富文本编辑器弹窗 -->
     <div class="sys-modal-overlay" id="updatesEditorModal" style="z-index: 9999999;">
         <div class="sys-modal-box" style="max-width: 800px; width: 90%;">
@@ -5459,7 +5467,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- 💥 论坛个人主页弹窗 -->
     <div class="forum-profile-modal" id="forumProfileModal" onclick="if(event.target===this) closeForumProfile()">
         <div class="forum-profile-box" id="forumProfileBox">
-            <button class="close-btn" style="position: absolute; top: 15px; right: 15px; z-index: 10;" onclick="closeForumProfile()">[X] CLOSE</button>
+            <button class="close-btn" style="position: absolute; top: 15px; right: 15px; z-index: 10;" onclick="closeForumProfile()">[X] </button>
             <div class="fp-header">
                 <div class="fp-avatar" id="fp-avatar">?</div>
                 <div class="fp-info">
@@ -5723,14 +5731,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
                         <!-- 💥 动态渲染的主界面阵营区 💥 -->
                         <section class="world-section" id="sec-factions">
-                            <h2 class="world-section-title"><span style="font-size: 1.5rem;"> 势力分布 </h2>
+                            <h2 class="world-section-title"><span style="font-size: 1.5rem;"> 势力分布 </span></h2>
                             <div class="faction-grid" id="main-faction-grid">
                                 <!-- JS 将从数据库拉取阵营与组织并渲染在这里 -->
                             </div>
                         </section>
 
                         <section class="world-section" id="sec-onboard">
-                            <h2 class="world-section-title"><span style="font-size: 1.5rem;">入职指南 </h2>
+                            <h2 class="world-section-title"><span style="font-size: 1.5rem;">入职指南 </span></h2>
                             <div class="world-text">
                                 <p>在这里，你可以是冷酷的联盟特工、满身机油味的黑市医生、或者是只认钱的战术小队爆破手。</p>
                                 <ol class="cyber-list">
@@ -6086,9 +6094,9 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="view-panel" id="profileView">
             <div class="archive-container">
                 <div class="archive-header">
-                    <h2 class="neon-title" style="font-size: 28px; text-align: left; color: #00e5ff; text-shadow: 0 0 10px #00e5ff;">个人档案</h2>
-                    </p>公民个人档案界面</p>
-                </div>
+    <h2 class="neon-title" style="font-size: 28px; text-align: left; color: #00e5ff; text-shadow: 0 0 10px #00e5ff;">个人档案</h2>
+    <p>公民个人档案界面</p>
+</div>
                 
                 <!-- 动态生成的个人卡片会放在这里 -->
                 <div id="profile-content"></div>
@@ -6707,7 +6715,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div id="admin-npc-toggle-group" style="display: none; margin-bottom: 20px; background: rgba(156,39,176,0.1); border: 1px dashed #9c27b0; padding: 15px; border-radius: 4px;">
                 <label style="color: #e1bee7; display: flex; align-items: center; gap: 10px; cursor: pointer; font-family: monospace;">
                     <input type="checkbox" id="f-is-npc-checkbox" style="width: 18px; height: 18px;">
-                    <span style="color: #9c27b0; font-weight: bold; font-size: 15px;">[ 管理员特权 ] 作为 NPC 档案录入</span>
+                    <span style="color: #9c27b0; font-weight: bold; font-size: 15px;">作为 NPC 档案录入</span>
                 </label>
                 <div style="font-size: 12px; color: #ba68c8; margin-top: 8px; margin-left: 28px;">勾选后，此档案将被标记为 NPC，不会覆盖您的主身份，且允许您无限创建。</div>
             </div>
@@ -7009,6 +7017,44 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </div>
 
+<!-- 💥 新增：政务大厅入口 -->
+                <div class="form-section-title" style="border-color: #00bcd4; color: #00bcd4; margin-bottom: 15px; margin-top: 30px;">[ 政务大厅 // GOV AFFAIRS ]</div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 40px;">
+                    
+                    <button class="submit-btn" style="padding: 20px 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; border-color: #e91e63; color: #e91e63; background: rgba(233,30,99,0.05); transition: 0.2s;" onclick="openGovForm('marriage')" onmouseover="this.style.background='rgba(233,30,99,0.15)'" onmouseout="this.style.background='rgba(233,30,99,0.05)'">
+                        <!-- 伴侣/羁绊交织环 SVG -->
+                        <svg viewBox="0 0 24 24" style="width: 42px; height: 42px; fill: #e91e63; filter: drop-shadow(0 0 8px rgba(233,30,99,0.6)); margin-bottom: 5px;">
+                            <path d="M8 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.08 0 3.91-1.06 5-2.67 1.09 1.61 2.92 2.67 5 2.67 3.31 0 6-2.69 6-6s-2.69-6-6-6c-2.08 0-3.91 1.06-5 2.67C11.91 7.06 10.08 6 8 6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4c1.19 0 2.25.53 2.98 1.36-.6.82-.98 1.83-.98 2.64 0 .81.38 1.82.98 2.64C10.25 15.47 9.19 16 8 16zm8 0c-1.19 0-2.25-.53-2.98-1.36.6-.82.98-1.83.98-2.64 0-.81-.38-1.82-.98-2.64.73-.83 1.79-1.36 2.98-1.36 2.21 0 4 1.79 4 4s-1.79 4-4 4z"/>
+                        </svg>
+                        <span style="font-family: 'Impact', sans-serif; letter-spacing: 2px;">[ 联盟民政局 ]</span>
+                        <span style="font-size: 12px; color: #ff80ab; font-family: 'PingFang SC', sans-serif;">伴侣登记 / 关系公证</span>
+                    </button>
+
+                    <button class="submit-btn" style="padding: 20px 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; border-color: #00bcd4; color: #00bcd4; background: rgba(0,188,212,0.05); transition: 0.2s;" onclick="openGovForm('ship')" onmouseover="this.style.background='rgba(0,188,212,0.15)'" onmouseout="this.style.background='rgba(0,188,212,0.05)'">
+                        <!-- 飞船/战机 SVG (完美居中对齐版) -->
+                        <svg viewBox="0 0 100 100" style="width: 42px; height: 42px; flex-shrink: 0; fill: rgba(0,188,212,0.1); stroke: #00bcd4; filter: drop-shadow(0 0 8px rgba(0,188,212,0.6)); margin-bottom: 5px;">
+                            <!-- 💥 核心修正：Y轴从 50 改为 68，把飞船的视觉重心往下压 -->
+                            <g transform="translate(50, 72)" stroke-linejoin="round" stroke-linecap="round">
+                                <!-- 飞船本体 -->
+                                <path stroke-width="4" d="M 0 0 h 10 l 5 -5 9 5 6 -15 -15 -15 c 0 -5 -4 -32 -15 -40 c -11 8 -15 35 -15 40 l -15 15 6 15 9 -5 5 5 h 10" />
+                                <!-- 尾部引擎尾流 -->
+                                <path stroke-width="3" fill="#00bcd4" d="M 0 7 a 8 8 0 0 0 -8 8 c 0 4 4 6 8 12 c 4 -6 8 -8 8 -12 a 8 8 0 0 0 -8 -8" />
+                            </g>
+                        </svg>
+                        <span style="font-family: 'Impact', sans-serif; letter-spacing: 2px;">[ 飞船管理局 ]</span>
+                        <span style="font-size: 12px; color: #84ffff; font-family: 'PingFang SC', sans-serif;">私人舰船 / 载具备案</span>
+                    </button>
+
+                    <button class="submit-btn" style="padding: 20px 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; border-color: #ff9800; color: #ff9800; background: rgba(255,152,0,0.05); transition: 0.2s;" onclick="openGovForm('corp')" onmouseover="this.style.background='rgba(255,152,0,0.15)'" onmouseout="this.style.background='rgba(255,152,0,0.05)'">
+                        <!-- 企业/商业公文包 SVG -->
+                        <svg viewBox="0 0 24 24" style="width: 42px; height: 42px; fill: #ff9800; filter: drop-shadow(0 0 8px rgba(255,152,0,0.6)); margin-bottom: 5px;">
+                            <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/>
+                        </svg>
+                        <span style="font-family: 'Impact', sans-serif; letter-spacing: 2px;">[ 商业注册局 ]</span>
+                        <span style="font-size: 12px; color: #ffcc80; font-family: 'PingFang SC', sans-serif;">商铺 / 营业执照签发</span>
+                    </button>
+                </div>
+
                 <!-- 状态看板 -->
                 <div id="queue-status-board" style="margin-bottom: 20px;"></div>
 
@@ -7021,6 +7067,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="form-section-title" style="border-color: #8bc34a; color: #8bc34a; margin-top: 40px;">[ 组织创立申请队列 ]</div>
                 <div id="queue-org-grid" class="roster-grid"></div>
                 <div id="queue-org-detail" class="roster-detail" style="display: none; border-color: #8bc34a; box-shadow: inset 0 0 20px rgba(139,195,74,0.1);"></div>
+
+                <!-- 💥 新增：政务备案排队列表 -->
+                <div class="form-section-title" style="border-color: #00bcd4; color: #00bcd4; margin-top: 40px;">[ 政务备案审核队列 ]</div>
+                <div id="queue-gov-grid" class="roster-grid"></div>
+                <div id="queue-gov-detail" class="roster-detail" style="display: none;"></div>
             </div>
         </div>
 
@@ -7118,6 +7169,232 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>
 
+        <!-- 💥 新增：政务大厅申请表 (动态三合一) -->
+        <div class="view-panel" id="govFormView">
+            <div class="archive-container" style="max-width: 800px; margin: 0 auto; padding-top: 2rem;">
+                <div class="article-top-bar" id="gov-top-bar">
+                    <button class="btn-ghost" onclick="closeForm()" style="padding: 6px 12px; font-size: 14px;" id="gov-back-btn">&lt; 返回</button>
+                    <div class="article-sys-status" id="gov-sys-status"><span class="blink-cursor">_</span> REGISTRY</div>
+                </div>
+
+                <div class="archive-header" id="gov-header-box" style="border-bottom: 2px solid; padding-bottom: 15px; margin-bottom: 30px;">
+                    <h2 class="neon-title" id="gov-form-title" style="font-size: 28px; text-align: left;">政务登记表</h2>
+                    <p id="gov-form-desc">请如实填写备案信息，提交后将由联盟政务中心审核。</p>
+                </div>
+
+                <form class="tactical-form" id="gov-form">
+                    <input type="hidden" id="gov-type" value="">
+                    
+                    <!-- 1. 民政局表单 (粉色) -->
+                    <div id="gov-marriage-fields" style="display: none;">
+    
+    <!-- 1. 关系类型挪到最上面 -->
+    <div class="input-group full-width" style="margin-bottom: 20px;">
+        <label style="color: #e91e63;">关系类型</label>
+        <div class="input-wrapper select-wrapper" style="border-color: rgba(233,30,99,0.4);">
+            <span class="prefix" style="color: #e91e63;">&gt;</span>
+            <!-- 💥 增加 onchange 事件触发文案变化，并删除了雇佣契约 -->
+            <select id="g-m-type" required style="color: #fff;" onchange="updateMarriageLabels()">
+                <option value="伴侣/婚姻">伴侣 / 婚姻登记</option>
+                <option value="收养/亲属">收养 / 亲属公证</option>
+                <option value="解除关系" style="color: #f44336;">解除关系 / 撤销公证</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- 2. 申请人 A -->
+    <div class="input-group full-width" style="margin-bottom: 20px;">
+        <label id="label-m-person-a" style="color: #e91e63;">申请人 A (您自己)</label>
+        <!-- 💥 加上 id="g-m-person-a-wrapper" 方便 JS 控制样式 -->
+        <div class="input-wrapper" id="g-m-person-a-wrapper" style="border-color: rgba(233,30,99,0.4); background: rgba(233,30,99,0.05);">
+            <span class="prefix" style="color: #e91e63;">&gt;</span>
+            <!-- 普通玩家看到的只读输入框 -->
+            <input type="text" id="g-m-person-a-input" readonly style="color: #ff80ab; width: 100%; background: transparent; border: none; outline: none;">
+            <!-- 管理员看到的下拉框 (默认隐藏) -->
+            <select id="g-m-person-a-select" style="display: none; color: #ff80ab; width: 100%; background: transparent; border: none; outline: none; appearance: none; cursor: pointer; font-family: 'PingFang SC', sans-serif;"></select>
+        </div>
+    </div>
+
+    <!-- 3. 申请人 B -->
+    <div class="input-group full-width" id="g-m-person-b-group" style="margin-bottom: 20px;">
+        <label id="label-m-person-b" style="color: #e91e63;">申请人 B (伴侣代号/姓名)</label>
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+            <div class="input-wrapper" style="flex: 1; border-color: rgba(233,30,99,0.4);">
+                <span class="prefix" style="color: #e91e63;">&gt;</span>
+                <textarea id="g-m-person-b" rows="1" placeholder="点击右侧按钮检索档案..." readonly required style="cursor: pointer;" onclick="openGovBindSearch()"></textarea><input type="hidden" id="g-m-person-b-id">
+            </div>
+            <button type="button" class="sys-modal-btn confirm" style="height: 41px; margin: 0; padding: 0 15px; white-space: nowrap; width: auto !important; flex-shrink: 0; border-color: #e91e63; color: #e91e63; background: rgba(233,30,99,0.1);" onclick="openGovBindSearch()">[ 检索档案 ]</button>
+        </div>
+        <div id="hint-m-person-b" style="font-size: 12px; color: #ff80ab; margin-top: 5px;">注：若关系模式允许多人，可多次点击检索添加。</div>
+    </div>
+
+    <!-- 4. 关系模式 / 连结形态 -->
+    <div class="input-group full-width" id="g-m-dynamic-group" style="margin-bottom: 20px;">
+        <label id="label-m-dynamic" style="color: #e91e63;">关系模式</label>
+        <div style="display: flex; gap: 10px; flex-direction: column;">
+            <div class="input-wrapper select-wrapper" id="g-m-dynamic-select-wrapper" style="border-color: rgba(233,30,99,0.4);">
+                <span class="prefix" style="color: #e91e63;">&gt;</span>
+                <select id="g-m-dynamic-select" onchange="checkCustomMarriageDynamic()" style="color: #fff;">
+                    <option value="未指定" selected>-- 不指定 / 默认 --</option>
+                    <option value="一对一">一对一</option>
+                    <option value="多边恋">多边恋</option>
+                    <option value="酷儿柏拉图">酷儿柏拉图</option>
+                    <option value="开放式关系">开放式关系</option>
+                    <option value="custom">-- 自定义其他模式 --</option>
+                </select>
+            </div>
+            <div class="input-wrapper" id="g-m-dynamic-custom-wrapper" style="display: none; border-color: rgba(233,30,99,0.4); flex-direction: column; align-items: flex-start;">
+                <div style="display: flex; width: 100%;">
+                    <span class="prefix" style="color: #e91e63;">&gt;</span>
+                    <input type="text" id="g-m-dynamic-custom" placeholder="请输入自定义的关系模式...">
+                </div>
+                <label id="label-m-multi" style="color: #ff80ab; font-size: 12px; padding: 5px 10px; cursor: pointer; display: flex; align-items: center; gap: 5px; border-top: 1px dashed rgba(233,30,99,0.3); width: 100%; box-sizing: border-box;">
+                    <input type="checkbox" id="g-m-is-multi" style="width: 14px; height: 14px;"> 此自定义关系允许多人
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. 誓言 / 附加条款 -->
+    <div class="input-group full-width" id="g-m-notes-group" style="margin-bottom: 20px;">
+        <label id="label-m-notes" style="color: #e91e63;">誓言 / 纪念日 (选填)</label>
+        <div class="input-wrapper" style="border-color: rgba(233,30,99,0.4);">
+            <textarea id="g-m-notes" rows="3" placeholder="写下你们的誓言，或者特殊的纪念日..."></textarea>
+        </div>
+    </div>
+
+    <!-- 💥 解除关系专属：选择证件 -->
+    <div class="input-group full-width" id="g-m-cert-group" style="display: none; margin-bottom: 20px;">
+        <label style="color: #f44336;">选择要解除的电子证件 <span style="color: #f44336;">*</span></label>
+        <div class="input-wrapper select-wrapper" style="border-color: rgba(244,67,54,0.4); background: rgba(244,67,54,0.05);">
+            <span class="prefix" style="color: #f44336;">&gt;</span>
+            <select id="g-m-cert-select" style="color: #fff;">
+                <option value="" disabled selected>-- 请选择要销毁的证件 --</option>
+            </select>
+        </div>
+        <div style="font-size: 12px; color: #ffb4a9; margin-top: 5px;">注：解除关系申请提交后，需等待管理员盖章。批准后证件将永久销毁，双方档案中的羁绊记录也会被自动清除。</div>
+    </div>
+
+    </div> <!-- 💥 补上这个 div！用来彻底闭合 gov-marriage-fields -->
+
+                    <!-- 2. 飞船登记表单 (青色) -->
+                    <div id="gov-ship-fields" style="display: none;">
+                        <div class="input-group full-width" style="margin-bottom: 20px;">
+                            <label style="color: #00bcd4;">舰船 / 载具名称</label>
+                            <div class="input-wrapper" style="border-color: rgba(0,188,212,0.4);">
+                                <span class="prefix" style="color: #00bcd4;">&gt;</span>
+                                <input type="text" id="g-s-name" placeholder="例如：游隼号、碎星者..." required>
+                            </div>
+                        </div>
+                        <div class="input-group full-width" style="margin-bottom: 20px;">
+                            <label style="color: #00bcd4;">舰船级别 / 型号</label>
+                            <div class="input-wrapper select-wrapper" style="border-color: rgba(0,188,212,0.4);">
+                                <span class="prefix" style="color: #00bcd4;">&gt;</span>
+                                <select id="g-s-class" required style="color: #fff;">
+                                    <option value="轻型单人战机/穿梭机">轻型战机 / 穿梭机 / 侦察艇</option>
+                                    <option value="中型武装运输船/走私船">中型武装运输船 / 走私船</option>
+                                    <option value="重型货卫/科考船">重型货船 / 深空科考船</option>
+                                    <option value="主力巡洋舰/护卫舰">主力巡洋舰 / 护卫舰 (需特殊许可)</option>
+                                    <option value="地面载具/机甲">地面重型载具 / 机甲</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group full-width" style="margin-bottom: 20px;">
+                            <label style="color: #00bcd4;">性能参数与武器改装 (详细说明)</label>
+                            <div class="input-wrapper" style="border-color: rgba(0,188,212,0.4);">
+                                <textarea id="g-s-specs" rows="4" placeholder="例如：加装了隐形涂层，配备两门等离子速射炮，跃迁引擎经过非法改装..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. 企业登记表单 (橙色) -->
+                    <div id="gov-corp-fields" style="display: none;">
+                        <div class="input-group full-width" style="margin-bottom: 20px;">
+                            <label style="color: #ff9800;">企业 / 商铺名称</label>
+                            <div class="input-wrapper" style="border-color: rgba(255,152,0,0.4);">
+                                <span class="prefix" style="color: #ff9800;">&gt;</span>
+                                <input type="text" id="g-c-name" placeholder="例如：老约翰义体维修店、深空矿业集团..." required>
+                            </div>
+                        </div>
+                        <div class="input-group full-width" style="margin-bottom: 20px;">
+                            <label style="color: #ff9800;">主营业务 / 经营范围</label>
+                            <div class="input-wrapper" style="border-color: rgba(255,152,0,0.4);">
+                                <span class="prefix" style="color: #ff9800;">&gt;</span>
+                                <input type="text" id="g-c-scope" placeholder="例如：义体维修、军火走私、矿物收购..." required>
+                            </div>
+                        </div>
+                        <div class="input-group full-width" style="margin-bottom: 20px;">
+                            <label style="color: #ff9800;">注册地 / 实体店位置</label>
+                            <div class="input-wrapper" style="border-color: rgba(255,152,0,0.4);">
+                                <span class="prefix" style="color: #ff9800;">&gt;</span>
+                                <input type="text" id="g-c-location" placeholder="例如：阿卡戎自由港-霓虹街区 104 号">
+                            </div>
+                        </div>
+                        <div class="input-group full-width" style="margin-bottom: 20px;">
+                            <label style="color: #ff9800;">企业背景与详细介绍</label>
+                            <div class="input-wrapper" style="border-color: rgba(255,152,0,0.4);">
+                                <textarea id="g-c-desc" rows="4" placeholder="向其他公民介绍您的商铺或企业..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="submit-btn" id="btn-submit-gov" style="color: #060b14; font-size: 18px; margin-top: 10px; width: 100%;">
+                        [ 提交政务备案申请 ]
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 💥 新增：充满仪式感的“契约签署”全屏界面 -->
+        <div class="view-panel" id="govConfirmView">
+            <div class="article-page-container" style="max-width: 800px; padding-top: 2rem;">
+                <div class="article-top-bar" style="border-bottom-color: rgba(233,30,99,0.3);">
+                    <button class="btn-ghost" onclick="closeForm()" style="color: #e91e63; border-color: #e91e63; padding: 6px 12px; font-size: 14px;">&lt; 返回大厅</button>
+                    <div class="article-sys-status" style="color: #e91e63;"><span class="blink-cursor">_</span> UNION CONTRACT</div>
+                </div>
+
+                <div style="background: rgba(0, 5, 10, 0.8); border: 2px solid #e91e63; padding: 50px 40px; border-radius: 4px; box-shadow: 0 0 40px rgba(233,30,99,0.2), inset 0 0 30px rgba(233,30,99,0.05); position: relative; overflow: hidden;">
+                    <!-- 背景幽灵水印 -->
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 180px; color: rgba(233,30,99,0.03); font-family: 'Impact', sans-serif; pointer-events: none; white-space: nowrap; z-index: 0;">P.S.C</div>
+
+                    <!-- 契约头部 -->
+                    <div style="text-align: center; margin-bottom: 40px; border-bottom: 1px dashed rgba(233,30,99,0.4); padding-bottom: 30px; position: relative; z-index: 1;">
+                        <svg viewBox="0 0 24 24" style="width: 64px; height: 64px; fill: #e91e63; filter: drop-shadow(0 0 15px rgba(233,30,99,0.6)); margin-bottom: 15px;">
+                            <path d="M8 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.08 0 3.91-1.06 5-2.67 1.09 1.61 2.92 2.67 5 2.67 3.31 0 6-2.69 6-6s-2.69-6-6-6c-2.08 0-3.91 1.06-5 2.67C11.91 7.06 10.08 6 8 6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4c1.19 0 2.25.53 2.98 1.36-.6.82-.98 1.83-.98 2.64 0 .81.38 1.82.98 2.64C10.25 15.47 9.19 16 8 16zm8 0c-1.19 0-2.25-.53-2.98-1.36.6-.82.98-1.83.98-2.64 0-.81-.38-1.82-.98-2.64.73-.83 1.79-1.36 2.98-1.36 2.21 0 4 1.79 4 4s-1.79 4-4 4z"/>
+                        </svg>
+                        <h2 style="color: #e91e63; font-size: 36px; margin: 0; letter-spacing: 6px; text-shadow: 0 0 20px rgba(233,30,99,0.5); font-family: 'Microsoft YaHei', serif;">泛星联盟民政局</h2>
+                        <p style="color: #ff80ab; font-family: monospace; letter-spacing: 4px; margin-top: 10px; font-size: 14px;">[ 关系缔结电子契约 ]</p>
+                    </div>
+
+                    <!-- 契约正文 (使用宋体/明朝体衬线族，增加官方公文的冰冷庄重感) -->
+                    <div id="gov-confirm-content" style="color: #e0f2fe; font-size: 16px; line-height: 2.2; font-family: 'Noto Serif SC', 'Songti SC', 'STSong', 'SimSun', serif; text-align: justify; position: relative; z-index: 1; padding: 0 20px; letter-spacing: 1px;">
+                        <!-- JS 动态生成宣誓词 -->
+                    </div>
+
+                    <!-- 收养专属：附加选项区 -->
+                    <div id="gov-confirm-extra-options" style="position: relative; z-index: 1; padding: 0 20px; margin-top: 20px;"></div>
+
+                    <!-- 电子签名区 -->
+                    <div style="margin-top: 60px; display: flex; justify-content: space-between; border-top: 1px dashed rgba(233,30,99,0.4); padding-top: 40px; position: relative; z-index: 1; flex-wrap: wrap; gap: 30px;">
+                        <div style="text-align: center; flex: 1;">
+                            <div style="color: #8bb9d6; font-size: 12px; font-family: monospace; margin-bottom: 15px; letter-spacing: 1px;">发起方电子签名</div>
+                            <div id="gov-confirm-sign-a" style="font-family: 'Impact', cursive; font-size: 28px; color: #e91e63; border-bottom: 2px solid #e91e63; padding: 0 30px 5px 30px; display: inline-block; text-shadow: 0 0 10px rgba(233,30,99,0.4);">SIGN_A</div>
+                        </div>
+                        <div style="text-align: center; flex: 1;">
+                            <div style="color: #8bb9d6; font-size: 12px; font-family: monospace; margin-bottom: 15px; letter-spacing: 1px;">确认方电子签名</div>
+                            <div id="gov-confirm-sign-b" style="font-family: 'Impact', cursive; font-size: 28px; color: rgba(255,255,255,0.2); border-bottom: 2px solid rgba(255,255,255,0.2); padding: 0 30px 5px 30px; display: inline-block; letter-spacing: 2px;">AWAITING...</div>
+                        </div>
+                    </div>
+
+                    <!-- 操作按钮 -->
+                    <div style="margin-top: 60px; display: flex; gap: 20px; position: relative; z-index: 1; flex-wrap: wrap;">
+                        <button class="submit-btn" style="flex: 2; min-width: 200px; font-size: 20px; padding: 18px; color: #060b14; background: #e91e63; border-color: #e91e63; font-weight: bold; letter-spacing: 4px; box-shadow: 0 0 25px rgba(233,30,99,0.5);" onclick="executeGovConfirm()">[ 签署契约并同意 ]</button>
+                        <button class="sys-modal-btn cancel" style="flex: 1; min-width: 150px; font-size: 16px; letter-spacing: 2px;" onclick="executeGovReject()">[ 拒绝并销毁 ]</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- 群友人设库 -->
         <div class="view-panel" id="logView">
             <div class="archive-container">
@@ -7203,6 +7480,8 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>
 
+        
+
         <!-- 🔷 科幻解密过渡遮罩 -->
 <div id="article-decode-overlay">
     <div class="decode-title-ghost" id="decode-title-ghost">ACCESSING...</div>
@@ -7245,6 +7524,8 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>
 
+        </div> <!-- 💥 补上这个 div，用来闭合最外层的 page-container -->
+
         <!-- 💥 引入 Supabase 官方引擎 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -7273,6 +7554,17 @@ window.getCyberLoaderHTML = function(text = 'UPLINKING...', color = '#12a8ff') {
 /* =========================================================
            💥 关系网检索与绑定引擎 💥
            ========================================================= */
+window.currentBindTarget = 'family'; // 默认是人设表的亲属绑定
+
+// 政务大厅专属呼叫
+window.openGovBindSearch = function() {
+    window.currentBindTarget = 'gov_marriage';
+    document.getElementById('bind-search-input').value = '';
+    document.getElementById('bind-search-results').innerHTML = '<div style="color:#8bb9d6; font-size:12px; text-align:center; padding: 20px 0;">请输入关键词进行检索</div>';
+    document.getElementById('bindCharModal').classList.add('active');
+    setTimeout(() => document.getElementById('bind-search-input').focus(), 100);
+};
+
         window.openBindCharModal = function() {
             document.getElementById('bind-search-input').value = '';
             document.getElementById('bind-search-results').innerHTML = '<div style="color:#8bb9d6; font-size:12px; text-align:center; padding: 20px 0;">请输入关键词进行检索</div>';
@@ -7285,47 +7577,231 @@ window.getCyberLoaderHTML = function(text = 'UPLINKING...', color = '#12a8ff') {
             const resBox = document.getElementById('bind-search-results');
             if (!query) return;
 
-            // 过滤出已通过审核的，且不是自己的档案
-            const results = characterDB.filter(c => c.status === 'approved' && c.owner_id !== currentUser.id && (c.callsign.toLowerCase().includes(query) || c.name.toLowerCase().includes(query)));
+            // 💥 新增：判断当前用户是否为管理员
+            const isAdmin = currentUser && ['admin', 'super_admin'].includes(currentUser.role);
+
+            // 💥 1. 检索玩家档案
+            const charResults = characterDB.filter(c => {
+                if (c.status !== 'approved') return false; // 必须是已通过的档案
+                
+                const callsign = (c.callsign || '').toLowerCase();
+                const name = (c.name || '').toLowerCase();
+                return callsign.includes(query) || name.includes(query);
+            }).map(c => {
+                return {
+                    isNpc: false,
+                    displayName: c.callsign || c.name || '未知代号',
+                    fullName: `${c.callsign || '未知'} // ${c.name || '未知'}`,
+                    faction: c.faction || '未知',
+                    ownerId: c.owner_id
+                };
+            });
+
+            // 💥 2. 检索 NPC 档案 (加入权限判断)
+            const npcResults = articlesDB.filter(a => {
+                if (a.type !== 'npc') return false;
+                const title = (a.title || '').toLowerCase();
+                return title.includes(query);
+            }).map(a => {
+                return {
+                    isNpc: true,
+                    displayName: a.title,
+                    // 💥 只有管理员能看到 [NPC] 后缀，普通玩家只看到名字
+                    fullName: isAdmin ? `${a.title} [NPC]` : a.title,
+                    // 💥 只有管理员能看到“系统 NPC”，普通玩家看到“未知”
+                    faction: isAdmin ? '系统 NPC' : '未知',
+                    ownerId: a.owner_id // NPC 的拥有者就是创建它的管理员
+                };
+            });
+
+            // 💥 3. 合并结果
+            const results = [...charResults, ...npcResults];
 
             if (results.length === 0) {
-                resBox.innerHTML = '<div style="color:#f44336; font-size:12px; text-align:center; padding: 20px 0;">[ ✕ 未检索到相关档案 ]</div>';
+                resBox.innerHTML = '<div style="color:#f44336; font-size:12px; text-align:center; padding: 20px 0;">[ ✕ 未检索到相关档案或 NPC ]</div>';
                 return;
             }
 
-            resBox.innerHTML = results.map(c => `
-                <div style="background: rgba(18,168,255,0.05); border: 1px solid rgba(18,168,255,0.3); padding: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
+            // 💥 4. 渲染列表
+            resBox.innerHTML = results.map(item => {
+                // 💥 核心：只有当“是NPC”且“是管理员”时，才启用紫色特效
+                const showAsNpc = item.isNpc && isAdmin;
+
+                const borderColor = showAsNpc ? '#9c27b0' : '#12a8ff';
+                const bgColor = showAsNpc ? 'rgba(156,39,176,0.05)' : 'rgba(18,168,255,0.05)';
+                const btnColor = showAsNpc ? 'color: #9c27b0; border-color: #9c27b0; background: rgba(156,39,176,0.1);' : '';
+
+                return `
+                <div style="background: ${bgColor}; border: 1px solid ${borderColor.replace(')', ', 0.3)').replace('rgb', 'rgba')}; padding: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <div>
-                        <div style="color: #fff; font-weight: bold; font-size: 14px; margin-bottom: 4px;">${c.callsign} // ${c.name}</div>
-                        <div style="color: #8bb9d6; font-size: 11px; font-family: monospace;">阵营: ${c.faction}</div>
+                        <div style="color: #fff; font-weight: bold; font-size: 14px; margin-bottom: 4px;">${item.fullName}</div>
+                        <div style="color: #8bb9d6; font-size: 11px; font-family: monospace;">归属: ${item.faction}</div>
                     </div>
-                    <button class="sys-modal-btn confirm" style="padding: 4px 10px; font-size: 12px; margin: 0;" onclick="selectBindChar('${c.callsign}')">[ 申请绑定 ]</button>
+                    <button class="sys-modal-btn confirm" style="padding: 4px 10px; font-size: 12px; margin: 0; ${btnColor}" onclick="selectBindChar('${item.displayName}', '${item.ownerId}')">[ 申请绑定 ]</button>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         };
 
-        window.selectBindChar = async function(callsign) {
-            // 💥 核心修复：先关闭检索弹窗，把屏幕让出来
+        window.selectBindChar = async function(callsign, ownerId) {
             document.getElementById('bindCharModal').classList.remove('active');
             
-            // 延迟 300 毫秒，等待检索弹窗的关闭动画结束，再弹出输入框
             setTimeout(async () => {
-                const relation = await SysModal.prompt(`请输入您与【${callsign}】的关系：\n（例如：兄妹、宿敌、前任、导师等）`, "", "绑定关系");
-                if (relation) {
-                    const textarea = document.getElementById('f-family-ties');
-                    const newLine = `[已绑定: ${callsign}] - 关系: ${relation.trim()}`;
+                if (window.currentBindTarget === 'gov_marriage') {
+                    const inputEl = document.getElementById('g-m-person-b');
+                    let idEl = document.getElementById('g-m-person-b-id');
                     
-                    if (textarea.value.trim() === '') {
-                        textarea.value = newLine;
+                    // 💥 容错：如果 HTML 里没加隐藏框，JS 自动建一个
+                    if (!idEl) {
+                        idEl = document.createElement('input');
+                        idEl.type = 'hidden';
+                        idEl.id = 'g-m-person-b-id';
+                        inputEl.parentNode.appendChild(idEl);
+                    }
+
+                    // 💥 核心新增：防止自己选自己（防自恋拦截）
+                    const selectAEl = document.getElementById('g-m-person-a-select');
+                    const pA = selectAEl.style.display !== 'none' ? selectAEl.value : document.getElementById('g-m-person-a-input').value;
+                    
+                    if (callsign === pA) {
+                        SysModal.alert("您不能选择当前申请人 A 作为申请人 B！\n（禁止自己与自己缔结关系）", "登记冲突");
+                        return;
+                    }
+
+                    const relationType = document.getElementById('g-m-type').value;
+                    const dynSel = document.getElementById('g-m-dynamic-select').value;
+                    const isCustomMulti = document.getElementById('g-m-is-multi').checked;
+                    
+                    let allowMulti = false;
+                    if (relationType === '收养/亲属') {
+                        allowMulti = true;
                     } else {
-                        textarea.value += '\n' + newLine;
+                        allowMulti = (dynSel === '多边恋 (Polyamory)' || dynSel === '关系无政府主义 (Relationship Anarchy)' || (dynSel === 'custom' && isCustomMulti));
+                    }
+
+                    // 💥 核心新增：结婚状态冲突校验引擎 💥
+                    if (relationType === '伴侣/婚姻') {
+                        const myChar = characterDB.find(c => c.owner_id === currentUser.id);
+                        const aNames = myChar ? [myChar.name, myChar.callsign, myChar.hidden_name, myChar.hidden_callsign].filter(Boolean) : [currentUser.nickname];
+
+                        let bNames = [callsign];
+                        const targetChar = characterDB.find(c => c.owner_id === ownerId && (c.callsign === callsign || c.name === callsign || c.hidden_callsign === callsign || c.hidden_name === callsign));
+                        if (targetChar) {
+                            bNames = [targetChar.name, targetChar.callsign, targetChar.hidden_name, targetChar.hidden_callsign].filter(Boolean);
+                        }
+
+                        // 获取所有生效中或排队中的婚姻记录
+                        const validCerts = articlesDB.filter(a => {
+                            if (a.type !== 'gov_record' || a.tag !== 'marriage') return false;
+                            if (a.status === 'rejected') return false;
+                            try {
+                                const data = JSON.parse(a.content);
+                                return data.rel === '伴侣/婚姻';
+                            } catch(e) { return false; }
+                        });
+
+                        const getActiveRomances = (namesArray) => {
+                            return validCerts.filter(cert => {
+                                try {
+                                    const data = JSON.parse(cert.content);
+                                    const allNames = (data.pA + "，" + data.pB).split(/[,，]/).map(s => s.trim());
+                                    return namesArray.some(n => allNames.includes(n));
+                                } catch(e) { return false; }
+                            });
+                        };
+
+                        const aRomances = getActiveRomances(aNames);
+                        const bRomances = getActiveRomances(bNames);
+
+                        // 校验 1：是否已经和对方结过婚（或正在申请中）
+                        let alreadyMarried = false;
+                        for (let cert of aRomances) {
+                            try {
+                                const data = JSON.parse(cert.content);
+                                const allNames = (data.pA + "，" + data.pB).split(/[,，]/).map(s => s.trim());
+                                if (bNames.some(n => allNames.includes(n))) {
+                                    alreadyMarried = true; break;
+                                }
+                            } catch(e){}
+                        }
+                        if (alreadyMarried) {
+                            SysModal.alert(`您与【${callsign}】已经缔结过伴侣关系（或申请正在审核中），无法重复登记！\n（如需变更关系模式，请先解除现有关系）`, "⚠️ 登记冲突");
+                            return;
+                        }
+
+                        // 校验 2：自己是否处于一对一关系中
+                        let aIsExclusive = false;
+                        for (let cert of aRomances) {
+                            try {
+                                const data = JSON.parse(cert.content);
+                                const dyn = data.dynamic || '';
+                                const isMulti = dyn.includes('多边恋') || dyn.includes('无政府') || dyn.includes('允许多人');
+                                if (!isMulti) { aIsExclusive = true; break; }
+                            } catch(e){}
+                        }
+                        if (aIsExclusive) {
+                            SysModal.alert("您当前已处于【专属一对一】的伴侣关系中，无法再与其他公民缔结关系！\n（需先解除现有关系）", "⚠️ 登记冲突");
+                            return;
+                        }
+
+                        // 校验 3：对方是否处于一对一关系中
+                        let bIsExclusive = false;
+                        for (let cert of bRomances) {
+                            try {
+                                const data = JSON.parse(cert.content);
+                                const dyn = data.dynamic || '';
+                                const isMulti = dyn.includes('多边恋') || dyn.includes('无政府') || dyn.includes('允许多人');
+                                if (!isMulti) { bIsExclusive = true; break; }
+                            } catch(e){}
+                        }
+                        if (bIsExclusive) {
+                            SysModal.alert(`【${callsign}】当前已处于【专属一对一】的伴侣关系中，无法与您缔结关系！`, "⚠️ 登记冲突");
+                            return;
+                        }
+
+                        // 校验 4：新关系是一对一，但双方已有其他伴侣
+                        if (!allowMulti) {
+                            if (aRomances.length > 0) {
+                                SysModal.alert("您当前已有伴侣，无法发起【专属一对一】的新关系登记！\n（请选择允许多人的关系模式，或先解除现有关系）", "⚠️ 登记冲突");
+                                return;
+                            }
+                            if (bRomances.length > 0) {
+                                SysModal.alert(`【${callsign}】当前已有伴侣，无法接受【专属一对一】的新关系登记！\n（请选择允许多人的关系模式）`, "⚠️ 登记冲突");
+                                return;
+                            }
+                        }
+                    }
+                    // 💥 校验结束 💥
+
+                    if (allowMulti) {
+                        if (inputEl.value.includes(callsign)) {
+                            SysModal.alert(`【${callsign}】已经在列表中了！`, "提示");
+                            return;
+                        }
+                        inputEl.value = inputEl.value ? inputEl.value + '，' + callsign : callsign;
+                        // 💥 修复：用逗号拼接多个 ID
+                        idEl.value = idEl.value ? idEl.value + ',' + ownerId : ownerId; 
+                        SysModal.alert(`已将【${callsign}】加入申请名单。\n当前关系模式允许多人，您可以继续检索添加。`, "添加成功");
+                    } else {
+                        inputEl.value = callsign;
+                        idEl.value = ownerId; // 💥 替换单个 ID
+                        SysModal.alert(`已选择【${callsign}】作为申请人 B。`, "选择成功");
                     }
                     
-                    // 自动撑开高度
-                    textarea.style.height = 'auto';
-                    textarea.style.height = textarea.scrollHeight + 'px';
-
-                    SysModal.alert(`已将【${callsign}】添加至您的关系网络中。\n\n注：当前为单向登记，后续将开放双向确认功能。`, "登记成功");
+                    inputEl.style.height = 'auto';
+                    inputEl.style.height = inputEl.scrollHeight + 'px';
+                } 
+                else {
+                    // 人设表亲属绑定逻辑
+                    const relation = await SysModal.prompt(`请输入您与【${callsign}】的关系：\n（例如：兄妹、宿敌、前任、导师等）`, "", "绑定关系");
+                    if (relation) {
+                        const textarea = document.getElementById('f-family-ties');
+                        const newLine = `[已绑定: ${callsign}] - 关系: ${relation.trim()}`;
+                        textarea.value = textarea.value.trim() === '' ? newLine : textarea.value + '\n' + newLine;
+                        textarea.style.height = 'auto';
+                        textarea.style.height = textarea.scrollHeight + 'px';
+                        SysModal.alert(`已将【${callsign}】添加至您的关系网络中。`, "登记成功");
+                    }
                 }
             }, 300);
         };
@@ -8705,44 +9181,84 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                     <div style="display: flex; flex-direction: column; gap: 10px; padding-top: 15px; border-top: 1px dashed rgba(18, 168, 255, 0.3);">
             `;
 
+            // 💥 核心修复：所有人（包括管理员）都应该看到自己的个人进度和待确认的政务申请！
+            const myApprovedChar = characterDB.filter(c => c.owner_id === currentUser.id);
+            const myPendingOrgs = (typeof pendingOrgsDB !== 'undefined' ? pendingOrgsDB : []).filter(o => o.owner_id === currentUser.id);
+            const myApprovedOrgs = (articlesDB || []).filter(o => o.type === 'org' && o.owner_id === currentUser.id);
+
+            const getStatusLine = (label, pendingArr, approvedArr) => {
+                if (pendingArr.length > 0) {
+                    const item = pendingArr[0];
+                    if (item.status === 'rejected') {
+                        return `<div style="color: #f44336; display: flex; align-items: flex-start;"><div style="flex-shrink:0; padding-top:2px;">${iconFail}</div><span>您的 <strong>${label}</strong> 已被退回，请点击下方您的档案查看修改建议。</span></div>`;
+                    } else {
+                        return `<div style="color: #ffeb3b; display: flex; align-items: flex-start;"><div style="flex-shrink:0; padding-top:2px;">${iconPend}</div><span>您的 <strong>${label}</strong> 正在排队审核中，请耐心等候哦。</span></div>`;
+                    }
+                } else if (approvedArr.length > 0) {
+                    return `<div style="color: #4caf50; display: flex; align-items: flex-start;"><div style="flex-shrink:0; padding-top:2px;">${iconPass}</div><span>您的 <strong>${label}</strong> 已顺利通过并归档。请前往「个人终端」获取群号。</span></div>`;
+                } else {
+                    return `<div style="color: #8bb9d6; display: flex; align-items: flex-start; opacity: 0.8;"><div style="flex-shrink:0; padding-top:2px;">${iconPend}</div><span>您暂未提交 <strong>${label}</strong>。</span></div>`;
+                }
+            };
+
+            notifyHtml += getStatusLine('公民个人档案', myPending, myApprovedChar);
+
+            // 💥 检测是否有别人向我发起的、需要我确认的政务申请
+            const incomingGovs = (typeof pendingGovsDB !== 'undefined' ? pendingGovsDB : []).filter(g => {
+                if (g.tag !== 'marriage') return false;
+                try {
+                    const data = JSON.parse(g.content);
+                    if (data.bConfirmed !== false) return false;
+                    
+                    let isMyTarget = false;
+                    // 1. 优先通过 bId 判断
+                    if (data.bId && data.bId.includes(currentUser.id)) isMyTarget = true;
+                    
+                    // 2. 核心兜底：如果 bId 丢失，通过名字判断！
+                    const myChar = characterDB.find(c => c.owner_id === currentUser.id);
+                    if (myChar && data.pB) {
+                        const myNames = [myChar.name, myChar.callsign, myChar.hidden_name, myChar.hidden_callsign].filter(Boolean);
+                        const pBNames = data.pB.split(/[,，]/).map(s => s.trim());
+                        if (myNames.some(n => pBNames.includes(n))) isMyTarget = true;
+                    }
+                    
+                    return isMyTarget;
+                } catch(e) { return false; }
+            });
+
+            if (incomingGovs.length > 0) {
+                incomingGovs.forEach(g => {
+                    try {
+                        const data = JSON.parse(g.content);
+                        notifyHtml += `
+                            <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed rgba(18,168,255,0.2);">
+                                <div style="color: #e91e63; display: flex; align-items: flex-start; margin-bottom: 10px;">
+                                    <div style="flex-shrink:0; padding-top:2px;">${iconPend}</div>
+                                    <span>【${data.pA}】向您发起了 <strong>${data.rel}</strong> 申请。</span>
+                                </div>
+                                <button class="submit-btn" style="margin-left: 22px; padding: 8px 20px; font-size: 14px; color: #e91e63; border-color: #e91e63; background: rgba(233,30,99,0.1); width: fit-content; letter-spacing: 1px; box-shadow: 0 0 10px rgba(233,30,99,0.2);" onclick="openGovConfirmView('${g.id}')">[ 前往签署契约 ]</button>
+                            </div>
+                        `;
+                    } catch(e){}
+                });
+            }
+
+            if (myPendingOrgs.length > 0 || myApprovedOrgs.length > 0) {
+                myPendingOrgs.forEach(o => notifyHtml += getStatusLine(`组织创立申请 [${o.title}]`, [o], []));
+                myApprovedOrgs.forEach(o => notifyHtml += getStatusLine(`创立的组织 [${o.title}]`, [], [o]));
+            } else {
+                notifyHtml += `<div style="color: #8bb9d6; display: flex; align-items: flex-start; opacity: 0.8;"><div style="flex-shrink:0; padding-top:2px;">${iconPend}</div><span>您暂未提交组织创立申请。</span></div>`;
+            }
+
+            // 💥 如果是管理员，在最底部追加管理员视角的统计
             if (['admin', 'super_admin'].includes(currentUser?.role)) {
-                // 管理员视角的统计
                 const orgsCount = (typeof pendingOrgsDB !== 'undefined' ? pendingOrgsDB.length : 0);
                 notifyHtml += `
-                    <div style="color:#ffeb3b; display:flex; align-items:flex-start; font-family:monospace;">
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed rgba(255,235,59,0.3); color:#ffeb3b; display:flex; align-items:flex-start; font-family:monospace;">
                         <div style="flex-shrink:0; padding-top:2px;">${iconPend}</div>
                         <span>[ 管理员模式 ] 正在待命：人设待审核 ${pendingDB.length} 份，组织创立待审核 ${orgsCount} 份。</span>
                     </div>
                 `;
-            } else {
-                // 普通用户视角的各项进度统计
-                const myApprovedChar = characterDB.filter(c => c.owner_id === currentUser.id);
-                const myPendingOrgs = (typeof pendingOrgsDB !== 'undefined' ? pendingOrgsDB : []).filter(o => o.owner_id === currentUser.id);
-                const myApprovedOrgs = (articlesDB || []).filter(o => o.type === 'org' && o.owner_id === currentUser.id);
-
-                const getStatusLine = (label, pendingArr, approvedArr) => {
-                    if (pendingArr.length > 0) {
-                        const item = pendingArr[0];
-                        if (item.status === 'rejected') {
-                            return `<div style="color: #f44336; display: flex; align-items: flex-start;"><div style="flex-shrink:0; padding-top:2px;">${iconFail}</div><span>您的 <strong>${label}</strong> 已被退回，请点击下方您的档案查看修改建议。</span></div>`;
-                        } else {
-                            return `<div style="color: #ffeb3b; display: flex; align-items: flex-start;"><div style="flex-shrink:0; padding-top:2px;">${iconPend}</div><span>您的 <strong>${label}</strong> 正在排队审核中，请耐心等候哦。</span></div>`;
-                        }
-                    } else if (approvedArr.length > 0) {
-                        return `<div style="color: #4caf50; display: flex; align-items: flex-start;"><div style="flex-shrink:0; padding-top:2px;">${iconPass}</div><span>好消息！您的 <strong>${label}</strong> 已顺利通过并归档。请前往「个人终端」获取群号。</span></div>`;
-                    } else {
-                        return `<div style="color: #8bb9d6; display: flex; align-items: flex-start; opacity: 0.8;"><div style="flex-shrink:0; padding-top:2px;">${iconPend}</div><span>您暂未提交 <strong>${label}</strong>。</span></div>`;
-                    }
-                };
-
-                notifyHtml += getStatusLine('公民个人档案', myPending, myApprovedChar);
-
-                if (myPendingOrgs.length > 0 || myApprovedOrgs.length > 0) {
-                    myPendingOrgs.forEach(o => notifyHtml += getStatusLine(`组织创立申请 [${o.title}]`, [o], []));
-                    myApprovedOrgs.forEach(o => notifyHtml += getStatusLine(`创立的组织 [${o.title}]`, [], [o]));
-                } else {
-                    notifyHtml += `<div style="color: #8bb9d6; display: flex; align-items: flex-start; opacity: 0.8;"><div style="flex-shrink:0; padding-top:2px;">${iconPend}</div><span>您暂未提交组织创立申请。</span></div>`;
-                }
             }
 
             notifyHtml += `</div></div>`;
@@ -8792,60 +9308,128 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                 grid.appendChild(btn);
             });
             // 👇 直接在这里接上组织创立排队列表的渲染逻辑
-    const orgGrid = document.getElementById('queue-org-grid');
-    if (!orgGrid) return;
-    orgGrid.innerHTML = '';
+        const orgGrid = document.getElementById('queue-org-grid');
+        if (!orgGrid) return;
+        orgGrid.innerHTML = '';
 
-    if (typeof pendingOrgsDB === 'undefined' || pendingOrgsDB.length === 0) {
-        orgGrid.innerHTML = '<div style="color:#8bc34a; font-size:12px;">[ 当前无组织创立申请 ]</div>';
-        return;
-    }
-
-    const svgOrg = `<svg viewBox="0 0 24 24" style="width: 1.1em; height: 1.1em; fill: currentColor; vertical-align: middle; margin-top: -2px; margin-right: 4px;"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>`;
-
-    pendingOrgsDB.forEach(org => {
-        const btn = document.createElement('button');
-        btn.className = 'roster-btn';
-        
-        if (['admin', 'super_admin'].includes(currentUser?.role) || org.owner_id === currentUser.id) {
-            btn.style.borderColor = org.status === 'rejected' ? '#f44336' : '#8bc34a';
-            btn.style.color = org.status === 'rejected' ? '#f44336' : '#8bc34a';
-            let prefixTag = '';
-            if (org.status === 'pending') prefixTag = '待审核';
-            else if (org.status === 'rejected') prefixTag = '已退回';
-            else if (org.status === 'approved') prefixTag = '已通过';
-
-            if (org.target_edit_id) {
-                prefixTag = "修改申请"; 
-                btn.style.boxShadow = "inset 0 0 10px rgba(139, 195, 74, 0.4)";
-            }
-
-            // 💥 核心新增：仅管理员可见的机密信息尾巴
-            let adminInfoOrg = '';
-            if (['admin', 'super_admin'].includes(currentUser?.role)) {
-                const timeStr = new Date(org.updated_at || org.created_at || Date.now()).toLocaleString();
-                const isRevision = !!org.target_edit_id;
-                let reviewObj = org.review_comments;
-                if (typeof reviewObj === 'string') { try { reviewObj = JSON.parse(reviewObj); } catch(e) {} }
-                const auditCount = (reviewObj && reviewObj.audit_count) ? reviewObj.audit_count : 0;
-                adminInfoOrg = `<div style="font-size: 10px; color: #8bb9d6; margin-top: 4px; font-family: monospace; font-weight: normal;">${timeStr} | 驳回: ${auditCount}次 ${isRevision ? '<span style="color:#ff9800; margin-left:5px;">[老组织修改]</span>' : ''}</div>`;
-                btn.style.display = 'flex';
-                btn.style.flexDirection = 'column';
-                btn.style.alignItems = 'flex-start';
-            }
-
-            btn.innerHTML = `<div style="font-weight:bold;">[${prefixTag}] ${svgOrg} ${org.title}</div>${adminInfoOrg}`;
-            btn.onclick = () => showOrgQueueDetail(org);
+        if (typeof pendingOrgsDB === 'undefined' || pendingOrgsDB.length === 0) {
+            orgGrid.innerHTML = '<div style="color:#8bc34a; font-size:12px;">[ 当前无组织创立申请 ]</div>';
         } else {
-            btn.style.opacity = '0.4';
-            btn.style.borderColor = '#666';
-            btn.style.color = '#888';
-            btn.innerHTML = `[已加密] ${svgOrg} ${org.title}`;
-            btn.onclick = () => SysModal.alert("审核中的组织仅管理员与提交者本人可查看。", "访问拒绝");
+            const svgOrg = `<svg viewBox="0 0 24 24" style="width: 1.1em; height: 1.1em; fill: currentColor; vertical-align: middle; margin-top: -2px; margin-right: 4px;"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>`;
+
+            pendingOrgsDB.forEach(org => {
+                const btn = document.createElement('button');
+                btn.className = 'roster-btn';
+                
+                if (['admin', 'super_admin'].includes(currentUser?.role) || org.owner_id === currentUser.id) {
+                    btn.style.borderColor = org.status === 'rejected' ? '#f44336' : '#8bc34a';
+                    btn.style.color = org.status === 'rejected' ? '#f44336' : '#8bc34a';
+                    let prefixTag = '';
+                    if (org.status === 'pending') prefixTag = '待审核';
+                    else if (org.status === 'rejected') prefixTag = '已退回';
+                    else if (org.status === 'approved') prefixTag = '已通过';
+
+                    if (org.target_edit_id) {
+                        prefixTag = "修改申请"; 
+                        btn.style.boxShadow = "inset 0 0 10px rgba(139, 195, 74, 0.4)";
+                    }
+
+                    let adminInfoOrg = '';
+                    if (['admin', 'super_admin'].includes(currentUser?.role)) {
+                        const timeStr = new Date(org.updated_at || org.created_at || Date.now()).toLocaleString();
+                        const isRevision = !!org.target_edit_id;
+                        let reviewObj = org.review_comments;
+                        if (typeof reviewObj === 'string') { try { reviewObj = JSON.parse(reviewObj); } catch(e) {} }
+                        const auditCount = (reviewObj && reviewObj.audit_count) ? reviewObj.audit_count : 0;
+                        adminInfoOrg = `<div style="font-size: 10px; color: #8bb9d6; margin-top: 4px; font-family: monospace; font-weight: normal;">${timeStr} | 驳回: ${auditCount}次 ${isRevision ? '<span style="color:#ff9800; margin-left:5px;">[老组织修改]</span>' : ''}</div>`;
+                        btn.style.display = 'flex';
+                        btn.style.flexDirection = 'column';
+                        btn.style.alignItems = 'flex-start';
+                    }
+
+                    btn.innerHTML = `<div style="font-weight:bold;">[${prefixTag}] ${svgOrg} ${org.title}</div>${adminInfoOrg}`;
+                    btn.onclick = () => showOrgQueueDetail(org);
+                } else {
+                    btn.style.opacity = '0.4';
+                    btn.style.borderColor = '#666';
+                    btn.style.color = '#888';
+                    btn.innerHTML = `[已加密] ${svgOrg} ${org.title}`;
+                    btn.onclick = () => SysModal.alert("审核中的组织仅管理员与提交者本人可查看。", "访问拒绝");
+                }
+                orgGrid.appendChild(btn);
+            });
         }
-        orgGrid.appendChild(btn);
-    });
-} // <-- 这是 renderQueue 函数的结尾大括号
+
+        // 💥 核心修复：把政务大厅的渲染逻辑放进 renderQueue 函数内部！
+        const govGrid = document.getElementById('queue-gov-grid');
+        if (govGrid) {
+            govGrid.innerHTML = '';
+            if (typeof pendingGovsDB === 'undefined' || pendingGovsDB.length === 0) {
+                govGrid.innerHTML = '<div style="color:#00bcd4; font-size:12px;">[ 当前无政务备案申请 ]</div>';
+            } else {
+                pendingGovsDB.forEach(gov => {
+                const btn = document.createElement('button');
+                btn.className = 'roster-btn';
+                
+                // 💥 新增：解析表单数据，看看当前登录的人是不是“被申请人(B)”
+                let isTarget = false;
+                try {
+                    const data = JSON.parse(gov.content);
+                    // 1. 优先通过 bId 判断
+                    if (data.bId && currentUser && data.bId.includes(currentUser.id)) {
+                        isTarget = true;
+                    }
+                    // 2. 💥 核心兜底：如果 bId 丢失，通过名字判断！
+                    const myChar = currentUser ? characterDB.find(c => c.owner_id === currentUser.id) : null;
+                    if (myChar && data.pB) {
+                        const myNames = [myChar.name, myChar.callsign, myChar.hidden_name, myChar.hidden_callsign].filter(Boolean);
+                        const pBNames = data.pB.split(/[,，]/).map(s => s.trim());
+                        if (myNames.some(n => pBNames.includes(n))) {
+                            isTarget = true;
+                        }
+                    }
+                } catch(e) {}
+                
+                // 💥 核心修复：把 isTarget 加进白名单！被申请人也能看到并点开这张卡片了
+                if (['admin', 'super_admin'].includes(currentUser?.role) || gov.owner_id === currentUser.id || isTarget) {
+                    const svgGov = `<svg viewBox="0 0 24 24" style="width:1.2em; height:1.2em; fill:currentColor; vertical-align:middle; margin-top:-2px; margin-right:4px;"><path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-9.5-5z"/></svg>`;
+                    const svgMarriage = `<svg viewBox="0 0 24 24" style="width:1.2em; height:1.2em; fill:currentColor; vertical-align:middle; margin-top:-2px; margin-right:4px;"><path d="M8 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.08 0 3.91-1.06 5-2.67 1.09 1.61 2.92 2.67 5 2.67 3.31 0 6-2.69 6-6s-2.69-6-6-6c-2.08 0-3.91 1.06-5 2.67C11.91 7.06 10.08 6 8 6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4c1.19 0 2.25.53 2.98 1.36-.6.82-.98 1.83-.98 2.64 0 .81.38 1.82.98 2.64C10.25 15.47 9.19 16 8 16zm8 0c-1.19 0-2.25-.53-2.98-1.36.6-.82.98-1.83.98-2.64 0-.81-.38-1.82-.98-2.64.73-.83 1.79-1.36 2.98-1.36 2.21 0 4 1.79 4 4s-1.79 4-4 4z"/></svg>`;
+                    const svgShip = `<svg viewBox="0 0 24 24" style="width:1.2em; height:1.2em; fill:currentColor; vertical-align:middle; margin-top:-2px; margin-right:4px;"><path d="M12 2C8.69 2 6.58 4.23 5.48 7.15c-1.04 2.76-.84 5.92-.09 8.21-.54 2.03-1.33 3.99-2.3 5.82-.2.38-.05.86.33 1.05.11.05.23.08.35.08.28 0 .55-.15.69-.41.97-1.84 1.8-3.83 2.39-5.91.95.42 2 .65 3.15.65s2.2-.23 3.15-.65c.59 2.08 1.42 4.07 2.39 5.91.14.26.41.41.69.41.12 0 .24-.03.35-.08.38-.19.53-.67.33-1.05-.97-1.83-1.76-3.79-2.3-5.82.75-2.29.95-5.45-.09-8.21C17.42 4.23 15.31 2 12 2zm0 12c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/></svg>`;
+                    const svgCorp = `<svg viewBox="0 0 24 24" style="width:1.2em; height:1.2em; fill:currentColor; vertical-align:middle; margin-top:-2px; margin-right:4px;"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>`;
+
+                    let color = '#00bcd4'; let icon = svgGov;
+                    if (gov.tag === 'marriage') { color = '#e91e63'; icon = svgMarriage; }
+                    else if (gov.tag === 'ship') { color = '#00bcd4'; icon = svgShip; }
+                    else if (gov.tag === 'corp') { color = '#ff9800'; icon = svgCorp; }
+
+                    btn.style.borderColor = gov.status === 'rejected' ? '#f44336' : color;
+                    btn.style.color = gov.status === 'rejected' ? '#f44336' : color;
+                    
+                    let prefixTag = gov.status === 'pending' ? '待审核' : '已退回';
+                    
+                    // 💥 如果是发给我的待确认申请，加上醒目的 [待确认] 标签
+                    if (isTarget && gov.status === 'pending') {
+                        try {
+                            const data = JSON.parse(gov.content);
+                            if (data.bConfirmed === false) prefixTag = '待您确认';
+                        } catch(e){}
+                    }
+
+                    btn.innerHTML = `<div style="font-weight:bold;">[${prefixTag}] ${icon} ${gov.title}</div>`;
+                    btn.onclick = () => showGovQueueDetail(gov, color);
+                } else {
+                    const svgGovFallback = `<svg viewBox="0 0 24 24" style="width:1.2em; height:1.2em; fill:currentColor; vertical-align:middle; margin-top:-2px; margin-right:4px;"><path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-9.5-5z"/></svg>`;
+                    btn.style.opacity = '0.4';
+                    btn.style.borderColor = '#666';
+                    btn.style.color = '#888';
+                    btn.innerHTML = `[已加密] ${svgGovFallback} 政务机密文件`;
+                    btn.onclick = () => SysModal.alert("审核中的政务文件仅管理员与相关当事人可查看。", "访问拒绝");
+                }
+                govGrid.appendChild(btn);
+            });
+            }
+        }
+    } // <-- 💥 真正的 renderQueue 函数结尾大括号在这里！
 
         // 💥 渲染个人终端主页 (终极修复版：支持无档案显示组织)
         function renderProfile() {
@@ -9103,6 +9687,83 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                 privateHtml = `<div style="color: #8bb9d6; font-family: monospace; padding: 30px; text-align: center; border: 1px dashed rgba(255,235,59,0.3); background: rgba(255,235,59,0.05); margin-top: 10px;">[ 档案通过审核后方可解锁其他设定功能 ]</div>`;
             }
 
+            // 💥 组装电子证件 Tab (自动读取已通过的政务档案)
+            let certsHtml = '';
+            if (myChar.status === 'approved') {
+                // 从文章库里捞出所有已通过的、且包含当前角色的民政局记录
+                const myCerts = articlesDB.filter(a => {
+                    if (a.type === 'gov_record' && a.tag === 'marriage' && a.status === 'approved') {
+                        try {
+                            const data = JSON.parse(a.content);
+                            // 把 pA 和 pB 里的所有人名拆成一个数组
+                            const allNames = (data.pA + "，" + data.pB).split(/[,，]/).map(s => s.trim());
+                            // 当前角色的所有可能名字
+                            const myNames = [myChar.name, myChar.callsign, myChar.hidden_name, myChar.hidden_callsign].filter(Boolean);
+                            // 只要有一个名字对得上，这张证就属于他
+                            return myNames.some(n => allNames.includes(n));
+                        } catch(e) { return false; }
+                    }
+                    return false;
+                });
+
+                if (myCerts.length > 0) {
+                    myCerts.forEach(cert => {
+                        const data = JSON.parse(cert.content);
+                        // 提取月和日，年份焊死在 2240
+                        const dateObj = new Date(cert.updated_at);
+                        const dateStr = `2240 / ${String(dateObj.getMonth()+1).padStart(2,'0')} / ${String(dateObj.getDate()).padStart(2,'0')}`;
+                        
+                        const relationName = data.dynamic ? data.dynamic : data.rel;
+                        const allParties = (data.pA + "，" + data.pB).split(/[,，]/).map(s => s.trim()).filter(Boolean).join(' & ');
+                        
+                        // 💥 差分逻辑：判断是否为解除关系
+                        const isDivorce = data.rel === '解除关系';
+                        const themeColor = isDivorce ? '#9e9e9e' : '#e91e63'; // 离婚用冰冷的灰色，结婚用粉色
+                        const themeBg = isDivorce ? 'rgba(158,158,158,0.05)' : 'rgba(233,30,99,0.05)';
+                        const titleText = isDivorce ? '泛星联盟关系解除证明' : '泛星联盟关系缔结证书';
+                        const subText = isDivorce ? 'CERTIFICATE OF DISSOLUTION' : 'CERTIFICATE OF UNION';
+                        const partyLabel = isDivorce ? '解约人：' : '缔结人：';
+                        const blessing = isDivorce ? '"聚散皆是星辰的指引。愿各自在深空安好。"' : '"无论深空如何浩瀚，愿你们的羁绊如星辰般永恒。"';
+                        const watermark = isDivorce ? 'TERMINATED' : 'P.S.C APPROVED';
+
+                        certsHtml += `
+                            <div onclick="openCertificate('${cert.id}')" style="cursor: pointer; background: ${themeBg}; border: 2px solid ${themeColor}; border-radius: 4px; padding: 30px; margin-bottom: 20px; position: relative; overflow: hidden; box-shadow: 0 0 20px ${themeColor}33, inset 0 0 20px ${themeColor}1A; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 30px ${themeColor}4D, inset 0 0 30px ${themeColor}1A';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 0 20px ${themeColor}33, inset 0 0 20px ${themeColor}1A';">
+                                <!-- 背景钢印 -->
+                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 60px; color: ${themeColor}0D; font-family: 'Impact', sans-serif; pointer-events: none; white-space: nowrap; z-index: 0; border: 4px solid ${themeColor}0D; padding: 10px;">${watermark}</div>
+                                
+                                <!-- 证书头部 -->
+                                <div style="text-align: center; margin-bottom: 25px; position: relative; z-index: 1; border-bottom: 1px dashed ${themeColor}66; padding-bottom: 15px;">
+                                    <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; fill: ${themeColor}; filter: drop-shadow(0 0 10px ${themeColor}99); margin-bottom: 10px;">
+                                        ${isDivorce ? '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.59-13L12 10.59 8.41 7 7 8.41 10.59 12 7 15.59 8.41 17 12 13.41 15.59 17 17 15.59 13.41 12 17 8.41z"/>' : '<path d="M8 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.08 0 3.91-1.06 5-2.67 1.09 1.61 2.92 2.67 5 2.67 3.31 0 6-2.69 6-6s-2.69-6-6-6c-2.08 0-3.91 1.06-5 2.67C11.91 7.06 10.08 6 8 6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4c1.19 0 2.25.53 2.98 1.36-.6.82-.98 1.83-.98 2.64 0 .81.38 1.82.98 2.64C10.25 15.47 9.19 16 8 16zm8 0c-1.19 0-2.25-.53-2.98-1.36.6-.82.98-1.83.98-2.64 0-.81-.38-1.82-.98-2.64.73-.83 1.79-1.36 2.98-1.36 2.21 0 4 1.79 4 4s-1.79 4-4 4z"/>'}
+                                    </svg>
+                                    <h3 style="color: ${themeColor}; font-size: 24px; margin: 0; letter-spacing: 4px; font-family: 'Noto Serif SC', 'Songti SC', serif; text-shadow: 0 0 10px ${themeColor}66;">${titleText}</h3>
+                                    <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-top: 5px; letter-spacing: 2px; opacity: 0.8;">${subText}</div>
+                                </div>
+
+                                <!-- 证书正文 -->
+                                <div style="position: relative; z-index: 1; font-family: 'Noto Serif SC', 'Songti SC', serif; color: #e0f2fe; font-size: 16px; line-height: 2;">
+                                    <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">${partyLabel}</span><span style="color: #fff; font-weight: bold; font-size: 18px; text-shadow: 0 0 8px ${themeColor}80;">${allParties}</span></div>
+                                    <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">关系类型：</span><span>${relationName}</span></div>
+                                    <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">生效日期：</span><span style="font-family: monospace; font-size: 15px;">${dateStr}</span></div>
+                                    
+                                    <!-- 联盟祝福语 -->
+                                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed ${themeColor}4D; text-align: center; color: ${themeColor}; font-size: 13px; font-style: italic; letter-spacing: 1px;">
+                                        ${blessing}
+                                    </div>
+                                </div>
+                                
+                                <!-- 点击提示 -->
+                                <div style="position: absolute; bottom: 10px; right: 15px; color: ${themeColor}; font-size: 12px; font-family: monospace; opacity: 0.6;">[ 点击查看高清证件 ]</div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    certsHtml = `<div style="color: #8bb9d6; font-family: monospace; padding: 30px; text-align: center; border: 1px dashed rgba(233,30,99,0.3); background: rgba(233,30,99,0.05); margin-top: 10px;">[ 暂无已生效的电子证件 ]</div>`;
+                }
+            } else {
+                certsHtml = `<div style="color: #8bb9d6; font-family: monospace; padding: 30px; text-align: center; border: 1px dashed rgba(233,30,99,0.3); background: rgba(233,30,99,0.05); margin-top: 10px;">[ 档案通过审核后方可解锁证件功能 ]</div>`;
+            }
+
             // 💥 状态 2：组装完整的 ID 卡片 (加入 Tab 切换)
             container.innerHTML = `
                 <div class="profile-card" style="border-color: ${themeColor}; box-shadow: inset 0 0 30px rgba(${rgbColor}, 0.1);">
@@ -9129,10 +9790,11 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                             <div class="profile-callsign" style="color: ${themeColor};">代号/呼号: ${renderDual(myChar, 'callsign', 'hidden_callsign')}</div>
                         </div>
                         
-                        <!-- 💥 新增：个人终端 Tab 切换栏 -->
+                        <!-- 💥 新增：个人终端 Tab 切换栏 (加入了电子证件) -->
                         <div class="profile-tabs">
                             <button class="profile-tab-btn active" data-tab="ptab-public" onclick="switchProfileTab('ptab-public')">公开档案</button>
                             <button class="profile-tab-btn" data-tab="ptab-private" onclick="switchProfileTab('ptab-private')" style="color: #ffeb3b; border-color: rgba(255,235,59,0.3);">其他设定</button>
+                            <button class="profile-tab-btn" data-tab="ptab-certs" onclick="switchProfileTab('ptab-certs')" style="color: #e91e63; border-color: rgba(233,30,99,0.3);">电子证件</button>
                         </div>
                         
                         <div id="ptab-public" class="profile-tab-content active">
@@ -9141,6 +9803,10 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                         
                         <div id="ptab-private" class="profile-tab-content">
                             ${privateHtml}
+                        </div>
+
+                        <div id="ptab-certs" class="profile-tab-content">
+                            ${certsHtml}
                         </div>
                         
                         ${myOrgsHtml}
@@ -9420,7 +10086,7 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                         <h3 class="detail-title-text" style="color: #ffeb3b;">
                             ${renderDual(char, 'name', 'hidden_name')} // ${renderDual(char, 'callsign', 'hidden_callsign')} ${getDecryptBtn(char)} ${headerAnnoBtn}
                         </h3>
-                        <button class="close-btn" onclick="document.getElementById('queue-detail').style.display='none'">[X] CLOSE</button>
+                        <button class="close-btn" onclick="document.getElementById('queue-detail').style.display='none'">[X] </button>
                     </div>
                     ${headerAnnoBox}
                 </div>
@@ -9748,6 +10414,58 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
             window.scrollTo({ top: 0, behavior: 'instant' });
             
             await SysModal.alert("旧档案数据已成功载入，请直接在表单上进行修改。", "调取成功");
+        };
+
+        // 💥 新增：将已有档案一键转换为 NPC
+        window.convertToNpc = async function(charId) {
+            const isSure = await SysModal.confirm("确认将此档案转换为 NPC 吗？\n\n转换后，该档案将带有 [NPC_FLAG] 标记，不再占用您的主身份名额。\n此操作不可逆！", "⚠️ 转换为 NPC");
+            if (!isSure) return;
+
+            const char = characterDB.find(c => String(c.id) === String(charId));
+            if (!char) return;
+
+            let newNotes = char.secret_notes || '';
+            if (!newNotes.includes('[NPC_FLAG]')) {
+                newNotes = '[NPC_FLAG]\n' + newNotes;
+            }
+
+            try {
+                // 1. 更新 characters 表，打上 NPC 标记释放名额
+                const { error } = await supabaseClient.from('characters').update({ secret_notes: newNotes }).eq('id', charId);
+                if (error) throw error;
+
+                // 2. 同步在 articles 表里创建一条 NPC 记录，方便在政务大厅下拉框里调用
+                const npcPayload = {
+                    type: 'npc',
+                    title: char.name || char.callsign,
+                    icon: char.avatar_url || '',
+                    summary: '从完整档案转换而来的 NPC',
+                    tag: 'NPC',
+                    content: 'NPC_DATA',
+                    status: 'approved',
+                    owner_id: currentUser.id,
+                    updated_at: new Date().toISOString()
+                };
+                
+                // 查重，防止重复插入
+                const existingArticle = articlesDB.find(a => a.type === 'npc' && a.title === npcPayload.title && a.owner_id === currentUser.id);
+                if (!existingArticle) {
+                    await supabaseClient.from('articles').insert([npcPayload]);
+                }
+
+                await SysModal.alert("已成功转换为 NPC 档案！\n您的主身份名额已释放，且该 NPC 已同步至系统库。", "转换成功");
+                
+                // 关闭详情面板
+                if (window.isOverlayOpen) window.closeDetailOverlay();
+                const mobileDetail = document.getElementById('roster-detail');
+                if (mobileDetail) mobileDetail.style.display = 'none';
+                
+                // 刷新全局数据
+                fetchCloudData(); 
+            } catch (e) {
+                console.error(e);
+                SysModal.alert("转换失败，请检查网络。", "ERROR");
+            }
         };
 
         // 💥 新增：管理员专属的正式库删除功能
@@ -10443,6 +11161,88 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
             }
         });
 
+        // 💥 动态切换民政局表单文案与显示状态
+        window.updateMarriageLabels = function() {
+            const type = document.getElementById('g-m-type').value;
+            
+            const groupB = document.getElementById('g-m-person-b-group');
+            const groupDyn = document.getElementById('g-m-dynamic-group');
+            const groupNotes = document.getElementById('g-m-notes-group');
+            const groupCert = document.getElementById('g-m-cert-group');
+
+            const labelB = document.getElementById('label-m-person-b');
+            const hintB = document.getElementById('hint-m-person-b');
+            const labelDyn = document.getElementById('label-m-dynamic');
+            const dynSelectWrap = document.getElementById('g-m-dynamic-select-wrapper');
+            const dynCustomWrap = document.getElementById('g-m-dynamic-custom-wrapper');
+            const dynCustomInput = document.getElementById('g-m-dynamic-custom');
+            const labelMulti = document.getElementById('label-m-multi');
+            const labelNotes = document.getElementById('label-m-notes');
+            const notesInput = document.getElementById('g-m-notes');
+
+            if (type === '伴侣/婚姻') {
+                groupB.style.display = 'block'; groupDyn.style.display = 'block'; groupNotes.style.display = 'block'; groupCert.style.display = 'none';
+                labelB.innerText = "申请人 B (伴侣代号/姓名)";
+                hintB.innerText = "注：若关系模式允许多人，可多次点击检索添加。";
+                labelDyn.innerText = "关系模式 / 连结形态 (可选)";
+                dynSelectWrap.style.display = 'flex';
+                if(window.checkCustomMarriageDynamic) window.checkCustomMarriageDynamic(); 
+                labelMulti.style.display = 'flex';
+                labelNotes.innerText = "誓言 / 纪念日 (选填)";
+                notesInput.placeholder = "写下你们的誓言，或者特殊的纪念日...";
+                
+            } else if (type === '收养/亲属') {
+                groupB.style.display = 'block'; groupDyn.style.display = 'block'; groupNotes.style.display = 'block'; groupCert.style.display = 'none';
+                labelB.innerText = "申请人 B (关联亲属 / 监护人 / 被收养人)";
+                hintB.innerHTML = "💡 <b>提示：</b>可多次点击检索添加多人。<br>（例如：被收养人填表时，可在此处同时检索并添加两名养父母）";
+                labelDyn.innerText = "具体亲属关系说明 (必填)";
+                dynSelectWrap.style.display = 'none';
+                dynCustomWrap.style.display = 'flex';
+                dynCustomInput.placeholder = "例如：法定监护人、养父子、义兄妹...";
+                labelMulti.style.display = 'none';
+                labelNotes.innerText = "附加条款 / 监护责任说明 (选填)";
+                notesInput.placeholder = "关于抚养权、监护责任分配或其他特殊说明...";
+                
+            } else if (type === '解除关系') {
+                // 💥 离婚模式：隐藏其他输入框，只显示证件选择框
+                groupB.style.display = 'none'; groupDyn.style.display = 'none'; groupNotes.style.display = 'none'; groupCert.style.display = 'block';
+
+                // 动态加载当前用户的证件
+                const myChar = characterDB.find(c => c.owner_id === currentUser.id);
+                const certSelect = document.getElementById('g-m-cert-select');
+                certSelect.innerHTML = '<option value="" disabled selected>-- 请选择要销毁的证件 --</option>';
+                
+                if (myChar) {
+                    const myCerts = articlesDB.filter(a => {
+                        if (a.type === 'gov_record' && a.tag === 'marriage' && a.status === 'approved') {
+                            try {
+                                const data = JSON.parse(a.content);
+                                // 💥 核心修复：过滤掉“解除关系”的记录，只抓取真正的证件！
+                                if (data.rel === '解除关系') return false;
+                                const allNames = (data.pA + "，" + data.pB).split(/[,，]/).map(s => s.trim());
+                                const myNames = [myChar.name, myChar.callsign, myChar.hidden_name, myChar.hidden_callsign].filter(Boolean);
+                                return myNames.some(n => allNames.includes(n));
+                            } catch(e) { return false; }
+                        }
+                        return false;
+                    });
+
+                    if (myCerts.length > 0) {
+                        myCerts.forEach(cert => {
+                            try {
+                                const data = JSON.parse(cert.content);
+                                const relationName = data.dynamic ? data.dynamic : data.rel;
+                                const allParties = (data.pA + "，" + data.pB).split(/[,，]/).map(s => s.trim()).filter(Boolean).join(' & ');
+                                certSelect.innerHTML += `<option value="${cert.id}">[${relationName}] ${allParties}</option>`;
+                            } catch(e){}
+                        });
+                    } else {
+                        certSelect.innerHTML = '<option value="" disabled selected>-- 您当前没有生效的电子证件 --</option>';
+                    }
+                }
+            }
+        };
+
         // 💥 新增：手机端专属的静态详情面板展开逻辑
         window.showMobileDetail = function(index) {
             const char = characterDB[index];
@@ -10454,7 +11254,7 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
             // 同样提供修改按钮（如果是本人的档案）
             let editActionHtml = '';
             if (char.owner_id === currentUser.id) {
-                editActionHtml += `<button class="sys-modal-btn confirm" style="margin-top: 15px; margin-right: 10px;" onclick="editQueueChar('${char.id}')">[ CREATE_REVISION // 提交修改申请 ]</button>`;
+                editActionHtml += `<button class="sys-modal-btn confirm" style="margin-top: 15px; margin-right: 10px;" onclick="editQueueChar('${char.id}')">[ 提交修改申请 ]</button>`;
             }
             // 💥 补回：如果是管理员，额外给他一个强制删除按钮
             if (['admin', 'super_admin'].includes(currentUser?.role)) {
@@ -10468,7 +11268,7 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                         ${char.is_private ? '<svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: #ff9800; vertical-align: middle; margin-top: -2px; margin-right: 6px; filter: drop-shadow(0 0 5px rgba(255,152,0,0.6));"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>' : ''}
                         ${renderDual(char, 'name', 'hidden_name')} // ${renderDual(char, 'callsign', 'hidden_callsign')} ${getDecryptBtn(char)}
                     </h3>
-                    <button class="close-btn" onclick="document.getElementById('roster-detail').style.display='none'">[X] CLOSE</button>
+                    <button class="close-btn" onclick="document.getElementById('roster-detail').style.display='none'">[X] </button>
                 </div>
                 <div class="form-grid" style="margin-bottom: 10px; border-bottom: 1px dashed rgba(18,168,255,0.4); padding-bottom: 10px;">
                     <div class="detail-item"><span class="detail-lbl">阵营:</span> ${renderDualTag(char, 'faction', 'hidden_faction', false)}</div>
@@ -10516,14 +11316,19 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
             
             overlay.style.display = 'flex';
 
-            // 💥 新增：判断如果这个档案是当前用户自己的，给他一个编辑按钮
+            // 同样提供修改按钮（如果是本人的档案）
             let editActionHtml = '';
             if (char.owner_id === currentUser.id) {
-                editActionHtml += `<button class="sys-modal-btn confirm" style="margin-top: 20px; margin-right: 15px;" onclick="editQueueChar('${char.id}')">[ 提交修改申请 ]</button>`;
+                editActionHtml += `<button class="sys-modal-btn confirm" style="margin-top: 15px; margin-right: 10px;" onclick="editQueueChar('${char.id}')">[ 提交修改申请 ]</button>`;
+                
+                // 如果还不是 NPC，就显示转换按钮
+                if (!(char.secret_notes || '').includes('[NPC_FLAG]')) {
+                    editActionHtml += `<button class="sys-modal-btn confirm" style="margin-top: 15px; margin-right: 10px; border-color: #9c27b0; color: #9c27b0; background: rgba(156,39,176,0.1);" onclick="convertToNpc('${char.id}')">[ 设为 NPC ]</button>`;
+                }
             }
-            // 💥 补回：如果是管理员，额外给他一个强制删除按钮
+            // 补回：如果是管理员，额外给他一个强制删除按钮
             if (['admin', 'super_admin'].includes(currentUser?.role)) {
-                editActionHtml += `<button class="sys-modal-btn cancel" style="margin-top: 20px;" onclick="deleteChar('${char.id}')">[ 档案删除 ]</button>`;
+                editActionHtml += `<button class="sys-modal-btn cancel" style="margin-top: 15px;" onclick="deleteChar('${char.id}')">[ 删除档案 ]</button>`;
             }
 
             overlay.innerHTML = `
@@ -10533,7 +11338,7 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                         ${char.is_private ? '<svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #ff9800; vertical-align: middle; margin-top: -4px; margin-right: 8px; filter: drop-shadow(0 0 8px rgba(255,152,0,0.6));"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>' : ''}
                         <span style="color:#fff;">${renderDual(char, 'name', 'hidden_name')}</span> // ${renderDual(char, 'callsign', 'hidden_callsign')} ${getDecryptBtn(char)}
                     </h3>
-                    <button class="close-btn" onclick="closeDetailOverlay()" style="font-size: 16px; padding: 5px 10px; border: 1px solid #f44336;">[X] CLOSE</button>
+                    <button class="close-btn" onclick="closeDetailOverlay()" style="font-size: 16px; padding: 5px 10px; border: 1px solid #f44336;">[X] </button>
                 </div>
                 
                 <!-- 中间的阵营、生理指标等所有内容全部保持你原来的代码 -->
@@ -13915,6 +14720,7 @@ window.deleteForumPost = async function(postId) {
            ========================================================= */
         
         let pendingOrgsDB = []; // 存放待审核的组织
+        let pendingGovsDB = []; // 存放待审核的政务申请
 
         // 1. 通用视图切换助手
         window.openView = function(targetId) {
@@ -13957,6 +14763,8 @@ window.deleteForumPost = async function(postId) {
         });
         
         pendingOrgsDB = data.filter(a => a.type === 'org' && (a.status === 'pending' || a.status === 'rejected'));
+        // 💥 新增：分离政务大厅草稿
+        pendingGovsDB = data.filter(a => a.type === 'gov_record' && (a.status === 'pending' || a.status === 'rejected'));
         
         // 2. 统一触发所有依赖文章数据的渲染更新
         renderIntelGrid(); 
@@ -13984,6 +14792,813 @@ if (_savedArticleId && sessionStorage.getItem('tf141_current_view') === 'article
     }
 };
 
+// 👇 从这里开始复制 👇
+    // 💥 追加渲染政务大厅排队列表
+    const govGrid = document.getElementById('queue-gov-grid');
+    if (govGrid) {
+        govGrid.innerHTML = '';
+        if (typeof pendingGovsDB === 'undefined' || pendingGovsDB.length === 0) {
+            govGrid.innerHTML = '<div style="color:#00bcd4; font-size:12px;">[ 当前无政务备案申请 ]</div>';
+        } else {
+            pendingGovsDB.forEach(gov => {
+                const btn = document.createElement('button');
+                btn.className = 'roster-btn';
+                
+                if (['admin', 'super_admin'].includes(currentUser?.role) || gov.owner_id === currentUser.id) {
+                    const svgGov = `<svg viewBox="0 0 24 24" style="width:1.2em; height:1.2em; fill:currentColor; vertical-align:middle; margin-top:-2px; margin-right:4px;"><path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-9.5-5z"/></svg>`;
+                    const svgMarriage = `<svg viewBox="0 0 24 24" style="width:1.2em; height:1.2em; fill:currentColor; vertical-align:middle; margin-top:-2px; margin-right:4px;"><path d="M8 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.08 0 3.91-1.06 5-2.67 1.09 1.61 2.92 2.67 5 2.67 3.31 0 6-2.69 6-6s-2.69-6-6-6c-2.08 0-3.91 1.06-5 2.67C11.91 7.06 10.08 6 8 6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4c1.19 0 2.25.53 2.98 1.36-.6.82-.98 1.83-.98 2.64 0 .81.38 1.82.98 2.64C10.25 15.47 9.19 16 8 16zm8 0c-1.19 0-2.25-.53-2.98-1.36.6-.82.98-1.83.98-2.64 0-.81-.38-1.82-.98-2.64.73-.83 1.79-1.36 2.98-1.36 2.21 0 4 1.79 4 4s-1.79 4-4 4z"/></svg>`;
+                    const svgShip = `<svg viewBox="0 0 24 24" style="width:1.2em; height:1.2em; fill:currentColor; vertical-align:middle; margin-top:-2px; margin-right:4px;"><path d="M12 2C8.69 2 6.58 4.23 5.48 7.15c-1.04 2.76-.84 5.92-.09 8.21-.54 2.03-1.33 3.99-2.3 5.82-.2.38-.05.86.33 1.05.11.05.23.08.35.08.28 0 .55-.15.69-.41.97-1.84 1.8-3.83 2.39-5.91.95.42 2 .65 3.15.65s2.2-.23 3.15-.65c.59 2.08 1.42 4.07 2.39 5.91.14.26.41.41.69.41.12 0 .24-.03.35-.08.38-.19.53-.67.33-1.05-.97-1.83-1.76-3.79-2.3-5.82.75-2.29.95-5.45-.09-8.21C17.42 4.23 15.31 2 12 2zm0 12c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/></svg>`;
+                    const svgCorp = `<svg viewBox="0 0 24 24" style="width:1.2em; height:1.2em; fill:currentColor; vertical-align:middle; margin-top:-2px; margin-right:4px;"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>`;
+
+                    let color = '#00bcd4'; let icon = svgGov;
+                    if (gov.tag === 'marriage') { color = '#e91e63'; icon = svgMarriage; }
+                    else if (gov.tag === 'ship') { color = '#00bcd4'; icon = svgShip; }
+                    else if (gov.tag === 'corp') { color = '#ff9800'; icon = svgCorp; }
+
+                    btn.style.borderColor = gov.status === 'rejected' ? '#f44336' : color;
+                    btn.style.color = gov.status === 'rejected' ? '#f44336' : color;
+                    
+                    let prefixTag = gov.status === 'pending' ? '待审核' : '已退回';
+                    btn.innerHTML = `<div style="font-weight:bold;">[${prefixTag}] ${icon} ${gov.title}</div>`;
+                    btn.onclick = () => showGovQueueDetail(gov, color);
+                } else {
+                    const svgGovFallback = `<svg viewBox="0 0 24 24" style="width:1.2em; height:1.2em; fill:currentColor; vertical-align:middle; margin-top:-2px; margin-right:4px;"><path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-9.5-5z"/></svg>`;
+                    btn.style.opacity = '0.4';
+                    btn.style.borderColor = '#666';
+                    btn.style.color = '#888';
+                    btn.innerHTML = `[已加密] ${svgGovFallback} 政务机密文件`;
+                    btn.onclick = () => SysModal.alert("审核中的政务文件仅管理员与提交者本人可查看。", "访问拒绝");
+                }
+                govGrid.appendChild(btn);
+            });
+        }
+    }
+
+        /* =========================================================
+           💥 政务大厅核心逻辑引擎 💥
+           ========================================================= */
+
+        window.openGovForm = function(type) {
+            window.formPreviousView = document.querySelector('.view-panel.active')?.id || 'queueView';
+            document.getElementById('gov-form').reset();
+            document.getElementById('gov-type').value = type;
+
+            const fMarriage = document.getElementById('gov-marriage-fields');
+            const fShip = document.getElementById('gov-ship-fields');
+            const fCorp = document.getElementById('gov-corp-fields');
+            
+            fMarriage.style.display = 'none';
+            fShip.style.display = 'none';
+            fCorp.style.display = 'none';
+
+            const titleEl = document.getElementById('gov-form-title');
+            const descEl = document.getElementById('gov-form-desc');
+            const btn = document.getElementById('btn-submit-gov');
+            
+            // UI 主题变色逻辑
+            const setTheme = (color, title, desc) => {
+                titleEl.innerText = title;
+                titleEl.style.color = color;
+                titleEl.style.textShadow = `0 0 10px ${color}`;
+                document.getElementById('gov-header-box').style.borderBottomColor = color;
+                document.getElementById('gov-top-bar').style.borderBottomColor = color.replace(')', ', 0.3)').replace('rgb', 'rgba');
+                document.getElementById('gov-back-btn').style.color = color;
+                document.getElementById('gov-back-btn').style.borderColor = color;
+                document.getElementById('gov-sys-status').style.color = color;
+                descEl.innerText = desc;
+                btn.style.background = color;
+                btn.style.borderColor = color;
+            };
+
+            if (type === 'marriage') {
+                fMarriage.style.display = 'block';
+                setTheme('#e91e63', "[ 联盟民政局 - 关系登记 ]", "在此进行伴侣登记或亲属关系备案。");
+                
+                const myChar = characterDB.find(c => c.owner_id === currentUser.id);
+                const myName = myChar ? myChar.callsign : currentUser.nickname;
+                
+                const inputEl = document.getElementById('g-m-person-a-input');
+                const selectEl = document.getElementById('g-m-person-a-select');
+                const wrapperEl = document.getElementById('g-m-person-a-wrapper');
+
+                // 💥 核心：判断是否为管理员，并拉取其管理的 NPC
+                let myNpcs = [];
+                if (['admin', 'super_admin'].includes(currentUser?.role)) {
+                    myNpcs = articlesDB.filter(a => a.type === 'npc' && a.owner_id === currentUser.id);
+                }
+
+                if (myNpcs.length > 0) {
+                    // 有 NPC，显示下拉框
+                    inputEl.style.display = 'none';
+                    selectEl.style.display = 'block';
+                    wrapperEl.classList.add('select-wrapper'); // 加上下拉箭头
+                    
+                    let optionsHtml = `<option value="${myName}">[本人] ${myName}</option>`;
+                    myNpcs.forEach(npc => {
+                        optionsHtml += `<option value="${npc.title}">[NPC] ${npc.title}</option>`;
+                    });
+                    selectEl.innerHTML = optionsHtml;
+                    selectEl.value = myName; // 默认选自己
+                } else {
+                    // 普通玩家或没有 NPC 的管理员，显示只读输入框
+                    selectEl.style.display = 'none';
+                    inputEl.style.display = 'block';
+                    wrapperEl.classList.remove('select-wrapper');
+                    inputEl.value = myName;
+                }
+                
+                if(window.updateMarriageLabels) window.updateMarriageLabels();
+            }else if (type === 'ship') {
+                fShip.style.display = 'block';
+                setTheme('#00bcd4', "[ 飞船管理局 - 资产备案 ]", "在此进行私人舰船、武装战机或地面重型载具的合法备案。");
+            } else if (type === 'corp') {
+                fCorp.style.display = 'block';
+                setTheme('#ff9800', "[ 商业注册局 - 营业执照 ]", "在此注册商会、个人店铺、佣兵团驻地或黑市摊位。");
+            }
+
+            openView('govFormView');
+        };
+
+        // 提交政务表单
+        document.getElementById('btn-submit-gov').addEventListener('click', async () => {
+            const type = document.getElementById('gov-type').value;
+            let title = '';
+            let payload = {};
+
+            if (type === 'marriage') {
+                const selectEl = document.getElementById('g-m-person-a-select');
+                const pA = selectEl.style.display !== 'none' ? selectEl.value : document.getElementById('g-m-person-a-input').value;
+                const rel = document.getElementById('g-m-type').value;
+
+                if (rel === '解除关系') {
+                    // 💥 提交解除关系申请
+                    const certId = document.getElementById('g-m-cert-select').value;
+                    if (!certId) return SysModal.alert("请选择要解除的证件！", "系统提示");
+                    
+                    const cert = articlesDB.find(a => String(a.id) === String(certId));
+                    let certData = {};
+                    try { certData = JSON.parse(cert.content); } catch(e) {}
+                    
+                    const allNames = (certData.pA + "，" + certData.pB).split(/[,，]/).map(s => s.trim()).filter(Boolean);
+                    const pBArray = allNames.filter(n => n !== pA); 
+                    const pB = pBArray.join('，');
+
+                    if (!pB) return SysModal.alert("无法识别证件上的其他当事人。", "系统提示");
+
+                    const bIds = [];
+                    pBArray.forEach(name => {
+                        const c = characterDB.find(char => char.callsign === name || char.name === name || char.hidden_callsign === name || char.hidden_name === name);
+                        if (c) bIds.push(c.owner_id);
+                    });
+                    const bId = bIds.join(',');
+
+                    title = `[解除关系] ${pA} 申请撤销证件`;
+                    payload = { pA, pB, bId, rel, certId, bConfirmed: false }; 
+                } else {
+                    // 正常的结婚/收养申请
+                    const pB = document.getElementById('g-m-person-b').value.trim();
+                    const bIdEl = document.getElementById('g-m-person-b-id');
+                    const bId = bIdEl ? bIdEl.value : '';
+                    
+                    let dynamic = "";
+                    let allowMulti = false;
+                    if (rel === '伴侣/婚姻') {
+                        const dynSel = document.getElementById('g-m-dynamic-select').value;
+                        dynamic = dynSel === 'custom' ? document.getElementById('g-m-dynamic-custom').value.trim() : dynSel;
+                        if (dynamic === '未指定') dynamic = '';
+                        if (dynSel === 'custom' && document.getElementById('g-m-is-multi').checked) {
+                            dynamic += " (允许多人)";
+                        }
+                        allowMulti = (dynSel === '多边恋 (Polyamory)' || dynSel === '关系无政府主义 (Relationship Anarchy)' || (dynSel === 'custom' && document.getElementById('g-m-is-multi').checked));
+                    } else if (rel === '收养/亲属') {
+                        dynamic = document.getElementById('g-m-dynamic-custom').value.trim();
+                        if (!dynamic) return SysModal.alert("请填写具体的亲属关系说明！", "系统提示");
+                        allowMulti = true;
+                    }
+                    
+                    const notes = document.getElementById('g-m-notes').value.trim();
+                    if (!pB) return SysModal.alert("请填写对方的代号！", "系统提示");
+
+                    // 💥 核心新增：提交时的最终防绕过校验 💥
+                    if (rel === '伴侣/婚姻') {
+                        const myChar = characterDB.find(c => c.owner_id === currentUser.id);
+                        const aNames = myChar ? [myChar.name, myChar.callsign, myChar.hidden_name, myChar.hidden_callsign].filter(Boolean) : [currentUser.nickname];
+                        const bNamesArray = pB.split(/[,，]/).map(s => s.trim()).filter(Boolean);
+
+                        const activeCerts = articlesDB.filter(a => a.type === 'gov_record' && a.tag === 'marriage' && a.status !== 'rejected');
+                        const validCerts = activeCerts.filter(a => {
+                            try {
+                                const data = JSON.parse(a.content);
+                                return data.rel === '伴侣/婚姻';
+                            } catch(e) { return false; }
+                        });
+
+                        const getActiveRomances = (namesArray) => {
+                            return validCerts.filter(cert => {
+                                try {
+                                    const data = JSON.parse(cert.content);
+                                    const allNames = (data.pA + "，" + data.pB).split(/[,，]/).map(s => s.trim());
+                                    return namesArray.some(n => allNames.includes(n));
+                                } catch(e) { return false; }
+                            });
+                        };
+
+                        const aRomances = getActiveRomances(aNames);
+
+                        // 校验 A 是否处于一对一
+                        let aIsExclusive = false;
+                        for (let cert of aRomances) {
+                            try {
+                                const data = JSON.parse(cert.content);
+                                const dyn = data.dynamic || '';
+                                const isMulti = dyn.includes('多边恋') || dyn.includes('无政府') || dyn.includes('允许多人');
+                                if (!isMulti) { aIsExclusive = true; break; }
+                            } catch(e){}
+                        }
+                        if (aIsExclusive) return SysModal.alert("您当前已处于【专属一对一】的伴侣关系中，无法再提交新的关系登记！\n（需先解除现有关系）", "⚠️ 登记冲突");
+
+                        // 校验新关系是一对一，但 A 已有伴侣
+                        if (!allowMulti && aRomances.length > 0) return SysModal.alert("您当前已有伴侣，无法提交【专属一对一】的新关系登记！\n（请选择允许多人的关系模式，或先解除现有关系）", "⚠️ 登记冲突");
+
+                        // 循环校验每一个 B
+                        for (let bName of bNamesArray) {
+                            let bAliases = [bName];
+                            const targetChar = characterDB.find(c => c.callsign === bName || c.name === bName || c.hidden_callsign === bName || c.hidden_name === bName);
+                            if (targetChar) bAliases = [targetChar.name, targetChar.callsign, targetChar.hidden_name, targetChar.hidden_callsign].filter(Boolean);
+
+                            const bRomances = getActiveRomances(bAliases);
+
+                            // 校验是否已经和这个 B 结过婚
+                            let alreadyMarried = false;
+                            for (let cert of aRomances) {
+                                try {
+                                    const data = JSON.parse(cert.content);
+                                    const allNames = (data.pA + "，" + data.pB).split(/[,，]/).map(s => s.trim());
+                                    if (bAliases.some(n => allNames.includes(n))) { alreadyMarried = true; break; }
+                                } catch(e){}
+                            }
+                            if (alreadyMarried) return SysModal.alert(`您与【${bName}】已经缔结过伴侣关系（或申请正在审核中），无法重复登记！`, "⚠️ 登记冲突");
+
+                            // 校验 B 是否处于一对一
+                            let bIsExclusive = false;
+                            for (let cert of bRomances) {
+                                try {
+                                    const data = JSON.parse(cert.content);
+                                    const dyn = data.dynamic || '';
+                                    const isMulti = dyn.includes('多边恋') || dyn.includes('无政府') || dyn.includes('允许多人');
+                                    if (!isMulti) { bIsExclusive = true; break; }
+                                } catch(e){}
+                            }
+                            if (bIsExclusive) return SysModal.alert(`【${bName}】当前已处于【专属一对一】的伴侣关系中，无法与您缔结关系！`, "⚠️ 登记冲突");
+
+                            // 校验新关系是一对一，但 B 已有伴侣
+                            if (!allowMulti && bRomances.length > 0) return SysModal.alert(`【${bName}】当前已有伴侣，无法接受【专属一对一】的新关系登记！\n（请选择允许多人的关系模式）`, "⚠️ 登记冲突");
+                        }
+                    }
+                    // 💥 校验结束 💥
+                    
+                    let bConfirmed = false; 
+                    title = `${pA} & ${pB} 的${rel}`;
+                    payload = { pA, pB, bId, rel, dynamic, notes, bConfirmed };
+                }
+            } else if (type === 'ship') {
+                const name = document.getElementById('g-s-name').value.trim();
+                const sClass = document.getElementById('g-s-class').value;
+                const specs = document.getElementById('g-s-specs').value.trim();
+                if (!name) return SysModal.alert("请填写舰船名称！", "系统提示");
+                title = `[载具] ${name}`;
+                payload = { name, class: sClass, specs };
+            } else if (type === 'corp') {
+                const name = document.getElementById('g-c-name').value.trim();
+                const scope = document.getElementById('g-c-scope').value.trim();
+                const loc = document.getElementById('g-c-location').value.trim();
+                const desc = document.getElementById('g-c-desc').value.trim();
+                if (!name || !scope) return SysModal.alert("请完整填写企业名称与经营范围！", "系统提示");
+                title = `[商铺] ${name}`;
+                payload = { name, scope, loc, desc };
+            }
+
+            const btn = document.getElementById('btn-submit-gov');
+            btn.innerHTML = `[ 📡 UPLOADING... ]`;
+            btn.disabled = true;
+
+            const newRecord = {
+                type: 'gov_record',
+                tag: type,
+                title: title,
+                content: JSON.stringify(payload),
+                status: 'pending',
+                owner_id: currentUser.id,
+                updated_at: new Date().toISOString()
+            };
+
+            try {
+                const { error } = await supabaseClient.from('articles').insert([newRecord]);
+                if (error) throw error;
+                await SysModal.alert('政务备案申请已提交！\n请在办事大厅等待管理员盖章。', 'SUCCESS');
+                closeForm();
+                fetchArticles();
+            } catch (e) {
+                SysModal.alert('提交失败，请检查网络。', 'ERROR');
+            } finally {
+                btn.innerHTML = `[ 提交政务备案申请 ]`;
+                btn.disabled = false;
+            }
+        });
+
+        // 渲染政务审核详情
+        window.showGovQueueDetail = function(gov, color) {
+            const detail = document.getElementById('queue-gov-detail');
+            detail.style.borderColor = color;
+            detail.style.boxShadow = `inset 0 0 30px ${color.replace(')', ', 0.15)').replace('rgb', 'rgba')}`;
+            detail.style.display = 'block';
+
+            let data = {};
+            try { data = JSON.parse(gov.content); } catch(e){}
+
+            let fieldsHtml = '';
+            for (let [k, v] of Object.entries(data)) {
+                if (k === 'dynamic' && !v) continue; // 如果没有指定关系模式，就不显示这一行
+                if (k === 'bId' || k === 'bConfirmed') continue; // 💥 隐藏内部逻辑字段，不展示给用户看
+
+                let label = k;
+                if (k === 'pA') label = '申请人 A';
+                if (k === 'pB') label = '申请人 B';
+                if (k === 'rel') label = '登记大类';
+                if (k === 'dynamic') label = '连结形态'; 
+                if (k === 'notes') label = '誓言 / 附加条款';
+                if (k === 'name') label = '名称';
+                if (k === 'class') label = '类型 / 级别';
+                if (k === 'specs') label = '参数与改装说明';
+                if (k === 'scope') label = '主营业务';
+                if (k === 'loc') label = '注册位置';
+                if (k === 'desc') label = '详细背景介绍';
+
+                fieldsHtml += `<div class="detail-text-block" style="background: rgba(0,0,0,0.4); border-left: 3px solid ${color};"><span class="detail-lbl" style="color:${color};">${label}:</span><br><span style="color:#fff; white-space:pre-wrap; line-height:1.6;">${v || '无'}</span></div>`;
+            }
+
+            // 💥 核心：双人关系确认逻辑 (合并收养、结婚与解除关系)
+            let bConfirmHtml = '';
+            if ((data.rel === '收养/亲属' || data.rel === '伴侣/婚姻' || data.rel === '解除关系') && data.bConfirmed === false) {
+                // 如果当前用户在被申请人列表里，就能看到确认按钮
+                if (data.bId && data.bId.includes(currentUser.id)) {
+                    let partnerCheckboxes = '';
+                    let actionText = data.rel === '伴侣/婚姻' ? '伴侣/婚姻登记' : '收养/监护';
+
+                    // 只有收养模式才需要“同时认伴侣为监护人”的复选框
+                    if (data.rel === '收养/亲属') {
+                        const charA = characterDB.find(c => c.callsign === data.pA || c.name === data.pA);
+                        if (charA && charA.family_ties) {
+                            const regex = /\[已绑定:\s*(.*?)\]\s*-\s*关系:\s*(.*?(伴侣|婚姻|一对一|多边恋).*?)/g;
+                            let match;
+                            while ((match = regex.exec(charA.family_ties)) !== null) {
+                                const partnerName = match[1];
+                                partnerCheckboxes += `
+                                    <label style="display:flex; align-items:center; gap:8px; color:#ff80ab; cursor:pointer; margin-top:8px;">
+                                        <input type="checkbox" class="adopt-partner-cb" value="${partnerName}">
+                                        同时认 ${partnerName} 为监护人
+                                    </label>
+                                `;
+                            }
+                        }
+                    }
+
+                    bConfirmHtml = `
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(233,30,99,0.1); border: 1px dashed #e91e63; border-radius: 4px; text-align: center;">
+                            <div style="color: #e91e63; font-weight: bold; margin-bottom: 10px; font-size: 16px;">[ 待您确认的${data.rel}申请 ]</div>
+                            <div style="color: #ffb4a9; font-size: 13px; margin-bottom: 15px;">【${data.pA}】向您发起了申请，需要您亲自签署契约方可生效。</div>
+                            <button class="submit-btn" style="width: 100%; color:#060b14; background:#e91e63; border-color:#e91e63; font-size: 16px; font-weight: bold; letter-spacing: 2px;" onclick="openGovConfirmView('${gov.id}')">[ 前往签署契约 ]</button>
+                        </div>
+                    `;
+                } else {
+                    // 如果是发起人自己或者管理员看，提示等待中
+                    bConfirmHtml = `<div class="system-notice" style="border-color:#ff9800; background:rgba(255,152,0,0.1); color:#ffcc80; margin-top: 15px;">[ 等待对方确认中... ]</div>`;
+                }
+            }
+
+            let adminControls = '';
+            // 💥 拦截管理员：如果还没确认，管理员不能盖章
+            if (['admin', 'super_admin'].includes(currentUser?.role)) {
+                if ((data.rel === '收养/亲属' || data.rel === '伴侣/婚姻' || data.rel === '解除关系') && data.bConfirmed === false) {
+                    adminControls = ''; // 隐藏盖章按钮
+                } else {
+                    adminControls = `
+                        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed ${color}; display: flex; gap: 10px;">
+                            <button class="submit-btn" style="flex:1; color:#4caf50; border-color:#4caf50;" onclick="approveGov('${gov.id}')">[ 批准 / 盖章入档 ]</button>
+                            <button class="submit-btn" style="flex:1; color:#f44336; border-color:#f44336;" onclick="rejectGov('${gov.id}')">[ 驳回申请 ]</button>
+                        </div>
+                    `;
+                }
+            }
+
+            let userControls = '';
+            if (gov.owner_id === currentUser.id) {
+                userControls = `
+                    <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
+                        <button class="sys-modal-btn cancel" onclick="deleteGovApp('${gov.id}')">[ 撤回并删除申请 ]</button>
+                    </div>
+                `;
+            }
+
+            detail.innerHTML = `
+                <div class="detail-header" style="border-bottom-color: ${color};">
+                    <h3 style="color: ${color}; text-shadow: 0 0 10px ${color}; margin:0; letter-spacing:1px;">${gov.title}</h3>
+                    <button class="close-btn" onclick="document.getElementById('queue-gov-detail').style.display='none'">[X] </button>
+                </div>
+                ${gov.status === 'rejected' ? `<div class="system-notice" style="border-color:#f44336; background:rgba(244,67,54,0.1);"><span style="color:#f44336; font-weight:bold;">[ 被驳回 ]</span> 管理员已退回该政务申请，请撤回后重新提交。</div>` : ''}
+                ${fieldsHtml}
+                ${bConfirmHtml} <!-- 💥 插入被收养人确认框 -->
+                ${adminControls}
+                ${userControls}
+            `;
+            
+            setTimeout(() => { detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 100);
+        };
+
+        // 💥 被申请人点击同意 (兼容结婚与收养)
+        window.confirmGovRelation = async function(govId) {
+            const govDraft = pendingGovsDB.find(g => String(g.id) === String(govId));
+            if (!govDraft) return;
+
+            let data = JSON.parse(govDraft.content);
+            
+            // 只有收养才需要处理“同时认伴侣为监护人”的逻辑
+            if (data.rel === '收养/亲属') {
+                const checkboxes = document.querySelectorAll('.adopt-partner-cb:checked');
+                let adopters = [data.pA];
+                checkboxes.forEach(cb => adopters.push(cb.value));
+                data.pA = adopters.join('，'); // 变成 "A，伴侣1"
+            }
+            
+            data.bConfirmed = true; // 标记为已确认
+
+            try {
+                await supabaseClient.from('articles').update({ content: JSON.stringify(data) }).eq('id', govId);
+                SysModal.alert("您已同意该申请！\n表单已送交联盟民政局，请等待管理员最终盖章。", "确认成功");
+                document.getElementById('queue-gov-detail').style.display='none';
+                fetchArticles();
+            } catch (e) {
+                SysModal.alert("操作失败，请检查网络。", "ERROR");
+            }
+        };
+
+        // 💥 核心引擎：打开充满仪式感的契约签署界面
+        window.openGovConfirmView = function(govId) {
+            const govDraft = pendingGovsDB.find(g => String(g.id) === String(govId));
+            if (!govDraft) return;
+
+            let data = {};
+            try { data = JSON.parse(govDraft.content); } catch(e) { return; }
+
+            window.currentConfirmGovId = govId; // 记录当前正在签署的契约 ID
+            window.formPreviousView = 'queueView'; // 记录来路，方便返回
+
+            const contentBox = document.getElementById('gov-confirm-content');
+            const extraBox = document.getElementById('gov-confirm-extra-options');
+            const signA = document.getElementById('gov-confirm-sign-a');
+            const signB = document.getElementById('gov-confirm-sign-b');
+
+            // 提取当前用户的名字作为签名
+            const myChar = characterDB.find(c => c.owner_id === currentUser.id);
+            const myName = myChar ? myChar.callsign : currentUser.nickname;
+
+            signA.innerText = data.pA;
+            signB.innerText = "AWAITING...";
+            signB.style.color = "rgba(255,255,255,0.2)";
+            signB.style.borderBottomColor = "rgba(255,255,255,0.2)";
+            signB.style.textShadow = "none";
+
+            extraBox.innerHTML = ''; // 清空附加选项
+
+            // 动态生成宣誓词
+            const currentYear = 2240; // 焊死在 2240 年，防止现实时间变动导致年份错乱
+            let ceremonyText = '';
+
+            if (data.rel === '伴侣/婚姻') {
+                const relationName = data.dynamic ? data.dynamic : '伴侣';
+                ceremonyText = `
+                    <p>星历 ${currentYear} 年，泛星联盟民政局在此见证。</p>
+                    <p>公民 <strong style="color:#e91e63; font-size:22px;">【${data.pA}】</strong> 与 公民 <strong style="color:#e91e63; font-size:22px;">【${data.pB}】</strong> 自愿缔结 <strong style="color:#ff80ab;">【${relationName}】</strong> 关系。</p>
+                    <p>无论深空如何浩瀚，无论星尘如何侵蚀，双方承诺在联盟的律法与群星的注视下，共享荣誉、财富与命运。此契约一经签署，即刻录入星际网络，受最高安全协议保护。</p>
+                `;
+                if (data.notes) {
+                    ceremonyText += `<div style="margin-top: 20px; padding: 15px; background: rgba(233,30,99,0.05); border-left: 4px solid #e91e63; font-size: 16px;"><strong style="color:#e91e63;">[ 附加誓言 / 纪念日 ]</strong><br><span style="color:#ffb4a9; white-space:pre-wrap;">${data.notes}</span></div>`;
+                }
+            } else if (data.rel === '收养/亲属') {
+                ceremonyText = `
+                    <p>星历 ${currentYear} 年，泛星联盟民政局在此见证。</p>
+                    <p>公民 <strong style="color:#e91e63; font-size:22px;">【${data.pA}】</strong> 申请与 公民 <strong style="color:#e91e63; font-size:22px;">【${data.pB}】</strong> 缔结亲属/监护关系，关系界定为：<strong style="color:#ff80ab;">【${data.dynamic}】</strong>。</p>
+                    <p>发起方承诺将履行相应的监护与扶养义务，被申请方享有联盟律法规定的相应权利。此契约受星际儿童与亲属保护法案监督。</p>
+                `;
+                if (data.notes) {
+                    ceremonyText += `<div style="margin-top: 20px; padding: 15px; background: rgba(233,30,99,0.05); border-left: 4px solid #e91e63; font-size: 16px;"><strong style="color:#e91e63;">[ 附加条款 / 责任说明 ]</strong><br><span style="color:#ffb4a9; white-space:pre-wrap;">${data.notes}</span></div>`;
+                }
+
+                // 收养模式：渲染“同时认伴侣为监护人”的复选框
+                const charA = characterDB.find(c => c.callsign === data.pA || c.name === data.pA);
+                if (charA && charA.family_ties) {
+                    const regex = /\[已绑定:\s*(.*?)\]\s*-\s*关系:\s*(.*?(伴侣|婚姻|一对一|多边恋).*?)/g;
+                    let match;
+                    let partnerCheckboxes = '';
+                    while ((match = regex.exec(charA.family_ties)) !== null) {
+                        const partnerName = match[1];
+                        partnerCheckboxes += `
+                            <label style="display:flex; align-items:center; gap:10px; color:#ff80ab; cursor:pointer; margin-top:10px; font-size: 16px; font-family: 'PingFang SC', sans-serif;">
+                                <input type="checkbox" class="adopt-partner-cb" value="${partnerName}" style="width: 18px; height: 18px;">
+                                同时认 <strong style="color:#e91e63;">${partnerName}</strong> 为监护人
+                            </label>
+                        `;
+                    }
+                    if (partnerCheckboxes) {
+                        extraBox.innerHTML = `
+                            <div style="padding: 15px; border: 1px dashed #e91e63; background: rgba(233,30,99,0.05); border-radius: 4px;">
+                                <div style="color: #e91e63; font-weight: bold; margin-bottom: 5px; font-family: monospace;">[ 附加授权 ]</div>
+                                <div style="color: #8bb9d6; font-size: 14px;">检测到发起方已有合法伴侣，您是否同意将其伴侣一并登记为监护人？</div>
+                                ${partnerCheckboxes}
+                            </div>
+                        `;
+                    }
+                }
+            } else if (data.rel === '解除关系') {
+                // 解除关系的专属悲伤宣誓词
+                ceremonyText = `
+                    <p>星历 ${currentYear} 年，泛星联盟民政局在此见证。</p>
+                    <p>公民 <strong style="color:#e91e63; font-size:22px;">【${data.pA}】</strong> 申请与 公民 <strong style="color:#e91e63; font-size:22px;">【${data.pB}】</strong> 解除关系并销毁电子证件。</p>
+                    <p>聚散皆是星辰的指引。此契约一经双方签署并经由管理员盖章，原关系证件将被永久销毁，双方档案中的羁绊记录也将同步清除。</p>
+                `;
+            }
+
+            contentBox.innerHTML = ceremonyText;
+
+            // 关闭可能打开的详情小面板，跳转到全屏契约界面
+            document.getElementById('queue-gov-detail').style.display = 'none';
+            openView('govConfirmView');
+        };
+
+        // 💥 核心引擎：执行签署并同意
+        window.executeGovConfirm = async function() {
+            const govId = window.currentConfirmGovId;
+            const govDraft = pendingGovsDB.find(g => String(g.id) === String(govId));
+            if (!govDraft) return;
+
+            let data = JSON.parse(govDraft.content);
+
+            // 💥 视觉特效：让签名栏亮起 (使用被申请方 pB 的名字，哪怕是管理员代签 NPC，也显示 NPC 的名字)
+            const signB = document.getElementById('gov-confirm-sign-b');
+            signB.innerText = data.pB; 
+            signB.style.color = "#e91e63";
+            signB.style.borderBottomColor = "#e91e63";
+            signB.style.textShadow = "0 0 10px rgba(233,30,99,0.4)";
+
+            // 只有收养才需要处理“同时认伴侣为监护人”的逻辑
+            if (data.rel === '收养/亲属') {
+                const checkboxes = document.querySelectorAll('.adopt-partner-cb:checked');
+                let adopters = [data.pA];
+                checkboxes.forEach(cb => adopters.push(cb.value));
+                data.pA = adopters.join('，'); // 变成 "A，伴侣1"
+            }
+            
+            data.bConfirmed = true; // 标记为已确认
+
+            try {
+                await supabaseClient.from('articles').update({ content: JSON.stringify(data) }).eq('id', govId);
+                
+                // 延迟一点点弹窗，让玩家看清签名亮起的特效
+                setTimeout(async () => {
+                    await SysModal.alert("契约签署完毕！\n\n表单已送交联盟民政局，请等待管理员最终盖章生效。", "✅ 签署成功");
+                    closeForm(); // 返回大厅
+                    fetchArticles(); // 刷新数据
+                }, 500);
+                
+            } catch (e) {
+                SysModal.alert("操作失败，请检查网络。", "ERROR");
+            }
+        };
+
+        // 💥 核心引擎：拒绝并销毁契约
+        window.executeGovReject = async function() {
+            const isSure = await SysModal.confirm("确认拒绝并销毁这份契约吗？\n此操作不可逆，发起方将需要重新提交申请。", "⚠️ 拒绝签署");
+            if (isSure) {
+                await supabaseClient.from('articles').delete().eq('id', window.currentConfirmGovId);
+                await SysModal.alert("契约已销毁。", "已拒绝");
+                closeForm();
+                fetchArticles();
+            }
+        };
+
+// 💥 核心引擎：打开高清电子证件 (支持离婚证差分 + 绝美誓词排版)
+        window.openCertificate = function(certId) {
+            const cert = articlesDB.find(a => String(a.id) === String(certId));
+            if (!cert) return;
+
+            let data = {};
+            try { data = JSON.parse(cert.content); } catch(e) { return; }
+
+            const dateObj = new Date(cert.updated_at);
+            const dateStr = `2240 / ${String(dateObj.getMonth()+1).padStart(2,'0')} / ${String(dateObj.getDate()).padStart(2,'0')}`;
+            const relationName = data.dynamic ? data.dynamic : data.rel;
+            const allParties = (data.pA + "，" + data.pB).split(/[,，]/).map(s => s.trim()).filter(Boolean).join(' & ');
+            const certNumber = String(cert.id).split('-')[0].toUpperCase();
+
+            // 💥 差分逻辑
+            const isDivorce = data.rel === '解除关系';
+            const themeColor = isDivorce ? '#9e9e9e' : '#e91e63';
+            const themeBg = isDivorce ? 'rgba(158,158,158,0.05)' : 'rgba(233,30,99,0.05)';
+            const titleText = isDivorce ? '泛星联盟关系解除证明' : '泛星联盟关系缔结证书';
+            const subText = isDivorce ? 'CERTIFICATE OF DISSOLUTION' : 'CERTIFICATE OF UNION';
+            const partyLabel = isDivorce ? '解约人：' : '缔结人：';
+            const blessing = isDivorce ? '「 聚散皆是星辰的指引。泛星联盟已注销此羁绊记录。」' : '「 无论深空如何浩瀚，愿你们的羁绊如星辰般永恒。泛星联盟致以诚挚祝福。」';
+            const watermark = isDivorce ? 'TERMINATED' : 'P.S.C APPROVED';
+            const sealText = isDivorce ? 'VOID' : 'P.S.C<br>SEAL';
+            const prefixCode = isDivorce ? 'PSC-DIV-' : 'PSC-MRG-';
+
+            const box = document.getElementById('certModalBox');
+            // 动态修改外框颜色
+            box.style.borderColor = themeColor;
+            box.style.boxShadow = `0 0 40px ${themeColor}4D, inset 0 0 20px ${themeColor}1A`;
+
+            box.innerHTML = `
+                <button class="close-btn" style="position: absolute; top: 15px; right: 15px; z-index: 10; color: ${themeColor};" onclick="closeCertificate()">[X] CLOSE</button>
+                <div style="padding: 50px 40px; position: relative; overflow: hidden;">
+                    <!-- 背景钢印 -->
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 80px; color: ${themeColor}0D; font-family: 'Impact', sans-serif; pointer-events: none; white-space: nowrap; z-index: 0; border: 6px solid ${themeColor}0D; padding: 15px;">${watermark}</div>
+                    
+                    <!-- 证书头部 -->
+                    <div style="text-align: center; margin-bottom: 30px; position: relative; z-index: 1; border-bottom: 1px dashed ${themeColor}66; padding-bottom: 20px;">
+                        <svg viewBox="0 0 24 24" style="width: 50px; height: 50px; fill: ${themeColor}; filter: drop-shadow(0 0 10px ${themeColor}99); margin-bottom: 15px;">
+                            ${isDivorce ? '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.59-13L12 10.59 8.41 7 7 8.41 10.59 12 7 15.59 8.41 17 12 13.41 15.59 17 17 15.59 13.41 12 17 8.41z"/>' : '<path d="M8 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.08 0 3.91-1.06 5-2.67 1.09 1.61 2.92 2.67 5 2.67 3.31 0 6-2.69 6-6s-2.69-6-6-6c-2.08 0-3.91 1.06-5 2.67C11.91 7.06 10.08 6 8 6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4c1.19 0 2.25.53 2.98 1.36-.6.82-.98 1.83-.98 2.64 0 .81.38 1.82.98 2.64C10.25 15.47 9.19 16 8 16zm8 0c-1.19 0-2.25-.53-2.98-1.36.6-.82.98-1.83.98-2.64 0-.81-.38-1.82-.98-2.64.73-.83 1.79-1.36 2.98-1.36 2.21 0 4 1.79 4 4s-1.79 4-4 4z'}
+                        </svg>
+                        <h3 style="color: ${themeColor}; font-size: 28px; margin: 0; letter-spacing: 6px; font-family: 'Noto Serif SC', 'Songti SC', serif; text-shadow: 0 0 15px ${themeColor}80;">${titleText}</h3>
+                        <div style="color: ${themeColor}; font-size: 14px; font-family: monospace; margin-top: 8px; letter-spacing: 3px; opacity: 0.8;">${subText}</div>
+                    </div>
+
+                    <!-- 证书正文 -->
+                    <div style="position: relative; z-index: 1; font-family: 'Noto Serif SC', 'Songti SC', serif; color: #e0f2fe; font-size: 18px; line-height: 2.2; padding: 0 10px;">
+                        <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">${partyLabel}</span><span style="color: #fff; font-weight: bold; font-size: 22px; text-shadow: 0 0 10px ${themeColor}80;">${allParties}</span></div>
+                        <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">关系类型：</span><span>${relationName}</span></div>
+                        <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">生效日期：</span><span style="font-family: monospace; font-size: 16px;">${dateStr}</span></div>
+                        <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">证书编号：</span><span style="font-family: monospace; font-size: 14px; color: #8bb9d6;">${prefixCode}${certNumber}</span></div>
+                        
+                        <!-- 💥 升级版：高清大图里的绝美誓词排版 -->
+                        ${data.notes && !isDivorce ? `
+                        <div style="margin-top: 30px; padding: 25px; background: linear-gradient(to right, ${themeColor}1A, transparent); border-left: 4px solid ${themeColor}; border-radius: 0 8px 8px 0; position: relative;">
+                            <div style="position: absolute; top: -10px; left: 15px; background: #060b14; padding: 0 10px; color: ${themeColor}; font-size: 12px; font-family: monospace; letter-spacing: 2px;">[ 专属誓词 // VOWS ]</div>
+                            <div style="font-style: italic; color: #ffb4a9; font-size: 18px; line-height: 1.8; white-space: pre-wrap; font-family: 'Kaiti', 'STKaiti', 'Noto Serif SC', serif; text-shadow: 0 0 8px rgba(255,180,169,0.3);">“ ${data.notes} ”</div>
+                        </div>` : ''}
+                        
+                        <!-- 联盟祝福语 -->
+                        <div style="margin-top: 30px; padding: 20px; background: ${themeBg}; border-radius: 4px; text-align: center; color: ${themeColor}; font-size: 16px; font-style: italic; letter-spacing: 2px; border: 1px solid ${themeColor}33;">
+                            ${blessing}
+                        </div>
+                    </div>
+                    
+                    <!-- 底部印章 -->
+                    <div style="margin-top: 40px; text-align: right; position: relative; z-index: 1;">
+                        <div style="display: inline-block; text-align: center;">
+                            <div style="width: 80px; height: 80px; border: 2px solid ${themeColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${themeColor}; font-family: 'Impact', sans-serif; font-size: 14px; transform: rotate(-15deg); box-shadow: 0 0 10px ${themeColor}4D; margin: 0 auto 10px auto;">${sealText}</div>
+                            <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-top: 5px; opacity: 0.8;">联盟民政局核发</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('certModalOverlay').classList.add('active');
+        };
+
+        window.closeCertificate = function() {
+            document.getElementById('certModalOverlay').classList.remove('active');
+        };
+
+        
+
+        window.approveGov = async function(id) {
+            const govDraft = pendingGovsDB.find(g => String(g.id) === String(id));
+            if (!govDraft) return;
+
+            try {
+                // 1. 先把政务记录本身设为通过
+                await supabaseClient.from('articles').update({ status: 'approved' }).eq('id', id);
+
+                // 2. 💥 核心联动：如果是民政局登记，自动双向绑定到个人档案！
+                if (govDraft.tag === 'marriage') {
+                    let data = {};
+                    try { data = JSON.parse(govDraft.content); } catch(e){}
+                    
+                    // 💥 差分逻辑：如果是解除关系，执行销毁旧证件和清除羁绊
+                    if (data.rel === '解除关系') {
+                        // 1. 销毁旧证件
+                        if (data.certId) {
+                            await supabaseClient.from('articles').delete().eq('id', data.certId);
+                        }
+                        
+                        // 2. 清除双方档案中的羁绊记录
+                        const aNames = data.pA.split(/[,，]/).map(s => s.trim()).filter(s => s);
+                        const bNames = data.pB.split(/[,，]/).map(s => s.trim()).filter(s => s);
+                        const allNames = [...aNames, ...bNames];
+                        
+                        for (let name of allNames) {
+                            const char = characterDB.find(c => c.callsign === name || c.name === name || c.hidden_callsign === name || c.hidden_name === name);
+                            if (char && char.family_ties) {
+                                // 用正则把包含对方名字的羁绊行删掉
+                                let newTies = char.family_ties;
+                                allNames.forEach(otherName => {
+                                    if (otherName !== name) {
+                                        // 匹配形如 "[已绑定: 某某] - 关系: 伴侣" 的整行并删除
+                                        const regex = new RegExp(`\\[已绑定:\\s*${otherName}\\]\\s*-\\s*关系:.*?(?:\\n|$)`, 'g');
+                                        newTies = newTies.replace(regex, '');
+                                    }
+                                });
+                                newTies = newTies.trim();
+                                await supabaseClient.from('characters').update({ family_ties: newTies }).eq('id', char.id);
+                            }
+                        }
+                    } 
+                    // 正常的缔结关系
+                    else if (data.pA && data.pB) {
+                        // 解析关系名称 (优先用具体模式，没有则用大类)
+                        const relationName = data.dynamic ? data.dynamic : data.rel;
+                        
+                        // 找到 A 的档案 (因为 pA 是发起人，直接用 owner_id 找最准)
+                        const aNames = data.pA.split(/[,，]/).map(s => s.trim()).filter(s => s);
+                        const bNames = data.pB.split(/[,，]/).map(s => s.trim()).filter(s => s);
+
+                        for (let aName of aNames) {
+                            // 尝试找 A 的档案 (如果是 NPC 就会找不到，这是正常的)
+                            const charA = characterDB.find(c => c.callsign === aName || c.name === aName || c.hidden_callsign === aName || c.hidden_name === aName);
+                            
+                            let newTiesA = charA ? (charA.family_ties || "") : null;
+                            
+                            for (let bName of bNames) {
+                                const charB = characterDB.find(c => c.callsign === bName || c.name === bName || c.hidden_callsign === bName || c.hidden_name === bName);
+                                
+                                // 1. 给 A 绑 B (前提是 A 是真实玩家)
+                                if (charA) {
+                                    const tieForA = `[已绑定: ${bName}] - 关系: ${relationName}`;
+                                    if (!newTiesA.includes(tieForA)) {
+                                        newTiesA = newTiesA ? newTiesA + '\n' + tieForA : tieForA;
+                                    }
+                                }
+
+                                // 2. 💥 给 B 绑 A (无论 A 是玩家还是 NPC，只要 B 存在就必须绑！)
+                                if (charB) {
+                                    let newTiesB = charB.family_ties || "";
+                                    const tieForB = `[已绑定: ${aName}] - 关系: ${relationName}`;
+                                    
+                                    if (!newTiesB.includes(tieForB)) {
+                                        newTiesB = newTiesB ? newTiesB + '\n' + tieForB : tieForB;
+                                    }
+                                    // 更新 B 的数据库
+                                    await supabaseClient.from('characters').update({ family_ties: newTiesB }).eq('id', charB.id);
+                                }
+                            }
+                            
+                            // 3. 更新 A 的数据库 (前提是 A 是真实玩家)
+                            if (charA) {
+                                await supabaseClient.from('characters').update({ family_ties: newTiesA }).eq('id', charA.id);
+                            }
+                        }
+                    }
+                }
+
+                SysModal.alert("政务登记已获批！\n系统已正式盖章入档，并自动同步至相关公民的个人终端。", "APPROVED");
+                document.getElementById('queue-gov-detail').style.display='none';
+                
+                // 💥 核心修复：同时刷新人物库和文章库！
+                fetchCloudData(); 
+                fetchArticles(); 
+            } catch (e) {
+                console.error(e);
+                SysModal.alert("审批过程中发生错误，请检查网络。", "ERROR");
+            }
+        };
+
+        window.rejectGov = async function(id) {
+            await supabaseClient.from('articles').update({ status: 'rejected' }).eq('id', id);
+            SysModal.alert("已驳回该政务申请。", "REJECTED");
+            document.getElementById('queue-gov-detail').style.display='none';
+            fetchArticles();
+        };
+
+        window.deleteGovApp = async function(id) {
+            const isSure = await SysModal.confirm("确认撤回并删除该政务申请吗？", "撤回申请");
+            if (isSure) {
+                await supabaseClient.from('articles').delete().eq('id', id);
+                document.getElementById('queue-gov-detail').style.display='none';
+                fetchArticles();
+            }
+        };
+
+        // 💥 新增：监听关系模式自定义选项的联动
+window.checkCustomMarriageDynamic = function() {
+    const selectEl = document.getElementById('g-m-dynamic-select');
+    const customWrapper = document.getElementById('g-m-dynamic-custom-wrapper');
+    if (selectEl.value === 'custom') {
+        customWrapper.style.display = 'flex';
+    } else {
+        customWrapper.style.display = 'none';
+    }
+};
+// 👆 复制到这里结束 👆
 
 
         // 5. 提交组织申请
@@ -14291,7 +15906,7 @@ if(!title || !parentFaction || !content) {
                         <h3 style="color: #c5e1a5; text-shadow: 0 0 8px rgba(139,195,74,0.6); margin:0; display: flex; align-items: center; flex-wrap: wrap;">
                             ${org.icon || svgOrg} ${org.title} ${headerAnnoBtn}
                         </h3>
-                        <button class="close-btn" onclick="document.getElementById('queue-org-detail').style.display='none'">[X] CLOSE</button>
+                        <button class="close-btn" onclick="document.getElementById('queue-org-detail').style.display='none'">[X] </button>
                     </div>
                     ${headerAnnoBox}
                 </div>
@@ -14795,7 +16410,7 @@ if(!title || !parentFaction || !content) {
                 this.zoomMouseX = 0;   // 💥 新增：鼠标X坐标（用于定点聚焦）
                 this.zoomMouseY = 0;   // 💥 新增：鼠标Y坐标
             }
-t
+
             resize() {
                 const w = this.container.clientWidth || window.innerWidth;
                 const h = this.container.clientHeight || window.innerHeight;
