@@ -62,6 +62,10 @@
             /* 💥 亮度下调：0.15 -> 0.08，边缘收窄：60% -> 50% */
             background: radial-gradient(circle, rgba(18, 168, 255, 0.08) 0%, transparent 50%);
             animation: diffuse-float 8s ease-in-out infinite alternate;
+         /* 💥 新增：强制开启 GPU 硬件加速，防止全屏重绘卡顿 */
+            will-change: transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
         }
 
         /* 弥散光球 2：霓虹紫 (右下角游走) */
@@ -73,6 +77,9 @@
             /* 💥 亮度下调：0.12 -> 0.06，边缘收窄：60% -> 50% */
             background: radial-gradient(circle, rgba(224, 64, 251, 0.06) 0%, transparent 50%);
             animation: diffuse-float-reverse 10s ease-in-out infinite alternate;
+            will-change: transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
         }
 
         /* 弥散光球 3：警告红 (右上角游走) */
@@ -83,6 +90,9 @@
             /* 💥 亮度下调：0.08 -> 0.04，边缘收窄：60% -> 50% */
             background: radial-gradient(circle, rgba(244, 67, 54, 0.04) 0%, transparent 50%);
             animation: diffuse-float-3 12s ease-in-out infinite alternate;
+            will-change: transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
         }
 
         /* --- 💥 加速与大范围漂浮动画 --- */
@@ -2618,6 +2628,7 @@
            ========================================================= */
         .glitch-text {
             position: relative;
+            z-index: 1; /* 💥 新增：建立层叠上下文，保护文字层级 */
             margin: 60px auto 20px auto;
             font-family: "Impact", "Microsoft YaHei", sans-serif;
             font-size: clamp(2.5rem, 6vw, 4rem); 
@@ -2631,36 +2642,37 @@
             animation: cyber-flicker-stretch 4s infinite; 
         }
 
-        /* 🔴 红色错位撕裂层 */
         .glitch-text::before,
         .glitch-text::after {
             content: attr(data-text);
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            /* 💥 核心修改：彻底透明，绝不遮挡背后的星星和弥散光！ */
             background: transparent; 
-            /* 💥 滤色混合模式：重叠时会让颜色发亮，产生屏幕过曝的电子感 */
-            mix-blend-mode: screen; 
+            
+            /* 💥 性能优化：注释掉或删掉下面这行！它极其消耗性能 */
+            /* mix-blend-mode: screen; */ 
+            
+            /* 💥 新增：提前告知浏览器这里有高频动画 */
+            will-change: transform, clip-path;
+            
             overflow: hidden;
-            clip-path: inset(100% 0 0 0); /* 默认隐藏 */
+            clip-path: inset(100% 0 0 0);
         }
 
         .glitch-text::before {
-            /* 💥 撕裂出去的层变成纯红色 */
             color: rgba(244, 67, 54, 0.9); 
             text-shadow: -3px 0 #f44336; 
             animation: cyber-tear-left 3s infinite linear alternate-reverse;
-            z-index: 2;
+            z-index: -1; /* 💥 修改：从 2 改为 -1，沉到白字下方 */
         }
 
         /* 🔵 蓝色错位撕裂层 */
         .glitch-text::after {
-            /* 💥 撕裂出去的层变成纯蓝色 */
             color: rgba(18, 168, 255, 0.9); 
             text-shadow: 3px 0 #12a8ff; 
             animation: cyber-tear-right 2.5s infinite linear alternate-reverse;
-            z-index: 3;
+            z-index: -2; /* 💥 修改：从 3 改为 -2，沉到白字下方 */
         }
 
         /* 💥 融合旧版：底层的红蓝阴影瞬间炸开拉大 + 接触不良闪烁 */
@@ -5207,6 +5219,7 @@ textarea:-webkit-autofill:active {
 
 <!-- 💥 终端子目录状态重置引擎 💥 -->
     <script>
+
 /* =========================================================
    💥 极致性能：Canvas 硬件加速视差星空 (智能密度适配版)
    ========================================================= */
@@ -5219,6 +5232,11 @@ function initCanvasStars() {
     canvas.style.height = '100vh';
     canvas.style.zIndex = '-5'; // 沉在底层
     canvas.style.pointerEvents = 'none';
+    
+    // 💥 核心修复：强制 Canvas 开启独立 GPU 图层，防止与背景层的硬件加速冲突导致“无限拖影”
+    canvas.style.transform = 'translateZ(0)';
+    canvas.style.willChange = 'transform';
+    
     document.body.appendChild(canvas);
 
     const ctx = canvas.getContext('2d');
@@ -5246,14 +5264,20 @@ function initCanvasStars() {
         });
     }
 
-    // 💥 新增：记录上一次的滚动位置
+    // 记录上一次的滚动位置
     let lastScrollY = window.scrollY || window.pageYOffset;
 
     function draw() {
+        // 💥 性能优化：如果用户切换到了其他浏览器标签页，暂停绘制星空
+        if (document.hidden) {
+            requestAnimationFrame(draw);
+            return;
+        }
+
+        // 💥 这一句绝对不能删！它是用来擦除上一帧画面的
         ctx.clearRect(0, 0, width, height); 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
         
-        // 💥 新增：计算这一帧页面滚动了多少距离
+        // 计算这一帧页面滚动了多少距离
         let currentScrollY = window.scrollY || window.pageYOffset;
         let deltaY = currentScrollY - lastScrollY;
         lastScrollY = currentScrollY;
@@ -5267,11 +5291,10 @@ function initCanvasStars() {
             // 1. 星星原本的缓慢上升漂浮
             star.y -= star.speed;
 
-            // 2. 💥 核心魔法：加入 3D 视差滚动！
-            // 乘以 star.speed 意味着：离得近的星星滚动快，离得远的星星滚动慢
+            // 2. 3D 视差滚动
             star.y -= deltaY * star.speed * 0.8;
 
-            // 3. 💥 修复边界循环：不仅要处理飞出上边界，还要处理向下滚动时飞出下边界
+            // 3. 修复边界循环
             if (star.y < 0) {
                 star.y += height;
                 star.x = Math.random() * width;
@@ -5285,8 +5308,7 @@ function initCanvasStars() {
     draw();
 }
 
-// 💥 修复重点：用 DOMContentLoaded 包裹起来
-// 意思是：“等网页的 body 完全加载出来了，再执行 initCanvasStars 画星星”
+// 等网页的 body 完全加载出来了，再执行 initCanvasStars 画星星
 document.addEventListener('DOMContentLoaded', function() {
     initCanvasStars();
 });
@@ -5740,11 +5762,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         <section class="world-section" id="sec-onboard">
                             <h2 class="world-section-title"><span style="font-size: 1.5rem;">入职指南 </span></h2>
                             <div class="world-text">
-                                <p>在这里，你可以是冷酷的联盟特工、满身机油味的黑市医生、或者是只认钱的战术小队爆破手。</p>
+                                <p>在这里，你可以是冷酷的联盟议员、满身机油味的黑市医生、或者是只认钱的战术小队爆破手。</p>
+                                <p>你可以是保守派，或革命家，高高在上的特权阶级，抑或是苦苦挣扎求存的普通人。</p>
                                 <ol class="cyber-list">
     <li>前往 <span class="world-highlight" style="cursor: pointer; text-decoration: underline; text-underline-offset: 4px; transition: 0.2s;" onclick="document.querySelector('[data-target=\'queueView\']').click()" onmouseover="this.style.color='#fff'; this.style.textShadow='0 0 15px #12a8ff'" onmouseout="this.style.color='#12a8ff'; this.style.textShadow='0 0 8px rgba(18,168,255,0.4)'">【终端办事大厅】</span>，并选择 [ 录入公民档案 ]。</li>
-    <li>选择你的 <strong>阵营</strong> 与 <strong>所属组织</strong>。</li>
-    <li>填写你的背景档案，提交并生成属于你的深空身份卡。</li>
+    <li>选择你的 <strong>阵营</strong> 与 <strong>组织</strong>。</li>
+    <li>填写你的公民档案，成为无垠深空的一员。</li>
 </ol>
                                 <div class="glitch-text">星海浩瀚，祝你好运。</div>
                             </div>
@@ -7290,15 +7313,31 @@ document.addEventListener('DOMContentLoaded', function() {
                             <label style="color: #00bcd4;">舰船级别 / 型号</label>
                             <div class="input-wrapper select-wrapper" style="border-color: rgba(0,188,212,0.4);">
                                 <span class="prefix" style="color: #00bcd4;">&gt;</span>
-                                <select id="g-s-class" required style="color: #fff;">
+                                <!-- 💥 新增：onchange 事件触发船员框的显示/隐藏 -->
+                                <select id="g-s-class" required style="color: #fff;" onchange="checkShipClass()">
                                     <option value="轻型单人战机/穿梭机">轻型战机 / 穿梭机 / 侦察艇</option>
                                     <option value="中型武装运输船/走私船">中型武装运输船 / 走私船</option>
-                                    <option value="重型货卫/科考船">重型货船 / 深空科考船</option>
+                                    <option value="重型货船/科考船">重型货船 / 深空科考船</option>
                                     <option value="主力巡洋舰/护卫舰">主力巡洋舰 / 护卫舰 (需特殊许可)</option>
                                     <option value="地面载具/机甲">地面重型载具 / 机甲</option>
                                 </select>
                             </div>
                         </div>
+                        
+                        <!-- 💥 新增：大型舰船专属的船员编制框 (默认隐藏) -->
+                        <div class="input-group full-width" id="g-s-crew-group" style="display: none; margin-bottom: 20px; padding: 15px; background: rgba(0,188,212,0.05); border: 1px dashed #00bcd4; border-radius: 4px;">
+                            <label style="color: #00bcd4; margin-bottom: 10px;">船员编制与招募需求</label>
+                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                <div class="input-wrapper" style="flex: 1; border-color: rgba(0,188,212,0.4); background: rgba(0,0,0,0.6);">
+                                    <span class="prefix" style="color: #00bcd4;">&gt;</span>
+                                    <input type="text" id="g-s-crew-capacity" placeholder="最大乘员数 (例如: 5人)">
+                                </div>
+                            </div>
+                            <div class="input-wrapper" style="border-color: rgba(0,188,212,0.4); background: rgba(0,0,0,0.6);">
+                                <textarea id="g-s-crew-roles" rows="2" placeholder="例如：需要领航员1名，炮手2名。欢迎在论坛发布招募贴..."></textarea>
+                            </div>
+                        </div>
+
                         <div class="input-group full-width" style="margin-bottom: 20px;">
                             <label style="color: #00bcd4;">性能参数与武器改装 (详细说明)</label>
                             <div class="input-wrapper" style="border-color: rgba(0,188,212,0.4);">
@@ -9431,7 +9470,7 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
         }
     } // <-- 💥 真正的 renderQueue 函数结尾大括号在这里！
 
-        // 💥 渲染个人终端主页 (终极修复版：支持无档案显示组织)
+        // 💥 渲染个人终端主页 (终极修复版：支持无档案显示组织 + 飞船执照)
         function renderProfile() {
             const container = document.getElementById('profile-content');
             if (!container) return;
@@ -9522,8 +9561,6 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
             let statusText = '审核通过';
             let themeColor = '#12a8ff'; 
             let rgbColor = '18, 168, 255';
-
-            // 💥 新增：控制状态标签是否显示的 HTML 变量
             let statusBadgeHtml = '';
 
             if (myChar.status === 'pending') {
@@ -9541,12 +9578,8 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
             }
 
             const avatarLetter = myChar.callsign ? myChar.callsign.charAt(0).toUpperCase() : '?';
-            // 💥 渲染真实头像
             const avatarContent = myChar.avatar_url ? `<img src="${myChar.avatar_url}" style="width:100%; height:100%; object-fit:cover;">` : avatarLetter;
-            
-            // 💥 如果是本人，允许点击修改
             const avatarClickAttr = myChar.owner_id === currentUser.id ? `onclick="openAvatarUploader('profile')" style="cursor:pointer;" title="点击修改证件照"` : '';
-
 
             let feedbackHtml = '';
             if (myChar.status === 'rejected' && myChar.review_comments) {
@@ -9578,10 +9611,7 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                     </div>
                 `;
             } else if (myChar.status === 'approved') {
-                // 💥 新增：审核通过后显示群号
-                // 👇 请把这里的 88888888 换成你们真实的 QQ 群号 👇
                 const groupNumber = '656774779'; 
-                
                 feedbackHtml = `
                     <div class="system-notice" style="border-color:#4caf50; background: rgba(76,175,80,0.1); margin-top: 15px;">
                         <div style="color: #4caf50; font-weight: bold; font-family: monospace; margin-bottom: 5px;">[ 档案已归档 ]</div>
@@ -9593,7 +9623,7 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                     </div>
                 `;
             }
-            // 💥 组装公开档案 Tab
+
             let publicHtml = `
                 <div class="form-grid" style="gap: 10px;">
                     <div class="detail-item"><span class="detail-lbl">所属阵营:</span> ${renderDualTag(myChar, 'faction', 'hidden_faction', false)}</div>
@@ -9628,60 +9658,46 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                 ` : ''}
             `;
 
-            // 💥 组装私密设定 Tab (分展示模式和编辑模式)
             let privateHtml = '';
             if (myChar.status === 'approved') {
-                // 1. 展示模式 HTML
                 let privViewHtml = `
                     <div id="priv-view-mode" style="display: block; margin-top: 10px;">
                         <div style="color: #ffeb3b; font-family: monospace; margin-bottom: 15px; font-weight: bold; font-size: 13px;">[ 以下内容仅您自己可见 ]</div>
-                        
                         ${myChar.relationships ? `<div class="detail-text-block secret-note-box"><span class="detail-lbl text-cyber-yellow">人物关系:</span><br><span class="text-cyber-yellow" style="white-space: pre-wrap;">${myChar.relationships}</span></div>` : '<div class="detail-text-block secret-note-box"><span class="detail-lbl text-cyber-yellow">人物关系:</span><br><span style="color:#8bb9d6; font-size:12px;">[ 暂无记录 ]</span></div>'}
-                        
                         ${myChar.history ? `<div class="detail-text-block secret-note-box"><span class="detail-lbl text-cyber-yellow">角色历史:</span><br><span class="text-cyber-yellow" style="white-space: pre-wrap;">${myChar.history}</span></div>` : '<div class="detail-text-block secret-note-box"><span class="detail-lbl text-cyber-yellow">角色历史:</span><br><span style="color:#8bb9d6; font-size:12px;">[ 暂无记录 ]</span></div>'}
-                        
                         ${myChar.biography ? `<div class="detail-text-block secret-note-box"><span class="detail-lbl text-cyber-yellow">个人小传:</span><br><span class="text-cyber-yellow" style="white-space: pre-wrap;">${myChar.biography}</span></div>` : '<div class="detail-text-block secret-note-box"><span class="detail-lbl text-cyber-yellow">个人小传:</span><br><span style="color:#8bb9d6; font-size:12px;">[ 暂无记录 ]</span></div>'}
-                        
                         ${myChar.secret_notes ? `<div class="detail-text-block secret-note-box"><span class="detail-lbl text-cyber-yellow">隐藏备注:</span><br><span class="text-cyber-yellow" style="white-space: pre-wrap;">${myChar.secret_notes}</span></div>` : '<div class="detail-text-block secret-note-box"><span class="detail-lbl text-cyber-yellow">隐藏备注:</span><br><span style="color:#8bb9d6; font-size:12px;">[ 暂无记录 ]</span></div>'}
-
                         <div class="detail-action-row" style="border-top: 1px dashed rgba(255,235,59,0.3); padding-top: 15px; margin-top: 15px;">
                             <button class="sys-modal-btn confirm" style="color: #ffeb3b; border-color: #ffeb3b;" onclick="document.getElementById('priv-view-mode').style.display='none'; document.getElementById('priv-edit-mode').style.display='block';">[ 编辑其他设定 ]</button>
                         </div>
                     </div>
                 `;
 
-                // 2. 编辑模式 HTML
                 let privEditHtml = `
                     <div id="priv-edit-mode" style="display: none; background: rgba(255,235,59,0.05); border: 1px solid rgba(255,235,59,0.3); padding: 20px; border-radius: 4px; margin-top: 10px;">
                         <div style="color: #ffeb3b; font-family: monospace; margin-bottom: 15px; font-weight: bold; font-size: 13px;">[ 编辑模式 ]</div>
-                        
                         <div class="input-group full-width" style="margin-bottom: 15px;">
                             <label style="color: #ffeb3b; font-size: 12px; margin-bottom: 5px; display: block;">人物关系</label>
                             <textarea id="priv-relationships" style="width: 100%; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,235,59,0.4); color: #fff; padding: 10px; font-family: 'PingFang SC', sans-serif; resize: vertical; min-height: 60px; outline: none;" placeholder="记录与其他角色的关系、羁绊、仇恨等...">${myChar.relationships || ''}</textarea>
                         </div>
-                        
                         <div class="input-group full-width" style="margin-bottom: 15px;">
                             <label style="color: #ffeb3b; font-size: 12px; margin-bottom: 5px; display: block;">角色历史</label>
                             <textarea id="priv-history" style="width: 100%; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,235,59,0.4); color: #fff; padding: 10px; font-family: 'PingFang SC', sans-serif; resize: vertical; min-height: 80px; outline: none;" placeholder="角色过去经历的重大事件、时间线...">${myChar.history || ''}</textarea>
                         </div>
-                        
                         <div class="input-group full-width" style="margin-bottom: 15px;">
                             <label style="color: #ffeb3b; font-size: 12px; margin-bottom: 5px; display: block;">个人小传</label>
                             <textarea id="priv-biography" style="width: 100%; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,235,59,0.4); color: #fff; padding: 10px; font-family: 'PingFang SC', sans-serif; resize: vertical; min-height: 100px; outline: none;" placeholder="角色的详细生平、内心独白、核心动机...">${myChar.biography || ''}</textarea>
                         </div>
-
                         <div class="input-group full-width" style="margin-bottom: 15px;">
                             <label style="color: #ffeb3b; font-size: 12px; margin-bottom: 5px; display: block;">其他备注</label>
                             <textarea id="priv-secret-notes" style="width: 100%; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,235,59,0.4); color: #fff; padding: 10px; font-family: 'PingFang SC', sans-serif; resize: vertical; min-height: 60px; outline: none;" placeholder="其他相关的设定...">${myChar.secret_notes || ''}</textarea>
                         </div>
-
                         <div style="display: flex; gap: 10px; margin-top: 5px;">
                             <button class="submit-btn" style="flex: 1; color: #060b14; background: #ffeb3b; border-color: #ffeb3b; font-weight: bold; margin: 0;" onclick="savePrivateLore('${myChar.id}')">[ 保存其他设定 ]</button>
                             <button class="sys-modal-btn cancel" style="padding: 0 15px; margin: 0;" onclick="document.getElementById('priv-edit-mode').style.display='none'; document.getElementById('priv-view-mode').style.display='block';">[ 取消 ]</button>
                         </div>
                     </div>
                 `;
-
                 privateHtml = privViewHtml + privEditHtml;
             } else {
                 privateHtml = `<div style="color: #8bb9d6; font-family: monospace; padding: 30px; text-align: center; border: 1px dashed rgba(255,235,59,0.3); background: rgba(255,235,59,0.05); margin-top: 10px;">[ 档案通过审核后方可解锁其他设定功能 ]</div>`;
@@ -9690,18 +9706,20 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
             // 💥 组装电子证件 Tab (自动读取已通过的政务档案)
             let certsHtml = '';
             if (myChar.status === 'approved') {
-                // 从文章库里捞出所有已通过的、且包含当前角色的民政局记录
+                // 💥 核心升级：同时抓取结婚证、飞船执照和营业执照
                 const myCerts = articlesDB.filter(a => {
-                    if (a.type === 'gov_record' && a.tag === 'marriage' && a.status === 'approved') {
-                        try {
-                            const data = JSON.parse(a.content);
-                            // 把 pA 和 pB 里的所有人名拆成一个数组
-                            const allNames = (data.pA + "，" + data.pB).split(/[,，]/).map(s => s.trim());
-                            // 当前角色的所有可能名字
-                            const myNames = [myChar.name, myChar.callsign, myChar.hidden_name, myChar.hidden_callsign].filter(Boolean);
-                            // 只要有一个名字对得上，这张证就属于他
-                            return myNames.some(n => allNames.includes(n));
-                        } catch(e) { return false; }
+                    if (a.type === 'gov_record' && a.status === 'approved') {
+                        if (a.tag === 'marriage') {
+                            try {
+                                const data = JSON.parse(a.content);
+                                const allNames = (data.pA + "，" + data.pB).split(/[,，]/).map(s => s.trim());
+                                const myNames = [myChar.name, myChar.callsign, myChar.hidden_name, myChar.hidden_callsign].filter(Boolean);
+                                return myNames.some(n => allNames.includes(n));
+                            } catch(e) { return false; }
+                        } else if (a.tag === 'ship' || a.tag === 'corp') {
+                            // 飞船和企业执照，直接看 owner_id 是不是自己就行
+                            return a.owner_id === currentUser.id;
+                        }
                     }
                     return false;
                 });
@@ -9709,53 +9727,90 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                 if (myCerts.length > 0) {
                     myCerts.forEach(cert => {
                         const data = JSON.parse(cert.content);
-                        // 提取月和日，年份焊死在 2240
                         const dateObj = new Date(cert.updated_at);
                         const dateStr = `2240 / ${String(dateObj.getMonth()+1).padStart(2,'0')} / ${String(dateObj.getDate()).padStart(2,'0')}`;
-                        
-                        const relationName = data.dynamic ? data.dynamic : data.rel;
-                        const allParties = (data.pA + "，" + data.pB).split(/[,，]/).map(s => s.trim()).filter(Boolean).join(' & ');
-                        
-                        // 💥 差分逻辑：判断是否为解除关系
-                        const isDivorce = data.rel === '解除关系';
-                        const themeColor = isDivorce ? '#9e9e9e' : '#e91e63'; // 离婚用冰冷的灰色，结婚用粉色
-                        const themeBg = isDivorce ? 'rgba(158,158,158,0.05)' : 'rgba(233,30,99,0.05)';
-                        const titleText = isDivorce ? '泛星联盟关系解除证明' : '泛星联盟关系缔结证书';
-                        const subText = isDivorce ? 'CERTIFICATE OF DISSOLUTION' : 'CERTIFICATE OF UNION';
-                        const partyLabel = isDivorce ? '解约人：' : '缔结人：';
-                        const blessing = isDivorce ? '"聚散皆是星辰的指引。愿各自在深空安好。"' : '"无论深空如何浩瀚，愿你们的羁绊如星辰般永恒。"';
-                        const watermark = isDivorce ? 'TERMINATED' : 'P.S.C APPROVED';
+                        const certNumber = String(cert.id).split('-')[0].toUpperCase();
 
-                        certsHtml += `
-                            <div onclick="openCertificate('${cert.id}')" style="cursor: pointer; background: ${themeBg}; border: 2px solid ${themeColor}; border-radius: 4px; padding: 30px; margin-bottom: 20px; position: relative; overflow: hidden; box-shadow: 0 0 20px ${themeColor}33, inset 0 0 20px ${themeColor}1A; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 30px ${themeColor}4D, inset 0 0 30px ${themeColor}1A';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 0 20px ${themeColor}33, inset 0 0 20px ${themeColor}1A';">
-                                <!-- 背景钢印 -->
-                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 60px; color: ${themeColor}0D; font-family: 'Impact', sans-serif; pointer-events: none; white-space: nowrap; z-index: 0; border: 4px solid ${themeColor}0D; padding: 10px;">${watermark}</div>
-                                
-                                <!-- 证书头部 -->
-                                <div style="text-align: center; margin-bottom: 25px; position: relative; z-index: 1; border-bottom: 1px dashed ${themeColor}66; padding-bottom: 15px;">
-                                    <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; fill: ${themeColor}; filter: drop-shadow(0 0 10px ${themeColor}99); margin-bottom: 10px;">
-                                        ${isDivorce ? '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.59-13L12 10.59 8.41 7 7 8.41 10.59 12 7 15.59 8.41 17 12 13.41 15.59 17 17 15.59 13.41 12 17 8.41z"/>' : '<path d="M8 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.08 0 3.91-1.06 5-2.67 1.09 1.61 2.92 2.67 5 2.67 3.31 0 6-2.69 6-6s-2.69-6-6-6c-2.08 0-3.91 1.06-5 2.67C11.91 7.06 10.08 6 8 6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4c1.19 0 2.25.53 2.98 1.36-.6.82-.98 1.83-.98 2.64 0 .81.38 1.82.98 2.64C10.25 15.47 9.19 16 8 16zm8 0c-1.19 0-2.25-.53-2.98-1.36.6-.82.98-1.83.98-2.64 0-.81-.38-1.82-.98-2.64.73-.83 1.79-1.36 2.98-1.36 2.21 0 4 1.79 4 4s-1.79 4-4 4z"/>'}
-                                    </svg>
-                                    <h3 style="color: ${themeColor}; font-size: 24px; margin: 0; letter-spacing: 4px; font-family: 'Noto Serif SC', 'Songti SC', serif; text-shadow: 0 0 10px ${themeColor}66;">${titleText}</h3>
-                                    <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-top: 5px; letter-spacing: 2px; opacity: 0.8;">${subText}</div>
-                                </div>
+                        if (cert.tag === 'marriage') {
+                            const relationName = data.dynamic ? data.dynamic : data.rel;
+                            const allParties = (data.pA + "，" + data.pB).split(/[,，]/).map(s => s.trim()).filter(Boolean).join(' & ');
+                            
+                            // 💥 差分逻辑：判断是否为解除关系
+                            const isDivorce = data.rel === '解除关系';
+                            const themeColor = isDivorce ? '#9e9e9e' : '#e91e63'; // 离婚用冰冷的灰色，结婚用粉色
+                            const themeBg = isDivorce ? 'rgba(158,158,158,0.05)' : 'rgba(233,30,99,0.05)';
+                            const titleText = isDivorce ? '泛星联盟关系解除证明' : '泛星联盟关系缔结证书';
+                            const subText = isDivorce ? 'CERTIFICATE OF DISSOLUTION' : 'CERTIFICATE OF UNION';
+                            const partyLabel = isDivorce ? '解约人：' : '缔结人：';
+                            const blessing = isDivorce ? '"聚散皆是星辰的指引。愿各自在深空安好。"' : '"无论深空如何浩瀚，愿你们的羁绊如星辰般永恒。"';
+                            const watermark = isDivorce ? 'TERMINATED' : 'P.S.C APPROVED';
 
-                                <!-- 证书正文 -->
-                                <div style="position: relative; z-index: 1; font-family: 'Noto Serif SC', 'Songti SC', serif; color: #e0f2fe; font-size: 16px; line-height: 2;">
-                                    <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">${partyLabel}</span><span style="color: #fff; font-weight: bold; font-size: 18px; text-shadow: 0 0 8px ${themeColor}80;">${allParties}</span></div>
-                                    <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">关系类型：</span><span>${relationName}</span></div>
-                                    <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">生效日期：</span><span style="font-family: monospace; font-size: 15px;">${dateStr}</span></div>
+                            certsHtml += `
+                                <div onclick="openCertificate('${cert.id}')" style="cursor: pointer; background: ${themeBg}; border: 2px solid ${themeColor}; border-radius: 4px; padding: 30px; margin-bottom: 20px; position: relative; overflow: hidden; box-shadow: 0 0 20px ${themeColor}33, inset 0 0 20px ${themeColor}1A; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 30px ${themeColor}4D, inset 0 0 30px ${themeColor}1A';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 0 20px ${themeColor}33, inset 0 0 20px ${themeColor}1A';">
+                                    <!-- 背景钢印 -->
+                                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 60px; color: ${themeColor}0D; font-family: 'Impact', sans-serif; pointer-events: none; white-space: nowrap; z-index: 0; border: 4px solid ${themeColor}0D; padding: 10px;">${watermark}</div>
                                     
-                                    <!-- 联盟祝福语 -->
-                                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed ${themeColor}4D; text-align: center; color: ${themeColor}; font-size: 13px; font-style: italic; letter-spacing: 1px;">
-                                        ${blessing}
+                                    <!-- 证书头部 -->
+                                    <div style="text-align: center; margin-bottom: 25px; position: relative; z-index: 1; border-bottom: 1px dashed ${themeColor}66; padding-bottom: 15px;">
+                                        <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; fill: ${themeColor}; filter: drop-shadow(0 0 10px ${themeColor}99); margin-bottom: 10px;">
+                                            ${isDivorce ? '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.59-13L12 10.59 8.41 7 7 8.41 10.59 12 7 15.59 8.41 17 12 13.41 15.59 17 17 15.59 13.41 12 17 8.41z"/>' : '<path d="M8 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.08 0 3.91-1.06 5-2.67 1.09 1.61 2.92 2.67 5 2.67 3.31 0 6-2.69 6-6s-2.69-6-6-6c-2.08 0-3.91 1.06-5 2.67C11.91 7.06 10.08 6 8 6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4c1.19 0 2.25.53 2.98 1.36-.6.82-.98 1.83-.98 2.64 0 .81.38 1.82.98 2.64C10.25 15.47 9.19 16 8 16zm8 0c-1.19 0-2.25-.53-2.98-1.36.6-.82.98-1.83.98-2.64 0-.81-.38-1.82-.98-2.64.73-.83 1.79-1.36 2.98-1.36 2.21 0 4 1.79 4 4s-1.79 4-4 4z"/>'}
+                                        </svg>
+                                        <h3 style="color: ${themeColor}; font-size: 24px; margin: 0; letter-spacing: 4px; font-family: 'Noto Serif SC', 'Songti SC', serif; text-shadow: 0 0 10px ${themeColor}66;">${titleText}</h3>
+                                        <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-top: 5px; letter-spacing: 2px; opacity: 0.8;">${subText}</div>
                                     </div>
+
+                                    <!-- 证书正文 -->
+                                    <div style="position: relative; z-index: 1; font-family: 'Noto Serif SC', 'Songti SC', serif; color: #e0f2fe; font-size: 16px; line-height: 2;">
+                                        <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">${partyLabel}</span><span style="color: #fff; font-weight: bold; font-size: 18px; text-shadow: 0 0 8px ${themeColor}80;">${allParties}</span></div>
+                                        <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">关系类型：</span><span>${relationName}</span></div>
+                                        <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">生效日期：</span><span style="font-family: monospace; font-size: 15px;">${dateStr}</span></div>
+                                        
+                                        <!-- 💥 升级版：小卡片里的誓词排版 -->
+                                        ${data.notes && !isDivorce ? `
+                                        <div style="margin-top: 15px; padding: 12px 15px; background: ${themeColor}1A; border-left: 3px solid ${themeColor}; border-radius: 0 4px 4px 0;">
+                                            <div style="color: ${themeColor}; font-size: 11px; font-family: monospace; margin-bottom: 4px; opacity: 0.8;">[ 专属誓词 ]</div>
+                                            <div style="font-style: italic; color: #ffb4a9; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Kaiti', 'STKaiti', serif;">“ ${data.notes} ”</div>
+                                        </div>` : ''}
+
+                                        <!-- 联盟祝福语 -->
+                                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed ${themeColor}4D; text-align: center; color: ${themeColor}; font-size: 13px; font-style: italic; letter-spacing: 1px;">
+                                            ${blessing}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 点击提示 -->
+                                    <div style="position: absolute; bottom: 10px; right: 15px; color: ${themeColor}; font-size: 12px; font-family: monospace; opacity: 0.6;">[ 点击查看高清证件 ]</div>
                                 </div>
-                                
-                                <!-- 点击提示 -->
-                                <div style="position: absolute; bottom: 10px; right: 15px; color: ${themeColor}; font-size: 12px; font-family: monospace; opacity: 0.6;">[ 点击查看高清证件 ]</div>
-                            </div>
-                        `;
+                            `;
+                        } else if (cert.tag === 'ship') {
+                            // 💥 飞船执照专属卡片 (青色主题)
+                            const themeColor = '#00bcd4';
+                            const themeBg = 'rgba(0,188,212,0.05)';
+                            
+                            certsHtml += `
+                                <div onclick="openCertificate('${cert.id}')" style="cursor: pointer; background: ${themeBg}; border: 2px solid ${themeColor}; border-radius: 4px; padding: 30px; margin-bottom: 20px; position: relative; overflow: hidden; box-shadow: 0 0 20px ${themeColor}33, inset 0 0 20px ${themeColor}1A; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 30px ${themeColor}4D, inset 0 0 30px ${themeColor}1A';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 0 20px ${themeColor}33, inset 0 0 20px ${themeColor}1A';">
+                                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 60px; color: ${themeColor}0D; font-family: 'Impact', sans-serif; pointer-events: none; white-space: nowrap; z-index: 0; border: 4px solid ${themeColor}0D; padding: 10px;">CLEARED FOR FLIGHT</div>
+                                    
+                                    <div style="text-align: center; margin-bottom: 25px; position: relative; z-index: 1; border-bottom: 1px dashed ${themeColor}66; padding-bottom: 15px;">
+                                        <svg viewBox="0 0 100 100" style="width: 40px; height: 40px; fill: rgba(0,188,212,0.1); stroke: ${themeColor}; filter: drop-shadow(0 0 10px ${themeColor}99); margin-bottom: 10px;">
+                                            <g transform="translate(50, 68)" stroke-linejoin="round" stroke-linecap="round">
+                                                <path stroke-width="4" d="M 0 0 h 10 l 5 -5 9 5 6 -15 -15 -15 c 0 -5 -4 -32 -15 -40 c -11 8 -15 35 -15 40 l -15 15 6 15 9 -5 5 5 h 10" />
+                                                <path stroke-width="3" fill="${themeColor}" d="M 0 7 a 8 8 0 0 0 -8 8 c 0 4 4 6 8 12 c 4 -6 8 -8 8 -12 a 8 8 0 0 0 -8 -8" />
+                                            </g>
+                                        </svg>
+                                        <h3 style="color: ${themeColor}; font-size: 24px; margin: 0; letter-spacing: 4px; font-family: 'Noto Serif SC', 'Songti SC', serif; text-shadow: 0 0 10px ${themeColor}66;">泛星联盟舰船飞行许可</h3>
+                                        <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-top: 5px; letter-spacing: 2px; opacity: 0.8;">P.S.C FLIGHT LICENSE</div>
+                                    </div>
+
+                                    <div style="position: relative; z-index: 1; font-family: 'Noto Serif SC', 'Songti SC', serif; color: #e0f2fe; font-size: 16px; line-height: 2;">
+                                        <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">舰船名称：</span><span style="color: #fff; font-weight: bold; font-size: 18px; text-shadow: 0 0 8px ${themeColor}80;">${data.name}</span></div>
+                                        <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">舰船级别：</span><span>${data.class}</span></div>
+                                        <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">所有者：</span><span style="font-family: monospace; font-size: 15px;">${myChar.callsign}</span></div>
+                                    </div>
+                                    <div style="position: absolute; bottom: 10px; right: 15px; color: ${themeColor}; font-size: 12px; font-family: monospace; opacity: 0.6;">[ 点击查看详细参数 ]</div>
+                                </div>
+                            `;
+                        }
                     });
                 } else {
                     certsHtml = `<div style="color: #8bb9d6; font-family: monospace; padding: 30px; text-align: center; border: 1px dashed rgba(233,30,99,0.3); background: rgba(233,30,99,0.05); margin-top: 10px;">[ 暂无已生效的电子证件 ]</div>`;
@@ -9771,10 +9826,9 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                         <div class="avatar-placeholder" style="border-color: ${themeColor}; color: ${themeColor}; text-shadow: 0 0 15px ${themeColor}; overflow: hidden;" ${avatarClickAttr}>
                             ${avatarContent}
                         </div>
-                        ${statusBadgeHtml} <!-- 💥 替换为动态变量，审核通过时这里就是空的 -->
+                        ${statusBadgeHtml}
                         <div class="profile-meta-text">
                         OP: ${currentUser.nickname} <span onclick="changeTerminalName()" class="profile-rename-btn">[改名]</span><br>
-                        <!-- 💥 修复：给 KEY 加上一键复制功能与悬停发光特效 -->
                         KEY: <span class="op-key-text" title="点击一键复制密钥" onclick="copyOpKey('${currentUser.id}')" style="cursor: pointer; transition: 0.2s; text-decoration: underline; text-underline-offset: 3px;" onmouseover="this.style.color='#fff'; this.style.textShadow='0 0 8px #12a8ff'" onmouseout="this.style.color=''; this.style.textShadow='none'">${currentUser.id}</span><br>
                         UPLINK: SECURE<br>
                         <span onclick="togglePrivacy('${myChar.id}', ${myChar.is_private || false})" style="color: ${myChar.is_private ? '#ff9800' : '#8bb9d6'}; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; display: inline-block; margin-top: 12px; font-weight: bold;">${myChar.is_private ? '[ 已设为私密 (点击公开) ]' : '[ 设为私密档案 ]'}</span><br>
@@ -9790,7 +9844,6 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                             <div class="profile-callsign" style="color: ${themeColor};">代号/呼号: ${renderDual(myChar, 'callsign', 'hidden_callsign')}</div>
                         </div>
                         
-                        <!-- 💥 新增：个人终端 Tab 切换栏 (加入了电子证件) -->
                         <div class="profile-tabs">
                             <button class="profile-tab-btn active" data-tab="ptab-public" onclick="switchProfileTab('ptab-public')">公开档案</button>
                             <button class="profile-tab-btn" data-tab="ptab-private" onclick="switchProfileTab('ptab-private')" style="color: #ffeb3b; border-color: rgba(255,235,59,0.3);">其他设定</button>
@@ -9810,7 +9863,7 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                         </div>
                         
                         ${myOrgsHtml}
-                        ${myNpcsHtml} <!-- 💥 加上这行：把 NPC 档案渲染出来！ -->
+                        ${myNpcsHtml}
                     </div>
                 </div>
             `;
@@ -10887,6 +10940,13 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
             let lastTime = 0;
 
             function raf(time) {
+                // 💥 终极性能优化：如果当前不在【人设库】界面，直接挂起 3D 渲染，释放 80% 的显卡算力！
+                if (!document.getElementById('logView').classList.contains('active')) {
+                    lastTime = time; // 保持时间同步
+                    tunnelRAF = requestAnimationFrame(raf);
+                    return;
+                }
+
                 const delta = time - lastTime;
                 lastTime = time;
                 if (time % 10 < 1 && delta > 0) feedbackFPS.innerText = Math.round(1000 / delta);
@@ -14919,6 +14979,17 @@ if (_savedArticleId && sessionStorage.getItem('tf141_current_view') === 'article
             openView('govFormView');
         };
 
+        // 💥 新增：监听飞船级别的变化，动态显示船员框
+        window.checkShipClass = function() {
+            const sClass = document.getElementById('g-s-class').value;
+            const crewGroup = document.getElementById('g-s-crew-group');
+            if (sClass.includes('中型') || sClass.includes('重型') || sClass.includes('主力')) {
+                crewGroup.style.display = 'block';
+            } else {
+                crewGroup.style.display = 'none';
+            }
+        };
+
         // 提交政务表单
         document.getElementById('btn-submit-gov').addEventListener('click', async () => {
             const type = document.getElementById('gov-type').value;
@@ -15065,9 +15136,16 @@ if (_savedArticleId && sessionStorage.getItem('tf141_current_view') === 'article
                 const name = document.getElementById('g-s-name').value.trim();
                 const sClass = document.getElementById('g-s-class').value;
                 const specs = document.getElementById('g-s-specs').value.trim();
+                
                 if (!name) return SysModal.alert("请填写舰船名称！", "系统提示");
                 title = `[载具] ${name}`;
                 payload = { name, class: sClass, specs };
+
+                // 💥 核心：如果是大型船，把船员数据也塞进 payload
+                if (sClass.includes('中型') || sClass.includes('重型') || sClass.includes('主力')) {
+                    payload.capacity = document.getElementById('g-s-crew-capacity').value.trim() || '未定';
+                    payload.roles = document.getElementById('g-s-crew-roles').value.trim() || '无特殊招募需求';
+                }
             } else if (type === 'corp') {
                 const name = document.getElementById('g-c-name').value.trim();
                 const scope = document.getElementById('g-c-scope').value.trim();
@@ -15119,7 +15197,7 @@ if (_savedArticleId && sessionStorage.getItem('tf141_current_view') === 'article
             let fieldsHtml = '';
             for (let [k, v] of Object.entries(data)) {
                 if (k === 'dynamic' && !v) continue; // 如果没有指定关系模式，就不显示这一行
-                if (k === 'bId' || k === 'bConfirmed') continue; // 💥 隐藏内部逻辑字段，不展示给用户看
+                if (k === 'bId' || k === 'bConfirmed' || k === 'certId') continue; // 💥 隐藏内部逻辑字段，不展示给用户看
 
                 let label = k;
                 if (k === 'pA') label = '申请人 A';
@@ -15130,6 +15208,8 @@ if (_savedArticleId && sessionStorage.getItem('tf141_current_view') === 'article
                 if (k === 'name') label = '名称';
                 if (k === 'class') label = '类型 / 级别';
                 if (k === 'specs') label = '参数与改装说明';
+                if (k === 'capacity') label = '最大乘员数'; // 💥 飞船新增
+                if (k === 'roles') label = '船员编制与招募'; // 💥 飞船新增
                 if (k === 'scope') label = '主营业务';
                 if (k === 'loc') label = '注册位置';
                 if (k === 'desc') label = '详细背景介绍';
@@ -15203,11 +15283,11 @@ if (_savedArticleId && sessionStorage.getItem('tf141_current_view') === 'article
             detail.innerHTML = `
                 <div class="detail-header" style="border-bottom-color: ${color};">
                     <h3 style="color: ${color}; text-shadow: 0 0 10px ${color}; margin:0; letter-spacing:1px;">${gov.title}</h3>
-                    <button class="close-btn" onclick="document.getElementById('queue-gov-detail').style.display='none'">[X] </button>
+                    <button class="close-btn" onclick="document.getElementById('queue-gov-detail').style.display='none'">[X] CLOSE</button>
                 </div>
                 ${gov.status === 'rejected' ? `<div class="system-notice" style="border-color:#f44336; background:rgba(244,67,54,0.1);"><span style="color:#f44336; font-weight:bold;">[ 被驳回 ]</span> 管理员已退回该政务申请，请撤回后重新提交。</div>` : ''}
                 ${fieldsHtml}
-                ${bConfirmHtml} <!-- 💥 插入被收养人确认框 -->
+                ${bConfirmHtml}
                 ${adminControls}
                 ${userControls}
             `;
@@ -15386,7 +15466,7 @@ if (_savedArticleId && sessionStorage.getItem('tf141_current_view') === 'article
             }
         };
 
-// 💥 核心引擎：打开高清电子证件 (支持离婚证差分 + 绝美誓词排版)
+// 💥 核心引擎：打开高清电子证件 (支持离婚证差分 + 绝美誓词排版 + 飞船执照)
         window.openCertificate = function(certId) {
             const cert = articlesDB.find(a => String(a.id) === String(certId));
             if (!cert) return;
@@ -15396,73 +15476,136 @@ if (_savedArticleId && sessionStorage.getItem('tf141_current_view') === 'article
 
             const dateObj = new Date(cert.updated_at);
             const dateStr = `2240 / ${String(dateObj.getMonth()+1).padStart(2,'0')} / ${String(dateObj.getDate()).padStart(2,'0')}`;
-            const relationName = data.dynamic ? data.dynamic : data.rel;
-            const allParties = (data.pA + "，" + data.pB).split(/[,，]/).map(s => s.trim()).filter(Boolean).join(' & ');
             const certNumber = String(cert.id).split('-')[0].toUpperCase();
-
-            // 💥 差分逻辑
-            const isDivorce = data.rel === '解除关系';
-            const themeColor = isDivorce ? '#9e9e9e' : '#e91e63';
-            const themeBg = isDivorce ? 'rgba(158,158,158,0.05)' : 'rgba(233,30,99,0.05)';
-            const titleText = isDivorce ? '泛星联盟关系解除证明' : '泛星联盟关系缔结证书';
-            const subText = isDivorce ? 'CERTIFICATE OF DISSOLUTION' : 'CERTIFICATE OF UNION';
-            const partyLabel = isDivorce ? '解约人：' : '缔结人：';
-            const blessing = isDivorce ? '「 聚散皆是星辰的指引。泛星联盟已注销此羁绊记录。」' : '「 无论深空如何浩瀚，愿你们的羁绊如星辰般永恒。泛星联盟致以诚挚祝福。」';
-            const watermark = isDivorce ? 'TERMINATED' : 'P.S.C APPROVED';
-            const sealText = isDivorce ? 'VOID' : 'P.S.C<br>SEAL';
-            const prefixCode = isDivorce ? 'PSC-DIV-' : 'PSC-MRG-';
-
             const box = document.getElementById('certModalBox');
-            // 动态修改外框颜色
-            box.style.borderColor = themeColor;
-            box.style.boxShadow = `0 0 40px ${themeColor}4D, inset 0 0 20px ${themeColor}1A`;
 
-            box.innerHTML = `
-                <button class="close-btn" style="position: absolute; top: 15px; right: 15px; z-index: 10; color: ${themeColor};" onclick="closeCertificate()">[X] CLOSE</button>
-                <div style="padding: 50px 40px; position: relative; overflow: hidden;">
-                    <!-- 背景钢印 -->
-                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 80px; color: ${themeColor}0D; font-family: 'Impact', sans-serif; pointer-events: none; white-space: nowrap; z-index: 0; border: 6px solid ${themeColor}0D; padding: 15px;">${watermark}</div>
-                    
-                    <!-- 证书头部 -->
-                    <div style="text-align: center; margin-bottom: 30px; position: relative; z-index: 1; border-bottom: 1px dashed ${themeColor}66; padding-bottom: 20px;">
-                        <svg viewBox="0 0 24 24" style="width: 50px; height: 50px; fill: ${themeColor}; filter: drop-shadow(0 0 10px ${themeColor}99); margin-bottom: 15px;">
-                            ${isDivorce ? '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.59-13L12 10.59 8.41 7 7 8.41 10.59 12 7 15.59 8.41 17 12 13.41 15.59 17 17 15.59 13.41 12 17 8.41z"/>' : '<path d="M8 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.08 0 3.91-1.06 5-2.67 1.09 1.61 2.92 2.67 5 2.67 3.31 0 6-2.69 6-6s-2.69-6-6-6c-2.08 0-3.91 1.06-5 2.67C11.91 7.06 10.08 6 8 6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4c1.19 0 2.25.53 2.98 1.36-.6.82-.98 1.83-.98 2.64 0 .81.38 1.82.98 2.64C10.25 15.47 9.19 16 8 16zm8 0c-1.19 0-2.25-.53-2.98-1.36.6-.82.98-1.83.98-2.64 0-.81-.38-1.82-.98-2.64.73-.83 1.79-1.36 2.98-1.36 2.21 0 4 1.79 4 4s-1.79 4-4 4z'}
-                        </svg>
-                        <h3 style="color: ${themeColor}; font-size: 28px; margin: 0; letter-spacing: 6px; font-family: 'Noto Serif SC', 'Songti SC', serif; text-shadow: 0 0 15px ${themeColor}80;">${titleText}</h3>
-                        <div style="color: ${themeColor}; font-size: 14px; font-family: monospace; margin-top: 8px; letter-spacing: 3px; opacity: 0.8;">${subText}</div>
-                    </div>
+            // 💥 飞船执照分支
+            if (cert.tag === 'ship') {
+                const themeColor = '#00bcd4';
+                const themeBg = 'rgba(0,188,212,0.05)';
+                
+                // 提取当前用户的名字
+                const myChar = characterDB.find(c => c.owner_id === currentUser.id);
+                const ownerName = myChar ? myChar.callsign : currentUser.nickname;
 
-                    <!-- 证书正文 -->
-                    <div style="position: relative; z-index: 1; font-family: 'Noto Serif SC', 'Songti SC', serif; color: #e0f2fe; font-size: 18px; line-height: 2.2; padding: 0 10px;">
-                        <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">${partyLabel}</span><span style="color: #fff; font-weight: bold; font-size: 22px; text-shadow: 0 0 10px ${themeColor}80;">${allParties}</span></div>
-                        <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">关系类型：</span><span>${relationName}</span></div>
-                        <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">生效日期：</span><span style="font-family: monospace; font-size: 16px;">${dateStr}</span></div>
-                        <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">证书编号：</span><span style="font-family: monospace; font-size: 14px; color: #8bb9d6;">${prefixCode}${certNumber}</span></div>
+                box.style.borderColor = themeColor;
+                box.style.boxShadow = `0 0 40px ${themeColor}4D, inset 0 0 20px ${themeColor}1A`;
+
+                box.innerHTML = `
+                    <button class="close-btn" style="position: absolute; top: 15px; right: 15px; z-index: 10; color: ${themeColor};" onclick="closeCertificate()">[X] CLOSE</button>
+                    <div style="padding: 50px 40px; position: relative; overflow: hidden;">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 80px; color: ${themeColor}0D; font-family: 'Impact', sans-serif; pointer-events: none; white-space: nowrap; z-index: 0; border: 6px solid ${themeColor}0D; padding: 15px;">CLEARED FOR FLIGHT</div>
                         
-                        <!-- 💥 升级版：高清大图里的绝美誓词排版 -->
-                        ${data.notes && !isDivorce ? `
-                        <div style="margin-top: 30px; padding: 25px; background: linear-gradient(to right, ${themeColor}1A, transparent); border-left: 4px solid ${themeColor}; border-radius: 0 8px 8px 0; position: relative;">
-                            <div style="position: absolute; top: -10px; left: 15px; background: #060b14; padding: 0 10px; color: ${themeColor}; font-size: 12px; font-family: monospace; letter-spacing: 2px;">[ 专属誓词 // VOWS ]</div>
-                            <div style="font-style: italic; color: #ffb4a9; font-size: 18px; line-height: 1.8; white-space: pre-wrap; font-family: 'Kaiti', 'STKaiti', 'Noto Serif SC', serif; text-shadow: 0 0 8px rgba(255,180,169,0.3);">“ ${data.notes} ”</div>
-                        </div>` : ''}
+                        <div style="text-align: center; margin-bottom: 30px; position: relative; z-index: 1; border-bottom: 1px dashed ${themeColor}66; padding-bottom: 20px;">
+                            <svg viewBox="0 0 100 100" style="width: 50px; height: 50px; fill: rgba(0,188,212,0.1); stroke: ${themeColor}; filter: drop-shadow(0 0 10px ${themeColor}99); margin-bottom: 15px;">
+                                <g transform="translate(50, 68)" stroke-linejoin="round" stroke-linecap="round">
+                                    <path stroke-width="4" d="M 0 0 h 10 l 5 -5 9 5 6 -15 -15 -15 c 0 -5 -4 -32 -15 -40 c -11 8 -15 35 -15 40 l -15 15 6 15 9 -5 5 5 h 10" />
+                                    <path stroke-width="3" fill="${themeColor}" d="M 0 7 a 8 8 0 0 0 -8 8 c 0 4 4 6 8 12 c 4 -6 8 -8 8 -12 a 8 8 0 0 0 -8 -8" />
+                                </g>
+                            </svg>
+                            <h3 style="color: ${themeColor}; font-size: 28px; margin: 0; letter-spacing: 6px; font-family: 'Noto Serif SC', 'Songti SC', serif; text-shadow: 0 0 15px ${themeColor}80;">泛星联盟舰船飞行许可</h3>
+                            <div style="color: ${themeColor}; font-size: 14px; font-family: monospace; margin-top: 8px; letter-spacing: 3px; opacity: 0.8;">P.S.C FLIGHT LICENSE</div>
+                        </div>
+
+                        <div style="position: relative; z-index: 1; font-family: 'Noto Serif SC', 'Songti SC', serif; color: #e0f2fe; font-size: 18px; line-height: 2.2; padding: 0 10px;">
+                            <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">舰船名称：</span><span style="color: #fff; font-weight: bold; font-size: 22px; text-shadow: 0 0 10px ${themeColor}80;">${data.name}</span></div>
+                            <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">舰船级别：</span><span>${data.class}</span></div>
+                            <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">所有者：</span><span style="font-family: monospace; font-size: 16px;">${ownerName}</span></div>
+                            <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">签发日期：</span><span style="font-family: monospace; font-size: 16px;">${dateStr}</span></div>
+                            <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">执照编号：</span><span style="font-family: monospace; font-size: 14px; color: #8bb9d6;">PSC-SHP-${certNumber}</span></div>
+                            
+                            ${data.capacity ? `<div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">最大乘员：</span><span style="font-family: monospace; font-size: 16px;">${data.capacity}</span></div>` : ''}
+                            
+                            <div style="margin-top: 25px; padding: 15px; background: ${themeColor}1A; border-left: 3px solid ${themeColor}; border-radius: 0 4px 4px 0;">
+                                <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-bottom: 8px; opacity: 0.8;">[ 性能参数与改装说明 ]</div>
+                                <div style="color: #84ffff; font-size: 14px; line-height: 1.8; white-space: pre-wrap; font-family: 'PingFang SC', sans-serif;">${data.specs || '无特殊改装'}</div>
+                            </div>
+
+                            ${data.roles ? `
+                            <div style="margin-top: 15px; padding: 15px; background: ${themeColor}1A; border-left: 3px solid ${themeColor}; border-radius: 0 4px 4px 0;">
+                                <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-bottom: 8px; opacity: 0.8;">[ 船员编制与招募需求 ]</div>
+                                <div style="color: #84ffff; font-size: 14px; line-height: 1.8; white-space: pre-wrap; font-family: 'PingFang SC', sans-serif;">${data.roles}</div>
+                            </div>` : ''}
+                        </div>
                         
-                        <!-- 联盟祝福语 -->
-                        <div style="margin-top: 30px; padding: 20px; background: ${themeBg}; border-radius: 4px; text-align: center; color: ${themeColor}; font-size: 16px; font-style: italic; letter-spacing: 2px; border: 1px solid ${themeColor}33;">
-                            ${blessing}
+                        <div style="margin-top: 40px; text-align: right; position: relative; z-index: 1;">
+                            <div style="display: inline-block; text-align: center;">
+                                <div style="width: 80px; height: 80px; border: 2px solid ${themeColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${themeColor}; font-family: 'Impact', sans-serif; font-size: 14px; transform: rotate(-15deg); box-shadow: 0 0 10px ${themeColor}4D; margin: 0 auto 10px auto;">P.S.C<br>FLIGHT</div>
+                                <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-top: 5px; opacity: 0.8;">飞船管理局核发</div>
+                            </div>
                         </div>
                     </div>
-                    
-                    <!-- 底部印章 -->
-                    <div style="margin-top: 40px; text-align: right; position: relative; z-index: 1;">
-                        <div style="display: inline-block; text-align: center;">
-                            <div style="width: 80px; height: 80px; border: 2px solid ${themeColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${themeColor}; font-family: 'Impact', sans-serif; font-size: 14px; transform: rotate(-15deg); box-shadow: 0 0 10px ${themeColor}4D; margin: 0 auto 10px auto;">${sealText}</div>
-                            <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-top: 5px; opacity: 0.8;">联盟民政局核发</div>
+                `;
+                document.getElementById('certModalOverlay').classList.add('active');
+                return; // 飞船分支结束，直接 return
+            }
+
+            // 💥 结婚证/离婚证分支
+            if (cert.tag === 'marriage') {
+                const relationName = data.dynamic ? data.dynamic : data.rel;
+                const allParties = (data.pA + "，" + data.pB).split(/[,，]/).map(s => s.trim()).filter(Boolean).join(' & ');
+                
+                // 💥 差分逻辑
+                const isDivorce = data.rel === '解除关系';
+                const themeColor = isDivorce ? '#9e9e9e' : '#e91e63';
+                const themeBg = isDivorce ? 'rgba(158,158,158,0.05)' : 'rgba(233,30,99,0.05)';
+                const titleText = isDivorce ? '泛星联盟关系解除证明' : '泛星联盟关系缔结证书';
+                const subText = isDivorce ? 'CERTIFICATE OF DISSOLUTION' : 'CERTIFICATE OF UNION';
+                const partyLabel = isDivorce ? '解约人：' : '缔结人：';
+                const blessing = isDivorce ? '「 聚散皆是星辰的指引。泛星联盟已注销此羁绊记录。」' : '「 无论深空如何浩瀚，愿你们的羁绊如星辰般永恒。泛星联盟致以诚挚祝福。」';
+                const watermark = isDivorce ? 'TERMINATED' : 'P.S.C APPROVED';
+                const sealText = isDivorce ? 'VOID' : 'P.S.C<br>SEAL';
+                const prefixCode = isDivorce ? 'PSC-DIV-' : 'PSC-MRG-';
+
+                box.style.borderColor = themeColor;
+                box.style.boxShadow = `0 0 40px ${themeColor}4D, inset 0 0 20px ${themeColor}1A`;
+
+                box.innerHTML = `
+                    <button class="close-btn" style="position: absolute; top: 15px; right: 15px; z-index: 10; color: ${themeColor};" onclick="closeCertificate()">[X] CLOSE</button>
+                    <div style="padding: 50px 40px; position: relative; overflow: hidden;">
+                        <!-- 背景钢印 -->
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 80px; color: ${themeColor}0D; font-family: 'Impact', sans-serif; pointer-events: none; white-space: nowrap; z-index: 0; border: 6px solid ${themeColor}0D; padding: 15px;">${watermark}</div>
+                        
+                        <!-- 证书头部 -->
+                        <div style="text-align: center; margin-bottom: 30px; position: relative; z-index: 1; border-bottom: 1px dashed ${themeColor}66; padding-bottom: 20px;">
+                            <svg viewBox="0 0 24 24" style="width: 50px; height: 50px; fill: ${themeColor}; filter: drop-shadow(0 0 10px ${themeColor}99); margin-bottom: 15px;">
+                                ${isDivorce ? '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.59-13L12 10.59 8.41 7 7 8.41 10.59 12 7 15.59 8.41 17 12 13.41 15.59 17 17 15.59 13.41 12 17 8.41z"/>' : '<path d="M8 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.08 0 3.91-1.06 5-2.67 1.09 1.61 2.92 2.67 5 2.67 3.31 0 6-2.69 6-6s-2.69-6-6-6c-2.08 0-3.91 1.06-5 2.67C11.91 7.06 10.08 6 8 6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4c1.19 0 2.25.53 2.98 1.36-.6.82-.98 1.83-.98 2.64 0 .81.38 1.82.98 2.64C10.25 15.47 9.19 16 8 16zm8 0c-1.19 0-2.25-.53-2.98-1.36.6-.82.98-1.83.98-2.64 0-.81-.38-1.82-.98-2.64.73-.83 1.79-1.36 2.98-1.36 2.21 0 4 1.79 4 4s-1.79 4-4 4z'}
+                            </svg>
+                            <h3 style="color: ${themeColor}; font-size: 28px; margin: 0; letter-spacing: 6px; font-family: 'Noto Serif SC', 'Songti SC', serif; text-shadow: 0 0 15px ${themeColor}80;">${titleText}</h3>
+                            <div style="color: ${themeColor}; font-size: 14px; font-family: monospace; margin-top: 8px; letter-spacing: 3px; opacity: 0.8;">${subText}</div>
+                        </div>
+
+                        <!-- 证书正文 -->
+                        <div style="position: relative; z-index: 1; font-family: 'Noto Serif SC', 'Songti SC', serif; color: #e0f2fe; font-size: 18px; line-height: 2.2; padding: 0 10px;">
+                            <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">${partyLabel}</span><span style="color: #fff; font-weight: bold; font-size: 22px; text-shadow: 0 0 10px ${themeColor}80;">${allParties}</span></div>
+                            <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">关系类型：</span><span>${relationName}</span></div>
+                            <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">生效日期：</span><span style="font-family: monospace; font-size: 16px;">${dateStr}</span></div>
+                            <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">证书编号：</span><span style="font-family: monospace; font-size: 14px; color: #8bb9d6;">${prefixCode}${certNumber}</span></div>
+                            
+                            <!-- 💥 升级版：高清大图里的绝美誓词排版 -->
+                            ${data.notes && !isDivorce ? `
+                            <div style="margin-top: 30px; padding: 25px; background: linear-gradient(to right, ${themeColor}1A, transparent); border-left: 4px solid ${themeColor}; border-radius: 0 8px 8px 0; position: relative;">
+                                <div style="position: absolute; top: -10px; left: 15px; background: #060b14; padding: 0 10px; color: ${themeColor}; font-size: 12px; font-family: monospace; letter-spacing: 2px;">[ 专属誓词 // VOWS ]</div>
+                                <div style="font-style: italic; color: #ffb4a9; font-size: 18px; line-height: 1.8; white-space: pre-wrap; font-family: 'Kaiti', 'STKaiti', 'Noto Serif SC', serif; text-shadow: 0 0 8px rgba(255,180,169,0.3);">“ ${data.notes} ”</div>
+                            </div>` : ''}
+                            
+                            <!-- 联盟祝福语 -->
+                            <div style="margin-top: 30px; padding: 20px; background: ${themeBg}; border-radius: 4px; text-align: center; color: ${themeColor}; font-size: 16px; font-style: italic; letter-spacing: 2px; border: 1px solid ${themeColor}33;">
+                                ${blessing}
+                            </div>
+                        </div>
+                        
+                        <!-- 底部印章 -->
+                        <div style="margin-top: 40px; text-align: right; position: relative; z-index: 1;">
+                            <div style="display: inline-block; text-align: center;">
+                                <div style="width: 80px; height: 80px; border: 2px solid ${themeColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${themeColor}; font-family: 'Impact', sans-serif; font-size: 14px; transform: rotate(-15deg); box-shadow: 0 0 10px ${themeColor}4D; margin: 0 auto 10px auto;">${sealText}</div>
+                                <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-top: 5px; opacity: 0.8;">联盟民政局核发</div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
-
-            document.getElementById('certModalOverlay').classList.add('active');
+                `;
+                document.getElementById('certModalOverlay').classList.add('active');
+            }
         };
 
         window.closeCertificate = function() {
