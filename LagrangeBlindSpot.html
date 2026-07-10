@@ -4587,7 +4587,55 @@ textarea:-webkit-autofill:active {
             .fp-info h2 { flex-direction: column; align-items: flex-start; gap: 6px; font-size: 20px; }
             #fp-name .sys-modal-btn { margin-left: 0; margin-top: 4px; width: auto; min-width: 0; padding: 2px 10px; font-size: 11px; line-height: 1.5; height: auto; display: inline-block; }
             .fp-avatar { width: 60px; height: 60px; min-width: 60px; min-height: 60px; font-size: 30px; }
+        
+        /* =========================================
+           💥 手机端终极修复：按钮防换行与字体自适应缩放
+           ========================================= */
+        
+        /* 1. 全局按钮：字体与内边距动态缩放，强制不换行 */
+        .btn-primary, .btn-ghost, .submit-btn, .sys-modal-btn, .my-org-action-btn {
+            /* 核心魔法：字号最小 10px，随屏幕宽度(vw)动态缩放，最大 14px */
+            font-size: clamp(10px, 3.5vw, 14px) !important;
+            /* 内边距也动态缩放，屏幕越窄边距越小 */
+            padding-left: clamp(4px, 2vw, 12px) !important;
+            padding-right: clamp(4px, 2vw, 12px) !important;
+            white-space: nowrap !important; /* 绝对禁止文字断行 */
+            word-break: keep-all !important;
         }
+
+        /* 2. 各种并排的操作按钮组：强制平分空间，绝不换行 */
+        .detail-action-row, .step-actions, .my-org-actions, .sys-modal-actions {
+            display: flex !important;
+            flex-wrap: nowrap !important; /* 强制在一行显示 */
+            gap: 8px !important; /* 稍微缩小按钮之间的间距 */
+            width: 100%;
+        }
+        .detail-action-row button, .step-actions button, .my-org-actions button, .sys-modal-actions button {
+            flex: 1 !important; /* 让所有按钮公平地平分宽度 */
+            min-width: 0 !important; /* 允许按钮被极限挤压 */
+            margin: 0 !important;
+        }
+
+        /* 3. 各种 Tab 选项卡：防挤压，放不下时允许内部滑动 */
+        .profile-tabs, .org-tabs, .admin-tab-btn-container {
+            display: flex !important;
+            flex-wrap: nowrap !important; 
+            overflow-x: auto !important; /* 如果屏幕实在太窄，允许手指横向滑动 Tab */
+            scrollbar-width: none !important; /* 隐藏丑陋的滚动条 */
+            -ms-overflow-style: none !important;
+        }
+        .profile-tabs::-webkit-scrollbar, .org-tabs::-webkit-scrollbar {
+            display: none !important;
+        }
+        .profile-tab-btn, .org-tab-btn, .admin-tab-btn, .log-tab-btn, .ann-tab-btn {
+            flex: 1 !important;
+            font-size: clamp(11px, 3vw, 14px) !important;
+            padding: 8px 4px !important; /* 极限压缩左右内边距 */
+            white-space: nowrap !important;
+            text-align: center !important;
+        }
+    
+    }
 
        /* =========================================
            💥 顶级赛博轴线展开动效 V10 (真·自适应版) 💥
@@ -5214,6 +5262,23 @@ textarea:-webkit-autofill:active {
             opacity: 0.8;
         }
 
+        /* =========================================
+           💥 后台管理网格：展开状态样式 (终极修复版)
+           ========================================= */
+        .admin-grid-expanded {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fill, 280px) !important;
+            gap: 20px !important; 
+            overflow-x: visible !important;
+            white-space: normal !important;
+        }
+        
+        .admin-grid-expanded .intel-card {
+            width: 100% !important;
+            /* 💥 核心修复：强制把内边距算进宽度里，防止卡片变胖吃掉空隙！ */
+            box-sizing: border-box !important; 
+        }
+
     </style>
 
 
@@ -5398,6 +5463,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>
     </div>
+
 
     <!-- 💥 头像裁剪与上传弹窗 -->
     <div class="sys-modal-overlay" id="avatarUploadModal" style="z-index: 9999999;">
@@ -5735,7 +5801,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="hud-text-box">
                                 <p>时间：公元2240年</p>
                                 <p>在人类走出太阳系后的第一个世纪，文明并没有迎来真正的黄金时代。</p>
-                                <p>半个世纪前，一种被称为<span class="world-highlight">C-62</span>（“黑血”） 的高能同位素矿物被发现，它能够提供近乎无限的清洁能源，让人类文明得以飞速发展并继续向外扩张，也让整个星系陷入漫长的资源战争。</p>
+                                <p>近一个世纪前，一种被称为<span class="world-highlight">C-62</span>（“黑血”） 的高能同位素矿物被发现，它能够提供近乎无限的清洁能源，让人类文明得以飞速发展并继续向外扩张，也让整个星系陷入漫长的资源战争。</p>
                                 <p>然而，长期接触原矿的人会患上无法治愈的职业病——星尘病，患者会受到不可逆且逐步恶化的神经损伤，器官将逐渐纤维化，同时伴随着严重的幻觉，最终在痛苦中死去。</p>
                                 <p>同数个世纪前的放射性元素镭一样，黑血的危害在发现后的数十年间始终被联盟和企业刻意淡化，直到越来越多矿工死于被称为“星尘病”的慢性疾病，官方的消息封锁才逐渐失效。</p>
                                 <p>但此时一切都已无法挽回，整个文明早已深深依赖上这种能源，内环的城市、星际航道、舰队引擎乃至数十亿人的生活，都建立在黑血之上，没有人不清楚得到它的代价，也没有人能承担失去它的后果。</p>
@@ -6373,25 +6439,22 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <span style="color: #4caf50; font-size: 12px;">🔍</span>
                                 <input type="text" id="admin-faction-search" placeholder="搜索阵营/组织..." style="background: transparent; border: none; color: #fff; padding: 8px; font-family: monospace; font-size: 12px; outline: none; width: 150px;">
                             </div>
+                            <!-- 💥 修复：把新建按钮移回这里，利用 flex-wrap 自动换行 -->
+                            <button class="submit-btn" style="margin: 0; padding: 8px 15px; font-size: 13px; color: #4caf50; border-color: #4caf50; background: rgba(76,175,80,0.1);" onclick="openAdminEditor('faction')">
+                                [ + 新建阵营 ]
+                            </button>
+                            <button class="submit-btn" style="margin: 0; padding: 8px 15px; font-size: 13px; color: #4caf50; border-color: #4caf50; background: rgba(76,175,80,0.1);" onclick="openAdminEditor('org')">
+                                [ + 新建组织 ]
+                            </button>
                         </div>
                     </div>
 
-                    <!-- 💥 新增：Tab 按钮栏 -->
+                    <!-- 💥 新增：Tab 按钮栏 (现在只剩下纯粹的 Tab，不会再被挤出去了) -->
                     <div style="display: flex; border-bottom: 1px solid rgba(76, 175, 80, 0.4); gap: 5px; position: relative; z-index: 1;">
                         <button class="admin-tab-btn active" data-tab="tab-factions" onclick="switchAdminTab('tab-factions')">
                             <svg viewBox="0 0 24 24" style="width: 1.1em; height: 1.1em; fill: currentColor; vertical-align: middle; margin-top: -3px; margin-right: 4px;"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>主阵营列表
                         </button>
                         <button class="admin-tab-btn" data-tab="tab-orgs" onclick="switchAdminTab('tab-orgs')">🔗 下属组织列表</button>
-                        
-                        <!-- 把新建按钮挤到右边去 -->
-                        <div style="flex-grow: 1;"></div>
-                        
-                        <button class="submit-btn" style="margin: 0 5px 5px 0; padding: 8px 15px; font-size: 13px; color: #4caf50; border-color: #4caf50; background: rgba(76,175,80,0.1);" onclick="openAdminEditor('faction')">
-                            [ + 新建阵营 ]
-                        </button>
-                        <button class="submit-btn" style="margin: 0 0 5px 0; padding: 8px 15px; font-size: 13px; color: #4caf50; border-color: #4caf50; background: rgba(76,175,80,0.1);" onclick="openAdminEditor('org')">
-                            [ + 新建组织 ]
-                        </button>
                     </div>
 
                     <!-- 💥 新增：Tab 对应的内容区 -->
@@ -6405,6 +6468,23 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                 </div> <!-- 阵营与组织区块结束 -->
+
+                <!-- 排列式分区：星球与星图管理 -->
+<div style="margin-bottom: 50px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid rgba(0, 229, 255, 0.3); padding-bottom: 10px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+        <h3 style="color: #00e5ff; margin: 0; font-family: monospace; text-shadow: 0 0 8px rgba(0,229,255,0.4); letter-spacing: 1px;">
+            [ 星图与星球档案管理 ]
+        </h3>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <button class="submit-btn" style="margin: 0; padding: 8px 15px; font-size: 13px; color: #00e5ff; border-color: #00e5ff; background: rgba(0,229,255,0.1);" onclick="openPlanetEditor()">
+                [ + 新建星球 ]
+            </button>
+        </div>
+    </div>
+    <!-- 横向滑动网格 -->
+    <div class="intel-grid" id="admin-planet-grid" style="display: flex; overflow-x: auto; gap: 20px; padding-bottom: 15px; scrollbar-width: thin; scrollbar-color: #00e5ff rgba(0,0,0,0.5);">
+    </div>
+</div>
 
                 <!-- 排列式分区 5：NPC 档案管理 -->
                 <div style="margin-bottom: 50px;">
@@ -6565,6 +6645,138 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     <button type="button" class="submit-btn" id="btn-publish-article" style="width: 100%; color: #060b14; border-color: #ffeb3b; background: #ffeb3b; font-size: 18px; margin-top: 20px;">
                         [ 发布至数据库 ]
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 💥 新增：全屏沉浸式【星球数据】编辑终端 💥 -->
+        <div class="view-panel" id="planetEditorView">
+            <div class="article-page-container" style="max-width: 1000px; padding-top: 2rem;">
+                
+                <div class="article-top-bar" style="border-bottom-color: rgba(0,229,255,0.3);">
+                    <button class="btn-ghost" onclick="closePlanetEditor()" style="padding: 6px 12px; font-size: 14px; color: #00e5ff; border-color: #00e5ff;">
+                        &lt; 返回
+                    </button>
+                    <div class="article-sys-status" style="color: #00e5ff;">
+                        <span class="blink-cursor">_</span> PLANET EDIT MODE
+                    </div>
+                </div>
+
+                <div class="archive-header" style="margin-bottom: 2rem;">
+                    <h2 class="neon-title" style="font-size: 32px; color: #00e5ff; text-shadow: 0 0 15px rgba(0,229,255,0.5);" id="planet-editor-main-title">[ + 新建星球档案 ]</h2>
+                    <p style="color: #8bb9d6; font-family: monospace;">请在此录入或修改星图坐标、星球设定及下属基地数据。</p>
+                </div>
+
+                <form class="tactical-form" id="planet-full-form" style="background: rgba(0, 5, 10, 0.8); border: 1px solid #00e5ff; padding: 30px; border-radius: 6px; box-shadow: inset 0 0 30px rgba(0,229,255,0.05);">
+                    <input type="hidden" id="p-edit-id">
+                    
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label style="color: #00e5ff;">星球 ID (英文字符, 如 earth) <span style="color: #f44336;">*</span></label>
+                            <div class="input-wrapper" style="border-color: rgba(0,229,255,0.4);">
+                                <span class="prefix" style="color: #00e5ff;">&gt;</span>
+                                <input type="text" id="p-id" placeholder="例如: earth_02" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label style="color: #00e5ff;">星球名称 <span style="color: #f44336;">*</span></label>
+                            <div class="input-wrapper" style="border-color: rgba(0,229,255,0.4);">
+                                <span class="prefix" style="color: #00e5ff;">&gt;</span>
+                                <input type="text" id="p-name" placeholder="例如: 谷神星" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label style="color: #00e5ff;">星系标识 (System) <span style="color: #f44336;">*</span></label>
+                            <div class="input-wrapper" style="border-color: rgba(0,229,255,0.4);">
+                                <span class="prefix" style="color: #00e5ff;">&gt;</span>
+                                <input type="text" id="p-system" placeholder="例如: earth_sys" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label style="color: #00e5ff;">类型归属</label>
+                            <div class="input-wrapper select-wrapper" style="border-color: rgba(0,229,255,0.4);">
+                                <span class="prefix" style="color: #00e5ff;">&gt;</span>
+                                <select id="p-is-parent" style="color: #fff;">
+                                    <option value="true">主星 (带有轨道线)</option>
+                                    <option value="false">卫星 / 空间站 / 设施</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label style="color: #00e5ff;">所属阵营</label>
+                            <div class="input-wrapper select-wrapper" style="border-color: rgba(0,229,255,0.4);">
+                                <span class="prefix" style="color: #00e5ff;">&gt;</span>
+                                <select id="p-faction" style="color: #fff;">
+                                    <option value="泛星联盟">泛星联盟</option>
+                                    <option value="外环">外环</option>
+                                    <option value="独立防务承包商">独立防务承包商</option>
+                                    <option value="自治空间站">自治空间站</option>
+                                    <option value="无阵营 / 独立势力">无阵营 / 独立势力</option>
+                                    <option value="无阵营 / 废弃">无阵营 / 废弃</option>
+                                    <option value="恒星">恒星</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label style="color: #00e5ff;">星区位置 (Region)</label>
+                            <div class="input-wrapper select-wrapper" style="border-color: rgba(0,229,255,0.4);">
+                                <span class="prefix" style="color: #00e5ff;">&gt;</span>
+                                <select id="p-region" style="color: #fff;">
+                                    <option value="太阳系中心">太阳系中心</option>
+                                    <option value="内环">内环</option>
+                                    <option value="小行星带">小行星带</option>
+                                    <option value="外环">外环</option>
+                                    <option value="柯伊伯带">柯伊伯带</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label style="color: #00e5ff;">主题颜色 (HEX)</label>
+                            <div class="input-wrapper" style="border-color: rgba(0,229,255,0.4);">
+                                <span class="prefix" style="color: #00e5ff;">#</span>
+                                <input type="text" id="p-color" placeholder="00e5ff" value="00e5ff">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label style="color: #00e5ff;">尺寸缩放 (Size Scale)</label>
+                            <div class="input-wrapper" style="border-color: rgba(0,229,255,0.4);">
+                                <span class="prefix" style="color: #00e5ff;">&gt;</span>
+                                <input type="number" step="0.1" id="p-scale" value="1.0">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label style="color: #00e5ff;">星图坐标 X (0 ~ 100)</label>
+                            <div class="input-wrapper" style="border-color: rgba(0,229,255,0.4);">
+                                <span class="prefix" style="color: #00e5ff;">X:</span>
+                                <input type="number" step="0.01" id="p-x" value="50">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label style="color: #00e5ff;">星图坐标 Y (0 ~ 100)</label>
+                            <div class="input-wrapper" style="border-color: rgba(0,229,255,0.4);">
+                                <span class="prefix" style="color: #00e5ff;">Y:</span>
+                                <input type="number" step="0.01" id="p-y" value="50">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-group full-width" style="margin-top: 20px;">
+                        <label style="color: #00e5ff;">下属国家/区域/基地列表 (每行一个，或逗号隔开)</label>
+                        <div class="input-wrapper" style="border-color: rgba(0,229,255,0.4);">
+                            <textarea id="p-locations" rows="4" placeholder="例如:&#10;China (中国)&#10;USA (美国)&#10;Tranquility Port (宁静海太空港)"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="input-group full-width" style="margin-top: 20px;">
+                        <label style="color: #00e5ff;">星球详细设定 / 档案介绍</label>
+                        <div class="input-wrapper" style="border-color: rgba(0,229,255,0.4);">
+                            <textarea id="p-desc" rows="6" placeholder="在此输入星球的历史、气候、政治格局与黑血开采状况..."></textarea>
+                        </div>
+                    </div>
+
+                    <button type="button" class="submit-btn" id="btnSavePlanet" style="width: 100%; color: #060b14; border-color: #00e5ff; background: #00e5ff; font-size: 18px; margin-top: 30px;" onclick="savePlanetData()">
+                        [ 发布至星图数据库 ]
                     </button>
                 </form>
             </div>
@@ -7016,36 +7228,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
 
                 <!-- 💥 新增：两大巨型申请入口 (扁平化 SVG 版) -->
-<div style="display: flex; gap: 20px; margin-bottom: 40px; flex-wrap: wrap;">
-    
-    <!-- 录入公民档案按钮 -->
-    <button class="submit-btn" style="flex: 1; padding: 40px 20px; font-size: 22px; display: flex; flex-direction: column; align-items: center; gap: 15px; border: 1px solid #12a8ff; background: rgba(18,168,255,0.05); color: #12a8ff; transition: all 0.2s;" onclick="window.formPreviousView='queueView'; openView('createView'); if(window.goToStep) window.goToStep(1, true);" onmouseover="this.style.background='rgba(18,168,255,0.15)'" onmouseout="this.style.background='rgba(18,168,255,0.05)'">
-        <!-- 个人档案 ID 卡 SVG -->
-        <svg viewBox="0 0 24 24" style="width: 56px; height: 56px; fill: #12a8ff; filter: drop-shadow(0 0 8px rgba(18,168,255,0.4));">
-            <path d="M3 5v14h18V5H3zm16 12H5V7h14v10zM12 8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm0 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4 3H8v-.5c0-1.33 2.67-2 4-2s4 .67 4 2v.5z"/>
-        </svg>
-        <span style="font-family: 'Impact', sans-serif; letter-spacing: 2px;">[ 录入公民档案 ]</span>
-        <span style="font-size: 14px; color: #8bb9d6; font-family: 'PingFang SC', sans-serif; font-weight: normal; letter-spacing: 0;">申请个人公民身份卡</span>
-    </button>
+                <div style="display: flex; gap: 20px; margin-bottom: 40px; flex-wrap: wrap;">
+                    
+                    <!-- 录入公民档案按钮 -->
+                    <button class="submit-btn" style="flex: 1; padding: 40px 20px; font-size: 22px; display: flex; flex-direction: column; align-items: center; gap: 15px; border: 1px solid #12a8ff; background: rgba(18,168,255,0.05); color: #12a8ff; transition: all 0.2s;" onclick="window.formPreviousView='queueView'; openView('createView'); if(window.goToStep) window.goToStep(1, true);" onmouseover="this.style.background='rgba(18,168,255,0.15)'" onmouseout="this.style.background='rgba(18,168,255,0.05)'">
+                        <svg viewBox="0 0 24 24" style="width: 56px; height: 56px; fill: #12a8ff; filter: drop-shadow(0 0 8px rgba(18,168,255,0.4));">
+                            <path d="M3 5v14h18V5H3zm16 12H5V7h14v10zM12 8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm0 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4 3H8v-.5c0-1.33 2.67-2 4-2s4 .67 4 2v.5z"/>
+                        </svg>
+                        <span style="font-family: 'Impact', sans-serif; letter-spacing: 2px;">[ 录入公民档案 ]</span>
+                        <span style="font-size: 14px; color: #8bb9d6; font-family: 'PingFang SC', sans-serif; font-weight: normal; letter-spacing: 0;">申请个人公民身份卡</span>
+                    </button>
 
-    <!-- 创立组织按钮 -->
-    <button class="submit-btn" style="flex: 1; padding: 40px 20px; font-size: 22px; display: flex; flex-direction: column; align-items: center; gap: 15px; border: 1px solid #8bc34a; background: rgba(139,195,74,0.05); color: #8bc34a; transition: all 0.2s;" onclick="window.formPreviousView='queueView'; openView('createOrgView')" onmouseover="this.style.background='rgba(139,195,74,0.15)'" onmouseout="this.style.background='rgba(139,195,74,0.05)'">
-        <!-- 组织/建筑 SVG -->
-        <svg viewBox="0 0 24 24" style="width: 56px; height: 56px; fill: #8bc34a; filter: drop-shadow(0 0 8px rgba(139,195,74,0.4));">
-            <path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/>
-        </svg>
-        <span style="font-family: 'Impact', sans-serif; letter-spacing: 2px;">[ 申请创立组织 ]</span>
-        <span style="font-size: 14px; color: #c5e1a5; font-family: 'PingFang SC', sans-serif; font-weight: normal; letter-spacing: 0;">建立小队 / 佣兵团 / 商会</span>
-    </button>
+                    <!-- 创立组织按钮 -->
+                    <button class="submit-btn" style="flex: 1; padding: 40px 20px; font-size: 22px; display: flex; flex-direction: column; align-items: center; gap: 15px; border: 1px solid #8bc34a; background: rgba(139,195,74,0.05); color: #8bc34a; transition: all 0.2s;" onclick="window.formPreviousView='queueView'; openView('createOrgView')" onmouseover="this.style.background='rgba(139,195,74,0.15)'" onmouseout="this.style.background='rgba(139,195,74,0.05)'">
+                        <svg viewBox="0 0 24 24" style="width: 56px; height: 56px; fill: #8bc34a; filter: drop-shadow(0 0 8px rgba(139,195,74,0.4));">
+                            <path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/>
+                        </svg>
+                        <span style="font-family: 'Impact', sans-serif; letter-spacing: 2px;">[ 申请创立组织 ]</span>
+                        <span style="font-size: 14px; color: #c5e1a5; font-family: 'PingFang SC', sans-serif; font-weight: normal; letter-spacing: 0;">建立小队 / 佣兵团 / 商会</span>
+                    </button>
+                </div>
 
-</div>
-
-<!-- 💥 新增：政务大厅入口 -->
+                <!-- 💥 新增：政务大厅入口 -->
                 <div class="form-section-title" style="border-color: #00bcd4; color: #00bcd4; margin-bottom: 15px; margin-top: 30px;">[ 政务大厅 // GOV AFFAIRS ]</div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 40px;">
                     
                     <button class="submit-btn" style="padding: 20px 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; border-color: #e91e63; color: #e91e63; background: rgba(233,30,99,0.05); transition: 0.2s;" onclick="openGovForm('marriage')" onmouseover="this.style.background='rgba(233,30,99,0.15)'" onmouseout="this.style.background='rgba(233,30,99,0.05)'">
-                        <!-- 伴侣/羁绊交织环 SVG -->
                         <svg viewBox="0 0 24 24" style="width: 42px; height: 42px; fill: #e91e63; filter: drop-shadow(0 0 8px rgba(233,30,99,0.6)); margin-bottom: 5px;">
                             <path d="M8 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.08 0 3.91-1.06 5-2.67 1.09 1.61 2.92 2.67 5 2.67 3.31 0 6-2.69 6-6s-2.69-6-6-6c-2.08 0-3.91 1.06-5 2.67C11.91 7.06 10.08 6 8 6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4c1.19 0 2.25.53 2.98 1.36-.6.82-.98 1.83-.98 2.64 0 .81.38 1.82.98 2.64C10.25 15.47 9.19 16 8 16zm8 0c-1.19 0-2.25-.53-2.98-1.36.6-.82.98-1.83.98-2.64 0-.81-.38-1.82-.98-2.64.73-.83 1.79-1.36 2.98-1.36 2.21 0 4 1.79 4 4s-1.79 4-4 4z"/>
                         </svg>
@@ -7053,14 +7261,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         <span style="font-size: 12px; color: #ff80ab; font-family: 'PingFang SC', sans-serif;">伴侣登记 / 关系公证</span>
                     </button>
 
-                    <button class="submit-btn" style="padding: 20px 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; border-color: #00bcd4; color: #00bcd4; background: rgba(0,188,212,0.05); transition: 0.2s;" onclick="openGovForm('ship')" onmouseover="this.style.background='rgba(0,188,212,0.15)'" onmouseout="this.style.background='rgba(0,188,212,0.05)'">
-                        <!-- 飞船/战机 SVG (完美居中对齐版) -->
+                    <button class="submit-btn" style="padding: 20px 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; border-color: #00bcd4; color: #00bcd4; background: rgba(0,188,212,0.05); transition: 0.2s;" onclick="openShipBureau()" onmouseover="this.style.background='rgba(0,188,212,0.15)'" onmouseout="this.style.background='rgba(0,188,212,0.05)'">
                         <svg viewBox="0 0 100 100" style="width: 42px; height: 42px; flex-shrink: 0; fill: rgba(0,188,212,0.1); stroke: #00bcd4; filter: drop-shadow(0 0 8px rgba(0,188,212,0.6)); margin-bottom: 5px;">
-                            <!-- 💥 核心修正：Y轴从 50 改为 68，把飞船的视觉重心往下压 -->
                             <g transform="translate(50, 72)" stroke-linejoin="round" stroke-linecap="round">
-                                <!-- 飞船本体 -->
                                 <path stroke-width="4" d="M 0 0 h 10 l 5 -5 9 5 6 -15 -15 -15 c 0 -5 -4 -32 -15 -40 c -11 8 -15 35 -15 40 l -15 15 6 15 9 -5 5 5 h 10" />
-                                <!-- 尾部引擎尾流 -->
                                 <path stroke-width="3" fill="#00bcd4" d="M 0 7 a 8 8 0 0 0 -8 8 c 0 4 4 6 8 12 c 4 -6 8 -8 8 -12 a 8 8 0 0 0 -8 -8" />
                             </g>
                         </svg>
@@ -7069,7 +7273,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     </button>
 
                     <button class="submit-btn" style="padding: 20px 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; border-color: #ff9800; color: #ff9800; background: rgba(255,152,0,0.05); transition: 0.2s;" onclick="openGovForm('corp')" onmouseover="this.style.background='rgba(255,152,0,0.15)'" onmouseout="this.style.background='rgba(255,152,0,0.05)'">
-                        <!-- 企业/商业公文包 SVG -->
                         <svg viewBox="0 0 24 24" style="width: 42px; height: 42px; fill: #ff9800; filter: drop-shadow(0 0 8px rgba(255,152,0,0.6)); margin-bottom: 5px;">
                             <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/>
                         </svg>
@@ -7095,6 +7298,50 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="form-section-title" style="border-color: #00bcd4; color: #00bcd4; margin-top: 40px;">[ 政务备案审核队列 ]</div>
                 <div id="queue-gov-grid" class="roster-grid"></div>
                 <div id="queue-gov-detail" class="roster-detail" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- 💥 新增：飞船管理局专属视图 (已抽离，完美并列！) -->
+        <div class="view-panel" id="shipBureauView">
+            <div class="archive-container" style="max-width: 1000px; margin: 0 auto; padding-top: 2rem;">
+                <div class="article-top-bar" style="border-bottom-color: rgba(0,188,212,0.3);">
+                    <button class="btn-ghost" onclick="closeForm()" style="padding: 6px 12px; font-size: 14px; color: #00bcd4; border-color: #00bcd4;">&lt; 返回大厅</button>
+                    <div class="article-sys-status" style="color: #00bcd4;"><span class="blink-cursor">_</span> SHIP BUREAU</div>
+                </div>
+
+                <div class="archive-header" style="border-bottom: 2px solid #00bcd4; padding-bottom: 15px; margin-bottom: 30px;">
+                    <h2 class="neon-title" style="font-size: 28px; text-align: left; color: #00bcd4; text-shadow: 0 0 10px #00bcd4;">飞船管理局</h2>
+                    <p style="color: #84ffff;">[ P.S.C FLIGHT ADMINISTRATION ]</p>
+                </div>
+
+                <div class="org-tabs" style="border-bottom-color: rgba(0,188,212,0.4); margin-bottom: 20px;">
+                    <button class="org-tab-btn active" data-tab="ship-tab-recruit" onclick="switchShipTab('ship-tab-recruit')" style="color: rgba(0,188,212,0.6); border-color: rgba(0,188,212,0.3);">招募大厅</button>
+                    <button class="org-tab-btn" data-tab="ship-tab-register" onclick="switchShipTab('ship-tab-register')" style="color: rgba(0,188,212,0.6); border-color: rgba(0,188,212,0.3);">资产备案</button>
+                </div>
+
+                <!-- 招募大厅 -->
+                <div id="ship-tab-recruit" class="org-tab-content active">
+                    <div class="intel-grid" id="ship-recruit-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+                        <!-- JS 动态渲染飞船卡片 -->
+                    </div>
+                </div>
+
+                <!-- 资产备案 -->
+                <div id="ship-tab-register" class="org-tab-content">
+                    <div style="background: rgba(0,188,212,0.05); border: 1px dashed #00bcd4; padding: 30px; text-align: center; border-radius: 4px;">
+                        <svg viewBox="0 0 100 100" style="width: 60px; height: 60px; fill: rgba(0,188,212,0.1); stroke: #00bcd4; filter: drop-shadow(0 0 10px rgba(0,188,212,0.6)); margin-bottom: 15px; display: inline-block;">
+                            <g transform="translate(50, 68)" stroke-linejoin="round" stroke-linecap="round">
+                                <path stroke-width="4" d="M 0 0 h 10 l 5 -5 9 5 6 -15 -15 -15 c 0 -5 -4 -32 -15 -40 c -11 8 -15 35 -15 40 l -15 15 6 15 9 -5 5 5 h 10" />
+                                <path stroke-width="3" fill="#00bcd4" d="M 0 7 a 8 8 0 0 0 -8 8 c 0 4 4 6 8 12 c 4 -6 8 -8 8 -12 a 8 8 0 0 0 -8 -8" />
+                            </g>
+                        </svg>
+                        <h3 style="color: #00bcd4; margin-bottom: 10px; font-size: 20px;">私人舰船 / 载具备案</h3>
+                        <p style="color: #84ffff; font-size: 14px; margin-bottom: 25px;">在此向联盟提交您的舰船资产备案。审核通过后，您将获得专属飞行执照，并可在招募大厅发布船员招募信息。</p>
+                        <button class="submit-btn" style="color: #060b14; background: #00bcd4; border-color: #00bcd4; font-size: 16px; padding: 12px 30px;" onclick="openGovForm('ship')">
+                            [ + 填写备案申请表 ]
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -7303,17 +7550,28 @@ document.addEventListener('DOMContentLoaded', function() {
                     <!-- 2. 飞船登记表单 (青色) -->
                     <div id="gov-ship-fields" style="display: none;">
                         <div class="input-group full-width" style="margin-bottom: 20px;">
-                            <label style="color: #00bcd4;">舰船 / 载具名称</label>
+                            <label style="color: #00bcd4;">舰船 / 载具名称 <span style="color: #f44336;">*</span></label>
                             <div class="input-wrapper" style="border-color: rgba(0,188,212,0.4);">
                                 <span class="prefix" style="color: #00bcd4;">&gt;</span>
                                 <input type="text" id="g-s-name" placeholder="例如：游隼号、碎星者..." required>
                             </div>
                         </div>
+                        
+                        <!-- 💥 新增：所属阵营 (用于招募联动) -->
+                        <div class="input-group full-width" style="margin-bottom: 20px;">
+                            <label style="color: #00bcd4;">所属阵营 (用于招募联动) <span style="color: #f44336;">*</span></label>
+                            <div class="input-wrapper select-wrapper" style="border-color: rgba(0,188,212,0.4);">
+                                <span class="prefix" style="color: #00bcd4;">&gt;</span>
+                                <select id="g-s-faction" required style="color: #fff;">
+                                    <!-- JS 动态填充 -->
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="input-group full-width" style="margin-bottom: 20px;">
                             <label style="color: #00bcd4;">舰船级别 / 型号</label>
                             <div class="input-wrapper select-wrapper" style="border-color: rgba(0,188,212,0.4);">
                                 <span class="prefix" style="color: #00bcd4;">&gt;</span>
-                                <!-- 💥 新增：onchange 事件触发船员框的显示/隐藏 -->
                                 <select id="g-s-class" required style="color: #fff;" onchange="checkShipClass()">
                                     <option value="轻型单人战机/穿梭机">轻型战机 / 穿梭机 / 侦察艇</option>
                                     <option value="中型武装运输船/走私船">中型武装运输船 / 走私船</option>
@@ -7324,17 +7582,31 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                         </div>
                         
-                        <!-- 💥 新增：大型舰船专属的船员编制框 (默认隐藏) -->
+                        <!-- 💥 升级版：大型舰船专属的船员编制框 (与组织招募完全一致) -->
                         <div class="input-group full-width" id="g-s-crew-group" style="display: none; margin-bottom: 20px; padding: 15px; background: rgba(0,188,212,0.05); border: 1px dashed #00bcd4; border-radius: 4px;">
-                            <label style="color: #00bcd4; margin-bottom: 10px;">船员编制与招募需求</label>
-                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                                <div class="input-wrapper" style="flex: 1; border-color: rgba(0,188,212,0.4); background: rgba(0,0,0,0.6);">
+                            <label style="color: #00bcd4; margin-bottom: 15px; font-weight: bold; font-size: 14px;">[ 船员编制与招募需求 ]</label>
+                            
+                            <div class="input-group full-width" style="margin-bottom: 15px;">
+                                <label style="color: #00bcd4; font-size: 12px;">预设固定职位与人数上限 (选填)</label>
+                                <div class="input-wrapper" style="border-color: rgba(0,188,212,0.4); background: rgba(0,0,0,0.6);">
                                     <span class="prefix" style="color: #00bcd4;">&gt;</span>
-                                    <input type="text" id="g-s-crew-capacity" placeholder="最大乘员数 (例如: 5人)">
+                                    <input type="text" id="g-s-positions" placeholder="例如: 领航员:1, 炮手:2, 突击手:0 (0代表不限)">
                                 </div>
                             </div>
-                            <div class="input-wrapper" style="border-color: rgba(0,188,212,0.4); background: rgba(0,0,0,0.6);">
-                                <textarea id="g-s-crew-roles" rows="2" placeholder="例如：需要领航员1名，炮手2名。欢迎在论坛发布招募贴..."></textarea>
+
+                            <div class="input-group full-width" style="margin-bottom: 15px;">
+                                <label style="color: #00bcd4; font-size: 12px;">需要自戏考核的职位 (选填)</label>
+                                <div class="input-wrapper" style="border-color: rgba(0,188,212,0.4); background: rgba(0,0,0,0.6);">
+                                    <span class="prefix" style="color: #00bcd4;">&gt;</span>
+                                    <input type="text" id="g-s-rp-positions" placeholder="例如: 领航员, 炮手。填 ALL 代表均需自戏">
+                                </div>
+                            </div>
+
+                            <div class="input-group full-width">
+                                <label style="color: #00bcd4; font-size: 12px;">各职位具体要求 (选填)</label>
+                                <div class="input-wrapper" style="border-color: rgba(0,188,212,0.4); background: rgba(0,0,0,0.6);">
+                                    <textarea id="g-s-reqs" rows="3" placeholder="例如：&#10;领航员：需要熟悉外环航道。&#10;炮手：要求活跃度高。"></textarea>
+                                </div>
                             </div>
                         </div>
 
@@ -8182,9 +8454,21 @@ window.parsePositionsStr = function(str) {
     return valid ? posObj : null;
 };
 
-// 💥 终极升级版：使用原生 DOM 解析器，并强力清洗双重转义字符
+// 💥 核心助手：同时在组织和飞船中查找数据
+        window.getOrgOrShipData = function(orgName) {
+            return articlesDB.find(a => {
+                if (a.type === 'org' && a.title === orgName) return true;
+                if (a.type === 'gov_record' && a.tag === 'ship') {
+                    try { const d = JSON.parse(a.content); return d.name === orgName; } catch(e){}
+                }
+                return false;
+            });
+        };
+
+        // 💥 终极升级版：同时支持解析组织的 HTML 和飞船的 JSON
         window.getOrgPositions = function(content) {
             if (!content) return null;
+            try { const data = JSON.parse(content); if (data.positions) return window.parsePositionsStr(data.positions); } catch(e) {}
             try {
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(content, 'text/html');
@@ -8194,15 +8478,13 @@ window.parsePositionsStr = function(str) {
                     let cleanStr = rawStr.replace(/&quot;/g, '"').replace(/&apos;/g, "'");
                     return JSON.parse(cleanStr);
                 }
-            } catch(e) { 
-                console.error("职位解析失败:", e); 
-            }
+            } catch(e) { console.error("职位解析失败:", e); }
             return null;
         };
 
-        // 💥 解析自戏考核要求
         window.getOrgRpPositions = function(content) {
             if (!content) return "";
+            try { const data = JSON.parse(content); if (data.rp_positions) return data.rp_positions; } catch(e) {}
             try {
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(content, 'text/html');
@@ -8211,27 +8493,22 @@ window.parsePositionsStr = function(str) {
                     let rawStr = div.getAttribute('data-rp-positions') || "";
                     return rawStr.replace(/&quot;/g, '"').replace(/&apos;/g, "'");
                 }
-            } catch(e) { 
-                console.error("自戏要求解析失败:", e); 
-            }
+            } catch(e) { console.error("自戏要求解析失败:", e); }
             return "";
         };
 
-        // 💥 新增：解析职位具体要求
         window.getOrgReqs = function(content) {
             if (!content) return "";
+            try { const data = JSON.parse(content); if (data.reqs) return data.reqs; } catch(e) {}
             try {
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(content, 'text/html');
                 const div = doc.querySelector('div[data-reqs]');
                 if (div) {
                     let rawStr = div.getAttribute('data-reqs') || "";
-                    // 还原换行符和引号
                     return rawStr.replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&#10;/g, '\n');
                 }
-            } catch(e) { 
-                console.error("要求解析失败:", e); 
-            }
+            } catch(e) { console.error("要求解析失败:", e); }
             return "";
         };
 
@@ -8289,7 +8566,7 @@ window.parsePositionsStr = function(str) {
 
 // 审核前：检查冲突
 window.processIdentityCapacity = async function(orgName, occupation, charId) {
-    const orgData = articlesDB.find(a => a.type === 'org' && a.title === orgName);
+    const orgData = window.getOrgOrShipData(orgName);
     if (!orgData) return { rejected: false };
     
     const positions = getOrgPositions(orgData.content);
@@ -8317,7 +8594,7 @@ window.processIdentityCapacity = async function(orgName, occupation, charId) {
 window.triggerConflictRejection = async function(charDraft) {
     const checkAndReject = async (orgName, occupation, approvedId) => {
         if (!orgName || !occupation) return;
-        const orgData = articlesDB.find(a => a.type === 'org' && a.title === orgName);
+        const orgData = window.getOrgOrShipData(orgName);
         if (!orgData) return;
         const positions = getOrgPositions(orgData.content);
         if (!positions || !positions[occupation] || positions[occupation] <= 0) return;
@@ -8578,6 +8855,47 @@ window.triggerConflictRejection = async function(charDraft) {
                                                .replace(/<div id=['"]hidden-updates-data['"] style=['"]display:none;['"]>[\s\S]*?<\/div>/g, '');
 
                 let renderContent = cleanContent;
+
+                // 💥 拦截：如果是飞船招募详情
+                if (item.type === 'gov_record' && item.tag === 'ship') {
+                    let data = {};
+                    try { data = JSON.parse(item.content); } catch(e) {}
+                    
+                    const ownerChar = characterDB.find(c => c.owner_id === item.owner_id);
+                    const ownerName = ownerChar ? ownerChar.callsign : '未知舰长';
+
+                    const positionsHtml = renderOrgPositionsStatus(data.name, item.content);
+                    const rpReqs = window.getOrgRpPositions(item.content);
+                    const reqs = window.getOrgReqs(item.content);
+                    
+                    let recruitHtml = positionsHtml;
+                    if (rpReqs) {
+                        recruitHtml += `<div style="margin-top: 20px; padding: 15px; background: rgba(0,188,212,0.05); border-left: 4px solid #00bcd4;"><h4 style="color: #00bcd4; margin: 0 0 10px 0; font-family: monospace;">[ 自戏考核要求 ]</h4><p style="color: #84ffff; font-size: 14px; margin: 0;">以下职位需要提交不少于 200 字的自戏考核：<br><strong style="color: #e0f2fe;">${rpReqs}</strong></p></div>`;
+                    }
+                    if (reqs) {
+                        recruitHtml += `<div style="margin-top: 20px; padding: 15px; background: rgba(0,188,212,0.05); border-left: 4px solid #00bcd4;"><h4 style="color: #00bcd4; margin: 0 0 10px 0; font-family: monospace;">[ 职位具体要求 ]</h4><div style="color: #e0f2fe; font-size: 14px; line-height: 1.8; white-space: pre-wrap;">${reqs}</div></div>`;
+                    }
+
+                    renderContent = `
+                        <div style="margin-bottom: 30px; padding: 20px; background: rgba(0,188,212,0.05); border: 1px solid rgba(0,188,212,0.3); border-radius: 4px;">
+                            <h3 style="color: #00bcd4; margin: 0 0 15px 0; font-size: 20px; text-shadow: 0 0 10px rgba(0,188,212,0.5);">[ 舰船档案 ]</h3>
+                            <div style="display: flex; margin-bottom: 10px;"><span style="color: #00bcd4; width: 90px; flex-shrink: 0;">舰船名称：</span><span style="color: #fff; font-weight: bold;">${data.name}</span></div>
+                            <div style="display: flex; margin-bottom: 10px;"><span style="color: #00bcd4; width: 90px; flex-shrink: 0;">舰船级别：</span><span style="color: #e0f2fe;">${data.class}</span></div>
+                            <div style="display: flex; margin-bottom: 10px;"><span style="color: #00bcd4; width: 90px; flex-shrink: 0;">归属阵营：</span><span style="color: #e0f2fe;">${data.faction || '未知'}</span></div>
+                            <div style="display: flex; margin-bottom: 10px;"><span style="color: #00bcd4; width: 90px; flex-shrink: 0;">所有者：</span><span style="color: #e0f2fe;">${ownerName}</span></div>
+                            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed rgba(0,188,212,0.3);">
+                                <span style="color: #00bcd4; display: block; margin-bottom: 5px;">性能参数与改装：</span>
+                                <span style="color: #84ffff; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${data.specs || '无'}</span>
+                            </div>
+                        </div>
+                        <h3 style="color: #00bcd4; margin: 0 0 15px 0; font-size: 20px; text-shadow: 0 0 10px rgba(0,188,212,0.5);">[ 招募大厅 ]</h3>
+                        ${recruitHtml}
+                    `;
+                    
+                    // 强制覆盖标题和标签
+                    pageTitle.innerText = data.name;
+                    pageMeta.innerText = 'SHIP RECRUITMENT';
+                }
                 
                 // 💥 拦截：如果是阵营，直接把公告顶在最上面
                 if (item.type === 'faction') {
@@ -9157,9 +9475,11 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
         // 3. 从云端拉取数据 (分类处理)
         async function fetchCloudData() {
             const grid = document.getElementById('roster-grid');
-            grid.innerHTML = window.getCyberLoaderHTML('正在连接卫星获取档案...', '#12a8ff');
-            
-            try {
+    if(grid) grid.innerHTML = window.getCyberLoaderHTML('正在连接卫星获取档案...', '#12a8ff');
+    
+    try {
+        // 💥 新增：同步拉取云端星球数据
+        await fetchPlanetsFromCloud();
                 // 一次性把所有档案拉下来
                 const { data, error } = await supabaseClient.from('characters').select('*');
                 if (error) throw error;
@@ -9225,7 +9545,13 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
             const myPendingOrgs = (typeof pendingOrgsDB !== 'undefined' ? pendingOrgsDB : []).filter(o => o.owner_id === currentUser.id);
             const myApprovedOrgs = (articlesDB || []).filter(o => o.type === 'org' && o.owner_id === currentUser.id);
 
-            const getStatusLine = (label, pendingArr, approvedArr) => {
+            // 💥 核心升级：支持传入 itemId 并渲染 [已阅] 按钮
+            const getStatusLine = (label, pendingArr, approvedArr, itemId = null) => {
+                // 如果这个提示已经被点过“已阅”，直接返回空，不再显示！
+                if (itemId && localStorage.getItem(`tf141_dismissed_${itemId}`)) {
+                    return ''; 
+                }
+
                 if (pendingArr.length > 0) {
                     const item = pendingArr[0];
                     if (item.status === 'rejected') {
@@ -9234,13 +9560,17 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                         return `<div style="color: #ffeb3b; display: flex; align-items: flex-start;"><div style="flex-shrink:0; padding-top:2px;">${iconPend}</div><span>您的 <strong>${label}</strong> 正在排队审核中，请耐心等候哦。</span></div>`;
                     }
                 } else if (approvedArr.length > 0) {
-                    return `<div style="color: #4caf50; display: flex; align-items: flex-start;"><div style="flex-shrink:0; padding-top:2px;">${iconPass}</div><span>您的 <strong>${label}</strong> 已顺利通过并归档。请前往「个人终端」获取群号。</span></div>`;
+                    // 💥 渲染已阅按钮
+                    const dismissBtn = itemId ? `<button onclick="dismissNotification('${itemId}')" style="background:rgba(76,175,80,0.1); border:1px solid #4caf50; color:#4caf50; border-radius:2px; font-size:11px; padding:2px 8px; margin-left:10px; cursor:pointer; white-space:nowrap; transition:0.2s;" onmouseover="this.style.background='#4caf50'; this.style.color='#060b14';" onmouseout="this.style.background='rgba(76,175,80,0.1)'; this.style.color='#4caf50';">[ 已读 ]</button>` : '';
+                    
+                    return `<div style="color: #4caf50; display: flex; align-items: flex-start;"><div style="flex-shrink:0; padding-top:2px;">${iconPass}</div><span style="flex:1; display:flex; align-items:center; flex-wrap:wrap;">您的 <strong>${label}</strong> 已顺利通过并归档。${dismissBtn}</span></div>`;
                 } else {
                     return `<div style="color: #8bb9d6; display: flex; align-items: flex-start; opacity: 0.8;"><div style="flex-shrink:0; padding-top:2px;">${iconPend}</div><span>您暂未提交 <strong>${label}</strong>。</span></div>`;
                 }
             };
 
-            notifyHtml += getStatusLine('公民个人档案', myPending, myApprovedChar);
+            // 💥 传入档案的 ID，以便绑定已阅状态
+            notifyHtml += getStatusLine('公民个人档案', myPending, myApprovedChar, myApprovedChar.length > 0 ? myApprovedChar[0].id : null);
 
             // 💥 检测是否有别人向我发起的、需要我确认的政务申请
             const incomingGovs = (typeof pendingGovsDB !== 'undefined' ? pendingGovsDB : []).filter(g => {
@@ -9250,17 +9580,14 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                     if (data.bConfirmed !== false) return false;
                     
                     let isMyTarget = false;
-                    // 1. 优先通过 bId 判断
                     if (data.bId && data.bId.includes(currentUser.id)) isMyTarget = true;
                     
-                    // 2. 核心兜底：如果 bId 丢失，通过名字判断！
                     const myChar = characterDB.find(c => c.owner_id === currentUser.id);
                     if (myChar && data.pB) {
                         const myNames = [myChar.name, myChar.callsign, myChar.hidden_name, myChar.hidden_callsign].filter(Boolean);
                         const pBNames = data.pB.split(/[,，]/).map(s => s.trim());
                         if (myNames.some(n => pBNames.includes(n))) isMyTarget = true;
                     }
-                    
                     return isMyTarget;
                 } catch(e) { return false; }
             });
@@ -9282,9 +9609,10 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                 });
             }
 
+            // 💥 传入组织的 ID，以便绑定已阅状态
             if (myPendingOrgs.length > 0 || myApprovedOrgs.length > 0) {
                 myPendingOrgs.forEach(o => notifyHtml += getStatusLine(`组织创立申请 [${o.title}]`, [o], []));
-                myApprovedOrgs.forEach(o => notifyHtml += getStatusLine(`创立的组织 [${o.title}]`, [], [o]));
+                myApprovedOrgs.forEach(o => notifyHtml += getStatusLine(`创立的组织 [${o.title}]`, [], [o], o.id));
             } else {
                 notifyHtml += `<div style="color: #8bb9d6; display: flex; align-items: flex-start; opacity: 0.8;"><div style="flex-shrink:0; padding-top:2px;">${iconPend}</div><span>您暂未提交组织创立申请。</span></div>`;
             }
@@ -9717,7 +10045,6 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                                 return myNames.some(n => allNames.includes(n));
                             } catch(e) { return false; }
                         } else if (a.tag === 'ship' || a.tag === 'corp') {
-                            // 飞船和企业执照，直接看 owner_id 是不是自己就行
                             return a.owner_id === currentUser.id;
                         }
                     }
@@ -9735,9 +10062,8 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                             const relationName = data.dynamic ? data.dynamic : data.rel;
                             const allParties = (data.pA + "，" + data.pB).split(/[,，]/).map(s => s.trim()).filter(Boolean).join(' & ');
                             
-                            // 💥 差分逻辑：判断是否为解除关系
                             const isDivorce = data.rel === '解除关系';
-                            const themeColor = isDivorce ? '#9e9e9e' : '#e91e63'; // 离婚用冰冷的灰色，结婚用粉色
+                            const themeColor = isDivorce ? '#9e9e9e' : '#e91e63'; 
                             const themeBg = isDivorce ? 'rgba(158,158,158,0.05)' : 'rgba(233,30,99,0.05)';
                             const titleText = isDivorce ? '泛星联盟关系解除证明' : '泛星联盟关系缔结证书';
                             const subText = isDivorce ? 'CERTIFICATE OF DISSOLUTION' : 'CERTIFICATE OF UNION';
@@ -9747,10 +10073,7 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
 
                             certsHtml += `
                                 <div onclick="openCertificate('${cert.id}')" style="cursor: pointer; background: ${themeBg}; border: 2px solid ${themeColor}; border-radius: 4px; padding: 30px; margin-bottom: 20px; position: relative; overflow: hidden; box-shadow: 0 0 20px ${themeColor}33, inset 0 0 20px ${themeColor}1A; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 30px ${themeColor}4D, inset 0 0 30px ${themeColor}1A';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 0 20px ${themeColor}33, inset 0 0 20px ${themeColor}1A';">
-                                    <!-- 背景钢印 -->
                                     <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 60px; color: ${themeColor}0D; font-family: 'Impact', sans-serif; pointer-events: none; white-space: nowrap; z-index: 0; border: 4px solid ${themeColor}0D; padding: 10px;">${watermark}</div>
-                                    
-                                    <!-- 证书头部 -->
                                     <div style="text-align: center; margin-bottom: 25px; position: relative; z-index: 1; border-bottom: 1px dashed ${themeColor}66; padding-bottom: 15px;">
                                         <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; fill: ${themeColor}; filter: drop-shadow(0 0 10px ${themeColor}99); margin-bottom: 10px;">
                                             ${isDivorce ? '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.59-13L12 10.59 8.41 7 7 8.41 10.59 12 7 15.59 8.41 17 12 13.41 15.59 17 17 15.59 13.41 12 17 8.41z"/>' : '<path d="M8 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.08 0 3.91-1.06 5-2.67 1.09 1.61 2.92 2.67 5 2.67 3.31 0 6-2.69 6-6s-2.69-6-6-6c-2.08 0-3.91 1.06-5 2.67C11.91 7.06 10.08 6 8 6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4c1.19 0 2.25.53 2.98 1.36-.6.82-.98 1.83-.98 2.64 0 .81.38 1.82.98 2.64C10.25 15.47 9.19 16 8 16zm8 0c-1.19 0-2.25-.53-2.98-1.36.6-.82.98-1.83.98-2.64 0-.81-.38-1.82-.98-2.64.73-.83 1.79-1.36 2.98-1.36 2.21 0 4 1.79 4 4s-1.79 4-4 4z"/>'}
@@ -9758,39 +10081,30 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                                         <h3 style="color: ${themeColor}; font-size: 24px; margin: 0; letter-spacing: 4px; font-family: 'Noto Serif SC', 'Songti SC', serif; text-shadow: 0 0 10px ${themeColor}66;">${titleText}</h3>
                                         <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-top: 5px; letter-spacing: 2px; opacity: 0.8;">${subText}</div>
                                     </div>
-
-                                    <!-- 证书正文 -->
                                     <div style="position: relative; z-index: 1; font-family: 'Noto Serif SC', 'Songti SC', serif; color: #e0f2fe; font-size: 16px; line-height: 2;">
                                         <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">${partyLabel}</span><span style="color: #fff; font-weight: bold; font-size: 18px; text-shadow: 0 0 8px ${themeColor}80;">${allParties}</span></div>
                                         <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">关系类型：</span><span>${relationName}</span></div>
                                         <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">生效日期：</span><span style="font-family: monospace; font-size: 15px;">${dateStr}</span></div>
-                                        
-                                        <!-- 💥 升级版：小卡片里的誓词排版 -->
                                         ${data.notes && !isDivorce ? `
                                         <div style="margin-top: 15px; padding: 12px 15px; background: ${themeColor}1A; border-left: 3px solid ${themeColor}; border-radius: 0 4px 4px 0;">
                                             <div style="color: ${themeColor}; font-size: 11px; font-family: monospace; margin-bottom: 4px; opacity: 0.8;">[ 专属誓词 ]</div>
                                             <div style="font-style: italic; color: #ffb4a9; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Kaiti', 'STKaiti', serif;">“ ${data.notes} ”</div>
                                         </div>` : ''}
-
-                                        <!-- 联盟祝福语 -->
                                         <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed ${themeColor}4D; text-align: center; color: ${themeColor}; font-size: 13px; font-style: italic; letter-spacing: 1px;">
                                             ${blessing}
                                         </div>
                                     </div>
-                                    
-                                    <!-- 点击提示 -->
                                     <div style="position: absolute; bottom: 10px; right: 15px; color: ${themeColor}; font-size: 12px; font-family: monospace; opacity: 0.6;">[ 点击查看高清证件 ]</div>
                                 </div>
                             `;
                         } else if (cert.tag === 'ship') {
-                            // 💥 飞船执照专属卡片 (青色主题)
                             const themeColor = '#00bcd4';
                             const themeBg = 'rgba(0,188,212,0.05)';
-                            
+                            const myChar = characterDB.find(c => c.owner_id === currentUser.id);
+                            const ownerName = myChar ? myChar.callsign : currentUser.nickname;
                             certsHtml += `
                                 <div onclick="openCertificate('${cert.id}')" style="cursor: pointer; background: ${themeBg}; border: 2px solid ${themeColor}; border-radius: 4px; padding: 30px; margin-bottom: 20px; position: relative; overflow: hidden; box-shadow: 0 0 20px ${themeColor}33, inset 0 0 20px ${themeColor}1A; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 30px ${themeColor}4D, inset 0 0 30px ${themeColor}1A';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 0 20px ${themeColor}33, inset 0 0 20px ${themeColor}1A';">
                                     <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 60px; color: ${themeColor}0D; font-family: 'Impact', sans-serif; pointer-events: none; white-space: nowrap; z-index: 0; border: 4px solid ${themeColor}0D; padding: 10px;">CLEARED FOR FLIGHT</div>
-                                    
                                     <div style="text-align: center; margin-bottom: 25px; position: relative; z-index: 1; border-bottom: 1px dashed ${themeColor}66; padding-bottom: 15px;">
                                         <svg viewBox="0 0 100 100" style="width: 40px; height: 40px; fill: rgba(0,188,212,0.1); stroke: ${themeColor}; filter: drop-shadow(0 0 10px ${themeColor}99); margin-bottom: 10px;">
                                             <g transform="translate(50, 68)" stroke-linejoin="round" stroke-linecap="round">
@@ -9801,13 +10115,13 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                                         <h3 style="color: ${themeColor}; font-size: 24px; margin: 0; letter-spacing: 4px; font-family: 'Noto Serif SC', 'Songti SC', serif; text-shadow: 0 0 10px ${themeColor}66;">泛星联盟舰船飞行许可</h3>
                                         <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-top: 5px; letter-spacing: 2px; opacity: 0.8;">P.S.C FLIGHT LICENSE</div>
                                     </div>
-
                                     <div style="position: relative; z-index: 1; font-family: 'Noto Serif SC', 'Songti SC', serif; color: #e0f2fe; font-size: 16px; line-height: 2;">
                                         <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">舰船名称：</span><span style="color: #fff; font-weight: bold; font-size: 18px; text-shadow: 0 0 8px ${themeColor}80;">${data.name}</span></div>
                                         <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">舰船级别：</span><span>${data.class}</span></div>
-                                        <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">所有者：</span><span style="font-family: monospace; font-size: 15px;">${myChar.callsign}</span></div>
+                                        <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">所有者：</span><span style="font-family: monospace; font-size: 15px;">${ownerName}</span></div>
+                                        <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">签发日期：</span><span style="font-family: monospace; font-size: 15px;">${dateStr}</span></div>
                                     </div>
-                                    <div style="position: absolute; bottom: 10px; right: 15px; color: ${themeColor}; font-size: 12px; font-family: monospace; opacity: 0.6;">[ 点击查看详细参数 ]</div>
+                                    <div style="position: absolute; bottom: 10px; right: 15px; color: ${themeColor}; font-size: 12px; font-family: monospace; opacity: 0.6;">[ 点击查看高清证件 ]</div>
                                 </div>
                             `;
                         }
@@ -11565,7 +11879,7 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
     if (typeof updateRosterFilters === 'function') updateRosterFilters(); // 同步更新人设库的下拉框
 };
 
-        // 2. 监听阵营选择，动态生成对应的下属组织
+        // 2. 监听阵营选择，动态生成对应的下属组织与飞船
         const bindFactionChange = (factionSelectId, orgSelectId) => {
             const factionSelect = document.getElementById(factionSelectId);
             const orgSelect = document.getElementById(orgSelectId);
@@ -11574,11 +11888,21 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
             factionSelect.addEventListener('change', function() {
                 const selectedFaction = this.value;
                 
-                // 从数据库里抓取属于该阵营的组织
-                const orgs = articlesDB.filter(a => a.type === 'org' && a.keywords && a.keywords.includes(`[PARENT:${selectedFaction}]`)).map(a => a.title);
+                // 💥 核心联动：同时抓取该阵营下的【组织】和【飞船】
+                const orgs = articlesDB.filter(a => 
+                    (a.type === 'org' && a.keywords && a.keywords.includes(`[PARENT:${selectedFaction}]`)) ||
+                    (a.type === 'gov_record' && a.tag === 'ship' && a.keywords && a.keywords.includes(`[PARENT:${selectedFaction}]`))
+                ).map(a => {
+                    if (a.type === 'org') return a.title;
+                    if (a.type === 'gov_record') {
+                        try {
+                            const data = JSON.parse(a.content);
+                            return data.name; // 返回飞船名称
+                        } catch(e) { return a.title; }
+                    }
+                });
                 
-                orgSelect.innerHTML = '<option value="" disabled selected>-- 选择所属分支机构 --</option>';
-                // 💥 永远保留“无归属”选项，允许阵营内的独狼，或纯散人
+                orgSelect.innerHTML = '<option value="" disabled selected>-- 选择所属分支机构 / 舰船 --</option>';
                 orgSelect.innerHTML += '<option value="无归属 / 独狼">无归属 / 独狼</option>'; 
                 
                 orgs.forEach(org => {
@@ -11599,7 +11923,7 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
             orgSelect.addEventListener('change', function() {
                 const orgName = this.value;
                 console.log(`[系统诊断] 选择了组织: ${orgName}`);
-                const orgData = articlesDB.find(a => a.type === 'org' && a.title === orgName);
+                const orgData = window.getOrgOrShipData(orgName);
                 
                 occSelect.innerHTML = '<option value="custom">-- 自定义新职位 --</option>';
                 
@@ -11690,7 +12014,7 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                 return;
             }
 
-            const orgData = articlesDB.find(a => a.type === 'org' && a.title === orgName);
+            const orgData = window.getOrgOrShipData(orgName);
             if (orgData) {
                 const rpReqStr = window.getOrgRpPositions(orgData.content);
                 if (!rpReqStr) {
@@ -12533,7 +12857,8 @@ setInterval(updateWarningCountdown, 1000);
 
             if (timelineQuery) timelineArticles = timelineArticles.filter(a => (a.title && a.title.toLowerCase().includes(timelineQuery)) || (a.tag && a.tag.toLowerCase().includes(timelineQuery)));
 
-            const createAdminCard = (item, themeColor, isHorizontal = false) => {
+            // 💥 核心修复：去掉 isHorizontal 参数，强制所有后台卡片保持 280px 宽度！
+            const createAdminCard = (item, themeColor) => {
                 const card = document.createElement('div');
                 card.className = 'intel-card';
                 card.style.borderColor = themeColor;
@@ -12544,7 +12869,8 @@ setInterval(updateWarningCountdown, 1000);
                 card.style.flexDirection = 'column';
                 card.style.minHeight = '180px'; 
                 
-                if (isHorizontal) card.style.flex = '0 0 260px'; 
+                // 💥 就是这一句！强制不许挤压，固定宽度 280px
+                card.style.flex = '0 0 280px'; 
 
                 let typeLabel = 'INTEL';
                 if (item.type === 'faction') typeLabel = 'FACTION';
@@ -12561,13 +12887,13 @@ setInterval(updateWarningCountdown, 1000);
                     if (match) parentDisplay = ` | PARENT: ${match[1]}`;
                 }
 
-                // 💥 核心修复：智能判断 icon 是 Emoji 还是图片 URL
+                // 智能判断 icon 是 Emoji 还是图片 URL
                 let iconHtml = `<span style="font-size: 20px;">${item.icon || '📁'}</span>`;
                 if (item.icon && (item.icon.startsWith('http') || item.icon.startsWith('data:'))) {
                     iconHtml = `<img src="${item.icon}" style="width: 36px; height: 36px; border-radius: 4px; object-fit: cover; border: 1px solid ${themeColor}; flex-shrink: 0;">`;
                 }
 
-                // 💥 核心修复：如果是 NPC，点击编辑时打开专属编辑器
+                // 如果是 NPC，点击编辑时打开专属编辑器
                 let editFunc = `editArticle('${item.id}')`;
                 if (item.type === 'npc') {
                     editFunc = `openNpcEditor('${item.id}')`;
@@ -12580,8 +12906,8 @@ setInterval(updateWarningCountdown, 1000);
                             <span style="font-family: monospace; color: ${themeColor}; font-size: 12px; border: 1px solid ${themeColor}; padding: 2px 6px; border-radius: 2px;">[ ${typeLabel} ]</span>
                         </div>
                         <div style="display: flex; gap: 5px;">
-                            <button onclick="event.stopPropagation(); ${editFunc}" style="background: rgba(255,235,59,0.1); border: 1px solid #ffeb3b; color: #ffeb3b; cursor: pointer; padding: 4px 8px; font-size: 12px; font-family: monospace; border-radius: 2px; transition: 0.2s;">[编辑]</button>
-                            <button onclick="event.stopPropagation(); deleteArticle('${item.id}')" style="background: rgba(244,67,54,0.1); border: 1px solid #f44336; color: #f44336; cursor: pointer; padding: 4px 8px; font-size: 12px; font-family: monospace; border-radius: 2px; transition: 0.2s;">[删除]</button>
+                            <button onclick="event.stopPropagation(); ${editFunc}" style="background: rgba(255,235,59,0.15); border: 1px solid #ffeb3b; color: #ffeb3b; cursor: pointer; padding: 4px 8px; font-size: 12px; font-family: monospace; border-radius: 2px; transition: 0.2s;">[编辑]</button>
+                            <button onclick="event.stopPropagation(); deleteArticle('${item.id}')" style="background: rgba(244,67,54,0.15); border: 1px solid #f44336; color: #f44336; cursor: pointer; padding: 4px 8px; font-size: 12px; font-family: monospace; border-radius: 2px; transition: 0.2s;">[删除]</button>
                         </div>
                     </div>
                     <h3 style="color: #fff; margin: 0 0 5px 0; font-size: 16px;">${item.title}</h3>
@@ -12591,33 +12917,33 @@ setInterval(updateWarningCountdown, 1000);
                 return card;
             };
 
+            // 💥 统一调用，不再传递 true/false 参数
             if (intelArticles.length === 0) intelGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace; padding: 20px 0;">[ 暂无记录 ]</div>';
-            else intelArticles.forEach(item => intelGrid.appendChild(createAdminCard(item, '#12a8ff', true)));
+            else intelArticles.forEach(item => intelGrid.appendChild(createAdminCard(item, '#12a8ff')));
 
             if (factionArticles.length === 0) factionGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace;">[ 暂无主阵营记录 ]</div>';
-            else factionArticles.forEach(item => factionGrid.appendChild(createAdminCard(item, '#4caf50', false)));
+            else factionArticles.forEach(item => factionGrid.appendChild(createAdminCard(item, '#4caf50')));
 
             if (orgArticles.length === 0) orgGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace;">[ 暂无下属组织记录 ]</div>';
-            else orgArticles.forEach(item => orgGrid.appendChild(createAdminCard(item, '#8bc34a', false))); 
+            else orgArticles.forEach(item => orgGrid.appendChild(createAdminCard(item, '#8bc34a'))); 
 
             if (timelineArticles.length === 0) timelineGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace; padding: 20px 0;">[ 暂无记录 ]</div>';
-            else timelineArticles.forEach(item => timelineGrid.appendChild(createAdminCard(item, '#ffeb3b', true)));
+            else timelineArticles.forEach(item => timelineGrid.appendChild(createAdminCard(item, '#ffeb3b')));
 
-            // 👇 新增：渲染警告卡片网格
             let warningArticles = articlesDB.filter(a => a.type === 'warning');
             if (warningArticles.length === 0) {
                 warningGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace; padding: 20px 0;">[ 暂无警告卡片 ]</div>';
             } else {
-                warningArticles.forEach(item => warningGrid.appendChild(createAdminCard(item, '#f44336', true)));
+                warningArticles.forEach(item => warningGrid.appendChild(createAdminCard(item, '#f44336')));
             }
-            // 👇 新增：渲染 NPC 卡片网格
+            
             let npcArticles = articlesDB.filter(a => a.type === 'npc');
             if (npcArticles.length === 0) {
                 npcGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace; padding: 20px 0;">[ 暂无 NPC 档案 ]</div>';
             } else {
-                npcArticles.forEach(item => npcGrid.appendChild(createAdminCard(item, '#9c27b0', true)));
+                npcArticles.forEach(item => npcGrid.appendChild(createAdminCard(item, '#9c27b0')));
             }
-        }
+        } // <-- renderAdminDashboard 函数结束
 
         document.addEventListener('input', function(e) {
             if (e.target.id === 'admin-intel-search' || e.target.id === 'admin-faction-search' || e.target.id === 'admin-timeline-search') {
@@ -14811,46 +15137,50 @@ window.deleteForumPost = async function(postId) {
         };
 
         window.fetchArticles = async function() {
-    try {
-        const { data, error } = await supabaseClient.from('articles').select('*');
-        if (error) throw error;
-        
-        // 1. 分流：已通过的放进正式库，待审核的放进排队库
-        articlesDB = data.filter(a => a.status === 'approved' || !a.status).sort((a, b) => {
-            const timeA = a.updated_at ? new Date(a.updated_at).getTime() : (a.id || 0);
-            const timeB = b.updated_at ? new Date(b.updated_at).getTime() : (b.id || 0);
-            return timeB - timeA; 
-        });
-        
-        pendingOrgsDB = data.filter(a => a.type === 'org' && (a.status === 'pending' || a.status === 'rejected'));
-        // 💥 新增：分离政务大厅草稿
-        pendingGovsDB = data.filter(a => a.type === 'gov_record' && (a.status === 'pending' || a.status === 'rejected'));
-        
-        // 2. 统一触发所有依赖文章数据的渲染更新
-        renderIntelGrid(); 
-        renderFactions(); 
-        renderTimeline(); 
-        updateDropdowns(); // 更新填表下拉框
-        renderQueue();     // 刷新办事大厅的队列
-        renderProfile();   // 刷新个人终端
-        renderSystemWarning(); // 👈 新增这一行：渲染警告卡片
-        
-        if (typeof renderStoryView === 'function') renderStoryView(); // 刷新剧情与日志页
-        // 💥 刷新恢复：如果刷新前停留在文章页，数据加载完后自动重新打开
-const _savedArticleId = sessionStorage.getItem('tf141_last_article_id');
-if (_savedArticleId && sessionStorage.getItem('tf141_current_view') === 'articleView') {
-    const _savedArticle = articlesDB.find(a => String(a.id) === String(_savedArticleId));
-    if (_savedArticle) openArticle(_savedArticle);
-}
-        
-        // 3. 权限相关渲染
-        if (currentUser && ['admin', 'super_admin'].includes(currentUser.role)) {
-            renderAdminDashboard();
-        }
-    } catch (err) {
-        console.error("拉取文章失败:", err);
-    }
-};
+            try {
+                const { data, error } = await supabaseClient.from('articles').select('*');
+                if (error) throw error;
+                
+                // 1. 分流：已通过的放进正式库，待审核的放进排队库
+                articlesDB = data.filter(a => a.status === 'approved' || !a.status).sort((a, b) => {
+                    const timeA = a.updated_at ? new Date(a.updated_at).getTime() : (a.id || 0);
+                    const timeB = b.updated_at ? new Date(b.updated_at).getTime() : (b.id || 0);
+                    return timeB - timeA; 
+                });
+                
+                pendingOrgsDB = data.filter(a => a.type === 'org' && (a.status === 'pending' || a.status === 'rejected'));
+                // 💥 新增：分离政务大厅草稿
+                pendingGovsDB = data.filter(a => a.type === 'gov_record' && (a.status === 'pending' || a.status === 'rejected'));
+                
+                // 2. 统一触发所有依赖文章数据的渲染更新
+                renderIntelGrid(); 
+                renderFactions(); 
+                renderTimeline(); 
+                updateDropdowns(); // 更新填表下拉框
+                renderQueue();     // 刷新办事大厅的队列
+                renderProfile();   // 刷新个人终端
+                renderSystemWarning(); // 渲染警告卡片
+                
+                if (typeof renderStoryView === 'function') renderStoryView(); // 刷新剧情与日志页
+                
+                // 💥 核心新增：每次拉取完数据，自动刷新飞船管理局大厅！
+                if (typeof renderShipBureau === 'function') renderShipBureau(); 
+                
+                // 💥 刷新恢复：如果刷新前停留在文章页，数据加载完后自动重新打开
+                const _savedArticleId = sessionStorage.getItem('tf141_last_article_id');
+                if (_savedArticleId && sessionStorage.getItem('tf141_current_view') === 'articleView') {
+                    const _savedArticle = articlesDB.find(a => String(a.id) === String(_savedArticleId));
+                    if (_savedArticle) openArticle(_savedArticle);
+                }
+                
+                // 3. 权限相关渲染
+                if (currentUser && ['admin', 'super_admin'].includes(currentUser.role)) {
+                    renderAdminDashboard();
+                }
+            } catch (err) {
+                console.error("拉取文章失败:", err);
+            }
+        };
 
 // 👇 从这里开始复制 👇
     // 💥 追加渲染政务大厅排队列表
@@ -14968,9 +15298,19 @@ if (_savedArticleId && sessionStorage.getItem('tf141_current_view') === 'article
                 }
                 
                 if(window.updateMarriageLabels) window.updateMarriageLabels();
-            }else if (type === 'ship') {
+            } else if (type === 'ship') {
                 fShip.style.display = 'block';
                 setTheme('#00bcd4', "[ 飞船管理局 - 资产备案 ]", "在此进行私人舰船、武装战机或地面重型载具的合法备案。");
+                
+                // 💥 动态填充飞船的阵营下拉框
+                const factionSelect = document.getElementById('g-s-faction');
+                if (factionSelect) {
+                    const factions = articlesDB.filter(a => a.type === 'faction').map(a => a.title);
+                    let html = `<option value="" disabled selected>-- 选择所属阵营 --</option>`;
+                    html += `<option value="无阵营 / 独立势力">无阵营 / 独立势力</option>`;
+                    factions.forEach(f => html += `<option value="${f}">${f}</option>`);
+                    factionSelect.innerHTML = html;
+                }
             } else if (type === 'corp') {
                 fCorp.style.display = 'block';
                 setTheme('#ff9800', "[ 商业注册局 - 营业执照 ]", "在此注册商会、个人店铺、佣兵团驻地或黑市摊位。");
@@ -15135,16 +15475,18 @@ if (_savedArticleId && sessionStorage.getItem('tf141_current_view') === 'article
             } else if (type === 'ship') {
                 const name = document.getElementById('g-s-name').value.trim();
                 const sClass = document.getElementById('g-s-class').value;
+                const faction = document.getElementById('g-s-faction').value;
                 const specs = document.getElementById('g-s-specs').value.trim();
                 
-                if (!name) return SysModal.alert("请填写舰船名称！", "系统提示");
+                if (!name || !faction) return SysModal.alert("请填写舰船名称并选择所属阵营", "系统提示");
                 title = `[载具] ${name}`;
-                payload = { name, class: sClass, specs };
+                payload = { name, class: sClass, faction, specs };
 
-                // 💥 核心：如果是大型船，把船员数据也塞进 payload
+                // 💥 核心：如果是大型船，把招募数据也塞进 payload
                 if (sClass.includes('中型') || sClass.includes('重型') || sClass.includes('主力')) {
-                    payload.capacity = document.getElementById('g-s-crew-capacity').value.trim() || '未定';
-                    payload.roles = document.getElementById('g-s-crew-roles').value.trim() || '无特殊招募需求';
+                    payload.positions = document.getElementById('g-s-positions').value.trim();
+                    payload.rp_positions = document.getElementById('g-s-rp-positions').value.trim();
+                    payload.reqs = document.getElementById('g-s-reqs').value.trim();
                 }
             } else if (type === 'corp') {
                 const name = document.getElementById('g-c-name').value.trim();
@@ -15169,6 +15511,10 @@ if (_savedArticleId && sessionStorage.getItem('tf141_current_view') === 'article
                 owner_id: currentUser.id,
                 updated_at: new Date().toISOString()
             };
+
+            if (type === 'ship' && payload.faction) {
+                newRecord.keywords = `[PARENT:${payload.faction}]`;
+            }
 
             try {
                 const { error } = await supabaseClient.from('articles').insert([newRecord]);
@@ -15479,65 +15825,93 @@ if (_savedArticleId && sessionStorage.getItem('tf141_current_view') === 'article
             const certNumber = String(cert.id).split('-')[0].toUpperCase();
             const box = document.getElementById('certModalBox');
 
-            // 💥 飞船执照分支
+            // 💥 飞船执照专属卡片 (青色主题 + 招募大厅 Tab)
             if (cert.tag === 'ship') {
                 const themeColor = '#00bcd4';
                 const themeBg = 'rgba(0,188,212,0.05)';
                 
-                // 提取当前用户的名字
                 const myChar = characterDB.find(c => c.owner_id === currentUser.id);
                 const ownerName = myChar ? myChar.callsign : currentUser.nickname;
 
                 box.style.borderColor = themeColor;
                 box.style.boxShadow = `0 0 40px ${themeColor}4D, inset 0 0 20px ${themeColor}1A`;
 
+                // 1. 组装招募大厅 HTML
+                const positionsHtml = renderOrgPositionsStatus(data.name, cert.content);
+                const rpReqs = window.getOrgRpPositions(cert.content);
+                const reqs = window.getOrgReqs(cert.content);
+                
+                let recruitHtml = positionsHtml;
+                if (rpReqs) {
+                    recruitHtml += `<div style="margin-top: 20px; padding: 15px; background: rgba(0,188,212,0.05); border-left: 4px solid #00bcd4;"><h4 style="color: #00bcd4; margin: 0 0 10px 0; font-family: monospace;">[ 自戏考核要求 ]</h4><p style="color: #84ffff; font-size: 14px; margin: 0;">以下职位需要提交不少于 200 字的自戏考核：<br><strong style="color: #e0f2fe;">${rpReqs}</strong></p></div>`;
+                }
+                if (reqs) {
+                    recruitHtml += `<div style="margin-top: 20px; padding: 15px; background: rgba(0,188,212,0.05); border-left: 4px solid #00bcd4;"><h4 style="color: #00bcd4; margin: 0 0 10px 0; font-family: monospace;">[ 职位具体要求 ]</h4><div style="color: #e0f2fe; font-size: 14px; line-height: 1.8; white-space: pre-wrap;">${reqs}</div></div>`;
+                }
+                if (!positionsHtml && !rpReqs && !reqs) {
+                    recruitHtml = `<div style="color: #8bb9d6; font-family: monospace; padding: 20px 0; text-align: center;">[ 该舰船暂无特殊招募要求，或为私人专属载具 ]</div>`;
+                }
+
+                // 2. 组装执照正文 HTML
+                const certHtml = `
+                    <div style="text-align: center; margin-bottom: 30px; position: relative; z-index: 1; border-bottom: 1px dashed ${themeColor}66; padding-bottom: 20px;">
+                        <svg viewBox="0 0 100 100" style="width: 50px; height: 50px; fill: rgba(0,188,212,0.1); stroke: ${themeColor}; filter: drop-shadow(0 0 10px ${themeColor}99); margin-bottom: 15px;">
+                            <g transform="translate(50, 68)" stroke-linejoin="round" stroke-linecap="round">
+                                <path stroke-width="4" d="M 0 0 h 10 l 5 -5 9 5 6 -15 -15 -15 c 0 -5 -4 -32 -15 -40 c -11 8 -15 35 -15 40 l -15 15 6 15 9 -5 5 5 h 10" />
+                                <path stroke-width="3" fill="${themeColor}" d="M 0 7 a 8 8 0 0 0 -8 8 c 0 4 4 6 8 12 c 4 -6 8 -8 8 -12 a 8 8 0 0 0 -8 -8" />
+                            </g>
+                        </svg>
+                        <h3 style="color: ${themeColor}; font-size: 28px; margin: 0; letter-spacing: 6px; font-family: 'Noto Serif SC', 'Songti SC', serif; text-shadow: 0 0 15px ${themeColor}80;">泛星联盟舰船飞行许可</h3>
+                        <div style="color: ${themeColor}; font-size: 14px; font-family: monospace; margin-top: 8px; letter-spacing: 3px; opacity: 0.8;">P.S.C FLIGHT LICENSE</div>
+                    </div>
+
+                    <div style="position: relative; z-index: 1; font-family: 'Noto Serif SC', 'Songti SC', serif; color: #e0f2fe; font-size: 18px; line-height: 2.2; padding: 0 10px;">
+                        <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">舰船名称：</span><span style="color: #fff; font-weight: bold; font-size: 22px; text-shadow: 0 0 10px ${themeColor}80;">${data.name}</span></div>
+                        <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">舰船级别：</span><span>${data.class}</span></div>
+                        <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">所有者：</span><span style="font-family: monospace; font-size: 16px;">${ownerName}</span></div>
+                        <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">签发日期：</span><span style="font-family: monospace; font-size: 16px;">${dateStr}</span></div>
+                        <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">执照编号：</span><span style="font-family: monospace; font-size: 14px; color: #8bb9d6;">PSC-SHP-${certNumber}</span></div>
+                        
+                        <div style="margin-top: 25px; padding: 15px; background: ${themeColor}1A; border-left: 3px solid ${themeColor}; border-radius: 0 4px 4px 0;">
+                            <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-bottom: 8px; opacity: 0.8;">[ 性能参数与改装说明 ]</div>
+                            <div style="color: #84ffff; font-size: 14px; line-height: 1.8; white-space: pre-wrap; font-family: 'PingFang SC', sans-serif;">${data.specs || '无特殊改装'}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 40px; text-align: right; position: relative; z-index: 1;">
+                        <div style="display: inline-block; text-align: center;">
+                            <div style="width: 80px; height: 80px; border: 2px solid ${themeColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${themeColor}; font-family: 'Impact', sans-serif; font-size: 14px; transform: rotate(-15deg); box-shadow: 0 0 10px ${themeColor}4D; margin: 0 auto 10px auto;">P.S.C<br>FLIGHT</div>
+                            <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-top: 5px; opacity: 0.8;">飞船管理局核发</div>
+                        </div>
+                    </div>
+                `;
+
+                // 3. 组合最终的弹窗 HTML (加入专属青色 Tab 样式)
                 box.innerHTML = `
+                    <style>
+                        #certModalBox .org-tab-btn { color: rgba(0,188,212,0.6); border-color: rgba(0,188,212,0.3); }
+                        #certModalBox .org-tab-btn:hover { background: rgba(0,188,212,0.1); color: #00bcd4; }
+                        #certModalBox .org-tab-btn.active { background: rgba(0,188,212,0.15); color: #00bcd4; border-color: #00bcd4; text-shadow: 0 0 8px rgba(0,188,212,0.5); border-bottom: 1px solid rgba(6, 11, 20, 1); }
+                    </style>
                     <button class="close-btn" style="position: absolute; top: 15px; right: 15px; z-index: 10; color: ${themeColor};" onclick="closeCertificate()">[X] CLOSE</button>
                     <div style="padding: 50px 40px; position: relative; overflow: hidden;">
                         <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 80px; color: ${themeColor}0D; font-family: 'Impact', sans-serif; pointer-events: none; white-space: nowrap; z-index: 0; border: 6px solid ${themeColor}0D; padding: 15px;">CLEARED FOR FLIGHT</div>
                         
-                        <div style="text-align: center; margin-bottom: 30px; position: relative; z-index: 1; border-bottom: 1px dashed ${themeColor}66; padding-bottom: 20px;">
-                            <svg viewBox="0 0 100 100" style="width: 50px; height: 50px; fill: rgba(0,188,212,0.1); stroke: ${themeColor}; filter: drop-shadow(0 0 10px ${themeColor}99); margin-bottom: 15px;">
-                                <g transform="translate(50, 68)" stroke-linejoin="round" stroke-linecap="round">
-                                    <path stroke-width="4" d="M 0 0 h 10 l 5 -5 9 5 6 -15 -15 -15 c 0 -5 -4 -32 -15 -40 c -11 8 -15 35 -15 40 l -15 15 6 15 9 -5 5 5 h 10" />
-                                    <path stroke-width="3" fill="${themeColor}" d="M 0 7 a 8 8 0 0 0 -8 8 c 0 4 4 6 8 12 c 4 -6 8 -8 8 -12 a 8 8 0 0 0 -8 -8" />
-                                </g>
-                            </svg>
-                            <h3 style="color: ${themeColor}; font-size: 28px; margin: 0; letter-spacing: 6px; font-family: 'Noto Serif SC', 'Songti SC', serif; text-shadow: 0 0 15px ${themeColor}80;">泛星联盟舰船飞行许可</h3>
-                            <div style="color: ${themeColor}; font-size: 14px; font-family: monospace; margin-top: 8px; letter-spacing: 3px; opacity: 0.8;">P.S.C FLIGHT LICENSE</div>
+                        <div class="org-tabs" style="border-bottom-color: rgba(0,188,212,0.4); margin-bottom: 30px; position: relative; z-index: 1;">
+                            <button class="org-tab-btn active" onclick="document.querySelectorAll('#certModalBox .org-tab-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active'); document.getElementById('ship-cert-tab').style.display='block'; document.getElementById('ship-recruit-tab').style.display='none';">飞船执照</button>
+                            <button class="org-tab-btn" onclick="document.querySelectorAll('#certModalBox .org-tab-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active'); document.getElementById('ship-cert-tab').style.display='none'; document.getElementById('ship-recruit-tab').style.display='block';">招募大厅</button>
                         </div>
 
-                        <div style="position: relative; z-index: 1; font-family: 'Noto Serif SC', 'Songti SC', serif; color: #e0f2fe; font-size: 18px; line-height: 2.2; padding: 0 10px;">
-                            <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">舰船名称：</span><span style="color: #fff; font-weight: bold; font-size: 22px; text-shadow: 0 0 10px ${themeColor}80;">${data.name}</span></div>
-                            <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">舰船级别：</span><span>${data.class}</span></div>
-                            <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">所有者：</span><span style="font-family: monospace; font-size: 16px;">${ownerName}</span></div>
-                            <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">签发日期：</span><span style="font-family: monospace; font-size: 16px;">${dateStr}</span></div>
-                            <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">执照编号：</span><span style="font-family: monospace; font-size: 14px; color: #8bb9d6;">PSC-SHP-${certNumber}</span></div>
-                            
-                            ${data.capacity ? `<div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">最大乘员：</span><span style="font-family: monospace; font-size: 16px;">${data.capacity}</span></div>` : ''}
-                            
-                            <div style="margin-top: 25px; padding: 15px; background: ${themeColor}1A; border-left: 3px solid ${themeColor}; border-radius: 0 4px 4px 0;">
-                                <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-bottom: 8px; opacity: 0.8;">[ 性能参数与改装说明 ]</div>
-                                <div style="color: #84ffff; font-size: 14px; line-height: 1.8; white-space: pre-wrap; font-family: 'PingFang SC', sans-serif;">${data.specs || '无特殊改装'}</div>
-                            </div>
-
-                            ${data.roles ? `
-                            <div style="margin-top: 15px; padding: 15px; background: ${themeColor}1A; border-left: 3px solid ${themeColor}; border-radius: 0 4px 4px 0;">
-                                <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-bottom: 8px; opacity: 0.8;">[ 船员编制与招募需求 ]</div>
-                                <div style="color: #84ffff; font-size: 14px; line-height: 1.8; white-space: pre-wrap; font-family: 'PingFang SC', sans-serif;">${data.roles}</div>
-                            </div>` : ''}
+                        <div id="ship-cert-tab" class="org-tab-content active">
+                            ${certHtml}
                         </div>
-                        
-                        <div style="margin-top: 40px; text-align: right; position: relative; z-index: 1;">
-                            <div style="display: inline-block; text-align: center;">
-                                <div style="width: 80px; height: 80px; border: 2px solid ${themeColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${themeColor}; font-family: 'Impact', sans-serif; font-size: 14px; transform: rotate(-15deg); box-shadow: 0 0 10px ${themeColor}4D; margin: 0 auto 10px auto;">P.S.C<br>FLIGHT</div>
-                                <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-top: 5px; opacity: 0.8;">飞船管理局核发</div>
-                            </div>
+                        <div id="ship-recruit-tab" class="org-tab-content" style="position: relative; z-index: 1;">
+                            ${recruitHtml}
                         </div>
                     </div>
                 `;
                 document.getElementById('certModalOverlay').classList.add('active');
-                return; // 飞船分支结束，直接 return
+                return;
             }
 
             // 💥 结婚证/离婚证分支
@@ -16258,123 +16632,52 @@ if(!title || !parentFaction || !content) {
            ========================================================= */
         
         // 1. 星球数据库 (x, y 是百分比位置，50,50 是正中心太阳)
-        const planetsDB = [
-            // ==========================================
-            // ☀️ 恒星中心
-            // ==========================================
-            { id: "sun", system: "sun_sys", isParent: true, name: "太阳", faction: "恒星", region: "太阳系中心", color: "#ffeb3b", rgb: "255, 235, 59", x: 50, y: 50, sizeScale: 2.5, desc: "太阳系的母星。戴森球计划在战争爆发后被无限期搁置，目前仅有几座无人能量收集站仍在近日轨道运行。" },
+        // 💥 从本地硬编码升级为全动态变量
+let planetsDB = [];
+let planetLocationsDB = {};
 
-            // ==========================================
-            // 🌐 内环 - 轨道半径 200
-            // ==========================================
-            { id: "mercury", system: "mercury_sys", isParent: true, name: "水星", faction: "泛星联盟", region: "内环", color: "#00e5ff", rgb: "0, 229, 255", x: 53.21, y: 50.86, sizeScale: 0.8, desc: "极度靠近太阳的焦热行星，地表布满了联盟的自动化太阳能阵列与反物质工厂。" },
-            { id: "mercury_forge", system: "mercury_sys", isParent: false, name: "日冕锻造站", faction: "泛星联盟", region: "内环", color: "#00e5ff", rgb: "0, 229, 255", x: 54.0, y: 51.5, sizeScale: 0.4, desc: "利用太阳辐射进行极端材料冶炼的军工设施。" },
+// 💥 从 Supabase 实时拉取最新星球与基地数据
+async function fetchPlanetsFromCloud() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('planets')
+            .select('*')
+            .order('created_at', { ascending: true });
+            
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+            // 转换为 3D 星图引擎所需要的映射结构
+            planetsDB = data.map(p => ({
+                db_id: p.id,
+                id: p.id,
+                system: p.system,
+                isParent: p.is_parent,
+                name: p.name,
+                faction: p.faction,
+                region: p.region,
+                color: p.color || '#00e5ff',
+                rgb: p.rgb || '0, 229, 255',
+                x: parseFloat(p.pos_x),
+                y: parseFloat(p.pos_y),
+                sizeScale: parseFloat(p.size_scale || 1.0),
+                desc: p.desc || ''
+            }));
 
-            { id: "venus", system: "venus_sys", isParent: true, name: "金星", faction: "泛星联盟", region: "内环", color: "#00e5ff", rgb: "0, 229, 255", x: 48.33, y: 52.88, sizeScale: 0.9, desc: "被浓厚硫酸云覆盖的行星。联盟的高级研究人员居住在漂浮于云层之上的『云城』中。" },
-            { id: "venus_cloud", system: "venus_sys", isParent: false, name: "伊什塔尔云城", faction: "泛星联盟", region: "内环", color: "#00e5ff", rgb: "0, 229, 255", x: 47.5, y: 53.5, sizeScale: 0.5, desc: "悬浮在金星大气层中的奢华都市，内环权贵的度假胜地。" },
-
-            { id: "earth", system: "earth_sys", isParent: true, name: "地球", faction: "泛星联盟", region: "内环", color: "#00e5ff", rgb: "0, 229, 255", x: 47.11, y: 48.33, sizeScale: 1.0, desc: "人类的摇篮。表面被巨大的都市带覆盖，拥有最顶级的医疗和科技，是内环绝对的经济中心。" },
-            { id: "luna", system: "earth_sys", isParent: false, name: "月球", faction: "泛星联盟", region: "内环", color: "#00e5ff", rgb: "0, 229, 255", x: 46.2, y: 47.5, sizeScale: 0.5, desc: "泛星议会、联盟总理府、最高星际法院所在地。整个星系的最高权力中枢，防卫极其森严。" },
-            { id: "earth_def", system: "earth_sys", isParent: false, name: "近地防御网", faction: "泛星联盟", region: "内环", color: "#00e5ff", rgb: "0, 229, 255", x: 48.0, y: 47.5, sizeScale: 0.4, desc: "环绕地球的巨型武装空间站群，任何未授权的跃迁都会被瞬间摧毁。" },
-            { id: "lagrange_l4", system: "earth_sys", isParent: false, name: "拉格朗日点盲区", faction: "自治空间站", region: "内环", color: "#ffeb3b", rgb: "255, 235, 59", x: 46.5, y: 49.5, sizeScale: 0.5, desc: "地球与月球引力平衡的盲区，隐藏着不受联盟监管的巨型黑市空间站，灯下黑的法外之地。" },
-
-            { id: "mars", system: "mars_sys", isParent: true, name: "火星", faction: "泛星联盟", region: "内环", color: "#00e5ff", rgb: "0, 229, 255", x: 52.88, y: 48.33, sizeScale: 0.9, desc: "联盟最大的重工业基地与舰队造船厂。空气中常年弥漫着铁锈味。" },
-            { id: "phobos", system: "mars_sys", isParent: false, name: "火卫一", faction: "泛星联盟", region: "内环", color: "#00e5ff", rgb: "0, 229, 255", x: 53.8, y: 49.0, sizeScale: 0.4, desc: "被彻底掏空改造的军事要塞，驻扎着联盟第一舰队的主力。" },
-            { id: "deimos", system: "mars_sys", isParent: false, name: "火卫二", faction: "泛星联盟", region: "内环", color: "#00e5ff", rgb: "0, 229, 255", x: 52.0, y: 49.2, sizeScale: 0.4, desc: "火星轨道上的巨型干船坞，负责维修和建造星际战舰。" },
-            { id: "utopia", system: "mars_sys", isParent: false, name: "乌托邦平原船坞", faction: "独立防务承包商", region: "内环", color: "#4caf50", rgb: "76, 175, 80", x: 53.0, y: 47.2, sizeScale: 0.5, desc: "承包商在火星的合法驻地，提供雇佣兵招募与战舰改装服务。" },
-
-            // ==========================================
-            // 🪨 小行星带 - 轨道半径 500
-            // ==========================================
-            { id: "ceres", system: "ceres_sys", isParent: true, name: "谷神星", faction: "外环", region: "小行星带", color: "#f44336", rgb: "244, 67, 54", x: 51.44, y: 58.20, sizeScale: 0.7, desc: "外环最大的农业与合成食物生产基地。长期受到各大财团的剥削与控制。" },
-            { id: "ceres_ag", system: "ceres_sys", isParent: false, name: "农业空间站", faction: "外环", region: "小行星带", color: "#f44336", rgb: "244, 67, 54", x: 50.5, y: 59.0, sizeScale: 0.4, desc: "巨大的温室空间站，为整个外环提供着勉强糊口的合成淀粉。" },
-
-            { id: "vesta", system: "vesta_sys", isParent: true, name: "灶神星", faction: "独立防务承包商", region: "小行星带", color: "#4caf50", rgb: "76, 175, 80", x: 42.17, y: 47.15, sizeScale: 0.6, desc: "佣兵团的前线补给站，充满了火药味和酒精味。" },
-            { id: "vesta_armory", system: "vesta_sys", isParent: false, name: "灶神星军火库", faction: "独立防务承包商", region: "小行星带", color: "#4caf50", rgb: "76, 175, 80", x: 42.8, y: 46.0, sizeScale: 0.4, desc: "全星系最大的私人军火交易市场。" },
-
-            { id: "pallas", system: "pallas_sys", isParent: true, name: "智神星", faction: "自治空间站", region: "小行星带", color: "#ffeb3b", rgb: "255, 235, 59", x: 55.35, y: 43.61, sizeScale: 0.6, desc: "走私客和情报贩子的中转站，连接内环与外环的灰色地带。" },
-            { id: "juno", system: "juno_sys", isParent: true, name: "婚神星", faction: "外环", region: "小行星带", color: "#f44336", rgb: "244, 67, 54", x: 58.20, y: 48.55, sizeScale: 0.6, desc: "外环反抗军的秘密联络点，表面上是一个废弃的采矿站。" },
-
-            // ==========================================
-            // 🪐 外环 - 轨道半径 900
-            // ==========================================
-            { id: "jupiter", system: "jupiter_sys", isParent: true, name: "木星", faction: "无阵营 / 废弃", region: "外环", color: "#9e9e9e", rgb: "158, 158, 158", x: 35.90, y: 55.13, sizeScale: 1.8, desc: "旧聚变技术时代的生产基地，在黑血被发现后逐渐衰落并废弃。如今是拾荒者和星际海盗的藏身处。" },
-            { id: "io", system: "jupiter_sys", isParent: false, name: "木卫一", faction: "无阵营 / 废弃", region: "外环", color: "#9e9e9e", rgb: "158, 158, 158", x: 37.4, y: 55.1, sizeScale: 0.5, desc: "火山活动剧烈的卫星，地表散落着旧时代的采矿遗迹。" },
-            { id: "europa", system: "jupiter_sys", isParent: false, name: "木卫二", faction: "无阵营 / 废弃", region: "外环", color: "#9e9e9e", rgb: "158, 158, 158", x: 36.5, y: 57.0, sizeScale: 0.5, desc: "冰层下隐藏着旧时代的秘密设施，常有拾荒者来此碰运气。" },
-            { id: "ganymede", system: "jupiter_sys", isParent: false, name: "木卫三", faction: "独立防务承包商", region: "外环", color: "#4caf50", rgb: "76, 175, 80", x: 34.0, y: 56.5, sizeScale: 0.6, desc: "被某大型承包商买下的私人领地，作为外环的佣兵集散中心。" },
-            { id: "callisto", system: "jupiter_sys", isParent: false, name: "木卫四", faction: "外环", region: "外环", color: "#f44336", rgb: "244, 67, 54", x: 33.5, y: 53.5, sizeScale: 0.5, desc: "外环反抗军的秘密据点之一，地表布满了隐蔽的地下掩体。" },
-            { id: "jupiter_station", system: "jupiter_sys", isParent: false, name: "废弃聚变站", faction: "自治空间站", region: "外环", color: "#ffeb3b", rgb: "255, 235, 59", x: 36.5, y: 53.5, sizeScale: 0.4, desc: "巨大的钢铁残骸，现已被星际海盗改造为法外据点。" },
-
-            { id: "saturn", system: "saturn_sys", isParent: true, name: "土星", faction: "独立防务承包商", region: "外环", color: "#ff9800", rgb: "255, 152, 0", x: 61.49, y: 59.64, sizeScale: 1.6, desc: "泰坦星脉财团总部所在地。土星环内隐藏着庞大的私人舰队造船厂与雇佣兵训练基地。" },
-            { id: "titan", system: "saturn_sys", isParent: false, name: "泰坦星", faction: "独立防务承包商", region: "外环", color: "#ff9800", rgb: "255, 152, 0", x: 63.4, y: 60.7, sizeScale: 0.7, desc: "财团核心总部，地表被甲烷湖泊和重工业穹顶覆盖。" },
-            { id: "enceladus", system: "saturn_sys", isParent: false, name: "土卫二", faction: "独立防务承包商", region: "外环", color: "#ff9800", rgb: "255, 152, 0", x: 60.7, y: 61.0, sizeScale: 0.5, desc: "冰层下隐藏着隐秘的雇佣兵训练营与非法生化实验室。" },
-            { id: "iapetus", system: "saturn_sys", isParent: false, name: "土卫八", faction: "独立防务承包商", region: "外环", color: "#ff9800", rgb: "255, 152, 0", x: 59.5, y: 58.3, sizeScale: 0.5, desc: "财团的深空通讯中继站，监控着整个外环的信号。" },
-            { id: "rhea", system: "saturn_sys", isParent: false, name: "土卫五", faction: "外环", region: "外环", color: "#f44336", rgb: "244, 67, 54", x: 62.4, y: 58.0, sizeScale: 0.5, desc: "被外环劳工占据的卫星，常年与泰坦星的财团武装发生摩擦。" },
-
-            { id: "uranus", system: "uranus_sys", isParent: true, name: "天王星", faction: "外环", region: "外环", color: "#f44336", rgb: "244, 67, 54", x: 47.39, y: 35.22, sizeScale: 1.2, desc: "冰巨星。大气层中漂浮着外环居民的气体采集站。" },
-            { id: "titania", system: "uranus_sys", isParent: false, name: "天卫三", faction: "外环", region: "外环", color: "#f44336", rgb: "244, 67, 54", x: 48.5, y: 36.3, sizeScale: 0.5, desc: "外环边缘的哨站，生活条件极其艰苦。" },
-            { id: "oberon", system: "uranus_sys", isParent: false, name: "天卫四", faction: "外环", region: "外环", color: "#f44336", rgb: "244, 67, 54", x: 45.6, y: 35.2, sizeScale: 0.5, desc: "反抗军的地下兵工厂，利用冰层掩盖热信号。" },
-            { id: "ariel", system: "uranus_sys", isParent: false, name: "天卫一", faction: "自治空间站", region: "外环", color: "#ffeb3b", rgb: "255, 235, 59", x: 48.4, y: 34.2, sizeScale: 0.4, desc: "一个中立的医疗与补给空间站，不问来客身份。" },
-
-            { id: "neptune", system: "neptune_sys", isParent: true, name: "海王星", faction: "泛星联盟", region: "外环", color: "#00e5ff", rgb: "0, 229, 255", x: 64.09, y: 44.87, sizeScale: 1.2, desc: "联盟在外环的最远端据点，主要用于深空观测和预警。" },
-            { id: "triton", system: "neptune_sys", isParent: false, name: "海卫一", faction: "泛星联盟", region: "外环", color: "#00e5ff", rgb: "0, 229, 255", x: 64.1, y: 46.5, sizeScale: 0.5, desc: "联盟的深空监狱与黑箱审讯中心，有去无回之地。" },
-            { id: "proteus", system: "neptune_sys", isParent: false, name: "海卫八", faction: "独立防务承包商", region: "外环", color: "#4caf50", rgb: "76, 175, 80", x: 63.1, y: 43.9, sizeScale: 0.4, desc: "受雇于联盟的驻扎地，负责看守海卫一监狱的外围。" },
-            { id: "nereid", system: "neptune_sys", isParent: false, name: "海卫二", faction: "外环", region: "外环", color: "#f44336", rgb: "244, 67, 54", x: 65.8, y: 43.9, sizeScale: 0.4, desc: "一颗轨道极度偏心的卫星，常被走私客用作引力弹弓的跳板。" },
-
-            // ==========================================
-            // ☄️ 柯伊伯带 - 轨道半径 1300
-            // ==========================================
-            { id: "pluto", system: "pluto_sys", isParent: true, name: "冥王星", faction: "无阵营 / 独立势力", region: "柯伊伯带", color: "#9e9e9e", rgb: "158, 158, 158", x: 42.59, y: 70.35, sizeScale: 0.6, desc: "被遗忘的矮行星，流放者和逃犯的最终归宿。" },
-            { id: "charon", system: "pluto_sys", isParent: false, name: "冥卫一", faction: "无阵营 / 独立势力", region: "柯伊伯带", color: "#9e9e9e", rgb: "158, 158, 158", x: 43.2, y: 71.3, sizeScale: 0.4, desc: "星际海盗的隐秘母港，停泊着大量改装过的武装商船。" },
-
-            { id: "acheron", system: "acheron_sys", isParent: true, name: "阿卡戎自由港", faction: "自治空间站", region: "柯伊伯带", color: "#ffeb3b", rgb: "255, 235, 59", x: 36.07, y: 33.40, sizeScale: 0.8, desc: "游离于联盟管辖之外的巨型空间站。这里是全星系最大的黑市，情报贩子、赏金猎人的天堂。" },
-            { id: "acheron_docks", system: "acheron_sys", isParent: false, name: "走私船坞", faction: "自治空间站", region: "柯伊伯带", color: "#ffeb3b", rgb: "255, 235, 59", x: 34.8, y: 34.1, sizeScale: 0.4, desc: "黑市交易的核心集散地，每天都有无数来路不明的货物在此吞吐。" },
-            { id: "acheron_casino", system: "acheron_sys", isParent: false, name: "霓虹赌场", faction: "自治空间站", region: "柯伊伯带", color: "#ffeb3b", rgb: "255, 235, 59", x: 37.7, y: 32.5, sizeScale: 0.4, desc: "销金窟。在这里，你可以用黑血原矿换取任何东西，包括人命。" },
-
-            { id: "mining_zone", system: "mining_sys", isParent: true, name: "核心矿区", faction: "外环", region: "柯伊伯带", color: "#f44336", rgb: "244, 67, 54", x: 65.32, y: 34.68, sizeScale: 0.9, desc: "位于星系边缘的高危矿区。环境恶劣，辐射极高，星尘病感染率居高不下，也是各方势力争夺最激烈的绞肉机。" },
-            { id: "refinery", system: "mining_sys", isParent: false, name: "黑血精炼厂", faction: "外环", region: "柯伊伯带", color: "#f44336", rgb: "244, 67, 54", x: 66.8, y: 34.7, sizeScale: 0.5, desc: "提炼高纯度 C-62 的巨型工厂，常年喷吐着幽蓝色的辐射废气。" },
-            { id: "slag_pit", system: "mining_sys", isParent: false, name: "废渣填埋场", faction: "外环", region: "柯伊伯带", color: "#f44336", rgb: "244, 67, 54", x: 65.3, y: 36.2, sizeScale: 0.4, desc: "堆放剧毒矿渣的地方，也是底层矿工们苟延残喘的贫民窟。" },
-
-            { id: "eris", system: "eris_sys", isParent: true, name: "阋神星", faction: "无阵营 / 独立势力", region: "柯伊伯带", color: "#9e9e9e", rgb: "158, 158, 158", x: 70.92, y: 55.60, sizeScale: 0.6, desc: "太阳系已知最边缘的矮行星，极度寒冷，几乎没有生命迹象。" },
-            { id: "dysnomia", system: "eris_sys", isParent: false, name: "阋卫一", faction: "无阵营 / 独立势力", region: "柯伊伯带", color: "#9e9e9e", rgb: "158, 158, 158", x: 70.9, y: 54.4, sizeScale: 0.4, desc: "传说中隐藏着旧时代遗物的神秘卫星，但去过的人都没能回来。" }
-        ];
-
-        // 💥 基地与国家数据库 (已严格按英文 A-Z 排序)
-        const planetLocationsDB = {
-            "地球": ["Australia (澳大利亚)", "Brazil (巴西)", "China (中国)", "EU (欧盟)", "India (印度)", "Japan (日本)", "Russia (俄罗斯)", "South Africa (南非)", "USA (美国)"],
-            "月球": ["Apollo Site (阿波罗遗址)", "Selene Base (塞勒涅基地)", "Tranquility Port (宁静海太空港)", "Tycho Base (第谷基地)"],
-            "火星": ["Hellas Planitia (希腊平原哨站)", "Olympus City (奥林帕斯城)", "Utopia Planitia (乌托邦平原)", "Valles Marineris (水手谷矿区)"],
-            "水星": ["Caloris Basin (卡洛里斯盆地)", "Corona Forge (日冕锻造站)"],
-            "金星": ["Aphrodite Terra (阿佛洛狄忒高地)", "Ishtar Cloud City (伊什塔尔云城)"],
-            "谷神星": ["Ceres Prime (谷神星主站)", "Dawn Farm (曙光农场)", "Piazzi Crater (皮亚齐陨石坑)"],
-            "灶神星": ["Armory Prime (军火库主站)", "Rheasilvia (雷亚西尔维亚)"],
-            "智神星": ["Athena Hub (雅典娜枢纽)"],
-            "婚神星": ["Abandoned Mine (废弃采矿站)"],
-            "木星": ["Great Red Spot Obs (大红斑观测站)"],
-            "木卫一": ["Loki Patera (洛基火山口)", "Pele Station (佩莱火山站)"],
-            "木卫二": ["Conamara Chaos (康纳马拉混沌)", "Sub-Ice City (冰下城)"],
-            "木卫三": ["Galileo Regio (伽利略区)", "Mercenary Hub (佣兵集散中心)"],
-            "木卫四": ["Valhalla (瓦尔哈拉多环区)"],
-            "土星": ["Cassini Obs (卡西尼观测站)"],
-            "泰坦星": ["Huygens Station (惠更斯深潜站)", "Kraken Mare (克拉肯海)", "Titan Pulse HQ (泰坦星脉总部)"],
-            "土卫二": ["Tiger Stripes (虎皮条纹区)"],
-            "土卫八": ["Cassini Regio (卡西尼区)"],
-            "土卫五": ["Rhea Prime (雷亚主城)"],
-            "天王星": ["Atmospheric Station (大气采集站)"],
-            "天卫三": ["Titania Outpost (提泰妮娅哨站)"],
-            "天卫四": ["Oberon Forge (奥伯龙兵工厂)"],
-            "天卫一": ["Ariel Med-Bay (艾瑞尔医疗站)"],
-            "海王星": ["Neptune Orbital (海王星轨道站)"],
-            "海卫一": ["Triton Blacksite (特里同黑牢)"],
-            "海卫八": ["Proteus Camp (普罗透斯营地)"],
-            "海卫二": ["Nereid Jump-Point (涅瑞伊得跳板)"],
-            "冥王星": ["Sputnik Planitia (斯普特尼克平原)", "Tombaugh Regio (汤博区)"],
-            "冥卫一": ["Charon Pirate Port (卡戎海盗港)", "Mordor Macula (莫多尔斑)"],
-            "阿卡戎自由港": ["Core Market (核心交易区)", "Neon Casino (霓虹赌场)", "Smuggler's Dock (走私船坞)"],
-            "核心矿区": ["Mine Zero (零号矿坑)", "Refinery (黑血精炼厂)", "Slag Pit (废渣填埋场)"],
-            "阋神星": ["Eris Prime (阋神星主站)"],
-            "阋卫一": ["Relic Site (遗物发掘场)"]
-        };
+            // 转换基地/国家对应字典
+            planetLocationsDB = {};
+            data.forEach(p => {
+                let locs = p.locations;
+                if (typeof locs === 'string') {
+                    try { locs = JSON.parse(locs); } catch(e) { locs = []; }
+                }
+                planetLocationsDB[p.name] = Array.isArray(locs) ? locs : [];
+            });
+        }
+    } catch (e) {
+        console.error("拉取星球数据失败，使用备用缓存:", e);
+    }
+}
 
         // 💥 动态填充基地/国家下拉栏
         window.populateBaseSelect = function(planetFullName, prefix) {
@@ -18180,6 +18483,364 @@ if(!title || !parentFaction || !content) {
             ease: "back.out(2)"
         }, "-=0.8");
     });
+
+    /* =========================================================
+   💥 星球云端管理引擎 (Admin Planet Management)
+   ========================================================= */
+
+// 1. 打开全屏星球编辑器
+window.openPlanetEditor = function(planetId = null) {
+    window.lastScrollY = window.scrollY || window.pageYOffset; // 记录滚动位置
+    
+    const titleEl = document.getElementById('planet-editor-main-title');
+    const btn = document.getElementById('btnSavePlanet');
+    
+    document.getElementById('p-edit-id').value = planetId || '';
+    const idInput = document.getElementById('p-id');
+
+    if (planetId) {
+        titleEl.innerText = '[ ⚙️ 修改星球档案 ]';
+        btn.innerText = '[ UPDATE DATABASE // 覆盖保存 ]';
+        idInput.disabled = true; // 编辑时锁定 ID 字段
+        
+        const p = planetsDB.find(item => item.id === planetId);
+        if (p) {
+            document.getElementById('p-id').value = p.id;
+            document.getElementById('p-name').value = p.name || '';
+            document.getElementById('p-system').value = p.system || '';
+            document.getElementById('p-is-parent').value = p.isParent ? 'true' : 'false';
+            document.getElementById('p-faction').value = p.faction || '无阵营 / 独立势力';
+            document.getElementById('p-region').value = p.region || '内环';
+            document.getElementById('p-color').value = (p.color || '#00e5ff').replace('#', '');
+            document.getElementById('p-scale').value = p.sizeScale || 1.0;
+            document.getElementById('p-x').value = p.x || 50;
+            document.getElementById('p-y').value = p.y || 50;
+            document.getElementById('p-desc').value = p.desc || '';
+            
+            const locs = planetLocationsDB[p.name] || [];
+            document.getElementById('p-locations').value = locs.join('\n');
+        }
+    } else {
+        titleEl.innerText = '[ + 新建星球档案 ]';
+        btn.innerText = '[ 发布至星图数据库 ]';
+        idInput.disabled = false;
+        document.getElementById('planet-full-form').reset();
+    }
+    
+    // 切换视图面板
+    document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+    document.getElementById('planetEditorView').classList.add('active');
+    
+    // 延迟 50 毫秒执行滚动，等待浏览器渲染完毕
+    setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+    }, 50);
+};
+
+// 2. 关闭全屏星球编辑器
+window.closePlanetEditor = function() {
+    document.getElementById('planet-full-form').reset();
+    document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+    
+    // 返回管理员控制台
+    const targetPanel = document.getElementById('adminView');
+    if (targetPanel) {
+        targetPanel.classList.add('active');
+        sessionStorage.setItem('tf141_current_view', 'adminView');
+    }
+    
+    // 恢复滚动位置
+    setTimeout(() => {
+        window.scrollTo({ top: window.lastScrollY || 0, behavior: 'auto' });
+    }, 50);
+};
+
+// 2. 保存星球数据至 Supabase
+window.savePlanetData = async function() {
+    const editId = document.getElementById('p-edit-id').value;
+    const pId = document.getElementById('p-id').value.trim();
+    const pName = document.getElementById('p-name').value.trim();
+    const pSystem = document.getElementById('p-system').value.trim();
+    const isParent = document.getElementById('p-is-parent').value === 'true';
+    const faction = document.getElementById('p-faction').value;
+    const region = document.getElementById('p-region').value;
+    let hexColor = document.getElementById('p-color').value.trim();
+    if (!hexColor.startsWith('#')) hexColor = '#' + hexColor;
+    
+    // 自动转换 RGB 颜色
+    const rgbColor = hexToRgb(hexColor);
+    const sizeScale = parseFloat(document.getElementById('p-scale').value) || 1.0;
+    const posX = parseFloat(document.getElementById('p-x').value) || 50;
+    const posY = parseFloat(document.getElementById('p-y').value) || 50;
+    const desc = document.getElementById('p-desc').value.trim();
+    
+    const locsRaw = document.getElementById('p-locations').value;
+    const locations = locsRaw.split(/[\n,，]/).map(s => s.trim()).filter(Boolean);
+
+    if (!pId || !pName || !pSystem) {
+        SysModal.alert("星球 ID、名称与所属星系标识为必填项！", "⚠️ 格式错误");
+        return;
+    }
+
+    const btn = document.getElementById('btnSavePlanet');
+    const originalText = btn.innerText;
+    btn.innerText = '[ 📡 SAVING... ]';
+    btn.disabled = true;
+
+    const payload = {
+        id: pId,
+        system: pSystem,
+        is_parent: isParent,
+        name: pName,
+        faction: faction,
+        region: region,
+        color: hexColor,
+        rgb: rgbColor,
+        pos_x: posX,
+        pos_y: posY,
+        size_scale: sizeScale,
+        desc: desc,
+        locations: locations,
+        updated_at: new Date().toISOString()
+    };
+
+    try {
+        const { error } = await supabaseClient
+            .from('planets')
+            .upsert([payload]);
+
+        if (error) throw error;
+
+        await SysModal.alert("星球数据已成功同步至星云网路！", "SUCCESS");
+        closePlanetEditor();
+        
+        // 重新拉取数据并刷新星图及后台
+        await fetchCloudData();
+        renderAdminDashboard();
+        
+        // 如果 3D/AR 星图正开启，重构星图宇宙
+        if (arEngine) {
+            arEngine.generateUniverse();
+        }
+    } catch (e) {
+        console.error(e);
+        SysModal.alert("保存星球失败，请检查数据库权限或网络。", "✕ ERROR");
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+};
+
+// 3. 删除星球
+window.deletePlanet = async function(pId) {
+    const isSure = await SysModal.confirm(`确定要彻底注销星球 [${pId}] 吗？\n该操作不可逆！`, "⚠️ 删除确认");
+    if (!isSure) return;
+
+    try {
+        const { error } = await supabaseClient.from('planets').delete().eq('id', pId);
+        if (error) throw error;
+        
+        await SysModal.alert("星球档案已从星图资料库中抹除。", "DELETE SUCCESS");
+        await fetchCloudData();
+        renderAdminDashboard();
+    } catch (e) {
+        console.error(e);
+        SysModal.alert("删除失败，请检查网络。", "✕ ERROR");
+    }
+};
+
+// 4. 更新后台管理控制台 (`renderAdminDashboard`)，加上星球管理列表
+const originalRenderAdminDashboard = window.renderAdminDashboard;
+window.renderAdminDashboard = function() {
+    if (originalRenderAdminDashboard) originalRenderAdminDashboard();
+
+    const planetGrid = document.getElementById('admin-planet-grid');
+    if (!planetGrid) return;
+    
+    planetGrid.innerHTML = '';
+
+    if (planetsDB.length === 0) {
+        planetGrid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace; padding: 20px 0;">[ 暂无星球数据 ]</div>';
+        return;
+    }
+
+    planetsDB.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'intel-card';
+        card.style.borderColor = p.color || '#00e5ff';
+        card.style.background = 'rgba(0,0,0,0.4)';
+        card.style.padding = '15px';
+        card.style.cursor = 'default';
+        card.style.display = 'flex';
+        card.style.flexDirection = 'column';
+        card.style.flex = '0 0 280px';
+
+        const locsCount = (planetLocationsDB[p.name] || []).length;
+
+        card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                <span style="font-family: monospace; color: ${p.color}; font-size: 12px; border: 1px solid ${p.color}; padding: 2px 6px; border-radius: 2px;">
+                    [ ${p.region} ] ${p.isParent ? '主星' : '卫星/设施'}
+                </span>
+                <div style="display: flex; gap: 5px;">
+                    <button onclick="event.stopPropagation(); openPlanetEditor('${p.id}')" style="background: rgba(255,235,59,0.15); border: 1px solid #ffeb3b; color: #ffeb3b; cursor: pointer; padding: 4px 8px; font-size: 12px; font-family: monospace; border-radius: 2px;">[改]</button>
+                    <button onclick="event.stopPropagation(); deletePlanet('${p.id}')" style="background: rgba(244,67,54,0.15); border: 1px solid #f44336; color: #f44336; cursor: pointer; padding: 4px 8px; font-size: 12px; font-family: monospace; border-radius: 2px;">[删]</button>
+                </div>
+            </div>
+            <h3 style="color: #fff; margin: 0 0 5px 0; font-size: 18px; text-shadow: 0 0 8px ${p.color};">${p.name}</h3>
+            <p style="color: #8bb9d6; font-size: 12px; margin: 0 0 10px 0; flex-grow: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${p.desc || '暂无描述'}</p>
+            <div style="font-family: monospace; font-size: 11px; color: #8bb9d6; margin-top: auto; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 6px;">
+                阵营: ${p.faction}<br>
+                下属区域: ${locsCount} 个 | 坐标: (${p.x}, ${p.y})
+            </div>
+        `;
+        planetGrid.appendChild(card);
+    });
+if (typeof addExpandButtonsToAdminGrids === 'function') {
+        addExpandButtonsToAdminGrids();
+    }
+};
+
+/* =========================================================
+           💥 后台网格智能展开引擎 (Auto-Expand Buttons)
+           ========================================================= */
+        window.addExpandButtonsToAdminGrids = function() {
+            // 定义所有后台网格的 ID 和它们对应的主题色
+            const gridConfigs = [
+                { id: 'admin-intel-grid', color: '#12a8ff' },    // 赛博蓝
+                { id: 'admin-timeline-grid', color: '#ffeb3b' }, // 赛博黄
+                { id: 'admin-warning-grid', color: '#f44336' },  // 警告红
+                { id: 'admin-faction-grid', color: '#4caf50' },  // 阵营绿
+                { id: 'admin-org-grid', color: '#8bc34a' },      // 组织浅绿
+                { id: 'admin-npc-grid', color: '#9c27b0' },      // NPC紫
+                { id: 'admin-planet-grid', color: '#00e5ff' }    // 星球青
+            ];
+
+            gridConfigs.forEach(config => {
+                const grid = document.getElementById(config.id);
+                if (!grid) return;
+                
+                // 检查是否已经添加过按钮，防止每次刷新重复添加
+                if (grid.previousElementSibling && grid.previousElementSibling.classList.contains('admin-expand-wrapper')) return;
+
+                // 创建按钮的包装容器（靠右对齐）
+                const wrapper = document.createElement('div');
+                wrapper.className = 'admin-expand-wrapper';
+                wrapper.style.display = 'flex';
+                wrapper.style.justifyContent = 'flex-end';
+                wrapper.style.marginBottom = '10px';
+                wrapper.style.width = '100%';
+
+                // 创建展开按钮
+                const btn = document.createElement('button');
+                btn.className = 'btn-ghost';
+                btn.style.padding = '4px 12px';
+                btn.style.fontSize = '12px';
+                btn.style.borderColor = config.color;
+                btn.style.color = config.color;
+                btn.style.fontFamily = 'monospace';
+                btn.innerText = '[ ↓ 展开全部卡片 ]';
+                
+                // 绑定点击事件：切换 CSS 类名
+                btn.onclick = function() {
+                    if (grid.classList.contains('admin-grid-expanded')) {
+                        grid.classList.remove('admin-grid-expanded');
+                        btn.innerText = '[ ↓ 展开全部卡片 ]';
+                    } else {
+                        grid.classList.add('admin-grid-expanded');
+                        btn.innerText = '[ ↑ 收起为横向滑动 ]';
+                    }
+                };
+
+                wrapper.appendChild(btn);
+                // 将按钮精准插入到网格的正上方
+                grid.parentNode.insertBefore(wrapper, grid);
+            });
+        };
+
+        /* =========================================================
+           💥 办事大厅：通知已阅清理引擎
+           ========================================================= */
+        window.dismissNotification = function(id) {
+            // 在本地浏览器记住这个 ID 已经被看过了
+            localStorage.setItem(`tf141_dismissed_${id}`, 'true');
+            // 瞬间重新渲染办事大厅，让那条提示消失
+            renderQueue(); 
+        };
+
+        /* =========================================================
+           💥 飞船管理局引擎 (Ship Bureau)
+           ========================================================= */
+        window.openShipBureau = function() {
+            window.formPreviousView = document.querySelector('.view-panel.active')?.id || 'queueView';
+            openView('shipBureauView');
+            renderShipBureau();
+        };
+
+        window.switchShipTab = function(tabId) {
+            const view = document.getElementById('shipBureauView');
+            view.querySelectorAll('.org-tab-btn').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = 'transparent';
+                b.style.color = 'rgba(0,188,212,0.6)';
+            });
+            view.querySelectorAll('.org-tab-content').forEach(c => c.classList.remove('active'));
+            
+            const targetBtn = view.querySelector(`.org-tab-btn[data-tab="${tabId}"]`);
+            if (targetBtn) {
+                targetBtn.classList.add('active');
+                targetBtn.style.background = 'rgba(0,188,212,0.15)';
+                targetBtn.style.color = '#00bcd4';
+            }
+            document.getElementById(tabId).classList.add('active');
+        };
+
+        window.renderShipBureau = function() {
+            const grid = document.getElementById('ship-recruit-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            // 抓取所有已通过的飞船
+            const ships = articlesDB.filter(a => a.type === 'gov_record' && a.tag === 'ship' && a.status === 'approved');
+            
+            // 过滤出填写了招募职位 (positions) 的飞船
+            const recruitingShips = ships.filter(ship => {
+                try { 
+                    const data = JSON.parse(ship.content); 
+                    return data.positions && data.positions.trim() !== ''; 
+                } catch(e) { return false; }
+            });
+
+            if (recruitingShips.length === 0) {
+                grid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace; grid-column: 1/-1; padding: 20px 0; text-align: center;">[ 暂无公开招募的舰船 ]</div>';
+                return;
+            }
+
+            recruitingShips.forEach(ship => {
+                let data = {};
+                try { data = JSON.parse(ship.content); } catch(e) {}
+
+                const card = document.createElement('div');
+                card.className = 'intel-card';
+                card.style.borderColor = '#00bcd4';
+                card.style.background = 'rgba(0,0,0,0.4)';
+                card.style.display = 'flex';
+                card.style.flexDirection = 'column';
+
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                        <span class="card-level" style="color: #00bcd4; border-color: #00bcd4; background: rgba(0,188,212,0.1); margin: 0;">${data.class || '舰船'}</span>
+                    </div>
+                    <h3 class="card-name" style="color: #fff; font-size: 18px; margin-bottom: 5px; text-shadow: 0 0 8px rgba(0,188,212,0.5);">${data.name || '未知舰船'}</h3>
+                    <div style="color: #84ffff; font-size: 12px; font-family: monospace; margin-bottom: 15px;">归属阵营: ${data.faction || '未知'}</div>
+                    <p class="card-desc" style="font-size: 13px; flex-grow: 1; margin-bottom: 15px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${data.roles || '暂无详细招募说明'}</p>
+                    <button class="btn-ghost" style="width: 100%; padding: 8px; font-size: 12px; color: #00bcd4; border-color: #00bcd4; margin-top: auto;">查看招募详情 →</button>
+                `;
+                // 点击卡片，调用全屏阅读器打开飞船招募详情
+                card.onclick = () => openArticle(ship);
+                grid.appendChild(card);
+            });
+        };
 </script>
 
 </body>
