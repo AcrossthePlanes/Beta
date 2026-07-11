@@ -7231,7 +7231,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div style="display: flex; gap: 20px; margin-bottom: 40px; flex-wrap: wrap;">
                     
                     <!-- 录入公民档案按钮 -->
-                    <button class="submit-btn" style="flex: 1; padding: 40px 20px; font-size: 22px; display: flex; flex-direction: column; align-items: center; gap: 15px; border: 1px solid #12a8ff; background: rgba(18,168,255,0.05); color: #12a8ff; transition: all 0.2s;" onclick="window.formPreviousView='queueView'; openView('createView'); if(window.goToStep) window.goToStep(1, true);" onmouseover="this.style.background='rgba(18,168,255,0.15)'" onmouseout="this.style.background='rgba(18,168,255,0.05)'">
+                    <button class="submit-btn" style="flex: 1; padding: 40px 20px; font-size: 22px; display: flex; flex-direction: column; align-items: center; gap: 15px; border: 1px solid #12a8ff; background: rgba(18,168,255,0.05); color: #12a8ff; transition: all 0.2s;" onclick="window.formPreviousView='queueView'; openView('createView'); if(window.goToStep) window.goToStep(1, true); window.editingCharId = null; document.getElementById('character-form').reset(); restoreDraft('character-form', 'draft_char');" onmouseover="this.style.background='rgba(18,168,255,0.15)'" onmouseout="this.style.background='rgba(18,168,255,0.05)'">
                         <svg viewBox="0 0 24 24" style="width: 56px; height: 56px; fill: #12a8ff; filter: drop-shadow(0 0 8px rgba(18,168,255,0.4));">
                             <path d="M3 5v14h18V5H3zm16 12H5V7h14v10zM12 8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm0 4.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4 3H8v-.5c0-1.33 2.67-2 4-2s4 .67 4 2v.5z"/>
                         </svg>
@@ -7240,7 +7240,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </button>
 
                     <!-- 创立组织按钮 -->
-                    <button class="submit-btn" style="flex: 1; padding: 40px 20px; font-size: 22px; display: flex; flex-direction: column; align-items: center; gap: 15px; border: 1px solid #8bc34a; background: rgba(139,195,74,0.05); color: #8bc34a; transition: all 0.2s;" onclick="window.formPreviousView='queueView'; openView('createOrgView')" onmouseover="this.style.background='rgba(139,195,74,0.15)'" onmouseout="this.style.background='rgba(139,195,74,0.05)'">
+                    <button class="submit-btn" style="flex: 1; padding: 40px 20px; font-size: 22px; display: flex; flex-direction: column; align-items: center; gap: 15px; border: 1px solid #8bc34a; background: rgba(139,195,74,0.05); color: #8bc34a; transition: all 0.2s;" onclick="window.formPreviousView='queueView'; openView('createOrgView'); window.editingOrgId = null; document.getElementById('org-form').reset(); restoreDraft('org-form', 'draft_org');" onmouseover="this.style.background='rgba(139,195,74,0.15)'" onmouseout="this.style.background='rgba(139,195,74,0.05)'">
                         <svg viewBox="0 0 24 24" style="width: 56px; height: 56px; fill: #8bc34a; filter: drop-shadow(0 0 8px rgba(139,195,74,0.4));">
                             <path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/>
                         </svg>
@@ -7272,7 +7272,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         <span style="font-size: 12px; color: #84ffff; font-family: 'PingFang SC', sans-serif;">私人舰船 / 载具备案</span>
                     </button>
 
-                    <button class="submit-btn" style="padding: 20px 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; border-color: #ff9800; color: #ff9800; background: rgba(255,152,0,0.05); transition: 0.2s;" onclick="openGovForm('corp')" onmouseover="this.style.background='rgba(255,152,0,0.15)'" onmouseout="this.style.background='rgba(255,152,0,0.05)'">
+                    <button class="submit-btn" style="padding: 20px 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; border-color: #ff9800; color: #ff9800; background: rgba(255,152,0,0.05); transition: 0.2s;" onclick="openCorpBureau()" onmouseover="this.style.background='rgba(255,152,0,0.15)'" onmouseout="this.style.background='rgba(255,152,0,0.05)'">
+                        <!-- 企业/商业公文包 SVG -->
                         <svg viewBox="0 0 24 24" style="width: 42px; height: 42px; fill: #ff9800; filter: drop-shadow(0 0 8px rgba(255,152,0,0.6)); margin-bottom: 5px;">
                             <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/>
                         </svg>
@@ -7338,6 +7339,47 @@ document.addEventListener('DOMContentLoaded', function() {
                         <h3 style="color: #00bcd4; margin-bottom: 10px; font-size: 20px;">私人舰船 / 载具备案</h3>
                         <p style="color: #84ffff; font-size: 14px; margin-bottom: 25px;">在此向联盟提交您的舰船资产备案。审核通过后，您将获得专属飞行执照，并可在招募大厅发布船员招募信息。</p>
                         <button class="submit-btn" style="color: #060b14; background: #00bcd4; border-color: #00bcd4; font-size: 16px; padding: 12px 30px;" onclick="openGovForm('ship')">
+                            [ + 填写备案申请表 ]
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 💥 新增：商业注册局专属视图 -->
+        <div class="view-panel" id="corpBureauView">
+            <div class="archive-container" style="max-width: 1000px; margin: 0 auto; padding-top: 2rem;">
+                <div class="article-top-bar" style="border-bottom-color: rgba(255,152,0,0.3);">
+                    <button class="btn-ghost" onclick="closeForm()" style="padding: 6px 12px; font-size: 14px; color: #ff9800; border-color: #ff9800;">&lt; 返回大厅</button>
+                    <div class="article-sys-status" style="color: #ff9800;"><span class="blink-cursor">_</span> COMMERCE BUREAU</div>
+                </div>
+
+                <div class="archive-header" style="border-bottom: 2px solid #ff9800; padding-bottom: 15px; margin-bottom: 30px;">
+                    <h2 class="neon-title" style="font-size: 28px; text-align: left; color: #ff9800; text-shadow: 0 0 10px #ff9800;">商业注册局</h2>
+                    <p style="color: #ffcc80;">[ P.S.C COMMERCE ADMINISTRATION ]</p>
+                </div>
+
+                <div class="org-tabs" style="border-bottom-color: rgba(255,152,0,0.4); margin-bottom: 20px;">
+                    <button class="org-tab-btn active" data-tab="corp-tab-recruit" onclick="switchCorpTab('corp-tab-recruit')" style="color: rgba(255,152,0,0.6); border-color: rgba(255,152,0,0.3);">招募大厅</button>
+                    <button class="org-tab-btn" data-tab="corp-tab-register" onclick="switchCorpTab('corp-tab-register')" style="color: rgba(255,152,0,0.6); border-color: rgba(255,152,0,0.3);">资产备案</button>
+                </div>
+
+                <!-- 招募大厅 -->
+                <div id="corp-tab-recruit" class="org-tab-content active">
+                    <div class="intel-grid" id="corp-recruit-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+                        <!-- JS 动态渲染企业卡片 -->
+                    </div>
+                </div>
+
+                <!-- 资产备案 -->
+                <div id="corp-tab-register" class="org-tab-content">
+                    <div style="background: rgba(255,152,0,0.05); border: 1px dashed #ff9800; padding: 30px; text-align: center; border-radius: 4px;">
+                        <svg viewBox="0 0 24 24" style="width: 60px; height: 60px; fill: rgba(255,152,0,0.1); stroke: #ff9800; filter: drop-shadow(0 0 10px rgba(255,152,0,0.6)); margin-bottom: 15px; display: inline-block;">
+                            <path stroke-width="1" d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/>
+                        </svg>
+                        <h3 style="color: #ff9800; margin-bottom: 10px; font-size: 20px;">商铺 / 企业营业执照</h3>
+                        <p style="color: #ffcc80; font-size: 14px; margin-bottom: 25px;">在此向联盟提交您的商业资产备案。审核通过后，您将获得专属营业执照，并可在招募大厅发布员工招募信息。</p>
+                        <button class="submit-btn" style="color: #060b14; background: #ff9800; border-color: #ff9800; font-size: 16px; padding: 12px 30px;" onclick="openGovForm('corp')">
                             [ + 填写备案申请表 ]
                         </button>
                     </div>
@@ -7559,7 +7601,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         <!-- 💥 新增：所属阵营 (用于招募联动) -->
                         <div class="input-group full-width" style="margin-bottom: 20px;">
-                            <label style="color: #00bcd4;">所属阵营 (用于招募联动) <span style="color: #f44336;">*</span></label>
+                            <label style="color: #00bcd4;">所属阵营<span style="color: #f44336;">*</span></label>
                             <div class="input-wrapper select-wrapper" style="border-color: rgba(0,188,212,0.4);">
                                 <span class="prefix" style="color: #00bcd4;">&gt;</span>
                                 <select id="g-s-faction" required style="color: #fff;">
@@ -7621,14 +7663,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     <!-- 3. 企业登记表单 (橙色) -->
                     <div id="gov-corp-fields" style="display: none;">
                         <div class="input-group full-width" style="margin-bottom: 20px;">
-                            <label style="color: #ff9800;">企业 / 商铺名称</label>
+                            <label style="color: #ff9800;">企业 / 商铺名称 <span style="color: #f44336;">*</span></label>
                             <div class="input-wrapper" style="border-color: rgba(255,152,0,0.4);">
                                 <span class="prefix" style="color: #ff9800;">&gt;</span>
                                 <input type="text" id="g-c-name" placeholder="例如：老约翰义体维修店、深空矿业集团..." required>
                             </div>
                         </div>
+                        
+                        <!-- 💥 新增：所属阵营 (用于招募联动) -->
                         <div class="input-group full-width" style="margin-bottom: 20px;">
-                            <label style="color: #ff9800;">主营业务 / 经营范围</label>
+                            <label style="color: #ff9800;">所属阵营<span style="color: #f44336;">*</span></label>
+                            <div class="input-wrapper select-wrapper" style="border-color: rgba(255,152,0,0.4);">
+                                <span class="prefix" style="color: #ff9800;">&gt;</span>
+                                <select id="g-c-faction" required style="color: #fff;">
+                                    <!-- JS 动态填充 -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="input-group full-width" style="margin-bottom: 20px;">
+                            <label style="color: #ff9800;">主营业务 / 经营范围 <span style="color: #f44336;">*</span></label>
                             <div class="input-wrapper" style="border-color: rgba(255,152,0,0.4);">
                                 <span class="prefix" style="color: #ff9800;">&gt;</span>
                                 <input type="text" id="g-c-scope" placeholder="例如：义体维修、军火走私、矿物收购..." required>
@@ -7641,6 +7695,35 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <input type="text" id="g-c-location" placeholder="例如：阿卡戎自由港-霓虹街区 104 号">
                             </div>
                         </div>
+                        
+                        <!-- 💥 升级版：企业专属的员工编制框 (与组织招募完全一致) -->
+                        <div class="input-group full-width" id="g-c-crew-group" style="margin-bottom: 20px; padding: 15px; background: rgba(255,152,0,0.05); border: 1px dashed #ff9800; border-radius: 4px;">
+                            <label style="color: #ff9800; margin-bottom: 15px; font-weight: bold; font-size: 14px;">[ 员工编制与招募需求 ]</label>
+                            
+                            <div class="input-group full-width" style="margin-bottom: 15px;">
+                                <label style="color: #ff9800; font-size: 12px;">预设固定职位与人数上限 (选填)</label>
+                                <div class="input-wrapper" style="border-color: rgba(255,152,0,0.4); background: rgba(0,0,0,0.6);">
+                                    <span class="prefix" style="color: #ff9800;">&gt;</span>
+                                    <input type="text" id="g-c-positions" placeholder="例如: 维修工:2, 安保:4, 店员:0 (0代表不限)">
+                                </div>
+                            </div>
+
+                            <div class="input-group full-width" style="margin-bottom: 15px;">
+                                <label style="color: #ff9800; font-size: 12px;">需要自戏考核的职位 (选填)</label>
+                                <div class="input-wrapper" style="border-color: rgba(255,152,0,0.4); background: rgba(0,0,0,0.6);">
+                                    <span class="prefix" style="color: #ff9800;">&gt;</span>
+                                    <input type="text" id="g-c-rp-positions" placeholder="例如: 安保, 维修工。填 ALL 代表均需自戏">
+                                </div>
+                            </div>
+
+                            <div class="input-group full-width">
+                                <label style="color: #ff9800; font-size: 12px;">各职位具体要求 (选填)</label>
+                                <div class="input-wrapper" style="border-color: rgba(255,152,0,0.4); background: rgba(0,0,0,0.6);">
+                                    <textarea id="g-c-reqs" rows="3" placeholder="例如：&#10;维修工：需要有义体维修经验。&#10;安保：要求战斗力强。"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="input-group full-width" style="margin-bottom: 20px;">
                             <label style="color: #ff9800;">企业背景与详细介绍</label>
                             <div class="input-wrapper" style="border-color: rgba(255,152,0,0.4);">
@@ -8364,6 +8447,106 @@ window.openGovBindSearch = function() {
             }
         };
 
+        /* =========================================================
+           💥 表单草稿自动保存引擎 (Auto-Save Engine) 💥
+           ========================================================= */
+        window.AutoSaveEngine = {
+            init() {
+                this.bindForm('character-form', 'tf141_draft_char');
+                this.bindForm('org-form', 'tf141_draft_org');
+                this.bindForm('gov-form', 'tf141_draft_gov');
+            },
+            bindForm(formId, baseDraftKey) {
+                const form = document.getElementById(formId);
+                if (!form) return;
+                // 监听输入和改变事件，只要打字就自动保存
+                form.addEventListener('input', () => this.save(formId, baseDraftKey));
+                form.addEventListener('change', () => this.save(formId, baseDraftKey));
+            },
+            save(formId, baseDraftKey) {
+                // 如果正在修改已有的档案，不保存为草稿，以免覆盖新建草稿
+                if (formId === 'character-form' && window.editingCharId) return;
+                if (formId === 'org-form' && window.editingOrgId) return;
+                if (formId === 'gov-form' && window.editingGovId) return;
+
+                let draftKey = baseDraftKey;
+                // 政务大厅有三种表单，按类型分开存
+                if (formId === 'gov-form') {
+                    const type = document.getElementById('gov-type').value;
+                    if (!type) return;
+                    draftKey = baseDraftKey + '_' + type;
+                }
+
+                const form = document.getElementById(formId);
+                if (!form) return;
+                const data = {};
+                // 抓取所有输入框（排除隐藏框）
+                const inputs = form.querySelectorAll('input:not([type="hidden"]), textarea, select');
+                inputs.forEach(el => {
+                    if (el.id) {
+                        if (el.type === 'checkbox' || el.type === 'radio') {
+                            data[el.id] = el.checked;
+                        } else {
+                            data[el.id] = el.value;
+                        }
+                    }
+                });
+                localStorage.setItem(draftKey, JSON.stringify(data));
+            },
+            load(formId, baseDraftKey) {
+                let draftKey = baseDraftKey;
+                if (formId === 'gov-form') {
+                    const type = document.getElementById('gov-type').value;
+                    draftKey = baseDraftKey + '_' + type;
+                }
+
+                const draft = localStorage.getItem(draftKey);
+                if (!draft) return false;
+
+                try {
+                    const data = JSON.parse(draft);
+                    
+                    // 预处理：如果存了星球，先生成基地列表，否则基地选不上
+                    if (data['f-hometown-planet']) window.populateBaseSelect(data['f-hometown-planet'], 'f');
+                    if (data['h-hometown-planet']) window.populateBaseSelect(data['h-hometown-planet'], 'h');
+                    
+                    // 预处理：如果存了里身份数据，自动展开里身份面板
+                    if (data['h-name'] && typeof isHiddenEnabled !== 'undefined' && !isHiddenEnabled) {
+                        const btn = document.getElementById('btn-toggle-hidden');
+                        if (btn) btn.click();
+                    }
+
+                    for (const key in data) {
+                        const el = document.getElementById(key);
+                        if (el && data[key] !== '' && data[key] !== false) {
+                            if (el.type === 'checkbox' || el.type === 'radio') {
+                                el.checked = data[key];
+                            } else {
+                                el.value = data[key];
+                            }
+                            // 触发 change 事件，让联动的下拉框（如阵营->组织）生效
+                            el.dispatchEvent(new Event('change', { bubbles: true }));
+                            // 触发 input 事件，让 textarea 自动撑开高度
+                            if (el.tagName.toLowerCase() === 'textarea') {
+                                el.dispatchEvent(new Event('input', { bubbles: true }));
+                            }
+                        }
+                    }
+                    return true;
+                } catch (e) {
+                    console.error("读取草稿失败", e);
+                    return false;
+                }
+            },
+            clear(baseDraftKey, type = null) {
+                let draftKey = type ? baseDraftKey + '_' + type : baseDraftKey;
+                localStorage.removeItem(draftKey);
+            }
+        };
+        
+        // 启动引擎
+        setTimeout(() => { window.AutoSaveEngine.init(); }, 1000);
+
         const SysModal = {
             closeTimeout: null,
             init() {
@@ -8653,21 +8836,31 @@ window.triggerConflictRejection = async function(charDraft) {
         /* =========================================================
            1. 网页交互逻辑（导航、侧边栏切换等）
            ========================================================= */
-        // 💥 全局监听：让所有 textarea 自动撑开高度
+        // 💥 全局监听：让所有 textarea 自动撑开高度 (智能修复版)
         document.addEventListener('input', function(e) {
             if (e.target.tagName.toLowerCase() === 'textarea') {
-                e.target.style.height = 'auto';
-                e.target.style.height = e.target.scrollHeight + 'px';
+                if (e.target.value === '') {
+                    // 如果里面没写字，就清除强制高度，恢复 HTML 里设定的 rows 默认高度，露出完整提示词
+                    e.target.style.height = ''; 
+                } else {
+                    // 如果写了字，就根据文字多少自动撑开
+                    e.target.style.height = 'auto';
+                    e.target.style.height = e.target.scrollHeight + 'px';
+                }
             }
         });
 
-        // 💥 自动撑开所有填入数据的文本框
-            setTimeout(() => {
-                document.querySelectorAll('.tactical-form textarea').forEach(el => {
+        // 💥 自动撑开所有填入数据的文本框 (智能修复版)
+        setTimeout(() => {
+            document.querySelectorAll('textarea').forEach(el => {
+                if (el.value !== '') {
                     el.style.height = 'auto';
                     el.style.height = el.scrollHeight + 'px';
-                });
-            }, 50);
+                } else {
+                    el.style.height = ''; // 保持默认高度，不压缩提示词
+                }
+            });
+        }, 50);
 
         const menuBtn = document.getElementById('menuBtn');
         const closeBtn = document.getElementById('closeBtn');
@@ -8856,45 +9049,65 @@ window.triggerConflictRejection = async function(charDraft) {
 
                 let renderContent = cleanContent;
 
-                // 💥 拦截：如果是飞船招募详情
-                if (item.type === 'gov_record' && item.tag === 'ship') {
+                // 💥 拦截：如果是飞船招募详情 或 企业招募详情
+                if (item.type === 'gov_record' && (item.tag === 'ship' || item.tag === 'corp')) {
                     let data = {};
                     try { data = JSON.parse(item.content); } catch(e) {}
                     
                     const ownerChar = characterDB.find(c => c.owner_id === item.owner_id);
-                    const ownerName = ownerChar ? ownerChar.callsign : '未知舰长';
+                    const ownerName = ownerChar ? ownerChar.callsign : '未知所有者';
 
                     const positionsHtml = renderOrgPositionsStatus(data.name, item.content);
                     const rpReqs = window.getOrgRpPositions(item.content);
                     const reqs = window.getOrgReqs(item.content);
                     
+                    const isShip = item.tag === 'ship';
+                    const themeColor = isShip ? '#00bcd4' : '#ff9800';
+                    const themeBg = isShip ? 'rgba(0,188,212,0.05)' : 'rgba(255,152,0,0.05)';
+                    const titleLabel = isShip ? '[ 舰船档案 ]' : '[ 企业档案 ]';
+                    const nameLabel = isShip ? '舰船名称：' : '企业名称：';
+                    const classLabel = isShip ? '舰船级别：' : '主营业务：';
+                    const classValue = isShip ? data.class : data.scope;
+                    const extraInfo = isShip ? `
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed rgba(0,188,212,0.3);">
+                            <span style="color: ${themeColor}; display: block; margin-bottom: 5px;">性能参数与改装：</span>
+                            <span style="color: #84ffff; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${data.specs || '无'}</span>
+                        </div>
+                    ` : `
+                        <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0;">注册位置：</span><span style="color: #e0f2fe;">${data.loc || '未知'}</span></div>
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed rgba(255,152,0,0.3);">
+                            <span style="color: ${themeColor}; display: block; margin-bottom: 5px;">企业背景介绍：</span>
+                            <span style="color: #ffcc80; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${data.desc || '无'}</span>
+                        </div>
+                    `;
+
                     let recruitHtml = positionsHtml;
                     if (rpReqs) {
-                        recruitHtml += `<div style="margin-top: 20px; padding: 15px; background: rgba(0,188,212,0.05); border-left: 4px solid #00bcd4;"><h4 style="color: #00bcd4; margin: 0 0 10px 0; font-family: monospace;">[ 自戏考核要求 ]</h4><p style="color: #84ffff; font-size: 14px; margin: 0;">以下职位需要提交不少于 200 字的自戏考核：<br><strong style="color: #e0f2fe;">${rpReqs}</strong></p></div>`;
+                        recruitHtml += `<div style="margin-top: 20px; padding: 15px; background: ${themeBg}; border-left: 4px solid ${themeColor};"><h4 style="color: ${themeColor}; margin: 0 0 10px 0; font-family: monospace;">[ 自戏考核要求 ]</h4><p style="color: #e0f2fe; font-size: 14px; margin: 0;">以下职位需要提交不少于 200 字的自戏考核：<br><strong style="color: #fff;">${rpReqs}</strong></p></div>`;
                     }
                     if (reqs) {
-                        recruitHtml += `<div style="margin-top: 20px; padding: 15px; background: rgba(0,188,212,0.05); border-left: 4px solid #00bcd4;"><h4 style="color: #00bcd4; margin: 0 0 10px 0; font-family: monospace;">[ 职位具体要求 ]</h4><div style="color: #e0f2fe; font-size: 14px; line-height: 1.8; white-space: pre-wrap;">${reqs}</div></div>`;
+                        recruitHtml += `<div style="margin-top: 20px; padding: 15px; background: ${themeBg}; border-left: 4px solid ${themeColor};"><h4 style="color: ${themeColor}; margin: 0 0 10px 0; font-family: monospace;">[ 职位具体要求 ]</h4><div style="color: #e0f2fe; font-size: 14px; line-height: 1.8; white-space: pre-wrap;">${reqs}</div></div>`;
+                    }
+                    if (!positionsHtml && !rpReqs && !reqs) {
+                        recruitHtml = `<div style="color: #8bb9d6; font-family: monospace; padding: 20px 0; text-align: center;">[ 该${isShip?'舰船':'企业'}暂无特殊招募要求 ]</div>`;
                     }
 
                     renderContent = `
-                        <div style="margin-bottom: 30px; padding: 20px; background: rgba(0,188,212,0.05); border: 1px solid rgba(0,188,212,0.3); border-radius: 4px;">
-                            <h3 style="color: #00bcd4; margin: 0 0 15px 0; font-size: 20px; text-shadow: 0 0 10px rgba(0,188,212,0.5);">[ 舰船档案 ]</h3>
-                            <div style="display: flex; margin-bottom: 10px;"><span style="color: #00bcd4; width: 90px; flex-shrink: 0;">舰船名称：</span><span style="color: #fff; font-weight: bold;">${data.name}</span></div>
-                            <div style="display: flex; margin-bottom: 10px;"><span style="color: #00bcd4; width: 90px; flex-shrink: 0;">舰船级别：</span><span style="color: #e0f2fe;">${data.class}</span></div>
-                            <div style="display: flex; margin-bottom: 10px;"><span style="color: #00bcd4; width: 90px; flex-shrink: 0;">归属阵营：</span><span style="color: #e0f2fe;">${data.faction || '未知'}</span></div>
-                            <div style="display: flex; margin-bottom: 10px;"><span style="color: #00bcd4; width: 90px; flex-shrink: 0;">所有者：</span><span style="color: #e0f2fe;">${ownerName}</span></div>
-                            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed rgba(0,188,212,0.3);">
-                                <span style="color: #00bcd4; display: block; margin-bottom: 5px;">性能参数与改装：</span>
-                                <span style="color: #84ffff; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${data.specs || '无'}</span>
-                            </div>
+                        <div style="margin-bottom: 30px; padding: 20px; background: ${themeBg}; border: 1px solid ${themeColor}4D; border-radius: 4px;">
+                            <h3 style="color: ${themeColor}; margin: 0 0 15px 0; font-size: 20px; text-shadow: 0 0 10px ${themeColor}80;">${titleLabel}</h3>
+                            <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0;">${nameLabel}</span><span style="color: #fff; font-weight: bold;">${data.name}</span></div>
+                            <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0;">${classLabel}</span><span style="color: #e0f2fe;">${classValue}</span></div>
+                            <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0;">归属阵营：</span><span style="color: #e0f2fe;">${data.faction || '未知'}</span></div>
+                            <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0;">所有者：</span><span style="color: #e0f2fe;">${ownerName}</span></div>
+                            ${extraInfo}
                         </div>
-                        <h3 style="color: #00bcd4; margin: 0 0 15px 0; font-size: 20px; text-shadow: 0 0 10px rgba(0,188,212,0.5);">[ 招募大厅 ]</h3>
+                        <h3 style="color: ${themeColor}; margin: 0 0 15px 0; font-size: 20px; text-shadow: 0 0 10px ${themeColor}80;">[ 招募大厅 ]</h3>
                         ${recruitHtml}
                     `;
                     
                     // 强制覆盖标题和标签
                     pageTitle.innerText = data.name;
-                    pageMeta.innerText = 'SHIP RECRUITMENT';
+                    pageMeta.innerText = isShip ? 'SHIP RECRUITMENT' : 'CORP RECRUITMENT';
                 }
                 
                 // 💥 拦截：如果是阵营，直接把公告顶在最上面
@@ -11094,6 +11307,7 @@ sessionStorage.setItem('tf141_last_article_id', item.id);
                 document.getElementById('f-org').disabled = true;
                 editingCharId = null; submitBtn.innerText = "[ 提交并生成档案 ]";
                 fetchCloudData();
+                clearDraft('character-form', 'draft_char'); // 💥 提交成功，清空本地草稿
                 closeForm(); // 💥 提交完毕后自动返回上一页
             } catch (error) {
                 console.error("上传失败:", error);
@@ -15108,9 +15322,14 @@ window.deleteForumPost = async function(postId) {
         let pendingOrgsDB = []; // 存放待审核的组织
         let pendingGovsDB = []; // 存放待审核的政务申请
 
-        // 1. 通用视图切换助手
+        // 1. 通用视图切换助手 (智能防死锁版)
         window.openView = function(targetId) {
-            window.lastScrollY = window.scrollY || window.pageYOffset; // 💥 记录滚动位置
+            const currentActive = document.querySelector('.view-panel.active');
+            // 💥 核心修复：只有当目标界面和当前界面不一样时，才记录滚动位置！防止自己记录自己！
+            if (currentActive && currentActive.id !== targetId) {
+                window.lastScrollY = window.scrollY || window.pageYOffset; 
+            }
+            
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
             const targetPanel = document.getElementById(targetId);
             if (targetPanel) { 
@@ -15122,17 +15341,34 @@ window.deleteForumPost = async function(postId) {
             }
         };
 
-
-        // 💥 新增：表单专属返回助手（智能返回上一页）
+        // 💥 新增：表单专属返回助手（智能防死锁版）
         window.closeForm = function() {
-            const targetId = window.formPreviousView || 'queueView';
+            // 1. 获取当前正在看的界面
+            const currentActive = document.querySelector('.view-panel.active');
+            const currentId = currentActive ? currentActive.id : null;
+
+            // 2. 获取记忆中的上一页
+            let targetId = window.formPreviousView || 'queueView';
+
+            // 💥 核心防死锁：如果系统让你返回的界面，就是你现在正在看的界面，
+            // 说明记忆错乱了（比如刷新导致），强制把它踢回办事大厅！
+            if (targetId === currentId) {
+                targetId = 'queueView';
+            }
+
+            // 3. 执行切换
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
             const targetPanel = document.getElementById(targetId);
+            
             if (targetPanel) { 
                 targetPanel.classList.add('active'); 
                 sessionStorage.setItem('tf141_current_view', targetId);
-                // 💥 核心修复：延迟 50 毫秒执行滚动
+                // 延迟 50 毫秒执行滚动
                 setTimeout(() => { window.scrollTo({ top: window.lastScrollY || 0, behavior: 'instant' }); }, 50);
+            } else {
+                // 终极兜底：如果连目标面板都找不到，强制回主界面
+                document.getElementById('mainView').classList.add('active');
+                sessionStorage.setItem('tf141_current_view', 'mainView');
             }
         };
 
@@ -15165,6 +15401,8 @@ window.deleteForumPost = async function(postId) {
                 
                 // 💥 核心新增：每次拉取完数据，自动刷新飞船管理局大厅！
                 if (typeof renderShipBureau === 'function') renderShipBureau(); 
+
+                if (typeof renderCorpBureau === 'function') renderCorpBureau();
                 
                 // 💥 刷新恢复：如果刷新前停留在文章页，数据加载完后自动重新打开
                 const _savedArticleId = sessionStorage.getItem('tf141_last_article_id');
@@ -15229,6 +15467,7 @@ window.deleteForumPost = async function(postId) {
            ========================================================= */
 
         window.openGovForm = function(type) {
+            window.editingGovId = null;
             window.formPreviousView = document.querySelector('.view-panel.active')?.id || 'queueView';
             document.getElementById('gov-form').reset();
             document.getElementById('gov-type').value = type;
@@ -15314,9 +15553,24 @@ window.deleteForumPost = async function(postId) {
             } else if (type === 'corp') {
                 fCorp.style.display = 'block';
                 setTheme('#ff9800', "[ 商业注册局 - 营业执照 ]", "在此注册商会、个人店铺、佣兵团驻地或黑市摊位。");
+                
+                // 💥 动态填充企业的阵营下拉框
+                const factionSelect = document.getElementById('g-c-faction');
+                if (factionSelect) {
+                    const factions = articlesDB.filter(a => a.type === 'faction').map(a => a.title);
+                    let html = `<option value="" disabled selected>-- 选择所属阵营 --</option>`;
+                    html += `<option value="无阵营 / 独立势力">无阵营 / 独立势力</option>`;
+                    factions.forEach(f => html += `<option value="${f}">${f}</option>`);
+                    factionSelect.innerHTML = html;
+                }
             }
 
             openView('govFormView');
+            
+            // 💥 恢复草稿 (延迟一点点等 DOM 切换完毕)
+            setTimeout(() => {
+                restoreDraft('gov-form', 'draft_gov');
+            }, 50);
         };
 
         // 💥 新增：监听飞船级别的变化，动态显示船员框
@@ -15490,12 +15744,19 @@ window.deleteForumPost = async function(postId) {
                 }
             } else if (type === 'corp') {
                 const name = document.getElementById('g-c-name').value.trim();
+                const faction = document.getElementById('g-c-faction').value;
                 const scope = document.getElementById('g-c-scope').value.trim();
                 const loc = document.getElementById('g-c-location').value.trim();
                 const desc = document.getElementById('g-c-desc').value.trim();
-                if (!name || !scope) return SysModal.alert("请完整填写企业名称与经营范围！", "系统提示");
+                
+                if (!name || !scope || !faction) return SysModal.alert("请完整填写企业名称、所属阵营与经营范围！", "系统提示");
                 title = `[商铺] ${name}`;
-                payload = { name, scope, loc, desc };
+                payload = { name, faction, scope, loc, desc };
+                
+                // 💥 核心：把招募数据也塞进 payload
+                payload.positions = document.getElementById('g-c-positions').value.trim();
+                payload.rp_positions = document.getElementById('g-c-rp-positions').value.trim();
+                payload.reqs = document.getElementById('g-c-reqs').value.trim();
             }
 
             const btn = document.getElementById('btn-submit-gov');
@@ -15514,12 +15775,25 @@ window.deleteForumPost = async function(postId) {
 
             if (type === 'ship' && payload.faction) {
                 newRecord.keywords = `[PARENT:${payload.faction}]`;
+            } else if (type === 'corp' && payload.faction) {
+                newRecord.keywords = `[PARENT:${payload.faction}]`;
             }
 
             try {
-                const { error } = await supabaseClient.from('articles').insert([newRecord]);
-                if (error) throw error;
-                await SysModal.alert('政务备案申请已提交！\n请在办事大厅等待管理员盖章。', 'SUCCESS');
+                if (window.editingGovId) {
+                    // 💥 更新草稿
+                    const { error } = await supabaseClient.from('articles').update(newRecord).eq('id', window.editingGovId);
+                    if (error) throw error;
+                    await SysModal.alert('政务备案申请已更新，\n请在办事大厅等待管理员盖章。', 'UPDATE SUCCESS');
+                } else {
+                    // 💥 新建草稿
+                    const { error } = await supabaseClient.from('articles').insert([newRecord]);
+                    if (error) throw error;
+                    await SysModal.alert('政务备案申请已提交，\n请在办事大厅等待管理员盖章。', 'SUCCESS');
+                }
+                
+                window.editingGovId = null; // 提交完清空状态
+                clearDraft('gov-form', 'draft_gov'); // 💥 提交成功，清空本地草稿
                 closeForm();
                 fetchArticles();
             } catch (e) {
@@ -15620,8 +15894,9 @@ window.deleteForumPost = async function(postId) {
             let userControls = '';
             if (gov.owner_id === currentUser.id) {
                 userControls = `
-                    <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
-                        <button class="sys-modal-btn cancel" onclick="deleteGovApp('${gov.id}')">[ 撤回并删除申请 ]</button>
+                    <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
+                        <button class="sys-modal-btn confirm" onclick="editGovApp('${gov.id}')">[ 修改申请 ]</button>
+                        <button class="sys-modal-btn cancel" onclick="deleteGovApp('${gov.id}')">[ 撤回并删除 ]</button>
                     </div>
                 `;
             }
@@ -15825,10 +16100,46 @@ window.deleteForumPost = async function(postId) {
             const certNumber = String(cert.id).split('-')[0].toUpperCase();
             const box = document.getElementById('certModalBox');
 
-            // 💥 飞船执照专属卡片 (青色主题 + 招募大厅 Tab)
-            if (cert.tag === 'ship') {
-                const themeColor = '#00bcd4';
-                const themeBg = 'rgba(0,188,212,0.05)';
+            // 💥 飞船执照 或 营业执照 专属卡片
+            if (cert.tag === 'ship' || cert.tag === 'corp') {
+                const isShip = cert.tag === 'ship';
+                const themeColor = isShip ? '#00bcd4' : '#ff9800';
+                const themeBg = isShip ? 'rgba(0,188,212,0.05)' : 'rgba(255,152,0,0.05)';
+                const titleText = isShip ? '泛星联盟舰船飞行许可' : '泛星联盟商业营业执照';
+                const subText = isShip ? 'P.S.C FLIGHT LICENSE' : 'P.S.C BUSINESS LICENSE';
+                const watermark = isShip ? 'CLEARED FOR FLIGHT' : 'AUTHORIZED BUSINESS';
+                const nameLabel = isShip ? '舰船名称：' : '企业名称：';
+                const classLabel = isShip ? '舰船级别：' : '主营业务：';
+                const classValue = isShip ? data.class : data.scope;
+                const prefixCode = isShip ? 'PSC-SHP-' : 'PSC-CRP-';
+                const sealText = isShip ? 'P.S.C<br>FLIGHT' : 'P.S.C<br>COMMERCE';
+                const sealSub = isShip ? '飞船管理局核发' : '商业注册局核发';
+                
+                const svgIcon = isShip ? `
+                    <svg viewBox="0 0 100 100" style="width: 40px; height: 40px; fill: rgba(0,188,212,0.1); stroke: ${themeColor}; filter: drop-shadow(0 0 10px ${themeColor}99); margin-bottom: 10px;">
+                        <g transform="translate(50, 68)" stroke-linejoin="round" stroke-linecap="round">
+                            <path stroke-width="4" d="M 0 0 h 10 l 5 -5 9 5 6 -15 -15 -15 c 0 -5 -4 -32 -15 -40 c -11 8 -15 35 -15 40 l -15 15 6 15 9 -5 5 5 h 10" />
+                            <path stroke-width="3" fill="${themeColor}" d="M 0 7 a 8 8 0 0 0 -8 8 c 0 4 4 6 8 12 c 4 -6 8 -8 8 -12 a 8 8 0 0 0 -8 -8" />
+                        </g>
+                    </svg>
+                ` : `
+                    <svg viewBox="0 0 24 24" style="width: 40px; height: 40px; fill: ${themeColor}; filter: drop-shadow(0 0 10px ${themeColor}99); margin-bottom: 10px;">
+                        <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/>
+                    </svg>
+                `;
+
+                const extraInfo = isShip ? `
+                    <div style="margin-top: 25px; padding: 15px; background: ${themeColor}1A; border-left: 3px solid ${themeColor}; border-radius: 0 4px 4px 0;">
+                        <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-bottom: 8px; opacity: 0.8;">[ 性能参数与改装说明 ]</div>
+                        <div style="color: #e0f2fe; font-size: 14px; line-height: 1.8; white-space: pre-wrap; font-family: 'PingFang SC', sans-serif;">${data.specs || '无特殊改装'}</div>
+                    </div>
+                ` : `
+                    <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">注册位置：</span><span style="font-family: monospace; font-size: 15px;">${data.loc || '未知'}</span></div>
+                    <div style="margin-top: 25px; padding: 15px; background: ${themeColor}1A; border-left: 3px solid ${themeColor}; border-radius: 0 4px 4px 0;">
+                        <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-bottom: 8px; opacity: 0.8;">[ 企业背景介绍 ]</div>
+                        <div style="color: #e0f2fe; font-size: 14px; line-height: 1.8; white-space: pre-wrap; font-family: 'PingFang SC', sans-serif;">${data.desc || '无'}</div>
+                    </div>
+                `;
                 
                 const myChar = characterDB.find(c => c.owner_id === currentUser.id);
                 const ownerName = myChar ? myChar.callsign : currentUser.nickname;
@@ -15843,62 +16154,53 @@ window.deleteForumPost = async function(postId) {
                 
                 let recruitHtml = positionsHtml;
                 if (rpReqs) {
-                    recruitHtml += `<div style="margin-top: 20px; padding: 15px; background: rgba(0,188,212,0.05); border-left: 4px solid #00bcd4;"><h4 style="color: #00bcd4; margin: 0 0 10px 0; font-family: monospace;">[ 自戏考核要求 ]</h4><p style="color: #84ffff; font-size: 14px; margin: 0;">以下职位需要提交不少于 200 字的自戏考核：<br><strong style="color: #e0f2fe;">${rpReqs}</strong></p></div>`;
+                    recruitHtml += `<div style="margin-top: 20px; padding: 15px; background: ${themeBg}; border-left: 4px solid ${themeColor};"><h4 style="color: ${themeColor}; margin: 0 0 10px 0; font-family: monospace;">[ 自戏考核要求 ]</h4><p style="color: #e0f2fe; font-size: 14px; margin: 0;">以下职位需要提交不少于 200 字的自戏考核：<br><strong style="color: #fff;">${rpReqs}</strong></p></div>`;
                 }
                 if (reqs) {
-                    recruitHtml += `<div style="margin-top: 20px; padding: 15px; background: rgba(0,188,212,0.05); border-left: 4px solid #00bcd4;"><h4 style="color: #00bcd4; margin: 0 0 10px 0; font-family: monospace;">[ 职位具体要求 ]</h4><div style="color: #e0f2fe; font-size: 14px; line-height: 1.8; white-space: pre-wrap;">${reqs}</div></div>`;
+                    recruitHtml += `<div style="margin-top: 20px; padding: 15px; background: ${themeBg}; border-left: 4px solid ${themeColor};"><h4 style="color: ${themeColor}; margin: 0 0 10px 0; font-family: monospace;">[ 职位具体要求 ]</h4><div style="color: #e0f2fe; font-size: 14px; line-height: 1.8; white-space: pre-wrap;">${reqs}</div></div>`;
                 }
                 if (!positionsHtml && !rpReqs && !reqs) {
-                    recruitHtml = `<div style="color: #8bb9d6; font-family: monospace; padding: 20px 0; text-align: center;">[ 该舰船暂无特殊招募要求，或为私人专属载具 ]</div>`;
+                    recruitHtml = `<div style="color: #8bb9d6; font-family: monospace; padding: 20px 0; text-align: center;">[ 该${isShip?'舰船':'企业'}暂无特殊招募要求 ]</div>`;
                 }
 
                 // 2. 组装执照正文 HTML
                 const certHtml = `
-                    <div style="text-align: center; margin-bottom: 30px; position: relative; z-index: 1; border-bottom: 1px dashed ${themeColor}66; padding-bottom: 20px;">
-                        <svg viewBox="0 0 100 100" style="width: 50px; height: 50px; fill: rgba(0,188,212,0.1); stroke: ${themeColor}; filter: drop-shadow(0 0 10px ${themeColor}99); margin-bottom: 15px;">
-                            <g transform="translate(50, 68)" stroke-linejoin="round" stroke-linecap="round">
-                                <path stroke-width="4" d="M 0 0 h 10 l 5 -5 9 5 6 -15 -15 -15 c 0 -5 -4 -32 -15 -40 c -11 8 -15 35 -15 40 l -15 15 6 15 9 -5 5 5 h 10" />
-                                <path stroke-width="3" fill="${themeColor}" d="M 0 7 a 8 8 0 0 0 -8 8 c 0 4 4 6 8 12 c 4 -6 8 -8 8 -12 a 8 8 0 0 0 -8 -8" />
-                            </g>
-                        </svg>
-                        <h3 style="color: ${themeColor}; font-size: 28px; margin: 0; letter-spacing: 6px; font-family: 'Noto Serif SC', 'Songti SC', serif; text-shadow: 0 0 15px ${themeColor}80;">泛星联盟舰船飞行许可</h3>
-                        <div style="color: ${themeColor}; font-size: 14px; font-family: monospace; margin-top: 8px; letter-spacing: 3px; opacity: 0.8;">P.S.C FLIGHT LICENSE</div>
+                    <div style="text-align: center; margin-bottom: 25px; position: relative; z-index: 1; border-bottom: 1px dashed ${themeColor}66; padding-bottom: 15px;">
+                        ${svgIcon}
+                        <h3 style="color: ${themeColor}; font-size: 24px; margin: 0; letter-spacing: 4px; font-family: 'Noto Serif SC', 'Songti SC', serif; text-shadow: 0 0 10px ${themeColor}66;">${titleText}</h3>
+                        <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-top: 5px; letter-spacing: 2px; opacity: 0.8;">${subText}</div>
                     </div>
 
-                    <div style="position: relative; z-index: 1; font-family: 'Noto Serif SC', 'Songti SC', serif; color: #e0f2fe; font-size: 18px; line-height: 2.2; padding: 0 10px;">
-                        <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">舰船名称：</span><span style="color: #fff; font-weight: bold; font-size: 22px; text-shadow: 0 0 10px ${themeColor}80;">${data.name}</span></div>
-                        <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">舰船级别：</span><span>${data.class}</span></div>
-                        <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">所有者：</span><span style="font-family: monospace; font-size: 16px;">${ownerName}</span></div>
-                        <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">签发日期：</span><span style="font-family: monospace; font-size: 16px;">${dateStr}</span></div>
-                        <div style="display: flex; margin-bottom: 15px;"><span style="color: ${themeColor}; width: 100px; flex-shrink: 0; opacity: 0.8;">执照编号：</span><span style="font-family: monospace; font-size: 14px; color: #8bb9d6;">PSC-SHP-${certNumber}</span></div>
-                        
-                        <div style="margin-top: 25px; padding: 15px; background: ${themeColor}1A; border-left: 3px solid ${themeColor}; border-radius: 0 4px 4px 0;">
-                            <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-bottom: 8px; opacity: 0.8;">[ 性能参数与改装说明 ]</div>
-                            <div style="color: #84ffff; font-size: 14px; line-height: 1.8; white-space: pre-wrap; font-family: 'PingFang SC', sans-serif;">${data.specs || '无特殊改装'}</div>
-                        </div>
+                    <div style="position: relative; z-index: 1; font-family: 'Noto Serif SC', 'Songti SC', serif; color: #e0f2fe; font-size: 16px; line-height: 2;">
+                        <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">${nameLabel}</span><span style="color: #fff; font-weight: bold; font-size: 18px; text-shadow: 0 0 8px ${themeColor}80;">${data.name}</span></div>
+                        <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">${classLabel}</span><span>${classValue}</span></div>
+                        <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">所有者：</span><span style="font-family: monospace; font-size: 15px;">${ownerName}</span></div>
+                        <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">签发日期：</span><span style="font-family: monospace; font-size: 15px;">${dateStr}</span></div>
+                        <div style="display: flex; margin-bottom: 10px;"><span style="color: ${themeColor}; width: 90px; flex-shrink: 0; opacity: 0.8;">执照编号：</span><span style="font-family: monospace; font-size: 14px; color: #8bb9d6;">${prefixCode}${certNumber}</span></div>
+                        ${extraInfo}
                     </div>
                     
                     <div style="margin-top: 40px; text-align: right; position: relative; z-index: 1;">
                         <div style="display: inline-block; text-align: center;">
-                            <div style="width: 80px; height: 80px; border: 2px solid ${themeColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${themeColor}; font-family: 'Impact', sans-serif; font-size: 14px; transform: rotate(-15deg); box-shadow: 0 0 10px ${themeColor}4D; margin: 0 auto 10px auto;">P.S.C<br>FLIGHT</div>
-                            <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-top: 5px; opacity: 0.8;">飞船管理局核发</div>
+                            <div style="width: 80px; height: 80px; border: 2px solid ${themeColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${themeColor}; font-family: 'Impact', sans-serif; font-size: 14px; transform: rotate(-15deg); box-shadow: 0 0 10px ${themeColor}4D; margin: 0 auto 10px auto;">${sealText}</div>
+                            <div style="color: ${themeColor}; font-size: 12px; font-family: monospace; margin-top: 5px; opacity: 0.8;">${sealSub}</div>
                         </div>
                     </div>
                 `;
 
-                // 3. 组合最终的弹窗 HTML (加入专属青色 Tab 样式)
+                // 3. 组合最终的弹窗 HTML
                 box.innerHTML = `
                     <style>
-                        #certModalBox .org-tab-btn { color: rgba(0,188,212,0.6); border-color: rgba(0,188,212,0.3); }
-                        #certModalBox .org-tab-btn:hover { background: rgba(0,188,212,0.1); color: #00bcd4; }
-                        #certModalBox .org-tab-btn.active { background: rgba(0,188,212,0.15); color: #00bcd4; border-color: #00bcd4; text-shadow: 0 0 8px rgba(0,188,212,0.5); border-bottom: 1px solid rgba(6, 11, 20, 1); }
+                        #certModalBox .org-tab-btn { color: ${themeColor}99; border-color: ${themeColor}4D; }
+                        #certModalBox .org-tab-btn:hover { background: ${themeColor}1A; color: ${themeColor}; }
+                        #certModalBox .org-tab-btn.active { background: ${themeColor}26; color: ${themeColor}; border-color: ${themeColor}; text-shadow: 0 0 8px ${themeColor}80; border-bottom: 1px solid rgba(6, 11, 20, 1); }
                     </style>
                     <button class="close-btn" style="position: absolute; top: 15px; right: 15px; z-index: 10; color: ${themeColor};" onclick="closeCertificate()">[X] CLOSE</button>
                     <div style="padding: 50px 40px; position: relative; overflow: hidden;">
-                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 80px; color: ${themeColor}0D; font-family: 'Impact', sans-serif; pointer-events: none; white-space: nowrap; z-index: 0; border: 6px solid ${themeColor}0D; padding: 15px;">CLEARED FOR FLIGHT</div>
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 60px; color: ${themeColor}0D; font-family: 'Impact', sans-serif; pointer-events: none; white-space: nowrap; z-index: 0; border: 4px solid ${themeColor}0D; padding: 10px;">${watermark}</div>
                         
-                        <div class="org-tabs" style="border-bottom-color: rgba(0,188,212,0.4); margin-bottom: 30px; position: relative; z-index: 1;">
-                            <button class="org-tab-btn active" onclick="document.querySelectorAll('#certModalBox .org-tab-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active'); document.getElementById('ship-cert-tab').style.display='block'; document.getElementById('ship-recruit-tab').style.display='none';">飞船执照</button>
+                        <div class="org-tabs" style="border-bottom-color: ${themeColor}66; margin-bottom: 30px; position: relative; z-index: 1;">
+                            <button class="org-tab-btn active" onclick="document.querySelectorAll('#certModalBox .org-tab-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active'); document.getElementById('ship-cert-tab').style.display='block'; document.getElementById('ship-recruit-tab').style.display='none';">${isShip ? '飞船执照' : '营业执照'}</button>
                             <button class="org-tab-btn" onclick="document.querySelectorAll('#certModalBox .org-tab-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active'); document.getElementById('ship-cert-tab').style.display='none'; document.getElementById('ship-recruit-tab').style.display='block';">招募大厅</button>
                         </div>
 
@@ -16105,6 +16407,156 @@ window.deleteForumPost = async function(postId) {
             }
         };
 
+        // 💥 新增：政务大厅草稿修改引擎
+        window.editingGovId = null;
+
+        window.editGovApp = function(id) {
+            const gov = pendingGovsDB.find(g => String(g.id) === String(id));
+            if (!gov) return;
+
+            let data = {};
+            try { data = JSON.parse(gov.content); } catch(e) { return; }
+
+            window.editingGovId = gov.id;
+            window.formPreviousView = document.querySelector('.view-panel.active')?.id || 'queueView';
+
+            // 重置表单并设置类型
+            document.getElementById('gov-form').reset();
+            document.getElementById('gov-type').value = gov.tag;
+
+            const fMarriage = document.getElementById('gov-marriage-fields');
+            const fShip = document.getElementById('gov-ship-fields');
+            const fCorp = document.getElementById('gov-corp-fields');
+            
+            fMarriage.style.display = 'none';
+            fShip.style.display = 'none';
+            fCorp.style.display = 'none';
+
+            const titleEl = document.getElementById('gov-form-title');
+            const descEl = document.getElementById('gov-form-desc');
+            const btn = document.getElementById('btn-submit-gov');
+
+            const setTheme = (color, title, desc) => {
+                titleEl.innerText = title;
+                titleEl.style.color = color;
+                titleEl.style.textShadow = `0 0 10px ${color}`;
+                document.getElementById('gov-header-box').style.borderBottomColor = color;
+                document.getElementById('gov-top-bar').style.borderBottomColor = color.replace(')', ', 0.3)').replace('rgb', 'rgba');
+                document.getElementById('gov-back-btn').style.color = color;
+                document.getElementById('gov-back-btn').style.borderColor = color;
+                document.getElementById('gov-sys-status').style.color = color;
+                descEl.innerText = desc;
+                btn.style.background = color;
+                btn.style.borderColor = color;
+            };
+
+            if (gov.tag === 'marriage') {
+                fMarriage.style.display = 'block';
+                setTheme('#e91e63', "[ 修改关系登记 ]", "在此修改您的伴侣登记或亲属关系备案。");
+                
+                document.getElementById('g-m-type').value = data.rel || '伴侣/婚姻';
+                if(window.updateMarriageLabels) window.updateMarriageLabels();
+
+                // 回显申请人 A
+                const inputEl = document.getElementById('g-m-person-a-input');
+                const selectEl = document.getElementById('g-m-person-a-select');
+                if (selectEl.style.display !== 'none') {
+                    selectEl.value = data.pA;
+                } else {
+                    inputEl.value = data.pA;
+                }
+
+                // 回显申请人 B
+                document.getElementById('g-m-person-b').value = data.pB || '';
+                document.getElementById('g-m-person-b-id').value = data.bId || '';
+
+                // 回显关系模式
+                const dynSel = document.getElementById('g-m-dynamic-select');
+                const dynCustom = document.getElementById('g-m-dynamic-custom');
+                const isMulti = document.getElementById('g-m-is-multi');
+                
+                if (data.rel === '伴侣/婚姻') {
+                    let dynVal = data.dynamic || '未指定';
+                    let isMultiVal = false;
+                    if (dynVal.includes('(允许多人)')) {
+                        isMultiVal = true;
+                        dynVal = dynVal.replace(' (允许多人)', '');
+                    }
+                    
+                    let found = false;
+                    for(let i=0; i<dynSel.options.length; i++) {
+                        if(dynSel.options[i].value === dynVal) {
+                            dynSel.value = dynVal;
+                            found = true; break;
+                        }
+                    }
+                    if(!found && dynVal !== '未指定') {
+                        dynSel.value = 'custom';
+                        dynCustom.value = dynVal;
+                        isMulti.checked = isMultiVal;
+                    }
+                    if(window.checkCustomMarriageDynamic) window.checkCustomMarriageDynamic();
+                } else if (data.rel === '收养/亲属') {
+                    dynCustom.value = data.dynamic || '';
+                }
+
+                document.getElementById('g-m-notes').value = data.notes || '';
+
+            } else if (gov.tag === 'ship') {
+                fShip.style.display = 'block';
+                setTheme('#00bcd4', "[ 修改资产备案 ]", "在此修改您的舰船或载具备案信息。");
+                
+                document.getElementById('g-s-name').value = data.name || '';
+                
+                // 动态填充阵营下拉框并回显
+                const factionSelect = document.getElementById('g-s-faction');
+                if (factionSelect) {
+                    const factions = articlesDB.filter(a => a.type === 'faction').map(a => a.title);
+                    let html = `<option value="" disabled selected>-- 选择所属阵营 --</option>`;
+                    html += `<option value="无阵营 / 独立势力">无阵营 / 独立势力</option>`;
+                    factions.forEach(f => html += `<option value="${f}">${f}</option>`);
+                    factionSelect.innerHTML = html;
+                    factionSelect.value = data.faction || '';
+                }
+
+                document.getElementById('g-s-class').value = data.class || '轻型单人战机/穿梭机';
+                if(window.checkShipClass) window.checkShipClass();
+                
+                document.getElementById('g-s-positions').value = data.positions || '';
+                document.getElementById('g-s-rp-positions').value = data.rp_positions || '';
+                document.getElementById('g-s-reqs').value = data.reqs || '';
+                document.getElementById('g-s-specs').value = data.specs || '';
+
+            } else if (gov.tag === 'corp') {
+                fCorp.style.display = 'block';
+                setTheme('#ff9800', "[ 修改营业执照 ]", "在此修改您的商铺或企业注册信息。");
+                
+                document.getElementById('g-c-name').value = data.name || '';
+                
+                // 动态填充阵营下拉框并回显
+                const factionSelect = document.getElementById('g-c-faction');
+                if (factionSelect) {
+                    const factions = articlesDB.filter(a => a.type === 'faction').map(a => a.title);
+                    let html = `<option value="" disabled selected>-- 选择所属阵营 --</option>`;
+                    html += `<option value="无阵营 / 独立势力">无阵营 / 独立势力</option>`;
+                    factions.forEach(f => html += `<option value="${f}">${f}</option>`);
+                    factionSelect.innerHTML = html;
+                    factionSelect.value = data.faction || '';
+                }
+
+                document.getElementById('g-c-scope').value = data.scope || '';
+                document.getElementById('g-c-location').value = data.loc || '';
+                document.getElementById('g-c-positions').value = data.positions || '';
+                document.getElementById('g-c-rp-positions').value = data.rp_positions || '';
+                document.getElementById('g-c-reqs').value = data.reqs || '';
+                document.getElementById('g-c-desc').value = data.desc || '';
+            }
+
+            btn.innerText = "[ 更新政务备案申请 ]";
+            document.getElementById('queue-gov-detail').style.display = 'none';
+            openView('govFormView');
+        };
+
         // 💥 新增：监听关系模式自定义选项的联动
 window.checkCustomMarriageDynamic = function() {
     const selectEl = document.getElementById('g-m-dynamic-select');
@@ -16222,6 +16674,7 @@ if(!title || !parentFaction || !content) {
                 document.getElementById('org-form').reset();
                 window.editingOrgId = null;
                 btn.innerText = "[ 提交组织创立申请 ]";
+                clearDraft('org-form', 'draft_org'); // 💥 提交成功，清空本地草稿
                 closeForm(); // 💥 提交完毕后自动返回上一页
                 fetchArticles();
             } catch (err) {
@@ -18003,12 +18456,40 @@ async function fetchPlanetsFromCloud() {
         };
 
 
-        // 💥 页面加载时，恢复刷新前的视图
+        // 💥 页面加载时，恢复刷新前的视图 (智能黑名单保护版)
         const savedView = sessionStorage.getItem('tf141_current_view');
-        // 如果有记忆，且不是文章页（文章页刷新会丢失动态数据，所以避开），就自动切换过去
-        if (savedView && document.getElementById(savedView) && savedView !== 'articleView') {
+        
+        // 💥 核心修复：定义一个“刷新后禁止停留”的黑名单。
+        // 包含所有表单、编辑器、契约签署等依赖临时 JS 变量的界面。
+        // 刷新这些界面会导致变量丢失（变成白板或引发严重Bug），所以强制把它们踢回安全界面。
+        const blackListViews = [
+            'articleView',       // 文章阅读器
+            'logReaderView',     // 记录阅读器
+            'govFormView',       // 政务登记表 (民政/飞船/商业)
+            'govConfirmView',    // 契约签署界面
+            'createView',        // 人设录入表
+            'createOrgView',     // 组织创立表
+            'adminEditorView',   // 后台数据编辑器
+            'planetEditorView',  // 星球编辑器
+            'logEditorView'      // 个人记录编辑器
+        ];
+
+        if (savedView && document.getElementById(savedView) && !blackListViews.includes(savedView)) {
+            // 如果是安全的展示界面，正常恢复
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
             document.getElementById(savedView).classList.add('active');
+        } else if (savedView && blackListViews.includes(savedView)) {
+            // 如果刷新时不幸停留在黑名单界面，强制踢回主界面或办事大厅
+            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+            
+            // 智能判断：如果是政务/人设相关的表单，踢回办事大厅；否则踢回主界面
+            if (['govFormView', 'govConfirmView', 'createView', 'createOrgView'].includes(savedView)) {
+                document.getElementById('queueView').classList.add('active');
+                sessionStorage.setItem('tf141_current_view', 'queueView');
+            } else {
+                document.getElementById('mainView').classList.add('active');
+                sessionStorage.setItem('tf141_current_view', 'mainView');
+            }
         }
 
         // 💥 页面加载时，恢复 Tab 记忆
@@ -18254,6 +18735,105 @@ async function fetchPlanetsFromCloud() {
         // （如果你后续需要为人设表单增加“保存”、“导出图片”等高级功能，代码可以继续写在这里）
 
         /* =========================================================
+           💥 全局表单草稿自动保存引擎 (Auto-Save Drafts) 💥
+           ========================================================= */
+        window.initAutoSave = function(formId, storageKeyPrefix) {
+            const form = document.getElementById(formId);
+            if (!form) return;
+
+            const saveDraft = () => {
+                // 如果当前正在“修改已有档案”，则不覆盖本地的新建草稿
+                if (formId === 'character-form' && window.editingCharId) return;
+                if (formId === 'org-form' && window.editingOrgId) return;
+                if (formId === 'gov-form' && window.editingGovId) return;
+
+                let key = storageKeyPrefix;
+                if (formId === 'gov-form') {
+                    const type = document.getElementById('gov-type').value;
+                    if (!type) return;
+                    key = storageKeyPrefix + '_' + type; // 政务大厅分门别类保存（结婚、飞船、企业互不干扰）
+                }
+
+                const draft = {};
+                const inputs = form.querySelectorAll('input, textarea, select');
+                inputs.forEach(input => {
+                    if (input.id && input.type !== 'file' && input.type !== 'hidden') {
+                        if (input.type === 'checkbox' || input.type === 'radio') {
+                            draft[input.id] = input.checked;
+                        } else {
+                            draft[input.id] = input.value;
+                        }
+                    }
+                });
+                localStorage.setItem(key, JSON.stringify(draft));
+            };
+
+            // 监听任何输入和选择变化，实时保存
+            form.addEventListener('input', saveDraft);
+            form.addEventListener('change', saveDraft);
+        };
+
+        window.restoreDraft = function(formId, storageKeyPrefix) {
+            let key = storageKeyPrefix;
+            if (formId === 'gov-form') {
+                const type = document.getElementById('gov-type').value;
+                key = storageKeyPrefix + '_' + type;
+            }
+
+            const draftStr = localStorage.getItem(key);
+            if (!draftStr) return;
+
+            try {
+                const draft = JSON.parse(draftStr);
+                const form = document.getElementById(formId);
+                if (!form) return;
+
+                Object.keys(draft).forEach(id => {
+                    const input = document.getElementById(id);
+                    if (input) {
+                        if (input.type === 'checkbox' || input.type === 'radio') {
+                            input.checked = draft[id];
+                        } else {
+                            input.value = draft[id];
+                        }
+                        // 触发 change 事件以联动其他 UI（比如下拉框显示隐藏）
+                        input.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                });
+                
+                // 自动撑开 textarea
+                setTimeout(() => {
+                    form.querySelectorAll('textarea').forEach(el => {
+                        if (el.value !== '') {
+                            el.style.height = 'auto';
+                            el.style.height = el.scrollHeight + 'px';
+                        }
+                    });
+                }, 100);
+            } catch (e) {
+                console.error("恢复草稿失败", e);
+            }
+        };
+
+        window.clearDraft = function(formId, storageKeyPrefix) {
+            let key = storageKeyPrefix;
+            if (formId === 'gov-form') {
+                const type = document.getElementById('gov-type').value;
+                key = storageKeyPrefix + '_' + type;
+            }
+            localStorage.removeItem(key);
+        };
+
+        // 页面加载完毕后，初始化三大表单的自动保存监听
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                initAutoSave('character-form', 'draft_char');
+                initAutoSave('org-form', 'draft_org');
+                initAutoSave('gov-form', 'draft_gov');
+            }, 1000);
+        });
+
+        /* =========================================================
            💥 终端安全协议：防审查与防篡改机制 (Anti-DevTools) 💥
            ========================================================= */
         (function initSecurityProtocols() {
@@ -18404,7 +18984,81 @@ async function fetchPlanetsFromCloud() {
         })();
 
         
+/* =========================================================
+           💥 商业注册局引擎 (Corp Bureau)
+           ========================================================= */
+        window.openCorpBureau = function() {
+            window.formPreviousView = document.querySelector('.view-panel.active')?.id || 'queueView';
+            openView('corpBureauView');
+            renderCorpBureau();
+        };
 
+        window.switchCorpTab = function(tabId) {
+            const view = document.getElementById('corpBureauView');
+            view.querySelectorAll('.org-tab-btn').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = 'transparent';
+                b.style.color = 'rgba(255,152,0,0.6)';
+            });
+            view.querySelectorAll('.org-tab-content').forEach(c => c.classList.remove('active'));
+            
+            const targetBtn = view.querySelector(`.org-tab-btn[data-tab="${tabId}"]`);
+            if (targetBtn) {
+                targetBtn.classList.add('active');
+                targetBtn.style.background = 'rgba(255,152,0,0.15)';
+                targetBtn.style.color = '#ff9800';
+            }
+            document.getElementById(tabId).classList.add('active');
+        };
+
+        window.renderCorpBureau = function() {
+            const grid = document.getElementById('corp-recruit-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            // 抓取所有已通过的企业
+            const corps = articlesDB.filter(a => a.type === 'gov_record' && a.tag === 'corp' && a.status === 'approved');
+            
+            // 过滤出填写了招募职位 (positions) 的企业
+            const recruitingCorps = corps.filter(corp => {
+                try { 
+                    const data = JSON.parse(corp.content); 
+                    return data.positions && data.positions.trim() !== ''; 
+                } catch(e) { return false; }
+            });
+
+            if (recruitingCorps.length === 0) {
+                grid.innerHTML = '<div style="color:#8bb9d6; font-family:monospace; grid-column: 1/-1; padding: 20px 0; text-align: center;">[ 暂无公开招募的企业/商铺 ]</div>';
+                return;
+            }
+
+            recruitingCorps.forEach(corp => {
+                let data = {};
+                try { data = JSON.parse(corp.content); } catch(e) {}
+
+                const card = document.createElement('div');
+                card.className = 'intel-card';
+                card.style.borderColor = '#ff9800';
+                card.style.background = 'rgba(0,0,0,0.4)';
+                card.style.display = 'flex';
+                card.style.flexDirection = 'column';
+
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                        <span class="card-level" style="color: #ff9800; border-color: #ff9800; background: rgba(255,152,0,0.1); margin: 0;">企业 / 商铺</span>
+                    </div>
+                    <h3 class="card-name" style="color: #fff; font-size: 18px; margin-bottom: 5px; text-shadow: 0 0 8px rgba(255,152,0,0.5);">${data.name || '未知企业'}</h3>
+                    <div style="color: #ffcc80; font-size: 12px; font-family: monospace; margin-bottom: 15px;">归属阵营: ${data.faction || '未知'}</div>
+                    <p class="card-desc" style="font-size: 13px; flex-grow: 1; margin-bottom: 15px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${data.desc || '暂无详细介绍'}</p>
+                    <button class="btn-ghost" style="width: 100%; padding: 8px; font-size: 12px; color: #ff9800; border-color: #ff9800; margin-top: auto;">查看招募详情 →</button>
+                `;
+                // 点击卡片，调用全屏阅读器打开企业招募详情
+                card.onclick = () => openArticle(corp);
+                grid.appendChild(card);
+            });
+        };
+
+        
 
 
     </script>
